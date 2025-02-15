@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>100</horstretch>
+    <verstretch>100</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>500</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>700</width>
+    <height>500</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Ads Mobile Killer</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>444</y>
+      <width>171</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="pprev">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>&lt; Назад</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pnext">
+       <property name="text">
+        <string>Далее &gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QGroupBox" name="contentLayout">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>701</width>
+      <height>441</height>
+     </rect>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
+    <layout class="QGridLayout" name="_2">
+     <item row="0" column="0">
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="tabShape">
+        <enum>QTabWidget::Rounded</enum>
+       </property>
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
+       <widget class="QWidget" name="tab0">
+        <attribute name="title">
+         <string>Tab 2</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QScrollArea" name="scrollArea">
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOn</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOff</enum>
+           </property>
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>639</width>
+              <height>402</height>
+             </rect>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_2">
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_2">
+               <property name="tabletTracking">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/resources/noads&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Освободите&lt;/span&gt; свое устройство Android от назойливых вирусов и реклам с помощью &lt;span style=&quot; font-weight:700; font-style:italic; text-decoration: underline;&quot;&gt;Ads Killer&lt;/span&gt;! Мощная программа эффективно удаляет вредоносные приложения и блокирует нежелательные рекламные объявления, обеспечивая вам безопасный и комфортный опыт использования вашего смартфона или планшета.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:22pt; font-weight:700; font-style:italic; text-decoration: underline; color:#00aa7f;&quot;&gt;ЧТО ВАЖНО? БЕЗ УДАЛЕНИЯ ВСЕХ ДАННЫХ. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;Проект реализован под свободной лицензией GPLv3 и разработан командой imister.kz. Защитите свое устройство с Ads Killer!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Страница</string>
+        </attribute>
+        <widget class="QLineEdit" name="lineEditToken">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>170</y>
+           <width>361</width>
+           <height>26</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="authButton">
+         <property name="geometry">
+          <rect>
+           <x>400</x>
+           <y>200</y>
+           <width>111</width>
+           <height>26</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Подключиться</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_4">
+         <property name="geometry">
+          <rect>
+           <x>180</x>
+           <y>140</y>
+           <width>301</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Авторизуйтесь своим ID чтобы продолжить.</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="statusAuthText">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>200</y>
+           <width>241</width>
+           <height>91</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab1">
+        <attribute name="title">
+         <string>Страница</string>
+        </attribute>
+        <widget class="QComboBox" name="comboBoxDevices">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>310</y>
+           <width>351</width>
+           <height>31</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>310</y>
+           <width>281</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Обновить список устройств</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources.qrc">
+           <normaloff>:/resources/update-list</normaloff>:/resources/update-list</iconset>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+        <widget class="QScrollArea" name="scrollArea_2">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>671</width>
+           <height>281</height>
+          </rect>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOn</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents_2">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>655</width>
+            <height>352</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h2 style=&quot; margin-top:16px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:x-large; font-weight:700;&quot;&gt;Как включить отладку USB на Android за 3 шага&lt;/span&gt;&lt;/h2&gt;&lt;h3 style=&quot; margin-top:14px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:large; font-weight:700;&quot;&gt;Шаг 1: Включите режим разработчика&lt;/span&gt;&lt;/h3&gt;&lt;ol style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Перейдите в &lt;span style=&quot; font-weight:700;&quot;&gt;Настройки&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Найдите раздел &lt;span style=&quot; font-weight:700;&quot;&gt;О телефоне&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Найдите &lt;span style=&quot; font-weight:700;&quot;&gt;Номер сборки&lt;/span&gt; и нажмите на него &lt;span style=&quot; font-weight:700;&quot;&gt;7 раз&lt;/span&gt;. Вы увидите сообщение о том, что вы стали разработчиком.&lt;/li&gt;&lt;/ol&gt;&lt;h3 style=&quot; margin-top:14px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:large; font-weight:700;&quot;&gt;Шаг 2: Включите отладку по USB&lt;/span&gt;&lt;/h3&gt;&lt;ol style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Вернитесь в &lt;span style=&quot; font-weight:700;&quot;&gt;Настройки&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Найдите раздел &lt;span style=&quot; font-weight:700;&quot;&gt;Для разработчиков&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Включите &lt;span style=&quot; font-weight:700;&quot;&gt;Отладка по USB&lt;/span&gt;.&lt;/li&gt;&lt;/ol&gt;&lt;h3 style=&quot; margin-top:14px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:large; font-weight:700;&quot;&gt;Шаг 3: Подключите устройство к компьютеру&lt;/span&gt;&lt;/h3&gt;&lt;ol style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Подключите ваше Android-устройство к компьютеру с помощью &lt;span style=&quot; font-weight:700;&quot;&gt;USB-кабеля&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Подтвердите запрос на разрешение отладки по USB на экране устройства.&lt;/li&gt;&lt;/ol&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+        <widget class="QLabel" name="label_3">
+         <property name="geometry">
+          <rect>
+           <x>530</x>
+           <y>360</y>
+           <width>141</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>&lt;a href=&quot;https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html&quot;&gt;Полная инструкция&lt;/a&gt;
+</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextBrowserInteraction</set>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_5">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>288</y>
+           <width>351</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Выберите подключенное устройство из списка ниже: </string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab2">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <attribute name="title">
+         <string>Tab 1</string>
+        </attribute>
+        <widget class="QListView" name="processStatus">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>20</y>
+           <width>651</width>
+           <height>201</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="buttonDecayMalware">
+         <property name="geometry">
+          <rect>
+           <x>280</x>
+           <y>230</y>
+           <width>121</width>
+           <height>141</height>
+          </rect>
+         </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;НАЖМИТЕ СЮДА, ЧТОБЫ УДАЛИТЬ ВИРУСЫ НА УСТРОЙСТВЕ.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    padding: 10px;
+	text-align: bottom center;
+	image: url(:/resources/shield);
+    image-position: top center; 
+}
+QPushButton:hover {
+    color: #3d3d3d; 
+	 image: url(:/resources/shield-hover);
+}
+QPushButton:disabled 
+{
+      	 image: url(:/resources/shield-close);
+}
+</string>
+         </property>
+         <property name="text">
+          <string>ОБЕЗВРЕДИТЬ</string>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QLabel" name="labelStat">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>450</y>
+      <width>501</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>700</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+    <addaction name="actionClose"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>Сведения</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionAboutUs"/>
+    <addaction name="separator"/>
+    <addaction name="actionUsLic"/>
+    <addaction name="action_Qt"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>Поддержка</string>
+    </property>
+    <addaction name="action_WhatsApp"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <action name="actionClose">
+   <property name="text">
+    <string>Выход</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionAboutUs">
+   <property name="text">
+    <string>О Программе</string>
+   </property>
+  </action>
+  <action name="actionUsLic">
+   <property name="text">
+    <string>Лицензия ПО</string>
+   </property>
+  </action>
+  <action name="action_WhatsApp">
+   <property name="text">
+    <string>Связаться через &amp;WhatsApp</string>
+   </property>
+  </action>
+  <action name="action_Qt">
+   <property name="text">
+    <string>О &amp;Qt</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>comboBoxDevices</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionClose</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>249</x>
+     <y>149</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
