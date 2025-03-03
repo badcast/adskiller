@@ -4,8 +4,8 @@
 #include "adbtrace.h"
 #include "network.h"
 
-// constexpr auto URL_Remote = "https://adskill.imister.kz";
-constexpr auto URL_Remote = "http://localhost:8080";
+constexpr auto URL_Remote = "https://adskill.imister.kz";
+//constexpr auto URL_Remote = "http://localhost:8080";
 constexpr auto URL_SupVer = "v1";
 constexpr auto URL_Auth = "fetch.php";
 
@@ -32,7 +32,7 @@ void Network::getToken(const QString& token)
 
     authedId = {}; // Clean last info
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("token", token.toUtf8());
+    request.setRawHeader("Token", token.toUtf8());
     reply = manager->post(request, "{\"request\":\"TOKENVERIFY\"}");
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }

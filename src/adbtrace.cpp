@@ -20,8 +20,14 @@ QString adb_get_prop(const QString & devId, const QString& prop)
     return output;
 }
 
-Adb::Adb()
+Adb::Adb(QObject * parent) : QObject(parent), deviceWatchTimer(nullptr)
 {
+
+}
+
+AdbConStatus Adb::status() const
+{
+    return deviceStatus(device);
 }
 
 QList<AdbDevice> Adb::devices()
@@ -29,6 +35,11 @@ QList<AdbDevice> Adb::devices()
     QList<AdbDevice> devices;
     QStringList lines;
     QProcess process;
+
+    process.start(QString(cmd_adb), QStringList() << "kill-server");
+    process.waitForFinished();
+    process.start(QString(cmd_adb), QStringList() << "start-server");
+    process.waitForFinished();
     process.start(QString(cmd_adb), QStringList() << "devices");
     if(!process.waitForFinished())
     {
@@ -55,7 +66,7 @@ QList<AdbDevice> Adb::devices()
 
 bool Adb::isConnected()
 {
-    return !device.devId.isEmpty();
+    return status() == DEVICE;
 }
 
 void Adb::connectFirst()
@@ -75,7 +86,14 @@ void Adb::connect(const QString &devId)
         qDebug() << "No allowed device";
         return;
     }
+    if(isConnected())
+        emit onDeviceChanged(device, AdbConState::Removed);
     device = *iter;
+    emit onDeviceChanged(device, AdbConState::Add);
+
+    deviceWatchTimer = new QTimer(this);
+    deviceWatchTimer->start(100);
+    QObject::connect(deviceWatchTimer, &QTimer::timeout, this, &Adb::onDeviceWatch);
 }
 
 QList<PackageIO> Adb::getPackages()
@@ -109,12 +127,54 @@ QList<PackageIO> Adb::getPackages()
     return packages;
 }
 
+void Adb::onDeviceWatch()
+{
+    AdbConStatus s = status();
+    if(s != AdbConStatus::DEVICE)
+    {
+        emit onDeviceChanged(device, AdbConState::Removed);
+        deviceWatchTimer->deleteLater();
+        device = {};
+    }
+}
+
+AdbConStatus Adb::deviceStatus(const AdbDevice &device)
+{
+    AdbConStatus retval = UNKNOWN;
+    QString res,tmp = device.devId;
+    if(!tmp.isEmpty())
+    {
+        QProcess proc;
+        proc.start(cmd_adb, QStringList() << "-s" << tmp << "get-state");
+        if(proc.waitForFinished())
+        {
+            res = proc.readAllStandardOutput();
+            res.remove('\n');
+            if(res == "unthourized")
+                retval = UNAUTH;
+            else if(res == "device")
+                retval = DEVICE;
+        }
+        else
+        {
+            qDebug() << "Failed retry get-state";
+        }
+    }
+    return retval;
+}
+
 void Adb::disconnect()
 {
     if(!isConnected())
     {
         qDebug() << "No connected";
         return;
+    }
+    emit onDeviceChanged(device, AdbConState::Removed);
+    if(deviceWatchTimer)
+    {
+        delete deviceWatchTimer;
+        deviceWatchTimer = nullptr;
     }
     device = {};
 }

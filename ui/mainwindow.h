@@ -24,7 +24,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateAdb();
+    void updateAdbDevices();
 
     Adb adb;
     QList<AdbDevice> devices;
@@ -50,18 +50,24 @@ private slots:
 
     void on_authButton_clicked();
 
+    void on_deviceChanged(const AdbDevice& device, AdbConState state);
+
     void replyAuthFinish(int status, bool ok);
     void replyAdsData(const QStringList& adsList, int status, bool ok);
+    void on_buttonDecayMalware_clicked();
+
 private:
     Ui::MainWindow *ui;
     QSettings* settings;
     int minPage;
     QList<QWidget*> pages;
     int curPage;
+    //std::function<void()> refreshDeviceWatch;
 
     void refreshTabState();
     void showPage(int pageNum);
     void pageShown(int page);
     void delayPush(int ms, std::function<void ()> call, bool loop = false);
+    void doMalware();
 };
 #endif // MAINWINDOW_H

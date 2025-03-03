@@ -6,7 +6,7 @@
  Available at: https://github.com/GTRONICK/QSS/blob/master/ElegantDark.qss
  */
 /* LICENSE MIT */
-QMainWindow {
+QWidget {
 	background-color:rgb(82, 82, 82);
 }
 QTextEdit {

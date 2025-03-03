@@ -52,11 +52,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Signals
     connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
     connect(&network, &Network::adsFinished, this, &MainWindow::replyAdsData);
+    connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
 }
 
 MainWindow::~MainWindow()
 {
-    settings->sync();
     delete ui;
 }
 
@@ -77,12 +77,15 @@ void MainWindow::on_comboBoxDevices_currentIndexChanged(int index)
 {
     if(devices.isEmpty() || index == -1)
         return;
-    adb.connect(devices[index].devId);
+    if(index == 0 && adb.isConnected())
+        adb.disconnect();
+    else
+        adb.connect(devices[index-1].devId);
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    updateAdb();
+    updateAdbDevices();
 }
 
 void MainWindow::on_action_WhatsApp_triggered()
@@ -109,7 +112,7 @@ void MainWindow::on_pprev_clicked()
         showPage(curPage - 1);
 }
 
-void MainWindow::updateAdb()
+void MainWindow::updateAdbDevices()
 {
     QStringList qlist;
     QList<AdbDevice> devicesNew = adb.devices();
@@ -120,7 +123,7 @@ void MainWindow::updateAdb()
     {
         // TODO: Make event for changed devices.
         if(index == -1 && dev.devId == adb.device.devId)
-            index = i;
+            index = i+1;
         ++i;
     }
     hOld = hash_from_adbdevs(devices);
@@ -129,7 +132,8 @@ void MainWindow::updateAdb()
         return;
     devices = std::move(devicesNew);
     std::transform(devices.cbegin(), devices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev) { return dev.displayName + " (" + dev.devId + ")"; });
-    ui->comboBoxDevices->clear();
+    for(; ui->comboBoxDevices->count() > 1;)
+        ui->comboBoxDevices->removeItem(1);
     ui->comboBoxDevices->addItems(qlist);
     if(index == -1 && !devices.isEmpty())
         index = 0;
@@ -176,8 +180,21 @@ void MainWindow::pageShown(int page)
         break;
         // DEVICES
     case 2:
+    {
         ui->pnext->setEnabled(false);
+        for(; ui->comboBoxDevices->count() > 1;)
+            ui->comboBoxDevices->removeItem(1);
+        ui->connectDeviceStateStat->setText("Выберите доступное устройство из списка.");
+        updateAdbDevices();
+        // refreshDeviceWatch = [this](){
+        //     if( curPage == 2 )
+        //     {
+        //         updateAdbDevices();
+        //         delayPush(500, refreshDeviceWatch);
+        //     }};
+        // refreshDeviceWatch();
         break;
+    }
     default:
         break;
     }
@@ -195,11 +212,22 @@ void MainWindow::delayPush(int ms, std::function<void()> call, bool loop)
     qtimer->start();
 }
 
+void MainWindow::doMalware()
+{
+    ui->buttonDecayMalware->setEnabled(false);
+
+    QList<std::function<void()>> queueCmds = { [](){return;} };
+    (void)queueCmds;
+    delayPush(500, [this](){
+        ui->buttonDecayMalware->setEnabled(true);
+    });
+}
+
 void MainWindow::on_authButton_clicked()
 {
     QString tryToken = ui->lineEditToken->text();
     network.getToken(tryToken);
-    ui->statusAuthText->setText("Подключение ");
+    ui->statusAuthText->setText("Подключение");
     timerAuthAnim = new QTimer(this);
     timerAuthAnim->start(350);
 
@@ -221,6 +249,24 @@ void MainWindow::on_authButton_clicked()
                 temp += '.';
             ui->statusAuthText->setText(temp);
         });
+}
+
+void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
+{
+    updateAdbDevices();
+    if(curPage == 2)
+    {
+        ui->pnext->setEnabled(state == Add);
+        QString text = "Устройство ";
+        text += device.displayName;
+        text += " успешно ";
+        if(state == Add)
+            text += "подключено.";
+        else
+            text += "отключено.";
+        ui->connectDeviceStateStat->setText(text);
+    }
+
 }
 
 void MainWindow::replyAuthFinish(int status, bool ok)
@@ -273,11 +319,17 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 
 void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
 {
-
     if(status == 601)
     {
+        showPage(1);
         QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance, "Завершить");
         return;
     }
 
 }
+
+void MainWindow::on_buttonDecayMalware_clicked()
+{
+    doMalware();
+}
+
