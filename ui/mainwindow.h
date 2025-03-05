@@ -10,6 +10,17 @@
 
 #include "adbtrace.h"
 
+#ifndef ADSVERSION
+#define ADSVERSION "custom"
+#endif
+
+enum MalwareStatus
+{
+    Idle,
+    Running,
+    Error
+};
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -25,15 +36,13 @@ public:
     ~MainWindow();
 
     void updateAdbDevices();
+    void showMessageFromStatus(int statusCode);
 
     Adb adb;
-    QList<AdbDevice> devices;
     Network network;
     QTimer *timerAuthAnim;
 
 private slots:
-    void on_pushButton_clicked();
-
     void on_actionAboutUs_triggered();
 
     void on_comboBoxDevices_currentIndexChanged(int index);
@@ -52,22 +61,28 @@ private slots:
 
     void on_deviceChanged(const AdbDevice& device, AdbConState state);
 
+    void on_buttonDecayMalware_clicked();
+
     void replyAuthFinish(int status, bool ok);
     void replyAdsData(const QStringList& adsList, int status, bool ok);
-    void on_buttonDecayMalware_clicked();
+    void replyFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
+
 
 private:
     Ui::MainWindow *ui;
+    QTimer * malwareUpdateTimer;
     QSettings* settings;
     int minPage;
     QList<QWidget*> pages;
     int curPage;
-    //std::function<void()> refreshDeviceWatch;
+    int startPage = 0;
 
-    void refreshTabState();
+    void updatePageState();
     void showPage(int pageNum);
     void pageShown(int page);
     void delayPush(int ms, std::function<void ()> call, bool loop = false);
     void doMalware();
+    void softUpdateDevices();
+    void checkVersion();
 };
 #endif // MAINWINDOW_H

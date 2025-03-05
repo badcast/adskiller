@@ -42,6 +42,7 @@ private:
     void fetch();
 
 public:
+    QList<AdbDevice> devices;
     AdbDevice device;
     Adb(QObject * parent = nullptr);
     AdbConStatus status() const;
@@ -50,6 +51,7 @@ public:
     void connect(const QString& devId);
     void disconnect();
     QList<PackageIO> getPackages();
+    bool uninstallPackages(const QStringList& packages);
 
 signals:
     void onDeviceChanged(const AdbDevice& device, AdbConState state);
@@ -57,9 +59,12 @@ private slots:
     void onDeviceWatch();
 public:
     static AdbConStatus deviceStatus(const AdbDevice &device);
-    static QList<AdbDevice> devices();
+    static QList<AdbDevice> getDevices();
+    static uint deviceHash(const AdbDevice& device);
 private:
     QTimer *deviceWatchTimer;
 };
+
+bool operator ==(const AdbDevice& lhs, const AdbDevice& rhs);
 
 #endif // ADBTRACE_H

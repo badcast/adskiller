@@ -8,6 +8,7 @@ constexpr auto URL_Remote = "https://adskill.imister.kz";
 //constexpr auto URL_Remote = "http://localhost:8080";
 constexpr auto URL_SupVer = "v1";
 constexpr auto URL_Auth = "fetch.php";
+constexpr auto URL_Version = "version.php";
 
 QString url_fetch()
 {
@@ -19,17 +20,26 @@ QString url_fetch()
     return url;
 }
 
-Network::Network(QObject * parent) : QObject(parent)
+QString url_version()
 {
-    manager = new QNetworkAccessManager{this};
+    QString url = URL_Remote;
+    url += "/";
+    url += URL_SupVer;
+    url += "/";
+    url += URL_Version;
+    return url;
 }
 
-void Network::getToken(const QString& token)
+Network::Network(QObject *parent) : QObject(parent)
+{
+    manager = new QNetworkAccessManager {this};
+}
+
+void Network::getToken(const QString &token)
 {
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
-
     authedId = {}; // Clean last info
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", token.toUtf8());
@@ -37,7 +47,7 @@ void Network::getToken(const QString& token)
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
-void Network::getAds()
+void Network::getAds(const QString& mdKey)
 {
     QStringList list;
     QNetworkReply *reply;
@@ -46,31 +56,34 @@ void Network::getAds()
     if(!isAuthed())
         return;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("token", authedId.token.toUtf8());
-    reply = manager->post(request, "{\"request\":\"GETADS\"}");
+    request.setRawHeader("Token", authedId.token.toUtf8());
+    QString requestBody = "{\"request\":\"GETADS\",\"mdKey\":\"";
+    requestBody += mdKey + "\"}";
+    reply = manager->post(request, requestBody.toUtf8());
     connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
 }
 
-void Network::sendUserPackages(const AdbDevice &device, const QStringList &packages)
+bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packages)
 {
+    QJsonObject json;
+    QJsonArray array;
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
-    if(!isAuthed() || packages.empty())
-        return;
+    if(device.devId.isEmpty() || packages.empty())
+        return false;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("token", authedId.token.toUtf8());
-    QJsonObject json;
-    QJsonArray array;
-    json["request"]= "UPLOADPKGS";
+    request.setRawHeader("Token", authedId.token.toUtf8());
+    json["request"] = "UPLOADPKGS";
     json["deviceSerial"] = device.devId;
     json["deviceModel"] = device.model;
     json["deviceVendor"] = device.vendor;
-    for(const QString & str : packages)
+    for(const QString &str : packages)
         array.append(str);
     json["packages"] = array;
     reply = manager->post(request, QJsonDocument(json).toJson());
     connect(reply, &QNetworkReply::finished, this, &Network::onUserPackagesUploadFinished);
+    return true;
 }
 
 bool Network::isAuthed()
@@ -78,9 +91,19 @@ bool Network::isAuthed()
     return !authedId.token.isEmpty();
 }
 
+void Network::fetchVersion()
+{
+    QNetworkReply *reply;
+    QUrl url(url_version());
+    QNetworkRequest request(url);
+    reply = manager->get(request);
+    connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
+}
+
 void Network::onAuthFinished()
 {
-    QNetworkReply * reply = qobject_cast<QNetworkReply*>(sender());
+    int status = NetworkStatus::NetworkError;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
         for(;;)
@@ -89,15 +112,13 @@ void Network::onAuthFinished()
             {
                 QByteArray responce = reply->readAll();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
-
                 if(jsonResp.isNull())
                 {
-                    emit loginFinish(-1, false);
+                    status = NetworkStatus::ServerError;
                     break;
                 }
-                if(jsonResp["status"].toInt() != 0)
+                if((status=jsonResp["status"].toInt()) != NetworkStatus::OK)
                 {
-                    emit loginFinish(jsonResp["status"].toInt(), false);
                     break;
                 }
                 QString tmp = jsonResp["token"].toString();
@@ -108,24 +129,21 @@ void Network::onAuthFinished()
                 authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
                 authedId.expires = jsonResp["expires"].toInt();
-                emit loginFinish(0, true);
-            }
-            else
-            {
-                emit loginFinish(1000, false);
+                authedId.scores = jsonResp["scores"].toInt();
+                status = 0;
             }
             break;
         }
-
+        emit loginFinish(status, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }
 
 void Network::onAdsFinished()
 {
-    int status = 500;
+    int status = NetworkStatus::NetworkError;
     QStringList adsList;
-    QNetworkReply * reply = qobject_cast<QNetworkReply*>(sender());
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
         for(;;)
@@ -134,28 +152,30 @@ void Network::onAdsFinished()
             {
                 QByteArray responce = reply->readAll();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
-                status = 0;
                 if(jsonResp.isNull() || !jsonResp["status"].isDouble())
-                    status = 500;
+                    status = NetworkStatus::ServerError;
                 else
                     status = jsonResp["status"].toInt();
-                if(status == 0)
+                if(status == NetworkStatus::OK)
                 {
                     QString split = jsonResp["ads"].toString();
                     adsList = split.split('\n', Qt::SkipEmptyParts);
+                    if(jsonResp["expires"].isDouble())
+                        authedId.expires = jsonResp["expires"].toInt();
                 }
             }
             break;
         }
-        emit adsFinished(adsList, status, status==0);
+        emit adsFinished(adsList, status, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }
 
 void Network::onUserPackagesUploadFinished()
 {
-    int status = 500;
-    QNetworkReply * reply = qobject_cast<QNetworkReply*>(sender());
+    int status = NetworkStatus::NetworkError;
+    QString mdKey;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
         for(;;)
@@ -165,12 +185,46 @@ void Network::onUserPackagesUploadFinished()
                 QByteArray responce = reply->readAll();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
                 if(jsonResp.isNull() || !jsonResp["status"].isDouble())
-                    status = 500;
+                    status = NetworkStatus::ServerError;
                 else
+                {
                     status = jsonResp["status"].toInt();
+                    if(status == NetworkStatus::OK)
+                    {
+                        mdKey = jsonResp["mdKey"].toString();
+                    }
+                }
             }
             break;
         }
-        emit uploadUserPackages(status, status == 0);
+        emit uploadUserPackages(status, mdKey, status == NetworkStatus::OK);
+        reply->deleteLater();
+    }
+}
+
+void Network::onFetchingVersion()
+{
+    int status = NetworkStatus::NetworkError;
+    QString version, url;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    if(reply)
+    {
+        for(;;)
+        {
+            if(reply->error() == QNetworkReply::NoError)
+            {
+                QByteArray resp = std::move(reply->readAll());
+                QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+                if(!jsonResp.isNull() && !jsonResp["version"].isNull() && !jsonResp["url"].isNull())
+                {
+                    version = jsonResp["version"].toString();
+                    url = jsonResp["url"].toString();
+                    status = NetworkStatus::OK;
+                }
+            }
+            break;
+        }
+        emit fetchingVersion(status, version, url, status == NetworkStatus::OK);
+        reply->deleteLater();
     }
 }

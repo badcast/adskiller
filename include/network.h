@@ -19,10 +19,18 @@ struct AuthIDData
     QString token;
     QString idName;
     int expires;
+    int scores;
     QDateTime lastLogin;
     QDateTime serverLastTime;
 };
 
+enum NetworkStatus
+{
+    OK,
+    ServerError = 500,
+    NoEnoughMoney = 601,
+    NetworkError = 1000
+};
 
 class Network : public QObject
 {
@@ -38,20 +46,23 @@ public:
     Network(QObject * parent = nullptr);
     void getToken(const QString &token);
     bool isAuthed();
+    void fetchVersion();
 
-    void getAds();
-    void sendUserPackages(const AdbDevice& device, const QStringList& packages);
+    void getAds(const QString &mdKey);
+    bool sendUserPackages(const AdbDevice& device, const QStringList& packages);
     bool checkNet();
 
 signals:
     void loginFinish(int status, bool ok);
     void adsFinished(const QStringList& adsData, int status, bool ok);
-    void uploadUserPackages(int status, bool ok);
+    void uploadUserPackages(int status, const QString& mdKey, bool ok);
+    void fetchingVersion(int status, const QString& version, const QString& url, bool ok);
 
 private slots:
     void onAuthFinished();
     void onAdsFinished();
     void onUserPackagesUploadFinished();
+    void onFetchingVersion();
 };
 
 #endif // NETWORK_H

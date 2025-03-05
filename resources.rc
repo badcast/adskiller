@@ -1,0 +1,3 @@
+#include <winver.h>
+#define IDR_APPICON 101
+IDR_APPICON ICON "res/icon.ico"

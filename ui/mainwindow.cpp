@@ -3,9 +3,15 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QMessageBox>
+#include <QStringListModel>
+#include <QTableView>
+#include <QStandardItemModel>
+#include <QHeaderView>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+constexpr auto COMPILED_VERSION = ADSVERSION;
 
 constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/dGV4dD3QryUyMNGF0L7RgtC10LslMjDQsdGLJTIw"
                                 "0L/QvtC00LXQu9C40YLRjNGB0Y8lMjDRgdCy0L7QuNC8JTIw0L7RgtC30YvQstC+0LwlMjDQuCUy"
@@ -14,12 +20,22 @@ constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/dGV4dD3QryU
                                 "RDElODIlRDElODAlRDAlQkUlRDAlQjklRDElODElRDElODIlRDAlQjIuCg==";
 constexpr auto acceptLinkMail = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQK";
 
-constexpr auto infoMessage = "Программа для удаления реклам (назоиливых и не приятных) на телефонах/смартфонах Android.\n\nПрограмма предоставлена из imister.kz.";
+constexpr auto infoMessage = "Программа для удаления реклам (назоиливых и не приятных) на телефонах/смартфонах Android.\n\n"
+                             "Программа предоставлена из imister.kz.";
 
 constexpr auto infoNoBalance = "Попытка войти в аккаунт была безуспешной, так как у вас закончился баланс. "
                                "Если вы хотите пополнить баланс, пожалуйста, свяжитесь с нашей службой поддержки. "
                                "Для этого перейдите в меню и выберите раздел 'Поддержка', затем нажмите на опцию "
                                "'Связаться через WhatsApp'.";
+constexpr auto infoNoNetwork = "Не удалось связаться с сервером обновления.\n"
+                               "Проверьте интернет соединение и повторите попытку еще раз.\n"
+                               "Программа будет завершена.";
+
+extern QStringList malwareRead();
+extern MalwareStatus malwareStatus();
+extern void malwareStart(MainWindow *handler);
+extern void malwareKill();
+extern void malwareClean();
 
 uint hash_from_adbdevs(const QList<AdbDevice> &devs)
 {
@@ -46,13 +62,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     for(x = 0; x < pages.count(); ++x)
         ui->contentLayout->layout()->addWidget(pages[x]);
     ui->tabWidget->deleteLater();
+    QStringListModel *model = new QStringListModel(ui->processStatus);
+    ui->processStatus->setModel(model);
     // Show First Page
     minPage = 0;
-    showPage(0);
+    showPage(startPage);
+
     // Signals
     connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
-    connect(&network, &Network::adsFinished, this, &MainWindow::replyAdsData);
+    connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
     connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
+
+    // Run check version
+    checkVersion();
 }
 
 MainWindow::~MainWindow()
@@ -60,27 +82,26 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButton_clicked()
-{
-}
-
 void MainWindow::on_actionAboutUs_triggered()
 {
+    QString text;
     QMessageBox msg(this);
+    text = QString("Версия программного обеспечения: %1\n\n").arg(ADSVERSION);
+    text += infoMessage;
     msg.setWindowTitle("О программе");
-    msg.setText(infoMessage);
+    msg.setText(text);
     msg.setStandardButtons(QMessageBox::Ok);
     msg.exec();
 }
 
 void MainWindow::on_comboBoxDevices_currentIndexChanged(int index)
 {
-    if(devices.isEmpty() || index == -1)
+    if(index == -1)
         return;
-    if(index == 0 && adb.isConnected())
+    if(index == 0)
         adb.disconnect();
-    else
-        adb.connect(devices[index-1].devId);
+    else if(!adb.devices.isEmpty())
+        adb.connect(adb.devices[index - 1].devId);
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -114,33 +135,44 @@ void MainWindow::on_pprev_clicked()
 
 void MainWindow::updateAdbDevices()
 {
-    QStringList qlist;
-    QList<AdbDevice> devicesNew = adb.devices();
+    QList<AdbDevice> devicesNew;
     uint hOld, hNew;
-    int index = -1;
-    int i = 0;
-    for(AdbDevice &dev : devices)
-    {
-        // TODO: Make event for changed devices.
-        if(index == -1 && dev.devId == adb.device.devId)
-            index = i+1;
-        ++i;
-    }
-    hOld = hash_from_adbdevs(devices);
+    devicesNew = adb.getDevices();
+    hOld = hash_from_adbdevs(adb.devices);
     hNew = hash_from_adbdevs(devicesNew);
     if(hOld == hNew)
         return;
-    devices = std::move(devicesNew);
-    std::transform(devices.cbegin(), devices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev) { return dev.displayName + " (" + dev.devId + ")"; });
+    adb.devices = std::move(devicesNew);
+    softUpdateDevices();
+}
+
+void MainWindow::softUpdateDevices()
+{
+    QStringList qlist;
+    int i = 0, index = 0;
+    for(AdbDevice &dev : adb.devices)
+    {
+        if(index == 0 && dev.devId == adb.device.devId)
+            index = i + 1;
+        ++i;
+    }
+    std::transform(adb.devices.cbegin(), adb.devices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev) { return dev.displayName + " (" + dev.devId + ")"; });
+    ui->comboBoxDevices->blockSignals(true);
     for(; ui->comboBoxDevices->count() > 1;)
         ui->comboBoxDevices->removeItem(1);
     ui->comboBoxDevices->addItems(qlist);
-    if(index == -1 && !devices.isEmpty())
-        index = 0;
     ui->comboBoxDevices->setCurrentIndex(index);
+    ui->comboBoxDevices->blockSignals(false);
 }
 
-void MainWindow::refreshTabState()
+void MainWindow::checkVersion()
+{
+    ui->labelStat->setText("Проверка обновления");
+    ui->pnext->setEnabled(false);
+    network.fetchVersion();
+}
+
+void MainWindow::updatePageState()
 {
     constexpr char labelPage[] = "Странница <u><b>%1</b></u> из <u><b>%2</b></u>";
     QString labelText = QString::fromUtf8(labelPage);
@@ -154,12 +186,12 @@ void MainWindow::showPage(int pageNum)
     curPage = -1;
     for(int x = 0; x < pages.count(); ++x)
     {
-        bool paged = x == pageNum;
+        bool paged = (x == pageNum);
         if(paged)
             curPage = pageNum;
         pages[x]->setVisible(paged);
     }
-    refreshTabState();
+    updatePageState();
     pageShown(curPage);
 }
 
@@ -173,26 +205,99 @@ void MainWindow::pageShown(int page)
         break;
         // AUTH
     case 1:
+    {
         ui->lineEditToken->setText(network._token);
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->pnext->setEnabled(false);
         ui->authButton->setEnabled(true);
+
+        // Создаем модель данных
+        QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
+
+        // Устанавливаем количество строк и столбцов
+        model->setRowCount(4);
+        model->setColumnCount(2);
+
+        // Устанавливаем заголовки столбцов
+        model->setHorizontalHeaderItem(0, new QStandardItem("Параметр"));
+        model->setHorizontalHeaderItem(1, new QStandardItem("Значение"));
+
+        // Заполняем модель данными
+        model->setItem(0, 0, new QStandardItem("Логин"));
+        model->setItem(0, 1, new QStandardItem("-"));
+
+        model->setItem(1, 0, new QStandardItem("Последний вход"));
+        model->setItem(1, 1, new QStandardItem("-"));
+
+        model->setItem(2, 0, new QStandardItem("Баланс"));
+        model->setItem(2, 1, new QStandardItem("-"));
+
+        model->setItem(3, 0, new QStandardItem("Подключений"));
+        model->setItem(3, 1, new QStandardItem("-"));
+
+        ui->authInfo->setModel(model);
+
+        ui->authInfo->horizontalHeader()->setStretchLastSection(true);
+        ui->authInfo->verticalHeader()->setVisible(false);
+
         break;
+    }
         // DEVICES
     case 2:
     {
         ui->pnext->setEnabled(false);
+        adb.blockSignals(true);
+        adb.devices.clear();
+        adb.disconnect();
+        adb.blockSignals(false);
+        ui->comboBoxDevices->blockSignals(true);
         for(; ui->comboBoxDevices->count() > 1;)
             ui->comboBoxDevices->removeItem(1);
+        ui->comboBoxDevices->blockSignals(false);
         ui->connectDeviceStateStat->setText("Выберите доступное устройство из списка.");
         updateAdbDevices();
-        // refreshDeviceWatch = [this](){
-        //     if( curPage == 2 )
-        //     {
-        //         updateAdbDevices();
-        //         delayPush(500, refreshDeviceWatch);
-        //     }};
-        // refreshDeviceWatch();
+        break;
+    }
+        // Malware
+    case 3:
+    {
+        QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
+        QStringList place {};
+        place << "<< Все готово для запуска обезвредителя >>";
+        place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
+        model->setStringList(place);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
+{
+    switch(curPage)
+    {
+    case 2:
+    {
+        softUpdateDevices();
+        ui->pnext->setEnabled(state == Add);
+        QString text = "Устройство ";
+        text += device.displayName;
+        text += " успешно ";
+        if(state == Add)
+            text += "подключено.";
+        else
+            text += "отключено.";
+        ui->connectDeviceStateStat->setText(text);
+        break;
+    }
+    case 3:
+    {
+        if(state == Removed)
+        {
+            malwareKill();
+            delayPush(5000, [this](){ showPage(curPage - 1); });
+        }
         break;
     }
     default:
@@ -202,25 +307,19 @@ void MainWindow::pageShown(int page)
 
 void MainWindow::delayPush(int ms, std::function<void()> call, bool loop)
 {
-    QTimer * qtimer = new QTimer(this);
+    QTimer *qtimer = new QTimer(this);
     qtimer->setSingleShot(!loop);
     qtimer->setInterval(ms);
-    connect(qtimer, &QTimer::timeout, [qtimer,call](){
-        call();
-        qtimer->deleteLater();
-    });
+    connect(
+        qtimer,
+        &QTimer::timeout,
+        [qtimer, call]()
+        {
+            call();
+            qtimer->stop();
+            qtimer->deleteLater();
+        });
     qtimer->start();
-}
-
-void MainWindow::doMalware()
-{
-    ui->buttonDecayMalware->setEnabled(false);
-
-    QList<std::function<void()>> queueCmds = { [](){return;} };
-    (void)queueCmds;
-    delayPush(500, [this](){
-        ui->buttonDecayMalware->setEnabled(true);
-    });
 }
 
 void MainWindow::on_authButton_clicked()
@@ -249,71 +348,106 @@ void MainWindow::on_authButton_clicked()
                 temp += '.';
             ui->statusAuthText->setText(temp);
         });
-}
 
-void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
-{
-    updateAdbDevices();
-    if(curPage == 2)
-    {
-        ui->pnext->setEnabled(state == Add);
-        QString text = "Устройство ";
-        text += device.displayName;
-        text += " успешно ";
-        if(state == Add)
-            text += "подключено.";
-        else
-            text += "отключено.";
-        ui->connectDeviceStateStat->setText(text);
-    }
-
+    QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
+    QString value = "-";
+    model->item(0,1)->setText(value);
+    model->item(1,1)->setText(value);
+    model->item(2,1)->setText(value);
+    model->item(3,1)->setText(value);
 }
 
 void MainWindow::replyAuthFinish(int status, bool ok)
 {
-    delayPush(1000, [ok,status,this](){
-        bool state = ok;
-        timerAuthAnim->stop();
-
-        if(state)
+    delayPush(
+        1000,
+        [ok, status, this]()
         {
-            if(network.authedId.expires == 0)
+            bool state = ok;
+            timerAuthAnim->stop();
+
+            if(state)
             {
-                ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
-                QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance, "Завершить");
-                state = false;
+                QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
+                QString value;
+                value = network.authedId.idName;
+                model->item(0,1)->setText(value);
+                value = QDateTime::currentDateTime().toString(Qt::LocalDate);
+                model->item(1,1)->setText(value);
+                value = network.authedId.expires > -1 ? QString::number(network.authedId.expires) : "(безлимит)";
+                model->item(2,1)->setText(value);
+                value = QString::number(network.authedId.scores);
+                model->item(3,1)->setText(value);
+                if(network.authedId.expires == 0)
+                {
+                    ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
+                    showMessageFromStatus(601);
+                    state = false;
+                }
+                else
+                {
+                    ui->statusAuthText->setText("Аутентификация прошла успешно.");
+                }
+
+                settings->setValue("_token", network.authedId.token);
+                minPage = curPage + 1;
+                updatePageState();
             }
             else
             {
-                ui->statusAuthText->setText("Аутентификация прошла успешно.");
-            }
+                QString errText;
+                switch(status)
+                {
+                case 0:
+                    errText = "Успех.";
+                    break;
+                case 401:
+                    errText = "Не действительный токен.";
+                    break;
+                case NetworkStatus::NoEnoughMoney:
+                    errText = infoNoBalance;
+                    break;
+                default:
+                    errText = "Проверьте интернет соединение.";
+                    break;
+                }
 
-            settings->setValue("_token", network.authedId.token);
-            minPage = curPage + 1;
-            refreshTabState();
-        }
-        else
+                ui->statusAuthText->setText(errText);
+                ui->pprev->setEnabled(true);
+            }
+            ui->lineEditToken->setEnabled(true);
+            ui->pnext->setEnabled(state);
+            ui->authButton->setEnabled(true);
+        });
+}
+
+void MainWindow::replyFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
+{
+    delayPush(1000, [=](){
+        if(status == NetworkStatus::NetworkError)
         {
-            QString errText;
-            switch(status)
-            {
-            case 0:
-                errText = "Успех.";
-                break;
-            case 401:
-                errText = "Не действительный токен.";
-                break;
-            default:
-                errText = "Проверьте интернет соединение.";
-                break;
-            }
-
-            ui->statusAuthText->setText(errText);
-            ui->pprev->setEnabled(true);
+            this->showMessageFromStatus(status);
+            this->close();
+            return;
         }
-        ui->lineEditToken->setEnabled(true);
-        ui->pnext->setEnabled(state);
-        ui->authButton->setEnabled(true);
+        if(version == QString(ADSVERSION))
+        {
+            ui->labelStat->setText("Вы используете последнюю версию. Нажмите <b>Далее ></b>, чтобы продолжить.");
+            ui->pnext->setEnabled(true);
+            return;
+        }
+        // TODO: update to new version
+        QString text;
+        text = "Обнаружена новая версия программного обеспечения. После нажатия кнопки \"ОК\" откроется ссылка в вашем браузере.\n"
+               "Пожалуйста, скачайте обновление по прямой ссылке.\n"
+               "С уважением ваша команда imister.kz.";
+        text += "\n\nВаша версия: ";
+        text +=  ADSVERSION;
+        text += "\nВерсия на сервере: ";
+        text += version;
+        QMessageBox::information(this, "Обнаружена новая версия", text);
+        QDesktopServices::openUrl(QUrl(url));
+        this->close();
     });
 }
 
@@ -322,10 +456,17 @@ void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
     if(status == 601)
     {
         showPage(1);
-        QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance, "Завершить");
-        return;
     }
+    showMessageFromStatus(status);
+}
 
+void MainWindow::showMessageFromStatus(int statusCode)
+{
+    if(statusCode == NetworkStatus::NetworkError)
+        QMessageBox::warning(this, "Ошибка подключения", infoNoNetwork);
+
+    if(statusCode == NetworkStatus::NoEnoughMoney)
+        QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance);
 }
 
 void MainWindow::on_buttonDecayMalware_clicked()
@@ -333,3 +474,51 @@ void MainWindow::on_buttonDecayMalware_clicked()
     doMalware();
 }
 
+void MainWindow::doMalware()
+{
+    QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
+    QStringList place {};
+
+    place << "<< Запуск процесса удаления рекламы, пожалуйста подождите >>";
+    place << "<< Не отсоединяйте устройство от компьютера >>";
+
+    model->setStringList(place);
+
+    ui->pprev->setEnabled(false);
+    ui->buttonDecayMalware->setEnabled(false);
+    delayPush(
+        500,
+        [this]()
+        {
+            malwareUpdateTimer = new QTimer(this);
+            malwareUpdateTimer->start(100);
+            // START MALWARE
+            malwareStart(this);
+            connect(
+                malwareUpdateTimer,
+                &QTimer::timeout,
+                this,
+                [this]()
+                {
+                    QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
+                    MalwareStatus status = malwareStatus();
+                    QStringList reads, from;
+                    reads = malwareRead();
+                    if(!reads.isEmpty())
+                    {
+                        from = model->stringList();
+                        from.append(reads);
+                        model->setStringList(from);
+                    }
+                    if(status != MalwareStatus::Running)
+                    {
+                        ui->pprev->setEnabled(true);
+                        ui->buttonDecayMalware->setEnabled(true);
+                        malwareUpdateTimer->stop();
+                        malwareUpdateTimer->deleteLater();
+                        malwareClean();
+                    }
+
+                });
+        });
+}

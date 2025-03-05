@@ -6,5 +6,6 @@
         <file alias="gravira-style">res/style/Gravira.qss</file>
         <file alias="shield-hover">res/shield-hover.png</file>
         <file alias="shield-close">res/shield-close.png</file>
+        <file alias="app-icon">res/icon.png</file>
     </qresource>
 </RCC>

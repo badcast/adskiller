@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(qt-adskiller VERSION 0.1 LANGUAGES CXX)
+# READ VERSION
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" ADSVERSION)
+string(STRIP "${ADSVERSION}" ADSVERSION)
+
+project(qt-adskiller VERSION ${ADSVERSION} LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -11,7 +15,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
-find_package(CURL REQUIRED)
 
 set(PROJECT_SOURCES
         ui/mainwindow.h
@@ -25,7 +28,15 @@ set(PROJECT_SOURCES
         src/packages.cpp
         src/adbtrace.cpp
         src/network.cpp
+        src/malwareProcess.cpp
+        resources.qrc
 )
+
+
+if(WIN32)
+    file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" "${CMAKE_BINARY_DIR}/adb")
+    set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/resources.rc")
+endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(qt-adskiller
@@ -46,7 +57,6 @@ else()
     else()
         add_executable(qt-adskiller
             ${PROJECT_SOURCES}
-            resources.qrc
         )
     endif()
 endif()
@@ -55,7 +65,7 @@ target_include_directories(qt-adskiller PRIVATE ${CMAKE_SOURCE_DIR}/include ${CM
 
 target_link_libraries(qt-adskiller PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
-target_link_libraries(qt-adskiller PRIVATE CURL::libcurl)
+target_compile_definitions(qt-adskiller PRIVATE ADSVERSION="${ADSVERSION}")
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

@@ -37,6 +37,10 @@
   <property name="windowTitle">
    <string>Ads Mobile Killer</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../resources.qrc">
+    <normaloff>:/resources/app-icon</normaloff>:/resources/app-icon</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
@@ -89,7 +93,7 @@
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab0">
         <attribute name="title">
@@ -113,7 +117,7 @@
               <x>0</x>
               <y>0</y>
               <width>639</width>
-              <height>402</height>
+              <height>370</height>
              </rect>
             </property>
             <property name="layoutDirection">
@@ -129,6 +133,9 @@
                 <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/resources/noads&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Освободите&lt;/span&gt; свое устройство Android от назойливых вирусов и реклам с помощью &lt;span style=&quot; font-weight:700; font-style:italic; text-decoration: underline;&quot;&gt;Ads Killer&lt;/span&gt;! Мощная программа эффективно удаляет вредоносные приложения и блокирует нежелательные рекламные объявления, обеспечивая вам безопасный и комфортный опыт использования вашего смартфона или планшета.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:22pt; font-weight:700; font-style:italic; text-decoration: underline; color:#00aa7f;&quot;&gt;ЧТО ВАЖНО? БЕЗ УДАЛЕНИЯ ВСЕХ ДАННЫХ. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;Проект реализован под свободной лицензией GPLv3 и разработан командой imister.kz. Защитите свое устройство с Ads Killer!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="openExternalLinks">
                 <bool>true</bool>
                </property>
                <property name="textInteractionFlags">
@@ -149,9 +156,9 @@
         <widget class="QLineEdit" name="lineEditToken">
          <property name="geometry">
           <rect>
-           <x>150</x>
-           <y>170</y>
-           <width>361</width>
+           <x>130</x>
+           <y>80</y>
+           <width>271</width>
            <height>26</height>
           </rect>
          </property>
@@ -159,21 +166,21 @@
         <widget class="QPushButton" name="authButton">
          <property name="geometry">
           <rect>
-           <x>400</x>
-           <y>200</y>
+           <x>410</x>
+           <y>80</y>
            <width>111</width>
            <height>26</height>
           </rect>
          </property>
          <property name="text">
-          <string>Подключиться</string>
+          <string>Войти</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_4">
          <property name="geometry">
           <rect>
-           <x>180</x>
-           <y>140</y>
+           <x>130</x>
+           <y>50</y>
            <width>301</width>
            <height>18</height>
           </rect>
@@ -185,9 +192,9 @@
         <widget class="QLabel" name="statusAuthText">
          <property name="geometry">
           <rect>
-           <x>150</x>
-           <y>200</y>
-           <width>241</width>
+           <x>130</x>
+           <y>110</y>
+           <width>391</width>
            <height>91</height>
           </rect>
          </property>
@@ -199,6 +206,19 @@
          </property>
          <property name="wordWrap">
           <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QTableView" name="authInfo">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>220</y>
+           <width>651</width>
+           <height>151</height>
+          </rect>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
          </property>
         </widget>
        </widget>
@@ -381,6 +401,9 @@ QComboBox::down-arrow, QSpinBox::down-arrow, QTimeEdit::down-arrow, QDateEdit::d
           <string>&lt;a href=&quot;https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html&quot;&gt;Полная инструкция&lt;/a&gt;
 </string>
          </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
          <property name="textInteractionFlags">
           <set>Qt::TextBrowserInteraction</set>
          </property>
@@ -424,17 +447,26 @@ QComboBox::down-arrow, QSpinBox::down-arrow, QTimeEdit::down-arrow, QDateEdit::d
           <rect>
            <x>10</x>
            <y>20</y>
-           <width>651</width>
-           <height>201</height>
+           <width>531</width>
+           <height>351</height>
           </rect>
+         </property>
+         <property name="tabletTracking">
+          <bool>true</bool>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
         <widget class="QPushButton" name="buttonDecayMalware">
          <property name="geometry">
           <rect>
-           <x>280</x>
-           <y>230</y>
-           <width>121</width>
+           <x>550</x>
+           <y>130</y>
+           <width>111</width>
            <height>141</height>
           </rect>
          </property>
