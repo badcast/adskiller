@@ -34,7 +34,7 @@ set(PROJECT_SOURCES
 
 
 if(WIN32)
-    file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" "${CMAKE_BINARY_DIR}/adb")
+    file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")
     set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/resources.rc")
 endif()
 

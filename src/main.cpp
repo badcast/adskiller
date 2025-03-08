@@ -24,11 +24,13 @@ int main(int argc, char *argv[])
     }
 
     // Set application Design
+#ifndef WIN32
     QFile styleRes(":/resources/gravira-style");
     styleRes.open(QFile::ReadOnly | QFile::Text);
     QString styleSheet = styleRes.readAll();
     styleRes.close();
     app.setStyleSheet(styleSheet);
+#endif
 
     MainWindow w;
     w.show();

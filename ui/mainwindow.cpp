@@ -372,7 +372,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 QString value;
                 value = network.authedId.idName;
                 model->item(0,1)->setText(value);
-                value = QDateTime::currentDateTime().toString(Qt::LocalDate);
+                value = QDateTime::currentDateTime().toString(Qt::TextDate);
                 model->item(1,1)->setText(value);
                 value = network.authedId.expires > -1 ? QString::number(network.authedId.expires) : "(безлимит)";
                 model->item(2,1)->setText(value);

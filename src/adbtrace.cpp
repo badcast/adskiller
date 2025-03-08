@@ -67,7 +67,7 @@ QList<AdbDevice> Adb::getDevices()
     }
     QString output = process.readAllStandardOutput();
     process.close();
-    lines = output.split('\r\n', Qt::SkipEmptyParts);
+    lines = output.replace("\r\n", "\n").split("\n", Qt::SkipEmptyParts);
     for(const QString & line : std::as_const(lines))
     {
         if(line.startsWith("List of devices"))
@@ -145,7 +145,7 @@ QList<PackageIO> Adb::getPackages()
     process.close();
     output.remove('\r');
     output.remove('\t');
-    packageList=output.split('\n', Qt::SkipEmptyParts);
+    packageList=output.replace("\r\n", "\n").split('\n', Qt::SkipEmptyParts);
     for(QString & item : packageList)
     {
         item.remove(0, item.indexOf(':')+1);
@@ -202,8 +202,8 @@ AdbConStatus Adb::deviceStatus(const AdbDevice &device)
         if(proc.waitForFinished())
         {
             res = proc.readAllStandardOutput();
-            res.remove('\n');
-            if(res == "unthourized")
+            res.remove('\n').remove('\r');
+            if(res == "unathourized")
                 retval = UNAUTH;
             else if(res == "device")
                 retval = DEVICE;
