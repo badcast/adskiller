@@ -158,10 +158,13 @@ void Network::onAdsFinished()
                     status = jsonResp["status"].toInt();
                 if(status == NetworkStatus::OK)
                 {
-                    QString split = jsonResp["ads"].toString();
-                    adsList = split.split('\n', Qt::SkipEmptyParts);
                     if(jsonResp["expires"].isDouble())
                         authedId.expires = jsonResp["expires"].toInt();
+                    QJsonArray adsData = jsonResp["ads"].toArray();
+                    for(const QJsonValue & val : adsData)
+                    {
+                        adsList << val.toString();
+                    }
                 }
             }
             break;
