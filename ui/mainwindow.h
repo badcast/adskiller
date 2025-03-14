@@ -7,6 +7,7 @@
 #include <QList>
 #include <QComboBox>
 #include <QSettings>
+#include <QVersionNumber>
 
 #include "adbtrace.h"
 

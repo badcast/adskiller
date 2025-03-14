@@ -33,6 +33,7 @@ QString url_version()
 Network::Network(QObject *parent) : QObject(parent)
 {
     manager = new QNetworkAccessManager {this};
+    manager->setTransferTimeout(5000);
 }
 
 void Network::getToken(const QString &token)
@@ -49,7 +50,6 @@ void Network::getToken(const QString &token)
 
 void Network::getAds(const QString& mdKey)
 {
-    QStringList list;
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
