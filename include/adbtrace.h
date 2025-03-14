@@ -45,6 +45,7 @@ public:
     QList<AdbDevice> devices;
     AdbDevice device;
     Adb(QObject * parent = nullptr);
+    virtual ~Adb();
     AdbConStatus status() const;
     bool isConnected();
     void connectFirst();

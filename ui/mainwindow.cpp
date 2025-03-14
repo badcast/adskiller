@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <QTimer>
 #include <QHash>
 #include <QDesktopServices>
@@ -5,6 +7,7 @@
 #include <QMessageBox>
 #include <QStringListModel>
 #include <QTableView>
+#include <QVector>
 #include <QStandardItemModel>
 #include <QHeaderView>
 
@@ -31,7 +34,7 @@ constexpr auto infoNoNetwork = "Не удалось связаться с сер
                                "Проверьте интернет соединение и повторите попытку еще раз.\n"
                                "Программа будет завершена.";
 
-extern QStringList malwareRead();
+extern QStringList malwareReadLog();
 extern MalwareStatus malwareStatus();
 extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
@@ -308,6 +311,7 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
 void MainWindow::delayPush(int ms, std::function<void()> call, bool loop)
 {
     QTimer *qtimer = new QTimer(this);
+    (void)qtimer;
     qtimer->setSingleShot(!loop);
     qtimer->setInterval(ms);
     connect(
@@ -368,8 +372,8 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 
             if(state)
             {
-                QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
                 QString value;
+                QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
                 value = network.authedId.idName;
                 model->item(0,1)->setText(value);
                 value = QDateTime::currentDateTime().toString(Qt::TextDate);
@@ -430,7 +434,19 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
             this->close();
             return;
         }
-        if(version == QString(ADSVERSION))
+        auto _convertToInt = [](const QString& str) -> int
+        {
+            return str.toInt();
+        };
+        QVector<int> ints;
+        QStringList list = std::move(QString(ADSVERSION).split('.', Qt::SkipEmptyParts));
+        std::transform(std::begin(list), std::end(list), std::back_inserter(ints), _convertToInt);
+        QVersionNumber verApp(ints);
+        list = std::move(version.split('.', Qt::SkipEmptyParts));
+        ints.clear();
+        std::transform(std::begin(list), std::end(list), std::back_inserter(ints), _convertToInt);
+        QVersionNumber verServer(ints);
+        if(verApp >= verServer)
         {
             ui->labelStat->setText("Вы используете последнюю версию. Нажмите <b>Далее ></b>, чтобы продолжить.");
             ui->pnext->setEnabled(true);
@@ -441,10 +457,10 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         text = "Обнаружена новая версия программного обеспечения. После нажатия кнопки \"ОК\" откроется ссылка в вашем браузере.\n"
                "Пожалуйста, скачайте обновление по прямой ссылке.\n"
                "С уважением ваша команда imister.kz.";
-        text += "\n\nВаша версия: ";
-        text +=  ADSVERSION;
-        text += "\nВерсия на сервере: ";
-        text += version;
+        text += "\n\nВаша версия: v";
+        text +=  verApp.toString();
+        text += "\nВерсия на сервере: v";
+        text += verServer.toString();
         QMessageBox::information(this, "Обнаружена новая версия", text);
         QDesktopServices::openUrl(QUrl(url));
         this->close();
@@ -503,12 +519,13 @@ void MainWindow::doMalware()
                     QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
                     MalwareStatus status = malwareStatus();
                     QStringList reads, from;
-                    reads = malwareRead();
+                    reads = malwareReadLog();
                     if(!reads.isEmpty())
                     {
                         from = model->stringList();
                         from.append(reads);
                         model->setStringList(from);
+                        ui->processStatus->scrollToBottom();
                     }
                     if(status != MalwareStatus::Running)
                     {
@@ -518,7 +535,6 @@ void MainWindow::doMalware()
                         malwareUpdateTimer->deleteLater();
                         malwareClean();
                     }
-
                 });
         });
 }

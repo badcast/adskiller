@@ -45,6 +45,13 @@ Adb::Adb(QObject * parent) : QObject(parent), deviceWatchTimer(nullptr)
 
 }
 
+Adb::~Adb()
+{
+    QProcess process;
+    process.start(adbExec(), QStringList() << "kill-server");
+    process.waitForFinished();
+}
+
 AdbConStatus Adb::status() const
 {
     return deviceStatus(device);
@@ -55,10 +62,10 @@ QList<AdbDevice> Adb::getDevices()
     QList<AdbDevice> devices;
     QStringList lines;
     QProcess process;
-    process.start(adbExec(), QStringList() << "kill-server");
-    process.waitForFinished();
-    process.start(adbExec(), QStringList() << "start-server");
-    process.waitForFinished();
+    // process.start(adbExec(), QStringList() << "kill-server");
+    // process.waitForFinished();
+    // process.start(adbExec(), QStringList() << "start-server");
+    // process.waitForFinished();
     process.start(adbExec(), QStringList() << "devices");
     if(!process.waitForFinished())
     {
