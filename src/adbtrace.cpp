@@ -163,17 +163,18 @@ QList<PackageIO> Adb::getPackages()
     return packages;
 }
 
-bool Adb::uninstallPackages(const QStringList &packages)
+bool Adb::uninstallPackages(const QStringList &packages, int& successCount)
 {
     QProcess process;
     if(!isConnected())
         return false;
-
+    successCount = 0;
     for(const QString & package : packages)
     {
         process.start(adbExec(), QStringList() << "uninstall" << package);
         if(!process.waitForFinished() || process.exitCode() != 0)
             return false;
+        successCount++;
         // QString out = process.readAllStandardOutput();
         // if(out == "Success")
         // {

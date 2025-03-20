@@ -500,6 +500,7 @@ void MainWindow::doMalware()
 
     model->setStringList(place);
 
+    ui->deviceLabelName->setText(adb.device.displayName  + " " + adb.device.devId);
     ui->pprev->setEnabled(false);
     ui->buttonDecayMalware->setEnabled(false);
     delayPush(

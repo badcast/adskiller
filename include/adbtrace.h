@@ -52,7 +52,7 @@ public:
     void connect(const QString& devId);
     void disconnect();
     QList<PackageIO> getPackages();
-    bool uninstallPackages(const QStringList& packages);
+    bool uninstallPackages(const QStringList& packages, int& successCount);
 
 signals:
     void onDeviceChanged(const AdbDevice& device, AdbConState state);
