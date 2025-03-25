@@ -34,7 +34,7 @@ constexpr auto infoNoNetwork = "Не удалось связаться с сер
                                "Проверьте интернет соединение и повторите попытку еще раз.\n"
                                "Программа будет завершена.";
 
-extern QStringList malwareReadLog();
+extern QPair<QStringList,int> malwareReadLog();
 extern MalwareStatus malwareStatus();
 extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
@@ -245,7 +245,7 @@ void MainWindow::pageShown(int page)
 
         break;
     }
-        // DEVICES
+    // DEVICES
     case 2:
     {
         ui->pnext->setEnabled(false);
@@ -261,11 +261,12 @@ void MainWindow::pageShown(int page)
         updateAdbDevices();
         break;
     }
-        // Malware
+    // Malware
     case 3:
     {
         QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
         QStringList place {};
+        ui->malwareProgressBar->setValue(0);
         place << "<< Все готово для запуска обезвредителя >>";
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
         model->setStringList(place);
@@ -499,6 +500,7 @@ void MainWindow::doMalware()
     place << "<< Не отсоединяйте устройство от компьютера >>";
 
     model->setStringList(place);
+    ui->malwareProgressBar->setValue(0);
 
     ui->deviceLabelName->setText(adb.device.displayName  + " " + adb.device.devId);
     ui->pprev->setEnabled(false);
@@ -519,13 +521,15 @@ void MainWindow::doMalware()
                 {
                     QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
                     MalwareStatus status = malwareStatus();
-                    QStringList reads, from;
+                    QPair<QStringList,int> reads;
+                    QStringList from;
                     reads = malwareReadLog();
-                    if(!reads.isEmpty())
+                    if(!reads.first.isEmpty())
                     {
                         from = model->stringList();
-                        from.append(reads);
+                        from.append(reads.first);
                         model->setStringList(from);
+                        ui->malwareProgressBar->setValue(reads.second);
                         ui->processStatus->scrollToBottom();
                     }
                     if(status != MalwareStatus::Running)
