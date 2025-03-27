@@ -500,9 +500,9 @@ QPushButton:disabled
         <widget class="QLabel" name="deviceLabelName">
          <property name="geometry">
           <rect>
-           <x>540</x>
+           <x>545</x>
            <y>180</y>
-           <width>131</width>
+           <width>126</width>
            <height>191</height>
           </rect>
          </property>

@@ -52,6 +52,7 @@ public:
     void connect(const QString& devId);
     void disconnect();
     QList<PackageIO> getPackages();
+    void killPackages(const QList<PackageIO> &packages);
     bool uninstallPackages(const QStringList& packages, int& successCount);
 
 signals:

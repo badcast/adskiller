@@ -163,6 +163,26 @@ QList<PackageIO> Adb::getPackages()
     return packages;
 }
 
+void Adb::killPackages(const QList<PackageIO> &packages)
+{
+    QProcess process;
+    if(!isConnected())
+        return;
+    int successCount = 0;
+    for(const PackageIO & package : packages)
+    {
+        process.start(adbExec(), QStringList() << "shell" << "am" << "kill" << package.packageName);
+        if(!process.waitForFinished() || process.exitCode() != 0)
+            return;
+        successCount++;
+        // QString out = process.readAllStandardOutput();
+        // if(out == "Success")
+        // {
+        // }
+        process.close();
+    }
+}
+
 bool Adb::uninstallPackages(const QStringList &packages, int& successCount)
 {
     QProcess process;
