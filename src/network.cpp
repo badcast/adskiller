@@ -7,7 +7,7 @@
 constexpr auto URL_Remote = "https://adskill.imister.kz";
 //constexpr auto URL_Remote = "http://localhost:8080";
 constexpr auto URL_SupVer = "v1";
-constexpr auto URL_Auth = "fetch.php";
+constexpr auto URL_Fetch = "fetch.php";
 constexpr auto URL_Version = "version.php";
 
 QString url_fetch()
@@ -16,7 +16,7 @@ QString url_fetch()
     url += "/";
     url += URL_SupVer;
     url += "/";
-    url += URL_Auth;
+    url += URL_Fetch;
     return url;
 }
 

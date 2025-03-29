@@ -1,3 +1,5 @@
+#include <utility>
+
 #include <QStringList>
 #include <QDebug>
 #include <QDir>
@@ -6,7 +8,7 @@
 #include "adbtrace.h"
 #include "adbcmds.h"
 
-QString adbExec()
+QString ADBExecFilename()
 {
     QString adbFile;
 #ifdef WIN32
@@ -14,23 +16,36 @@ QString adbExec()
 #else
     adbFile = "/usr/bin/";
 #endif
-    adbFile += cmd_adb;
+    adbFile += AdbFilename;
     return adbFile;
+}
+
+std::pair<bool,QString> adb_send_cmd(int& exitCode, const QStringList & arguments)
+{
+    QProcess process;
+    QString retval;
+    process.start(ADBExecFilename(), arguments);
+    if(!process.waitForFinished())
+    {
+        qDebug() << "ADB Failed";
+        return {false,{}};
+    }
+    retval = process.readAllStandardOutput();
+    process.close();
+    exitCode = process.exitCode();
+    retval.replace("\r\n", "\n");
+    return {true,retval};
+}
+
+std::pair<bool,QString> adb_send_cmd(const QStringList & arguments)
+{
+    int code;
+    return adb_send_cmd(code, arguments);
 }
 
 QString adb_get_prop(const QString & devId, const QString& prop)
 {
-    QProcess process;
-    process.start(adbExec(), QStringList() << "-s" << devId << "shell" << "getprop" << prop);
-    if(!process.waitForFinished())
-    {
-        qDebug() << "Prop timedout";
-        return {};
-    }
-    QString output = process.readAllStandardOutput();
-    process.close();
-    output.remove('\n');
-    output.remove('\r');
+    QString output = adb_send_cmd(QStringList() << "-s" << devId << "shell" << "getprop" << prop).second.remove("\n");
     return output;
 }
 
@@ -47,9 +62,7 @@ Adb::Adb(QObject * parent) : QObject(parent), deviceWatchTimer(nullptr)
 
 Adb::~Adb()
 {
-    QProcess process;
-    process.start(adbExec(), QStringList() << "kill-server");
-    process.waitForFinished();
+    adb_send_cmd(QStringList() << "kill-server");
 }
 
 AdbConStatus Adb::status() const
@@ -61,31 +74,21 @@ QList<AdbDevice> Adb::getDevices()
 {
     QList<AdbDevice> devices;
     QStringList lines;
-    QProcess process;
-    // process.start(adbExec(), QStringList() << "kill-server");
-    // process.waitForFinished();
-    // process.start(adbExec(), QStringList() << "start-server");
-    // process.waitForFinished();
-    process.start(adbExec(), QStringList() << "devices");
-    if(!process.waitForFinished())
+    std::pair<bool,QString> reply = adb_send_cmd(QStringList() << "devices");
+    if(reply.first)
     {
-        qDebug() << "Error on run command";
-        return {};
-    }
-    QString output = process.readAllStandardOutput();
-    process.close();
-    lines = output.replace("\r\n", "\n").split("\n", Qt::SkipEmptyParts);
-    for(const QString & line : std::as_const(lines))
-    {
-        if(line.startsWith("List of devices"))
-            continue;
-        AdbDevice dev{};
-        dev.devId = line.split('\t').first();
-        dev.model = adb_get_prop(dev.devId,CmdGetProductModel);
-        dev.displayName = adb_get_prop(dev.devId,CmdGetProductMarketname);
-        dev.vendor = adb_get_prop(dev.devId,CmdGetProductManufacturer);
-        dev.displayName = dev.vendor + " " + dev.model;
-        devices.append(dev);
+        lines = reply.second.split("\n", Qt::SkipEmptyParts);
+        for(const QString & line : std::as_const(lines))
+        {
+            if(line.startsWith("List of devices"))
+                continue;
+            AdbDevice dev{};
+            dev.devId = line.split('\t').first();
+            dev.model = adb_get_prop(dev.devId,CmdGetProductModel);
+            dev.vendor = adb_get_prop(dev.devId,CmdGetProductManufacturer);
+            dev.displayName = dev.vendor + " " + dev.model;
+            devices.append(dev);
+        }
     }
     return devices;
 }
@@ -134,72 +137,67 @@ void Adb::connect(const QString &devId)
 
 QList<PackageIO> Adb::getPackages()
 {
-    QProcess process;
+    QList<PackageIO> packages;
+    QStringList packageList;
+
     if(!isConnected())
     {
         qDebug() << "Device is not connected";
         return {};
     }
-    process.start(adbExec(), QStringList() << "-s" << device.devId << "shell" << "pm" << "list" << "packages" << "-3");
-    if(!process.waitForFinished())
+
+    std::pair<bool,QString> reply = adb_send_cmd(QStringList() << "-s" << device.devId << "shell" << "pm" << "list" << "packages" << "-3");
+    if(reply.first)
     {
-        qDebug() << "Prop timedout";
-        return {};
-    }
-    QStringList packageList;
-    QList<PackageIO> packages;
-    QString output = process.readAllStandardOutput();
-    process.close();
-    output.remove('\r');
-    output.remove('\t');
-    packageList=output.replace("\r\n", "\n").split('\n', Qt::SkipEmptyParts);
-    for(QString & item : packageList)
-    {
-        item.remove(0, item.indexOf(':')+1);
-        packages.append(PackageIO{});
-        packages.last().packageName = item;
-        packages.last().applicationName = "Unknown";
+        reply.second.remove('\t');
+        packageList = reply.second.split('\n', Qt::SkipEmptyParts);
+        for(QString & item : packageList)
+        {
+            item.remove(0, item.indexOf(':')+1);
+            packages.append(PackageIO{});
+            packages.last().packageName = item;
+            packages.last().applicationName = "Unknown";
+        }
     }
     return packages;
 }
 
 void Adb::killPackages(const QList<PackageIO> &packages)
 {
-    QProcess process;
+    std::pair<bool,QString> reply;
+    int successCount = 0;
+    int exit;
     if(!isConnected())
         return;
-    int successCount = 0;
     for(const PackageIO & package : packages)
     {
-        process.start(adbExec(), QStringList() << "shell" << "am" << "kill" << package.packageName);
-        if(!process.waitForFinished() || process.exitCode() != 0)
+        reply = adb_send_cmd(exit, QStringList() << "shell" << "am" << "force-stop" << package.packageName);
+        if(!reply.first || exit != 0)
             return;
         successCount++;
         // QString out = process.readAllStandardOutput();
         // if(out == "Success")
         // {
         // }
-        process.close();
     }
 }
 
 bool Adb::uninstallPackages(const QStringList &packages, int& successCount)
 {
-    QProcess process;
+    std::pair<bool,QString> reply;
+    int exit;
     if(!isConnected())
         return false;
-    successCount = 0;
     for(const QString & package : packages)
     {
-        process.start(adbExec(), QStringList() << "uninstall" << package);
-        if(!process.waitForFinished() || process.exitCode() != 0)
+        reply = adb_send_cmd(exit, QStringList() << "uninstall" << package);
+        if(!reply.first || exit != 0)
             return false;
         successCount++;
         // QString out = process.readAllStandardOutput();
         // if(out == "Success")
         // {
         // }
-        process.close();
     }
     return true;
 }
@@ -209,11 +207,11 @@ void Adb::onDeviceWatch()
     AdbConStatus s = status();
     if(s != AdbConStatus::DEVICE)
     {
-        deviceWatchTimer->stop();
         AdbDevice old = device;
         devices.removeOne(device);
         device = {};
         emit onDeviceChanged(old, AdbConState::Removed);
+        deviceWatchTimer->stop();
         deviceWatchTimer->deleteLater();
         deviceWatchTimer = nullptr;
     }
@@ -225,12 +223,10 @@ AdbConStatus Adb::deviceStatus(const AdbDevice &device)
     QString res,tmp = device.devId;
     if(!tmp.isEmpty())
     {
-        QProcess proc;
-        proc.start(adbExec(), QStringList() << "-s" << tmp << "get-state");
-        if(proc.waitForFinished())
+        std::pair<bool,QString> reply = adb_send_cmd(QStringList() << "-s" << tmp << "get-state");
+        if(reply.first)
         {
-            res = proc.readAllStandardOutput();
-            res.remove('\n').remove('\r');
+            res = reply.second.remove("\n");
             if(res == "unathourized")
                 retval = UNAUTH;
             else if(res == "device")

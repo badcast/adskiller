@@ -3,9 +3,9 @@
 
 
 #ifdef __linux__
-constexpr const char cmd_adb[] = "adb";
+constexpr const char AdbFilename[] = "adb";
 #elif _WIN32
-constexpr const char cmd_adb[] = "adb.exe";
+constexpr const char AdbFilename[] = "adb.exe";
 #endif
 
 constexpr const char CmdGetProductModel[] = "ro.product.model";

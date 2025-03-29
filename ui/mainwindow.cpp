@@ -267,6 +267,7 @@ void MainWindow::pageShown(int page)
         QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
         QStringList place {};
         ui->malwareProgressBar->setValue(0);
+        ui->buttonDecayMalware->setEnabled(true);
         place << "<< Все готово для запуска обезвредителя >>";
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
         model->setStringList(place);
