@@ -356,11 +356,10 @@ void MainWindow::on_authButton_clicked()
         });
 
     QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
-    QString value = "-";
-    model->item(0,1)->setText(value);
-    model->item(1,1)->setText(value);
-    model->item(2,1)->setText(value);
-    model->item(3,1)->setText(value);
+    for(int x = model->rowCount()-1; x > -1; --x)
+    {
+        model->item(x,1)->setText("-");
+    }
 }
 
 void MainWindow::replyAuthFinish(int status, bool ok)
@@ -384,6 +383,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 model->item(2,1)->setText(value);
                 value = QString::number(network.authedId.scores);
                 model->item(3,1)->setText(value);
+                value = QString();
                 if(network.authedId.expires == 0)
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");

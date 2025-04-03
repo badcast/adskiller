@@ -10,7 +10,11 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
+    if(sharedMemUpdate.attach())
+    {
+        return 1;
+    }
 
     QSharedMemory sharedMem("imister.kz-app_adskiller_v1");
     if(sharedMem.attach())
@@ -23,6 +27,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    QApplication app(argc, argv);
     // Set application Design
 #ifndef WIN32
     QFile styleRes(":/resources/gravira-style");

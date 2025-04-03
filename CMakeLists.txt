@@ -32,6 +32,7 @@ set(PROJECT_SOURCES
         resources.qrc
 )
 
+add_executable(update update/main.cpp ui/update_window.h ui/update_window.cpp ui/update_window.ui)
 
 if(WIN32)
     file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")
@@ -62,24 +63,13 @@ else()
 endif()
 
 target_include_directories(adskiller PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
+target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
 target_link_libraries(adskiller PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 target_compile_definitions(adskiller PRIVATE ADSVERSION="${ADSVERSION}")
-
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.adskiller)
-endif()
-set_target_properties(adskiller PROPERTIES
-    ${BUNDLE_ID_OPTION}
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
-)
+target_compile_definitions(update PRIVATE APPVERSION="${ADSVERSION}")
 
 include(GNUInstallDirs)
 install(TARGETS adskiller
@@ -90,4 +80,5 @@ install(TARGETS adskiller
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(adskiller)
+    qt_finalize_executable(update)
 endif()
