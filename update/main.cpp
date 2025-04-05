@@ -50,10 +50,18 @@ class UpdateManager : public QObject
 {
     Q_OBJECT
 
+    enum {
+        GetDirs = QDir::Dirs,
+        GetFiles = QDir::Files,
+        AllOF = 3,
+        WriteFullpath = 4
+    };
+
 public:
     UpdateManager(QObject *parent = nullptr) : QObject(parent)
     {
         m_manager = new QNetworkAccessManager(this);
+        m_manager->setTransferTimeout(5000);
         m_lastStatus = 0;
         m_forclyExit = 0;
         finishSuccess = 0;
@@ -97,6 +105,10 @@ public:
                             m_lastStatus = 0;
                             break;
                         }
+                        if(reply->error() != QNetworkReply::NoError)
+                        {
+                            m_lastStatus = -1;
+                        }
                         reply->deleteLater();
                     }
                     loop.quit();
@@ -122,11 +134,13 @@ public:
             }
             bool skip;
             QCryptographicHash hash(QCryptographicHash::Md5);
-            files = recursivellyFiles(existsDir);
+            files = GetFilesEx(existsDir, GetFiles);
+#ifdef WIN32
             for(QString & s : files)
             {
-                s.remove(0, existsDir.size()+1);
+                s.replace("\\", "/");
             }
+#endif
 
             for(int x = 0; x < updates.size(); ++x)
             {
@@ -141,7 +155,7 @@ public:
                         }
                         else
                         {
-                            dir.remove(existsDir + "/" +f);
+                            dir.remove(existsDir + QDir::separator() + f);
                         }
                         break;
                     }
@@ -164,34 +178,36 @@ public:
         }
         else
         {
-            m_statusDownload.maxDownloads = contents.size();
-            QString tempDir("/tmp/test");
-            QDir dir(tempDir);
-
-            if((dir.exists() && !dir.removeRecursively()) || !dir.mkdir(tempDir))
+            QTemporaryDir tempDir;
+            QDir dir;
+            if(!tempDir.isValid())
             {
                 m_lastError = "Failed make temp directory.";
                 m_lastStatus = -1;
                 return m_lastStatus;
             }
+            dir.setPath(tempDir.path());
+            m_statusDownload.maxDownloads = contents.size();
+            m_statusDownload.totalDownloaded = std::accumulate(std::begin(contents), std::end(contents), 0,
+                                                               [](quint64 val, const FetchResult & t){
+                                                                   return val + t.bytes;
+                                                               });
 
-            m_statusDownload.totalDownloaded = std::accumulate(std::begin(contents), std::end(contents), 0, [](quint64 val, auto & t){
-                return val + t.bytes;
-            });
-
+            int downloadAtempts = MaxDownloadAtemp;
+            quint64 lastBytes;
             for(int x = 0; x < contents.size() && !m_forclyExit; ++x)
             {
                 const FetchResult* fetch = &contents[x];
                 QNetworkRequest request(QUrl(m_rootUrl + "/" + fetch->remoteLink));
                 QNetworkReply * reply = m_manager->get(request);
                 QEventLoop loop;
-                QFile file(tempDir + QDir::separator() + fetch->remoteLink);
+                QFile file(tempDir.path() + QDir::separator() + fetch->remoteLink);
 
                 // Make Sub dirs
                 QStringList subDirs = fetch->remoteLink.split("/");
                 for(int y = 0; y < subDirs.size()-1; ++y)
                 {
-                    dir.mkdir(tempDir + QDir::separator() + subDirs[y]);
+                    dir.mkdir(tempDir.path() + QDir::separator() + subDirs[y]);
                 }
 
                 mutex.lock();
@@ -199,7 +215,7 @@ public:
                 m_statusDownload.file = fetch->remoteLink.split("/", Qt::SkipEmptyParts).back();
                 mutex.unlock();
 
-                quint64 lastBytes = 0;
+                lastBytes = 0;
                 connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived, qint64 bytesTotal)
                         {
                             QMutexLocker locker(&mutex);
@@ -223,11 +239,23 @@ public:
                             if(file.open(QFile::WriteOnly))
                             {
                                 file.write(reply->readAll());
+                                // Restore atemps
+                                downloadAtempts = MaxDownloadAtemp;
                             }
                             else
+                                // File write fails
+                                stop();
+                        }
+                        else
+                        {
+                            if(--downloadAtempts == 0)
                             {
-
+                                m_lastStatus = -1;
+                                m_lastError = "Network failed.";
+                                stop();
                             }
+                            else // Retry download
+                                --x;
                         }
                         reply->deleteLater();
                     }
@@ -238,8 +266,12 @@ public:
 
             if(m_lastStatus == 0 && !m_forclyExit)
             {
-                moveContents(tempDir, existsDir);
+                moveContents(tempDir.path(), existsDir);
                 finishSuccess = 1;
+            }
+            else
+            {
+                m_statusDownload = {};
             }
 
             dir.removeRecursively();
@@ -250,7 +282,6 @@ public:
     void stop()
     {
         m_forclyExit = 1;
-        finishSuccess = 0;
     }
 
     StatusDownload downloadStatus()
@@ -269,23 +300,18 @@ public:
     int finishSuccess;
 
 private:
-    QStringList recursivellyFiles(const QString& path)
+    QStringList GetFilesEx(const QString& path, int flags = GetFiles, QString _special = QString(""))
     {
         QDir dir(path);
         QStringList result;
-        QStringList items = dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+        QStringList items = dir.entryList(QDir::Filter(flags & AllOF) | QDir::Dirs | QDir::NoDotAndDotDot);
         for (const QString &item : items) {
             QString fullPath = dir.filePath(item);
             QFileInfo file(fullPath);
-
-            if (file.isDir()) {
-                result += recursivellyFiles(fullPath);
-            } else {
-#ifdef WIN32
-                fullPath.replace("\\", "/");
-#endif
-                result.append(fullPath);
-            }
+            if (file.isDir())
+                result += GetFilesEx(fullPath, flags, _special + item + QDir::separator());
+            if((flags & GetFiles) && file.isFile() || (flags & GetDirs) && file.isDir())
+                result.append(((flags & WriteFullpath) ? fullPath : (_special + item)));
         }
         return result;
     }
@@ -307,29 +333,28 @@ private:
     }
     bool moveContents(const QString &sourcePath, const QString &destinationPath) {
         QDir sourceDir(sourcePath);
-
         if (!sourceDir.exists()) {
             return false;
         }
-
         QDir destinationDir(destinationPath);
         if (!destinationDir.exists()) {
             if (!destinationDir.mkpath(destinationPath)) {
                 return false;
             }
         }
-
-        QStringList entries = sourceDir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot);
-
-        foreach (const QString &entry, entries) {
+        QStringList entries = GetFilesEx(sourcePath, GetDirs);
+        for(const QString &entry : entries)
+        {
+            destinationDir.mkdir(destinationDir.filePath(entry));
+        }
+        entries = GetFilesEx(sourcePath, GetFiles);
+        for(const QString &entry : entries) {
             QString sourceFilePath = sourceDir.filePath(entry);
             QString destinationFilePath = destinationDir.filePath(entry);
             QFile::rename(sourceFilePath, destinationFilePath);
         }
-
         return true;
     }
-
 
 private:
     QNetworkAccessManager * m_manager;
@@ -372,6 +397,9 @@ int main(int argc, char** argv)
     QCommandLineOption dirOption("dir", "AdsKiller work dir", "work directory");
     parser.addOption(dirOption);
 
+    QCommandLineOption execOption("exec", "Run program after update", "program");
+    parser.addOption(execOption);
+
     parser.process(a);
 
     QString workDir = QCoreApplication::applicationDirPath();
@@ -390,6 +418,16 @@ int main(int argc, char** argv)
     else
     {
         workDir = parser.value(dirOption);
+    }
+
+    if(parser.isSet(execOption))
+    {
+        if(!m.exists(parser.value(execOption)))
+        {
+            qDebug() << "Program file is not exists";
+            sharedMem.detach();
+            return 1;
+        }
     }
 
     UpdateManager manager;
@@ -412,11 +450,18 @@ int main(int argc, char** argv)
     QObject::connect(progressUpdateTimer, &QTimer::timeout, [&]()
                      {
                          StatusDownload downloads;
+                         QString lastErr;
                          int status;
-                         QString lastErr = manager.getLastError(&status);
-                         if(status)
+                         lastErr = manager.getLastError(&status);
+                         if(status < 0)
                          {
-                             w.setText((status < 0 ? "Download fails.\n" : "") + lastErr);
+                             w.setText("Download fails.\n" + lastErr);
+                             progressUpdateTimer->stop();
+                             w.setProgress(0,0);
+                             w.delayPush(3000, [&](){
+                                 w.close();
+                             });
+                             return;
                          }
                          double v1,v2;
                          downloads = manager.downloadStatus();
@@ -453,8 +498,14 @@ int main(int argc, char** argv)
 
     downloadThread.quit();
     downloadThread.wait();
-
     sharedMem.detach();
+
+    if(manager.finishSuccess && parser.isSet(execOption))
+    {
+        QProcess * execProc = new QProcess;
+        execProc->start(parser.value(execOption));
+    }
+
     return exitCode;
 }
 

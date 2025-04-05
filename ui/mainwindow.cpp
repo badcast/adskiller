@@ -10,11 +10,16 @@
 #include <QVector>
 #include <QStandardItemModel>
 #include <QHeaderView>
+#include <QTemporaryDir>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 constexpr auto COMPILED_VERSION = ADSVERSION;
+
+#ifdef WIN32
+constexpr auto UpdateManagerExecute = "update.exe";
+#endif
 
 constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/dGV4dD3QryUyMNGF0L7RgtC10LslMjDQsdGLJTIw"
                                 "0L/QvtC00LXQu9C40YLRjNGB0Y8lMjDRgdCy0L7QuNC8JTIw0L7RgtC30YvQstC+0LwlMjDQuCUy"
@@ -448,24 +453,49 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         ints.clear();
         std::transform(std::begin(list), std::end(list), std::back_inserter(ints), _convertToInt);
         QVersionNumber verServer(ints);
+
         if(verApp >= verServer)
         {
             ui->labelStat->setText("Вы используете последнюю версию. Нажмите <b>Далее ></b>, чтобы продолжить.");
             ui->pnext->setEnabled(true);
             return;
         }
-        // TODO: update to new version
+
         QString text;
-        text = "Обнаружена новая версия программного обеспечения. После нажатия кнопки \"ОК\" откроется ссылка в вашем браузере.\n"
-               "Пожалуйста, скачайте обновление по прямой ссылке.\n"
-               "С уважением ваша команда imister.kz.";
+        text = "Обнаружена новая версия программного обеспечения. После нажатия кнопки \"ОК\" ";
+#ifdef WIN32
+        text += "будет запущена обновление ПО.";
+#else
+        text += "откроется ссылка в вашем браузере.\n"
+                "Пожалуйста, скачайте обновление по прямой ссылке.\n";
+#endif
+        text += "\nС уважением ваша команда imister.kz.";
         text += "\n\nВаша версия: v";
         text +=  verApp.toString();
         text += "\nВерсия на сервере: v";
         text += verServer.toString();
         QMessageBox::information(this, "Обнаружена новая версия", text);
-        QDesktopServices::openUrl(QUrl(url));
         this->close();
+
+#ifdef WIN32
+        QProcess *updateManager = new QProcess;
+        QTemporaryDir tempdir;
+        QDir appDir(QCoreApplication::applicationDirPath());
+        QStringList entries = appDir.entryList(QStringList() << "*.dll" << UpdateManagerExecute, QDir::Files);
+        for(const QString & e : entries)
+        {
+            QFile::copy(appDir.filePath(e), tempdir.filePath(e));
+        }
+        updateManager->start(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath());
+
+        if(updateManager->state() != QProcess::NotRunning)
+        {
+            return;
+        }
+
+        delete updateManager;
+#endif
+        QDesktopServices::openUrl(QUrl(url));
     });
 }
 

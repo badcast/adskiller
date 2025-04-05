@@ -85,5 +85,6 @@ private:
     void doMalware();
     void softUpdateDevices();
     void checkVersion();
+    void runUpdateManager();
 };
 #endif // MAINWINDOW_H
