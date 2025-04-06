@@ -255,7 +255,10 @@ public:
                                 stop();
                             }
                             else // Retry download
+                            {
                                 --x;
+                                QThread::msleep(500);
+                            }
                         }
                         reply->deleteLater();
                     }

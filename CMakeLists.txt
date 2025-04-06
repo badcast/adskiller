@@ -20,13 +20,8 @@ set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
-        include/adbtrace.h
         include/network.h
-        include/packages.h
-        include/adbcmds.h
         src/main.cpp
-        src/packages.cpp
-        src/adbtrace.cpp
         src/network.cpp
         src/malwareProcess.cpp
         resources.qrc
@@ -39,8 +34,14 @@ if(WIN32)
     set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/resources.rc")
 endif()
 
+add_subdirectory(src/common/adbfront)
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(adskiller
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
+    )
+    qt_add_executable(update
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
@@ -65,7 +66,7 @@ endif()
 target_include_directories(adskiller PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
-target_link_libraries(adskiller PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(adskiller PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 target_compile_definitions(adskiller PRIVATE ADSVERSION="${ADSVERSION}")
