@@ -1,21 +1,22 @@
 #include <QApplication>
 #include <QMessageBox>
+#include <QDir>
 #include <QFile>
 #include <QSharedMemory>
 
 #include "mainwindow.h"
 #include "network.h"
-#include "adbtrace.h"
-#include "packages.h"
+
+bool checkout();
 
 int main(int argc, char *argv[])
 {
+    QApplication app(argc, argv);
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
-    if(sharedMemUpdate.attach())
+    if(sharedMemUpdate.attach() || !checkout())
     {
         return 1;
     }
-
     QSharedMemory sharedMem("imister.kz-app_adskiller_v1");
     if(sharedMem.attach())
     {
@@ -27,19 +28,22 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    QApplication app(argc, argv);
-    // Set application Design
-#ifndef WIN32
-    QFile styleRes(":/resources/gravira-style");
-    styleRes.open(QFile::ReadOnly | QFile::Text);
-    QString styleSheet = styleRes.readAll();
-    styleRes.close();
-    app.setStyleSheet(styleSheet);
-#endif
-
     MainWindow w;
+    w.app = &app;
     w.show();
     int exitCode = app.exec();
     sharedMem.detach();
     return exitCode;
+}
+
+bool checkout()
+{
+    QDir qdir;
+    QString adbfile = ADBExecFilename();
+    if(!qdir.exists(adbfile))
+    {
+        qDebug() << "Adb not found";
+        return false;
+    }
+    return true;
 }

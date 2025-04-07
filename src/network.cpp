@@ -1,7 +1,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include "adbtrace.h"
+#include "adbfront.h"
 #include "network.h"
 
 constexpr auto URL_Remote = "https://adskill.imister.kz";
@@ -36,7 +36,7 @@ Network::Network(QObject *parent) : QObject(parent)
     manager->setTransferTimeout(5000);
 }
 
-void Network::getToken(const QString &token)
+void Network::authenticate(const QString &token)
 {
     QNetworkReply *reply;
     QUrl url(url_fetch());
@@ -48,7 +48,7 @@ void Network::getToken(const QString &token)
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
-void Network::getAds(const QString& mdKey)
+void Network::getAdsData(const QString& mdKey)
 {
     QNetworkReply *reply;
     QUrl url(url_fetch());

@@ -13,8 +13,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Network)
 
 set(PROJECT_SOURCES
         ui/mainwindow.h
@@ -27,14 +27,10 @@ set(PROJECT_SOURCES
         resources.qrc
 )
 
-add_executable(update update/main.cpp ui/update_window.h ui/update_window.cpp ui/update_window.ui)
-
 if(WIN32)
     file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")
     set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/resources.rc")
 endif()
-
-add_subdirectory(src/common/adbfront)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(adskiller
@@ -43,7 +39,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     )
     qt_add_executable(update
         MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET adskiller APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -60,8 +55,14 @@ else()
         add_executable(adskiller
             ${PROJECT_SOURCES}
         )
+        add_executable(update)
     endif()
 endif()
+
+add_subdirectory(src/common/adbfront)
+
+file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT_SOURCE_DIR}/ui/update_*")
+target_sources(update PRIVATE ${UPDATE_SOURCES})
 
 target_include_directories(adskiller PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
@@ -71,6 +72,11 @@ target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSI
 
 target_compile_definitions(adskiller PRIVATE ADSVERSION="${ADSVERSION}")
 target_compile_definitions(update PRIVATE APPVERSION="${ADSVERSION}")
+
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+  set_property(TARGET adskiller PROPERTY WIN32_EXECUTABLE true)
+  set_property(TARGET update PROPERTY WIN32_EXECUTABLE true)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS adskiller
@@ -83,3 +89,5 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(adskiller)
     qt_finalize_executable(update)
 endif()
+
+#message(FATAL_ERROR ${adbfront_INCLUDE_DIRS})

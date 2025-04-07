@@ -9,7 +9,8 @@
 #include <QSettings>
 #include <QVersionNumber>
 
-#include "adbtrace.h"
+#include "adbfront.h"
+#include "network.h"
 
 #ifndef ADSVERSION
 #define ADSVERSION "custom"
@@ -20,6 +21,13 @@ enum MalwareStatus
     Idle,
     Running,
     Error
+};
+
+enum ThemeScheme : int
+{
+    System,
+    Light,
+    Dark
 };
 
 QT_BEGIN_NAMESPACE
@@ -38,10 +46,12 @@ public:
 
     void updateAdbDevices();
     void showMessageFromStatus(int statusCode);
+    void setTheme(ThemeScheme theme);
 
     Adb adb;
     Network network;
     QTimer *timerAuthAnim;
+    QApplication *app;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -65,9 +75,13 @@ private slots:
     void on_buttonDecayMalware_clicked();
 
     void replyAuthFinish(int status, bool ok);
+
     void replyAdsData(const QStringList& adsList, int status, bool ok);
+
     void replyFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
 
+public slots:
+    void setThemeAction();
 
 private:
     Ui::MainWindow *ui;

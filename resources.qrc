@@ -3,9 +3,10 @@
         <file alias="noads">res/noads.png</file>
         <file alias="shield">res/shield.png</file>
         <file alias="update-list">res/update-list.png</file>
-        <file alias="gravira-style">res/style/Gravira.qss</file>
+        <file alias="app-style-light">res/style/metro-blue.qss</file>
         <file alias="shield-hover">res/shield-hover.png</file>
         <file alias="shield-close">res/shield-close.png</file>
         <file alias="app-icon">res/icon.png</file>
+        <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
     </qresource>
 </RCC>

@@ -28,7 +28,6 @@ void update_window::setProgress(int v1, int v2)
 void update_window::delayPush(int ms, std::function<void()> call, bool loop)
 {
     QTimer *qtimer = new QTimer(this);
-    (void)qtimer;
     qtimer->setSingleShot(!loop);
     qtimer->setInterval(ms);
     connect(

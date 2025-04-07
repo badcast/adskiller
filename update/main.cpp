@@ -23,10 +23,12 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QCryptographicHash>
+#include <QLockFile>
 
 #include "update_window.h"
 
 constexpr int MaxDownloadAtemp = 4;
+constexpr char URLFetch[] = "https://adskill.imister.kz/v1/update";
 
 struct FetchResult
 {
@@ -43,7 +45,7 @@ struct StatusDownload
     quint64 totalDownloaded;
     int downloadStep;
     int maxDownloads;
-    QString file;
+    QString currentStatus;
 };
 
 class UpdateManager : public QObject
@@ -70,7 +72,6 @@ public:
 
     std::pair<QList<FetchResult>,int> fetch()
     {
-        constexpr char URLFetch[] = "https://adskill.imister.kz/v1/update";
         QEventLoop loop;
         QNetworkReply * reply;
         QList<FetchResult> contents;
@@ -212,7 +213,7 @@ public:
 
                 mutex.lock();
                 m_statusDownload.downloadStep = x+1;
-                m_statusDownload.file = fetch->remoteLink.split("/", Qt::SkipEmptyParts).back();
+                m_statusDownload.currentStatus = fetch->remoteLink.split("/", Qt::SkipEmptyParts).back();
                 mutex.unlock();
 
                 lastBytes = 0;
@@ -266,6 +267,10 @@ public:
                 });
                 loop.exec();
             }
+
+            mutex.lock();
+            m_statusDownload.currentStatus = "Apply update";
+            mutex.unlock();
 
             if(m_lastStatus == 0 && !m_forclyExit)
             {
@@ -346,15 +351,27 @@ private:
             }
         }
         QStringList entries = GetFilesEx(sourcePath, GetDirs);
+        QTemporaryDir _lostTemps;
         for(const QString &entry : entries)
         {
             destinationDir.mkdir(destinationDir.filePath(entry));
+            destinationDir.mkdir(_lostTemps.filePath(entry));
         }
         entries = GetFilesEx(sourcePath, GetFiles);
         for(const QString &entry : entries) {
             QString sourceFilePath = sourceDir.filePath(entry);
             QString destinationFilePath = destinationDir.filePath(entry);
-            QFile::rename(sourceFilePath, destinationFilePath);
+            QString destBackupFile = entry + "_old";
+            QString destBackFilePath = destinationDir.filePath(destBackupFile);
+            if(destinationDir.exists(destBackFilePath) && !QFile::remove(destBackFilePath) )
+            {
+                QFile::rename(destBackFilePath, _lostTemps.filePath(destBackupFile));
+            }
+            QFile::rename(destinationFilePath, destinationDir.filePath(destBackFilePath));
+            while(!QFile::rename(sourceFilePath, destinationFilePath))
+            {
+                QThread::msleep(100);
+            }
         }
         return true;
     }
@@ -374,6 +391,7 @@ private:
 int main(int argc, char** argv)
 {
     int exitCode = 1;
+    QApplication a(argc, argv);
     QSharedMemory sharedMemApp("imister.kz-app_adskiller_v1");
     while(sharedMemApp.attach())
     {
@@ -391,8 +409,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    QApplication a(argc, argv);
-
     QCommandLineParser parser;
     parser.setApplicationDescription("AdsKiller update manager " + QString(APPVERSION));
     parser.addHelpOption();
@@ -405,9 +421,8 @@ int main(int argc, char** argv)
 
     parser.process(a);
 
-    QString workDir = QCoreApplication::applicationDirPath();
     QDir m;
-    m.mkdir(workDir);
+    QString workDir = QApplication::applicationDirPath();
 
     if(!parser.isSet(dirOption))
     {
@@ -420,7 +435,8 @@ int main(int argc, char** argv)
     }
     else
     {
-        workDir = parser.value(dirOption);
+        QDir dir(parser.value(dirOption));
+        workDir = dir.absolutePath();
     }
 
     if(parser.isSet(execOption))
@@ -436,14 +452,16 @@ int main(int argc, char** argv)
     UpdateManager manager;
     update_window w;
     QThread downloadThread;
+    manager.moveToThread(&downloadThread);
     QObject::connect(&downloadThread, &QThread::started, [&](){
+        QDir existDir(workDir);
         std::pair<QList<FetchResult>,int> result = manager.fetch();
         if(result.second < 0)
             return;
-        result = manager.filter_by(workDir, result.first);
+        result = manager.filter_by(existDir.path(), result.first);
         if(result.second < 0)
             return;
-        if(manager.downloadAll(workDir, result.first) < 0)
+        if(manager.downloadAll(existDir.path(), result.first) < 0)
             return;
     });
 
@@ -486,8 +504,8 @@ int main(int argc, char** argv)
                          else
                              v2 = static_cast<double>(downloads.totalCurrentDownloaded) / std::max<quint64>(downloads.totalDownloaded,1u);
                          w.setProgress(static_cast<int>(v1*100), static_cast<int>(v2*100));
-                         if(!downloads.file.isEmpty())
-                             w.setText(QString("Download %1/%2: %3").arg(QString::number(downloads.downloadStep)).arg(QString::number(downloads.maxDownloads)).arg(downloads.file));
+                         if(!downloads.currentStatus.isEmpty())
+                             w.setText(QString("Download %1/%2: %3").arg(QString::number(downloads.downloadStep)).arg(QString::number(downloads.maxDownloads)).arg(downloads.currentStatus));
                      });
 
     progressUpdateTimer->start();
@@ -505,8 +523,7 @@ int main(int argc, char** argv)
 
     if(manager.finishSuccess && parser.isSet(execOption))
     {
-        QProcess * execProc = new QProcess;
-        execProc->start(parser.value(execOption));
+        QProcess::startDetached(parser.value(execOption));
     }
 
     return exitCode;

@@ -1,16 +1,9 @@
 #ifndef ADBTRACE_H
 #define ADBTRACE_H
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #include <QList>
 #include <QProcess>
 #include <QTimer>
-
-
-#include "packages.h"
 
 enum AdbConStatus
 {
@@ -23,6 +16,12 @@ enum AdbConState
 {
     Removed,
     Add
+};
+
+struct PackageIO
+{
+    QString applicationName;
+    QString packageName;
 };
 
 struct AdbDevice
@@ -68,5 +67,7 @@ private:
 };
 
 bool operator ==(const AdbDevice& lhs, const AdbDevice& rhs);
+
+QString ADBExecFilename();
 
 #endif // ADBTRACE_H

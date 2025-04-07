@@ -60,18 +60,28 @@ uint hash_from_adbdevs(const QList<AdbDevice> &devs)
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     int x;
+    QStringListModel *model;
     ui->setupUi(this);
+
     // Load settings
     settings = new QSettings("imister.kz-app.ads", "AdsKiller", this);
     network._token = settings->value("_token", "").toString();
+
     // Refresh TabPages to Content widget (Selective)
     for(x = 0; x < ui->tabWidget->count(); ++x)
         pages.append(ui->tabWidget->widget(x));
     for(x = 0; x < pages.count(); ++x)
         ui->contentLayout->layout()->addWidget(pages[x]);
+    QList<QAction*> menusTheme {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
+    for(QAction* q : menusTheme)
+    {
+        q->setChecked(false);
+        connect(q, &QAction::triggered, this, &MainWindow::setThemeAction);
+    }
     ui->tabWidget->deleteLater();
-    QStringListModel *model = new QStringListModel(ui->processStatus);
+    model = new QStringListModel(ui->processStatus);
     ui->processStatus->setModel(model);
+
     // Show First Page
     minPage = 0;
     showPage(startPage);
@@ -80,6 +90,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
     connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
     connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
+
+    // Set Default Theme is Light (1)
+    setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(),0,2))));
 
     // Run check version
     checkVersion();
@@ -336,7 +349,7 @@ void MainWindow::delayPush(int ms, std::function<void()> call, bool loop)
 void MainWindow::on_authButton_clicked()
 {
     QString tryToken = ui->lineEditToken->text();
-    network.getToken(tryToken);
+    network.authenticate(tryToken);
     ui->statusAuthText->setText("Подключение");
     timerAuthAnim = new QTimer(this);
     timerAuthAnim->start(350);
@@ -365,6 +378,16 @@ void MainWindow::on_authButton_clicked()
     {
         model->item(x,1)->setText("-");
     }
+}
+
+void MainWindow::setThemeAction()
+{
+    QList<QAction*> menus {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
+    QAction * sel = qobject_cast<QAction*>(sender());
+    int scheme;
+    for(scheme = (0); scheme < menus.size() && sel != menus[scheme]; ++scheme)
+        ;
+    setTheme(static_cast<ThemeScheme>(scheme));
 }
 
 void MainWindow::replyAuthFinish(int status, bool ok)
@@ -478,22 +501,27 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         this->close();
 
 #ifdef WIN32
-        QProcess *updateManager = new QProcess;
         QTemporaryDir tempdir;
+        tempdir.setAutoRemove(false);
         QDir appDir(QCoreApplication::applicationDirPath());
         QStringList entries = appDir.entryList(QStringList() << "*.dll" << UpdateManagerExecute, QDir::Files);
         for(const QString & e : entries)
         {
             QFile::copy(appDir.filePath(e), tempdir.filePath(e));
         }
-        updateManager->start(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath());
-
-        if(updateManager->state() != QProcess::NotRunning)
+        appDir.mkdir(tempdir.filePath("platforms"));
+        QFile::copy(appDir.filePath("platforms/qwindows.dll"), tempdir.filePath("platforms/qwindows.dll"));
+        appDir.mkdir(tempdir.filePath("networkinformation"));
+        QFile::copy(appDir.filePath("networkinformation/qnetworklistmanager.dll"), tempdir.filePath("networkinformation/qnetworklistmanager.dll"));
+        appDir.mkdir(tempdir.filePath("tls"));
+        QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
+        QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
+//#error BUG "EXISTS PROCESS NOT BY REPLACE"
+        if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
         {
+            QApplication::quit();
             return;
         }
-
-        delete updateManager;
 #endif
         QDesktopServices::openUrl(QUrl(url));
     });
@@ -506,6 +534,39 @@ void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
         showPage(1);
     }
     showMessageFromStatus(status);
+}
+
+void MainWindow::setTheme(ThemeScheme theme)
+{
+    int scheme;
+    const char * resourceName;
+    QList<QAction*> menus {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
+    QAction * sel = qobject_cast<QAction*>(sender());
+    for(scheme = (0); scheme < menus.size(); ++scheme)
+    {
+        menus[scheme]->setChecked(theme == scheme);
+    }
+
+    switch(theme)
+    {
+    case System:
+        resourceName = nullptr;
+        break;
+    case Dark:
+        resourceName = ":/resources/app-style-dark";
+        break;
+    case Light:
+    default:
+        resourceName = ":/resources/app-style-light";
+        break;
+    }
+    // Set application Design
+    QFile styleRes(resourceName);
+    styleRes.open(QFile::ReadOnly | QFile::Text);
+    QString styleSheet = styleRes.readAll();
+    styleRes.close();
+    app->setStyleSheet(styleSheet);
+    settings->setValue("theme", static_cast<int>(theme));
 }
 
 void MainWindow::showMessageFromStatus(int statusCode)

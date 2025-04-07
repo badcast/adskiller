@@ -1,7 +1,6 @@
 #ifndef ADBCMDS_H
 #define ADBCMDS_H
 
-
 #ifdef __linux__
 constexpr const char AdbFilename[] = "adb";
 #elif _WIN32

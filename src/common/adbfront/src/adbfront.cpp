@@ -5,7 +5,7 @@
 #include <QDir>
 #include <QCoreApplication>
 
-#include "adbtrace.h"
+#include "adbfront.h"
 #include "adbcmds.h"
 
 QString ADBExecFilename()
@@ -33,7 +33,9 @@ std::pair<bool,QString> adb_send_cmd(int& exitCode, const QStringList & argument
     retval = process.readAllStandardOutput();
     process.close();
     exitCode = process.exitCode();
+#ifdef WIN32
     retval.replace("\r\n", "\n");
+#endif
     return {true,retval};
 }
 

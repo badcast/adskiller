@@ -44,11 +44,11 @@ public:
     AuthIDData authedId;
 
     Network(QObject * parent = nullptr);
-    void getToken(const QString &token);
+    void authenticate(const QString &token);
     bool isAuthed();
     void fetchVersion();
 
-    void getAds(const QString &mdKey);
+    void getAdsData(const QString &mdKey);
     bool sendUserPackages(const AdbDevice& device, const QStringList& packages);
     bool checkNet();
 
