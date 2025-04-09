@@ -24,6 +24,11 @@ struct AuthIDData
     QDateTime serverLastTime;
 };
 
+struct LabStatusInfo
+{
+    QString mdKey;
+};
+
 enum NetworkStatus
 {
     OK,
@@ -50,11 +55,13 @@ public:
 
     void getAdsData(const QString &mdKey);
     bool sendUserPackages(const AdbDevice& device, const QStringList& packages);
+    bool fetchLabState(const QString &mdKey);
+    // TODO: Check Network
     bool checkNet();
 
 signals:
     void loginFinish(int status, bool ok);
-    void adsFinished(const QStringList& adsData, int status, bool ok);
+    void labStatusFinish(const QStringList& adsData, int status, bool ok);
     void uploadUserPackages(int status, const QString& mdKey, bool ok);
     void fetchingVersion(int status, const QString& version, const QString& url, bool ok);
 

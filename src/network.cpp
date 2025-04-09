@@ -169,7 +169,7 @@ void Network::onAdsFinished()
             }
             break;
         }
-        emit adsFinished(adsList, status, status == NetworkStatus::OK);
+        emit labStatusFinish(adsList, status, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }
