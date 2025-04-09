@@ -143,6 +143,13 @@ public:
             }
 #endif
 
+            QHash<QString,QString> hashes;
+            for(QString & f : files)
+            {
+                QString file = existsDir + QDir::separator() + f;
+                hashes[file] = calcMD5(file);
+            }
+
             for(int x = 0; x < updates.size(); ++x)
             {
                 skip = false;
@@ -150,14 +157,11 @@ public:
                 {
                     if(updates[x].remoteLink == f)
                     {
-                        if(updates[x].md5hash == calcMD5(existsDir + "/" + f))
-                        {
+                        QString file = existsDir + QDir::separator() + f;
+                        if(updates[x].md5hash == hashes[file])
                             skip = true;
-                        }
                         else
-                        {
-                            dir.remove(existsDir + QDir::separator() + f);
-                        }
+                            dir.remove(file);
                         break;
                     }
                 }
