@@ -68,6 +68,6 @@ private:
 
 bool operator ==(const AdbDevice& lhs, const AdbDevice& rhs);
 
-QString ADBExecFilename();
+QString ADBExecFilePath();
 
 #endif // ADBTRACE_H

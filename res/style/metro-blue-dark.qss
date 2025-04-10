@@ -6,12 +6,11 @@ QWidget {
 QWidget:disabled {
     background-color: #383838;
     color: #707070;
-    border: 1px solid #505050;
 }
 QPushButton {
     background-color: #336791;
     color: #DCDCDC;
-    border: none;
+    border: 1px solid #555555;
     padding: 3px 3px;
 }
 QPushButton:hover {
@@ -23,7 +22,7 @@ QPushButton:pressed {
 QLineEdit {
     background-color: #333333;
     border: 1px solid #555555;
-    border-radius: 4px;
+
     padding: 5px;
     color: #DCDCDC;
 }
@@ -48,7 +47,6 @@ QListView::item:selected {
 QComboBox {
     background-color: #333333;
     border: 1px solid #555555;
-    border-radius: 4px;
     padding: 5px;
     color: #DCDCDC;
     selection-background-color: #336791;
@@ -119,13 +117,13 @@ QProgressBar {
     background-color: #333333;
     color: #DCDCDC;
     border: 1px solid #555555;
-    border-radius: 4px;
+
     text-align: center;
 }
 
 QProgressBar::chunk {
     background-color: #336791;
-    border-radius: 4px;
+
 }
 
 QProgressBar::chunk:disabled {
@@ -134,7 +132,7 @@ QProgressBar::chunk:disabled {
 QSlider::groove:horizontal {
     background: #444444;
     height: 8px;
-    border-radius: 4px;
+
 }
 
 QSlider::handle:horizontal {
@@ -156,17 +154,17 @@ QSlider::handle:horizontal:pressed {
 
 QSlider::add-page:horizontal {
     background: #333333;
-    border-radius: 4px;
+
 }
 
 QSlider::sub-page:horizontal {
     background: #336791;
-    border-radius: 4px;
+
 }
 QSlider::groove:vertical {
     background: #444444;
     width: 8px;
-    border-radius: 4px;
+
 }
 
 QSlider::handle:vertical {
@@ -188,12 +186,12 @@ QSlider::handle:vertical:pressed {
 
 QSlider::add-page:vertical {
     background: #333333;
-    border-radius: 4px;
+
 }
 
 QSlider::sub-page:vertical {
     background: #336791;
-    border-radius: 4px;
+
 }
 QStatusBar {
     background-color: #333333;

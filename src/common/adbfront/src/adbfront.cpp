@@ -8,7 +8,7 @@
 #include "adbfront.h"
 #include "adbcmds.h"
 
-QString ADBExecFilename()
+QString ADBExecFilePath()
 {
     QString adbFile;
 #ifdef WIN32
@@ -24,7 +24,7 @@ std::pair<bool,QString> adb_send_cmd(int& exitCode, const QStringList & argument
 {
     QProcess process;
     QString retval;
-    process.start(ADBExecFilename(), arguments);
+    process.start(ADBExecFilePath(), arguments);
     if(!process.waitForFinished())
     {
         qDebug() << "ADB Failed";

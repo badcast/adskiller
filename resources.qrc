@@ -8,5 +8,10 @@
         <file alias="shield-close">res/shield-close.png</file>
         <file alias="app-icon">res/icon.png</file>
         <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
+        <file alias="icon-hello">res/icon-hello.png</file>
+        <file alias="icon-malware">res/icon-malware.png</file>
+        <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
+        <file alias="icon-authlogin">res/icon-authlogin.png</file>
+        <file alias="icon-arrow-right">res/icon-arrow-right.png</file>
     </qresource>
 </RCC>

@@ -204,13 +204,26 @@ void MainWindow::updatePageState()
 
 void MainWindow::showPage(int pageNum)
 {
+    int x,y;
     curPage = -1;
-    for(int x = 0; x < pages.count(); ++x)
+    for(x = 0,y=pages.count(); x < y; ++x)
     {
         bool paged = (x == pageNum);
         if(paged)
             curPage = pageNum;
         pages[x]->setVisible(paged);
+    }
+    QVBoxLayout * layout = qobject_cast<QVBoxLayout*>(ui->pageIconBoxes->layout());
+    for(x = 0,y=layout->count(); x < y; ++x)
+    {
+        bool paged = x == pageNum;
+        layout->itemAt(x)->widget()->setEnabled(paged);
+        if(paged)
+        {
+            QRect arrowPos = ui->arrowIconMark->geometry();
+            arrowPos.setY(layout->itemAt(x)->widget()->geometry().y()-16);
+            ui->arrowIconMark->setGeometry(arrowPos);
+        }
     }
     updatePageState();
     pageShown(curPage);
@@ -257,6 +270,7 @@ void MainWindow::pageShown(int page)
         model->setItem(3, 1, new QStandardItem("-"));
 
         ui->authInfo->setModel(model);
+        ui->authInfo->resizeColumnsToContents();
 
         ui->authInfo->horizontalHeader()->setStretchLastSection(true);
         ui->authInfo->verticalHeader()->setVisible(false);
@@ -286,7 +300,7 @@ void MainWindow::pageShown(int page)
         QStringList place {};
         ui->malwareProgressBar->setValue(0);
         ui->buttonDecayMalware->setEnabled(true);
-        place << "<< Все готово для запуска обезвредителя >>";
+        place << "<< Все готово для запуска >>";
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
         model->setStringList(place);
         break;
@@ -516,7 +530,7 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         appDir.mkdir(tempdir.filePath("tls"));
         QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
         QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
-//#error BUG "EXISTS PROCESS NOT BY REPLACE"
+        //#error BUG "EXISTS PROCESS NOT BY REPLACE"
         if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
         {
             QApplication::quit();

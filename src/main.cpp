@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 bool checkout()
 {
     QDir qdir;
-    QString adbfile = ADBExecFilename();
+    QString adbfile = ADBExecFilePath();
     if(!qdir.exists(adbfile))
     {
         qDebug() << "Adb not found";

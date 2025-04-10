@@ -6,14 +6,16 @@ QWidget {
 QWidget:disabled {
     background-color: #E0E0E0;
     color: #A0A0A0;
-    border: 1px solid #CCCCCC;
 }
 QPushButton {
     background-color: #0078D7;
     color: white;
-    border: none;
-    border-radius: 4px;
+    border: 1px solid #004080;
     padding: 3px 3px;
+}
+QPushButton:disabled
+{
+    border: 1px solid #CCCCCC;
 }
 QPushButton:hover {
     background-color: #0056A3;
@@ -24,7 +26,6 @@ QPushButton:pressed {
 QLineEdit {
     background-color: #F0F0F0;
     border: 1px solid #CCCCCC;
-    border-radius: 4px;
     padding: 5px;
 }
 QLineEdit:focus {
@@ -47,7 +48,7 @@ QListView::item:selected {
 QComboBox {
     background-color: #F0F0F0;
     border: 1px solid #CCCCCC;
-    border-radius: 4px;
+
     padding: 5px;
     color: #333333;
     selection-background-color: #0078D7;
@@ -116,12 +117,12 @@ QProgressBar {
     background-color: #F0F0F0;
     color: #333333;
     border: 1px solid #CCCCCC;
-    border-radius: 4px;
+
     text-align: center;
 }
 QProgressBar::chunk {
     background-color: #0078D7;
-    border-radius: 4px;
+
 }
 
 QProgressBar::chunk:disabled {
@@ -130,7 +131,7 @@ QProgressBar::chunk:disabled {
 QSlider::groove:horizontal {
     background: #CCCCCC;
     height: 8px;
-    border-radius: 4px;
+
 }
 
 QSlider::handle:horizontal {
@@ -151,17 +152,17 @@ QSlider::handle:horizontal:pressed {
 
 QSlider::add-page:horizontal {
     background: #F0F0F0;
-    border-radius: 4px;
+
 }
 
 QSlider::sub-page:horizontal {
     background: #0078D7;
-    border-radius: 4px;
+
 }
 QSlider::groove:vertical {
     background: #CCCCCC;
     width: 8px;
-    border-radius: 4px;
+
 }
 QSlider::handle:vertical {
     background: #0078D7;
@@ -181,12 +182,12 @@ QSlider::handle:vertical:pressed {
 
 QSlider::add-page:vertical {
     background: #F0F0F0;
-    border-radius: 4px;
+
 }
 
 QSlider::sub-page:vertical {
     background: #0078D7;
-    border-radius: 4px;
+
 }
 QStatusBar {
     background-color: #F0F0F0;
@@ -260,7 +261,7 @@ QHeaderView {
     font-weight: bold;
 }
 QHeaderView::section {
-    padding: 10px;
+    padding: 1px;
 }
 QTableWidget, QTableView {
     background-color: #FFFFFF;
@@ -268,7 +269,7 @@ QTableWidget, QTableView {
     gridline-color: #CCCCCC;
 }
 QTableWidget::item, QTableView::item {
-    padding: 10px;
+    padding: 1px;
     border: 1px solid #E0E0E0;
 }
 QTableWidget::item:selected, QTableView::item:selected {
