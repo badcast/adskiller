@@ -4,10 +4,11 @@
 #include "adbfront.h"
 #include "network.h"
 
+constexpr auto NetworkTimeoutDefault = 5000;
 constexpr auto URL_Remote = "https://adskill.imister.kz";
 //constexpr auto URL_Remote = "http://localhost:8080";
 constexpr auto URL_SupVer = "v1";
-constexpr auto URL_Fetch = "fetch.php";
+constexpr auto URL_Work = "action";
 constexpr auto URL_Version = "version.php";
 
 QString url_fetch()
@@ -16,7 +17,7 @@ QString url_fetch()
     url += "/";
     url += URL_SupVer;
     url += "/";
-    url += URL_Fetch;
+    url += URL_Work;
     return url;
 }
 
@@ -33,23 +34,26 @@ QString url_version()
 Network::Network(QObject *parent) : QObject(parent)
 {
     manager = new QNetworkAccessManager {this};
-    manager->setTransferTimeout(5000);
+    manager->setTransferTimeout(NetworkTimeoutDefault);
 }
 
 void Network::authenticate(const QString &token)
 {
+    QJsonObject json;
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
     authedId = {}; // Clean last info
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", token.toUtf8());
-    reply = manager->post(request, "{\"request\":\"TOKENVERIFY\"}");
+    json["request"] = "TOKENVERIFY";
+    reply = manager->post(request, QJsonDocument(json).toJson());
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
 void Network::getAdsData(const QString& mdKey)
 {
+    QJsonObject json;
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
@@ -57,9 +61,9 @@ void Network::getAdsData(const QString& mdKey)
         return;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", authedId.token.toUtf8());
-    QString requestBody = "{\"request\":\"GETADS\",\"mdKey\":\"";
-    requestBody += mdKey + "\"}";
-    reply = manager->post(request, requestBody.toUtf8());
+    json["request"] = "GETADS";
+    json["mdKey"] = mdKey;
+    reply = manager->post(request, QJsonDocument(json).toJson());
     connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
 }
 

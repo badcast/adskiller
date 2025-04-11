@@ -164,23 +164,19 @@ QList<PackageIO> Adb::getPackages()
     return packages;
 }
 
-void Adb::killPackages(const QList<PackageIO> &packages)
+void Adb::killPackages(const QList<PackageIO> &packages, int & successCount)
 {
     std::pair<bool,QString> reply;
-    int successCount = 0;
     int exit;
     if(!isConnected())
         return;
+    successCount = 0;
     for(const PackageIO & package : packages)
     {
         reply = adb_send_cmd(exit, QStringList() << "shell" << "am" << "force-stop" << package.packageName);
         if(!reply.first || exit != 0)
             return;
         successCount++;
-        // QString out = process.readAllStandardOutput();
-        // if(out == "Success")
-        // {
-        // }
     }
 }
 
@@ -196,18 +192,14 @@ bool Adb::uninstallPackages(const QStringList &packages, int& successCount)
         if(!reply.first || exit != 0)
             return false;
         successCount++;
-        // QString out = process.readAllStandardOutput();
-        // if(out == "Success")
-        // {
-        // }
     }
     return true;
 }
 
 void Adb::onDeviceWatch()
 {
-    AdbConStatus s = status();
-    if(s != AdbConStatus::DEVICE)
+    AdbConStatus deviceStatus = status();
+    if(deviceStatus != AdbConStatus::DEVICE)
     {
         AdbDevice old = device;
         devices.removeOne(device);
