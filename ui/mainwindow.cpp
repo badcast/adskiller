@@ -45,7 +45,7 @@ extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
 extern void malwareClean();
 
-uint hash_from_adbdevs(const QList<AdbDevice> &devs)
+uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 {
     QString _compare;
     for(const AdbDevice &dev : devs)
@@ -159,8 +159,8 @@ void MainWindow::updateAdbDevices()
     QList<AdbDevice> devicesNew;
     uint hOld, hNew;
     devicesNew = adb.getDevices();
-    hOld = hash_from_adbdevs(adb.devices);
-    hNew = hash_from_adbdevs(devicesNew);
+    hOld = hash_from_AdbDevice(adb.devices);
+    hNew = hash_from_AdbDevice(devicesNew);
     if(hOld == hNew)
         return;
     adb.devices = std::move(devicesNew);
@@ -266,15 +266,21 @@ void MainWindow::pageShown(int page)
         model->setItem(2, 0, new QStandardItem("Баланс"));
         model->setItem(2, 1, new QStandardItem("-"));
 
-        model->setItem(3, 0, new QStandardItem("Подключений"));
-        model->setItem(3, 1, new QStandardItem("-"));
+        model->setItem(3,0, new QStandardItem("VIP дней"));
+        model->setItem(3,1, new QStandardItem("-"));
+
+        model->setItem(4, 0, new QStandardItem("Подключений"));
+        model->setItem(4, 1, new QStandardItem("-"));
+
+        model->setItem(5,0, new QStandardItem("Расположение"));
+        model->setItem(5,1, new QStandardItem("-"));
 
         ui->authInfo->setModel(model);
-        ui->authInfo->resizeColumnsToContents();
 
         ui->authInfo->horizontalHeader()->setStretchLastSection(true);
         ui->authInfo->verticalHeader()->setVisible(false);
 
+        ui->authInfo->resizeColumnToContents(0);
         break;
     }
     // DEVICES
@@ -419,13 +425,23 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
                 value = network.authedId.idName;
                 model->item(0,1)->setText(value);
+
                 value = QDateTime::currentDateTime().toString(Qt::TextDate);
                 model->item(1,1)->setText(value);
+
                 value = network.authedId.expires > -1 ? QString::number(network.authedId.expires) : "(безлимит)";
                 model->item(2,1)->setText(value);
-                value = QString::number(network.authedId.scores);
+
+                value = QString::number(network.authedId.vipDays);
                 model->item(3,1)->setText(value);
-                value = QString();
+
+                value = QString::number(network.authedId.scores);
+                model->item(4,1)->setText(value);
+
+                value = network.authedId.location;
+                model->item(5,1)->setText(value);
+                value.clear();
+
                 if(network.authedId.expires == 0)
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
@@ -635,9 +651,9 @@ void MainWindow::doMalware()
                         from = model->stringList();
                         from.append(reads.first);
                         model->setStringList(from);
-                        ui->malwareProgressBar->setValue(reads.second);
                         ui->processStatus->scrollToBottom();
                     }
+                    ui->malwareProgressBar->setValue(reads.second);
                     if(status != MalwareStatus::Running)
                     {
                         ui->pprev->setEnabled(true);

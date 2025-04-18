@@ -18,6 +18,8 @@ struct AuthIDData
 {
     QString token;
     QString idName;
+    QString location;
+    int vipDays;
     int expires;
     int scores;
     QDateTime lastLogin;
@@ -27,6 +29,9 @@ struct AuthIDData
 struct LabStatusInfo
 {
     QString mdKey;
+    QString analyzeStatus;
+
+    bool ready() const;
 };
 
 enum NetworkStatus
@@ -55,21 +60,23 @@ public:
 
     void getAdsData(const QString &mdKey);
     bool sendUserPackages(const AdbDevice& device, const QStringList& packages);
-    bool fetchLabState(const QString &mdKey);
+    void fetchLabState(const QString &mdKey);
     // TODO: Check Network
     bool checkNet();
 
 signals:
     void loginFinish(int status, bool ok);
-    void labStatusFinish(const QStringList& adsData, int status, bool ok);
-    void uploadUserPackages(int status, const QString& mdKey, bool ok);
+    void labAdsFinish(int status, const std::pair<LabStatusInfo,QStringList>& adsData, bool ok);
+    void uploadUserPackages(int status, const LabStatusInfo& labs, bool ok);
     void fetchingVersion(int status, const QString& version, const QString& url, bool ok);
+    void fetchingLabs(int status, const LabStatusInfo& labs, bool ok);
 
 private slots:
     void onAuthFinished();
     void onAdsFinished();
     void onUserPackagesUploadFinished();
     void onFetchingVersion();
+    void onFetchingLabs();
 };
 
 #endif // NETWORK_H

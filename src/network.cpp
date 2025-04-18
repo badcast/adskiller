@@ -31,6 +31,17 @@ QString url_version()
     return url;
 }
 
+LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
+{
+    LabStatusInfo retval;
+    if(jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
+    {
+        retval.analyzeStatus = jroot["analyzeStatus"].toString();
+        retval.mdKey = jroot["mdKey"].toString();
+    }
+    return retval;
+}
+
 Network::Network(QObject *parent) : QObject(parent)
 {
     manager = new QNetworkAccessManager {this};
@@ -90,6 +101,22 @@ bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packa
     return true;
 }
 
+void Network::fetchLabState(const QString &mdKey)
+{
+    QJsonObject json;
+    QNetworkReply *reply;
+    QUrl url(url_fetch());
+    QNetworkRequest request(url);
+    if(!isAuthed())
+        return;
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Token", authedId.token.toUtf8());
+    json["request"] = "MDKEYSTATUS";
+    json["mdKey"] = mdKey;
+    reply = manager->post(request, QJsonDocument(json).toJson());
+    connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
+}
+
 bool Network::isAuthed()
 {
     return !authedId.token.isEmpty();
@@ -134,6 +161,8 @@ void Network::onAuthFinished()
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
                 authedId.expires = jsonResp["expires"].toInt();
                 authedId.scores = jsonResp["scores"].toInt();
+                authedId.vipDays = jsonResp["vip_period"].toInt();
+                authedId.location = jsonResp["location"].toString();
                 status = 0;
             }
             break;
@@ -147,6 +176,7 @@ void Network::onAdsFinished()
 {
     int status = NetworkStatus::NetworkError;
     QStringList adsList;
+    LabStatusInfo labs;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
@@ -156,7 +186,7 @@ void Network::onAdsFinished()
             {
                 QByteArray responce = reply->readAll();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
-                if(jsonResp.isNull() || !jsonResp["status"].isDouble())
+                if(jsonResp.isNull() || !jsonResp["status"].isDouble() || !jsonResp["labs"].isObject())
                     status = NetworkStatus::ServerError;
                 else
                     status = jsonResp["status"].toInt();
@@ -164,16 +194,15 @@ void Network::onAdsFinished()
                 {
                     if(jsonResp["expires"].isDouble())
                         authedId.expires = jsonResp["expires"].toInt();
-                    QJsonArray adsData = jsonResp["ads"].toArray();
+                    labs = fromJsonLabs(jsonResp["labs"]);
+                    QJsonArray adsData = jsonResp["result"].toArray();
                     for(const QJsonValue & val : adsData)
-                    {
                         adsList << val.toString();
-                    }
                 }
             }
             break;
         }
-        emit labStatusFinish(adsList, status, status == NetworkStatus::OK);
+        emit labAdsFinish(status, {labs,adsList}, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }
@@ -181,7 +210,7 @@ void Network::onAdsFinished()
 void Network::onUserPackagesUploadFinished()
 {
     int status = NetworkStatus::NetworkError;
-    QString mdKey;
+    LabStatusInfo labs;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
@@ -198,13 +227,13 @@ void Network::onUserPackagesUploadFinished()
                     status = jsonResp["status"].toInt();
                     if(status == NetworkStatus::OK)
                     {
-                        mdKey = jsonResp["mdKey"].toString();
+                        labs = fromJsonLabs(jsonResp["labs"]);
                     }
                 }
             }
             break;
         }
-        emit uploadUserPackages(status, mdKey, status == NetworkStatus::OK);
+        emit uploadUserPackages(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }
@@ -234,4 +263,31 @@ void Network::onFetchingVersion()
         emit fetchingVersion(status, version, url, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+}
+
+void Network::onFetchingLabs()
+{
+    int status = NetworkStatus::NetworkError;
+    LabStatusInfo labs;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    if(reply)
+    {
+        if(reply->error() == QNetworkReply::NoError)
+        {
+            QByteArray resp = std::move(reply->readAll());
+            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull() && jsonResp["labs"].isObject())
+            {
+                labs = fromJsonLabs(jsonResp["labs"]);
+                status = NetworkStatus::OK;
+            }
+        }
+        emit fetchingLabs(status, labs, status == NetworkStatus::OK);
+        reply->deleteLater();
+    }
+}
+
+bool LabStatusInfo::ready() const
+{
+    return analyzeStatus == QString("verified");
 }

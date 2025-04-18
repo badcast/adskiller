@@ -45,9 +45,9 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>610</x>
+      <x>600</x>
       <y>446</y>
-      <width>181</width>
+      <width>191</width>
       <height>41</height>
      </rect>
     </property>
@@ -705,9 +705,9 @@ background-color: transparent;
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>440</y>
-      <width>601</width>
-      <height>51</height>
+      <y>442</y>
+      <width>581</width>
+      <height>48</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_4">
