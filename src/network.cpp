@@ -7,9 +7,9 @@
 constexpr auto NetworkTimeoutDefault = 5000;
 constexpr auto URL_Remote = "https://adskill.imister.kz";
 //constexpr auto URL_Remote = "http://localhost:8080";
-constexpr auto URL_SupVer = "v1";
+constexpr auto URL_SupVer = "v2";
 constexpr auto URL_Work = "action";
-constexpr auto URL_Version = "version.php";
+constexpr auto URL_Version = "version";
 
 QString url_fetch()
 {
@@ -24,9 +24,7 @@ QString url_fetch()
 QString url_version()
 {
     QString url = URL_Remote;
-    url += "/";
-    url += URL_SupVer;
-    url += "/";
+    url += "/cdn/";
     url += URL_Version;
     return url;
 }

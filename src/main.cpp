@@ -29,9 +29,10 @@ int main(int argc, char *argv[])
     }
 
     MainWindow w;
+    int exitCode;
     w.app = &app;
     w.show();
-    int exitCode = app.exec();
+    exitCode = app.exec();
     sharedMem.detach();
     return exitCode;
 }

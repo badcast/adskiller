@@ -28,7 +28,7 @@
 #include "update_window.h"
 
 constexpr int MaxDownloadAtemp = 4;
-constexpr char URLFetch[] = "https://adskill.imister.kz/v1/update";
+constexpr char URLFetch[] = "https://adskill.imister.kz/v2/update";
 
 struct FetchResult
 {
