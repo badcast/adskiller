@@ -9,6 +9,8 @@
 #include <QSettings>
 #include <QVersionNumber>
 
+#include "ProgressCircle.h"
+
 #include "adbfront.h"
 #include "network.h"
 
@@ -87,8 +89,10 @@ private:
     Ui::MainWindow *ui;
     QTimer * malwareUpdateTimer;
     QSettings* settings;
+    ProgressCircle* malwareProgressCircle;
     int minPage;
     QList<QWidget*> pages;
+    QList<QWidget*> malwareStatusLayouts;
     int curPage;
     int startPage = 0;
 
@@ -96,9 +100,11 @@ private:
     void showPage(int pageNum);
     void pageShown(int page);
     void delayPush(int ms, std::function<void ()> call, bool loop = false);
-    void doMalware();
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();
+    void doMalware();
+    void cirlceMalwareState(bool success);
+    void cirlceMalwareStateReset();
 };
 #endif // MAINWINDOW_H

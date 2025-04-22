@@ -32,6 +32,7 @@ struct LabStatusInfo
     QString analyzeStatus;
 
     bool ready() const;
+    bool exists() const;
 };
 
 enum NetworkStatus

@@ -15,7 +15,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-constexpr auto COMPILED_VERSION = ADSVERSION;
+constexpr auto AdskillerCompiledVersion = ADSVERSION;
 
 #ifdef WIN32
 constexpr auto UpdateManagerExecute = "update.exe";
@@ -39,11 +39,12 @@ constexpr auto infoNoNetwork = "Не удалось связаться с сер
                                "Проверьте интернет соединение и повторите попытку еще раз.\n"
                                "Программа будет завершена.";
 
-extern QPair<QStringList,int> malwareReadLog();
+extern QString malwareReadHeader();
+extern std::pair<QStringList,int> malwareReadLog();
 extern MalwareStatus malwareStatus();
 extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
-extern void malwareClean();
+extern bool malwareClean();
 
 uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 {
@@ -69,18 +70,44 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Refresh TabPages to Content widget (Selective)
     for(x = 0; x < ui->tabWidget->count(); ++x)
-        pages.append(ui->tabWidget->widget(x));
+        pages << ui->tabWidget->widget(x);
     for(x = 0; x < pages.count(); ++x)
         ui->contentLayout->layout()->addWidget(pages[x]);
+    for(x = 0; x< ui->tabWidget_2->count(); ++x)
+        malwareStatusLayouts << ui->tabWidget_2->widget(x);
+    for(x = 0; x < malwareStatusLayouts.count(); ++x)
+        ui->malwareContentLayout->addWidget(malwareStatusLayouts[x]);
+    malwareStatusLayouts[0]->show();
+    connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool){
+        for(auto & layout : malwareStatusLayouts)
+        {
+            if(layout->isHidden())
+            {
+                layout->show();
+            }
+            else
+            {
+                layout->hide();
+            }
+        }
+    });
+
+    ui->tabWidget->deleteLater();
+    ui->tabWidget_2->deleteLater();
+
+    malwareProgressCircle = new ProgressCircle(this);
+    ui->progressCircleLayout->addWidget(malwareProgressCircle);
+    malwareProgressCircle->setInfinilyMode(false);
+
     QList<QAction*> menusTheme {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
     for(QAction* q : menusTheme)
     {
         q->setChecked(false);
         connect(q, &QAction::triggered, this, &MainWindow::setThemeAction);
     }
-    ui->tabWidget->deleteLater();
-    model = new QStringListModel(ui->processStatus);
-    ui->processStatus->setModel(model);
+
+    model = new QStringListModel(ui->processLogStatus);
+    ui->processLogStatus->setModel(model);
 
     // Show First Page
     minPage = 0;
@@ -221,7 +248,7 @@ void MainWindow::showPage(int pageNum)
         if(paged)
         {
             QRect arrowPos = ui->arrowIconMark->geometry();
-            arrowPos.setY(layout->itemAt(x)->widget()->geometry().y()-16);
+            arrowPos.setY(layout->itemAt(x)->widget()->geometry().y()-20);
             ui->arrowIconMark->setGeometry(arrowPos);
         }
     }
@@ -302,12 +329,17 @@ void MainWindow::pageShown(int page)
     // Malware
     case 3:
     {
-        QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
+        QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
         QStringList place {};
-        ui->malwareProgressBar->setValue(0);
+        ui->processBarStatus->setValue(0);
         ui->buttonDecayMalware->setEnabled(true);
         place << "<< Все готово для запуска >>";
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
+        ui->malwareStatusText0->setText("Malware не запущен.");
+        malwareProgressCircle->setValue(0);
+        malwareProgressCircle->setMaximum(100);
+        malwareProgressCircle->setInfinilyMode(false);
+        cirlceMalwareStateReset();
         model->setStringList(place);
         break;
     }
@@ -339,7 +371,6 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
         if(state == Removed)
         {
             malwareKill();
-            delayPush(5000, [this](){ showPage(curPage - 1); });
         }
         break;
     }
@@ -615,14 +646,17 @@ void MainWindow::on_buttonDecayMalware_clicked()
 
 void MainWindow::doMalware()
 {
-    QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
+    QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
     QStringList place {};
 
     place << "<< Запуск процесса удаления рекламы, пожалуйста подождите >>";
     place << "<< Не отсоединяйте устройство от компьютера >>";
 
     model->setStringList(place);
-    ui->malwareProgressBar->setValue(0);
+    ui->processBarStatus->setValue(0);
+    cirlceMalwareStateReset();
+    malwareProgressCircle->setInfinilyMode(true);
+    malwareProgressCircle->setValue(0);
 
     ui->deviceLabelName->setText(adb.device.displayName  + " " + adb.device.devId);
     ui->pprev->setEnabled(false);
@@ -641,27 +675,84 @@ void MainWindow::doMalware()
                 this,
                 [this]()
                 {
-                    QStringListModel *model = static_cast<QStringListModel *>(ui->processStatus->model());
+                    QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
                     MalwareStatus status = malwareStatus();
-                    QPair<QStringList,int> reads;
+                    std::pair<QStringList,int> reads;
+                    QString header;
                     QStringList from;
+                    header = malwareReadHeader();
                     reads = malwareReadLog();
+
+                    ui->malwareStatusText0->setText(header);
+                    ui->processBarStatus->setValue(reads.second);
+                    malwareProgressCircle->setValue(reads.second);
                     if(!reads.first.isEmpty())
                     {
                         from = model->stringList();
                         from.append(reads.first);
                         model->setStringList(from);
-                        ui->processStatus->scrollToBottom();
+                        ui->processLogStatus->scrollToBottom();
                     }
-                    ui->malwareProgressBar->setValue(reads.second);
                     if(status != MalwareStatus::Running)
                     {
                         ui->pprev->setEnabled(true);
                         ui->buttonDecayMalware->setEnabled(true);
+                        cirlceMalwareState(status != MalwareStatus::Error);
+                        malwareProgressCircle->setInfinilyMode(false);
                         malwareUpdateTimer->stop();
                         malwareUpdateTimer->deleteLater();
                         malwareClean();
                     }
                 });
         });
+}
+
+void MainWindow::cirlceMalwareState(bool success)
+{
+    malwareProgressCircle->setInfinilyMode(false);
+
+    QPropertyAnimation * animation;
+    // animation = new QPropertyAnimation(malwareProgressCircle, "outerRadius", malwareProgressCircle);
+    // animation->setDuration(1500);
+    // animation->setEasingCurve(QEasingCurve::OutQuad);
+    // animation->setEndValue(0.5);
+    // animation->start(QAbstractAnimation::DeleteWhenStopped);
+
+    animation = new QPropertyAnimation(malwareProgressCircle, "innerRadius", malwareProgressCircle);
+    animation->setDuration(750);
+    animation->setEasingCurve(QEasingCurve::OutQuad);
+    animation->setEndValue(0.0);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+
+    QColor color = success ? QColor(155,219,58) : QColor(255,100,100);
+
+    animation = new QPropertyAnimation(malwareProgressCircle, "color", malwareProgressCircle);
+    animation->setDuration(750);
+    animation->setEasingCurve(QEasingCurve::OutQuad);
+    animation->setEndValue(color);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void MainWindow::cirlceMalwareStateReset()
+{
+    QPropertyAnimation * animation;
+    // animation = new QPropertyAnimation(malwareProgressCircle, "outerRadius", malwareProgressCircle);
+    // animation->setDuration(1500);
+    // animation->setEasingCurve(QEasingCurve::OutQuad);
+    // animation->setEndValue(1.0);
+    // animation->start(QAbstractAnimation::DeleteWhenStopped);
+
+    animation = new QPropertyAnimation(malwareProgressCircle, "innerRadius", malwareProgressCircle);
+    animation->setDuration(750);
+    animation->setEasingCurve(QEasingCurve::OutQuad);
+    animation->setEndValue(0.6);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+
+    QColor color {110,190,235};
+
+    animation = new QPropertyAnimation(malwareProgressCircle, "color", malwareProgressCircle);
+    animation->setDuration(750);
+    animation->setEasingCurve(QEasingCurve::OutQuad);
+    animation->setEndValue(color);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
 }

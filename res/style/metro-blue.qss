@@ -39,7 +39,7 @@ QListView {
     border: 1px solid #CCCCCC;
 }
 QListView::item {
-    padding: 10px;
+    padding: 1px;
 }
 QListView::item:selected {
     background-color: #0078D7;
@@ -48,7 +48,6 @@ QListView::item:selected {
 QComboBox {
     background-color: #F0F0F0;
     border: 1px solid #CCCCCC;
-
     padding: 5px;
     color: #333333;
     selection-background-color: #0078D7;

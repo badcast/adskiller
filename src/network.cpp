@@ -11,7 +11,7 @@ constexpr auto URL_SupVer = "v2";
 constexpr auto URL_Work = "action";
 constexpr auto URL_Version = "version";
 
-QString url_fetch()
+inline QString url_fetch()
 {
     QString url = URL_Remote;
     url += "/";
@@ -21,7 +21,7 @@ QString url_fetch()
     return url;
 }
 
-QString url_version()
+inline QString url_version()
 {
     QString url = URL_Remote;
     url += "/cdn/";
@@ -29,7 +29,7 @@ QString url_version()
     return url;
 }
 
-LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
+inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
 {
     LabStatusInfo retval;
     if(jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
@@ -288,4 +288,9 @@ void Network::onFetchingLabs()
 bool LabStatusInfo::ready() const
 {
     return analyzeStatus == QString("verified");
+}
+
+bool LabStatusInfo::exists() const
+{
+    return analyzeStatus != QString("no-exists");
 }

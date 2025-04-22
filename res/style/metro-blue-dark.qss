@@ -38,7 +38,7 @@ QListView {
     color: #DCDCDC;
 }
 QListView::item {
-    padding: 10px;
+    padding: 1px;
 }
 QListView::item:selected {
     background-color: #336791;
@@ -271,7 +271,7 @@ QHeaderView {
     font-weight: bold;
 }
 QHeaderView::section {
-    padding: 10px;
+    padding: 1px;
 }
 QTableWidget::item, QTableView::item {
     padding: 10px;

@@ -21,9 +21,11 @@ set(PROJECT_SOURCES
         ui/mainwindow.ui
         ui/mainwindow.cpp
         include/network.h
+        include/ProgressCircle.h
         src/main.cpp
         src/network.cpp
         src/malwareProcess.cpp
+        src/widget/ProgressCircle.cpp
         resources.qrc
 )
 
