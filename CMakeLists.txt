@@ -75,7 +75,7 @@ target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSI
 target_compile_definitions(adskiller PRIVATE ADSVERSION="${ADSVERSION}")
 target_compile_definitions(update PRIVATE APPVERSION="${ADSVERSION}")
 
-if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+if(WIN32)
   set_property(TARGET adskiller PROPERTY WIN32_EXECUTABLE true)
   set_property(TARGET update PROPERTY WIN32_EXECUTABLE true)
 endif()
