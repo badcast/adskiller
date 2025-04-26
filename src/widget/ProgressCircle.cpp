@@ -241,12 +241,10 @@ QPixmap ProgressCircle::generatePixmap() const
         int spanAngle = 0.15 * 360 * 16;
         painter.drawPie(rect, startAngle, spanAngle);
     }
-    else
+    else if(value > 0)
     {
-
         int startAngle = 90 * 16;
         int spanAngle = -qreal(value) * 360 * 16 / mMaximum;
-
         painter.drawPie(rect, startAngle, spanAngle);
     }
 

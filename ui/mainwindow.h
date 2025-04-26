@@ -46,7 +46,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateAdbDevices();
+    void hardUpdateAdbDevices();
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
 
@@ -100,7 +100,7 @@ private:
     void showPage(int pageNum);
     void pageShown(int page);
     void delayPush(int ms, std::function<void ()> call, bool loop = false);
-    void softUpdateDevices();
+    void softUpdateAdbDevices();
     void checkVersion();
     void runUpdateManager();
     void doMalware();

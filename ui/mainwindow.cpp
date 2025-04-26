@@ -154,7 +154,7 @@ void MainWindow::on_comboBoxDevices_currentIndexChanged(int index)
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    updateAdbDevices();
+    hardUpdateAdbDevices();
 }
 
 void MainWindow::on_action_WhatsApp_triggered()
@@ -181,7 +181,7 @@ void MainWindow::on_pprev_clicked()
         showPage(curPage - 1);
 }
 
-void MainWindow::updateAdbDevices()
+void MainWindow::hardUpdateAdbDevices()
 {
     QList<AdbDevice> devicesNew;
     uint hOld, hNew;
@@ -191,10 +191,10 @@ void MainWindow::updateAdbDevices()
     if(hOld == hNew)
         return;
     adb.devices = std::move(devicesNew);
-    softUpdateDevices();
+    softUpdateAdbDevices();
 }
 
-void MainWindow::softUpdateDevices()
+void MainWindow::softUpdateAdbDevices()
 {
     QStringList qlist;
     int i = 0, index = 0;
@@ -323,24 +323,22 @@ void MainWindow::pageShown(int page)
             ui->comboBoxDevices->removeItem(1);
         ui->comboBoxDevices->blockSignals(false);
         ui->connectDeviceStateStat->setText("Выберите доступное устройство из списка.");
-        updateAdbDevices();
+        hardUpdateAdbDevices();
         break;
     }
     // Malware
     case 3:
     {
         QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-        QStringList place {};
         ui->processBarStatus->setValue(0);
         ui->buttonDecayMalware->setEnabled(true);
-        place << "<< Все готово для запуска >>";
-        place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
         ui->malwareStatusText0->setText("Malware не запущен.");
         malwareProgressCircle->setValue(0);
         malwareProgressCircle->setMaximum(100);
         malwareProgressCircle->setInfinilyMode(false);
         cirlceMalwareStateReset();
-        model->setStringList(place);
+        model->setStringList(QStringList() << "<< Все готово для запуска >>"
+                                           << "<< Во время процесса не отсоединяйте устройство от компьютера >>");
         break;
     }
     default:
@@ -350,11 +348,11 @@ void MainWindow::pageShown(int page)
 
 void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
 {
+    softUpdateAdbDevices();
     switch(curPage)
     {
     case 2:
     {
-        softUpdateDevices();
         ui->pnext->setEnabled(state == Add);
         QString text = "Устройство ";
         text += device.displayName;
