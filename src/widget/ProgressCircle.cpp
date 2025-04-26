@@ -1,6 +1,8 @@
 // * THIS WIDGET COPY FROM URL: https://github.com/mofr/QtProgressCircle *
 // * MODIFIED: Add Progress Text *
 // * MODIFIED: Inifnily Mode Forcly *
+// * MODIFIED: Fix 0 - value is empty circle *
+// * MODIFIED: Set showing text
 
 /////////////////////////////////////////////////////////////////////////////
 // Date of creation: 04.07.2013
@@ -15,6 +17,7 @@
 ProgressCircle::ProgressCircle(QWidget *parent) :
     QWidget(parent),
     mInfinilyMode(true),
+    mVisibleText(true),
     mValue(0),
     mMaximum(100),
     mInnerRadius(0.6),
@@ -62,6 +65,11 @@ QColor ProgressCircle::color() const
     return mColor;
 }
 
+bool ProgressCircle::getVisibleText() const
+{
+    return mVisibleText;
+}
+
 void ProgressCircle::setValue(int value)
 {
     if(value < 0) value = 0;
@@ -89,6 +97,15 @@ void ProgressCircle::setInfinilyMode(bool value)
     else
     {
         mInfiniteAnimation.stop();
+    }
+}
+
+void ProgressCircle::setVisibleText(bool value)
+{
+    if(mVisibleText != value)
+    {
+        mVisibleText = value;
+        update();
     }
 }
 
@@ -182,7 +199,7 @@ void ProgressCircle::setVisibleValue(int value)
 
 QString ProgressCircle::key() const
 {
-    return QString("%1,%2,%3,%4,%5,%6,%7,%8,%9")
+    return QString("%1,%2,%3,%4,%5,%6,%7,%8,%9,%10")
     .arg(mInfiniteAnimationValue)
         .arg(mVisibleValue)
         .arg(mMaximum)
@@ -192,6 +209,7 @@ QString ProgressCircle::key() const
         .arg(height())
         .arg(mColor.rgb())
         .arg(mInfinilyMode)
+        .arg(mVisibleText)
         ;
 }
 
@@ -239,13 +257,16 @@ QPixmap ProgressCircle::generatePixmap() const
     //outer frame
     painter.drawArc(rect, 0, 360*16);
     // Add Text Percentage %
-    QString progressText = QString::number(value) + "%";
-    QFont font = painter.font();
-    font.setPixelSize(rect.width() / 5);
-    painter.setFont(font);
-    painter.setPen(Qt::black);
-    QRectF textRect = painter.boundingRect(rect, Qt::AlignCenter, progressText);
-    painter.drawText(textRect, progressText);
+    if(mVisibleText)
+    {
+        QString progressText = QString::number(value) + "%";
+        QFont font = painter.font();
+        font.setPixelSize(rect.width() / 5);
+        painter.setFont(font);
+        painter.setPen(Qt::black);
+        QRectF textRect = painter.boundingRect(rect, Qt::AlignCenter, progressText);
+        painter.drawText(textRect, progressText);
+    }
 
     return pixmap;
 }

@@ -20,6 +20,7 @@ class ProgressCircle : public QWidget
     Q_PROPERTY(qreal outerRadius READ outerRadius WRITE setOuterRadius)
     Q_PROPERTY(QColor color READ color WRITE setColor)
     Q_PROPERTY(bool infinilyMode READ infinilyMode WRITE setInfinilyMode)
+    Q_PROPERTY(bool visibleText READ getVisibleText WRITE setVisibleText)
 
     //private
     Q_PROPERTY(qreal infiniteAnimationValue READ infiniteAnimationValue WRITE setInfiniteAnimationValue)
@@ -31,6 +32,8 @@ public:
     int value() const;
 
     bool infinilyMode() const;
+
+    bool getVisibleText() const;
 
     /**
      * @brief maximum
@@ -58,6 +61,7 @@ public slots:
     void setMaximum(int maximum);
 
     void setInfinilyMode(bool value);
+    void setVisibleText(bool value);
 
     void setInnerRadius(qreal innerRadius);
     void setOuterRadius(qreal outerRadius);
@@ -85,6 +89,7 @@ private:
     //actual current value
     int mValue;
     int mMaximum;
+    bool mVisibleText;
     bool mInfinilyMode;
     qreal mInnerRadius;
     qreal mOuterRadius;
