@@ -50,6 +50,7 @@ class Network : public QObject
 private:
     QNetworkAccessManager* manager;
     QString _token;
+    int hasInternet;
 
 public:
     AuthIDData authedId;
