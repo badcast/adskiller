@@ -9,8 +9,10 @@
 #include <QTableView>
 #include <QVector>
 #include <QStandardItemModel>
+#include <QCryptographicHash>
 #include <QHeaderView>
 #include <QTemporaryDir>
+#include <QRandomGenerator>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -46,6 +48,66 @@ extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
 extern bool malwareClean();
 
+QByteArray randomKey()
+{
+    QByteArray key;
+    key.resize(8);
+    for ( int x = 0; x < key.length(); ++x)
+    {
+        key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
+    }
+    return key;
+}
+
+QByteArray encryptData(const QByteArray& bytes, const QByteArray& key)
+{
+    int x;
+    QByteArray retval {bytes};
+    for(x = 0; x < bytes.length(); ++x)
+    {
+        retval[x] = bytes[x] ^ key[x % key.length()];
+    }
+    return retval;
+}
+
+inline QByteArray decryptData(const QByteArray& bytes, const QByteArray& key)
+{
+    return encryptData(bytes, key);
+}
+
+QString packDC(const QByteArray& dataInit, const QByteArray& key)
+{
+    QByteArray retval {};
+    QByteArray data = encryptData(dataInit, key);
+    int keylen = key.toHex().length();
+    int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
+    retval.resize(hashlen + data.length() + keylen + 1);
+    retval[hashlen] = static_cast<char>(keylen);
+    retval.replace(hashlen + 1, keylen, key.toHex());
+    retval.replace(hashlen + 1 + keylen, data.length(), data);
+    retval.replace(0, hashlen, QCryptographicHash::hash(retval.mid(hashlen), QCryptographicHash::Sha256));
+    return QLatin1String(retval.toBase64());
+}
+
+QByteArray unpackDC(const QString& packed)
+{
+    QByteArray key{}, data{};
+    int keylen;
+    int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
+    data = QByteArray::fromBase64(packed.toLatin1());
+    if (!data.isEmpty() && data.mid(0,hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
+    {
+        keylen = data[hashlen];
+        key = QByteArray::fromHex(data.mid(hashlen + 1, keylen));
+        data = decryptData(data.mid(hashlen + 1 + keylen),key);
+    }
+    else
+    {
+        data.clear();
+    }
+    return data;
+}
+
 uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 {
     QString _compare;
@@ -66,7 +128,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Load settings
     settings = new QSettings("imister.kz-app.ads", "AdsKiller", this);
-    network._token = settings->value("_token", "").toString();
+    if(settings->contains("_token"))
+    {
+        network._token = settings->value("_token", "").toString();
+        settings->remove("_token");
+        settings->setValue("encrypted_token", packDC(network._token.toLatin1(), randomKey()));
+    }
+    else if(settings->contains("encrypted_token"))
+    {
+        QByteArray decData = unpackDC(settings->value("encrypted_token").toString());
+        network._token = QLatin1String(decData);
+    }
 
     // Refresh TabPages to Content widget (Selective)
     for(x = 0; x < ui->tabWidget->count(); ++x)
@@ -484,7 +556,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                     ui->statusAuthText->setText("Аутентификация прошла успешно.");
                 }
 
-                settings->setValue("_token", network.authedId.token);
+                settings->setValue("encrypted_token", packDC(network.authedId.token.toLatin1(), randomKey()));
                 minPage = curPage + 1;
                 updatePageState();
             }
