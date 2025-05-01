@@ -630,7 +630,8 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         text +=  verApp.toString();
         text += "\nВерсия на сервере: v";
         text += verServer.toString();
-        QMessageBox::information(this, "Обнаружена новая версия", text);
+        // TURNED OFF INFO ABOUT UPDATE
+        // QMessageBox::information(this, "Обнаружена новая версия", text);
         this->close();
 
 #ifdef WIN32
