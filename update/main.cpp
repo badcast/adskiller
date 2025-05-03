@@ -273,11 +273,9 @@ public:
             }
 
             mutex.lock();
-            m_statusDownload.currentStatus = "Apply update";
-            mutex.unlock();
-
             if(m_lastStatus == 0 && !m_forclyExit)
             {
+                m_statusDownload.currentStatus = "Apply update";
                 moveContents(tempDir.path(), existsDir);
                 finishSuccess = 1;
             }
@@ -285,6 +283,7 @@ public:
             {
                 m_statusDownload = {};
             }
+            mutex.unlock();
 
             dir.removeRecursively();
         }
@@ -336,8 +335,8 @@ private:
 
         QCryptographicHash hash(QCryptographicHash::Md5);
         while (!file.atEnd()) {
-            QByteArray line = file.read(4096);
-            hash.addData(line);
+            QByteArray buffer = file.read(4096);
+            hash.addData(buffer);
         }
 
         file.close();
