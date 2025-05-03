@@ -31,7 +31,7 @@ inline QString url_version()
 
 inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
 {
-    LabStatusInfo retval;
+    LabStatusInfo retval {};
     if(jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
     {
         retval.analyzeStatus = jroot["analyzeStatus"].toString();
