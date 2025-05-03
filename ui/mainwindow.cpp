@@ -128,7 +128,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Load settings
     settings = new QSettings("imister.kz-app.ads", "AdsKiller", this);
-    if(settings->contains("_token"))
+    if(settings->contains("_token") && !settings->contains("encrypted_token"))
     {
         network._token = settings->value("_token", "").toString();
         settings->remove("_token");
