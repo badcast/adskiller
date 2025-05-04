@@ -226,8 +226,8 @@ void MainWindow::on_comboBoxDevices_currentIndexChanged(int index)
         return;
     if(index == 0)
         adb.disconnect();
-    else if(!adb.devices.isEmpty())
-        adb.connect(adb.devices[index - 1].devId);
+    else if(!adb.cachedDevices.isEmpty())
+        adb.connect(adb.cachedDevices[index - 1].devId);
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -264,25 +264,30 @@ void MainWindow::hardUpdateAdbDevices()
     QList<AdbDevice> devicesNew;
     uint hOld, hNew;
     devicesNew = adb.getDevices();
-    hOld = hash_from_AdbDevice(adb.devices);
+    hOld = hash_from_AdbDevice(adb.cachedDevices);
     hNew = hash_from_AdbDevice(devicesNew);
     if(hOld == hNew)
         return;
+<<<<<<< HEAD
     adb.devices = std::move(devicesNew);
     softUpdateAdbDevices();
+=======
+    adb.cachedDevices = std::move(devicesNew);
+    softUpdateDevices();
+>>>>>>> main
 }
 
 void MainWindow::softUpdateAdbDevices()
 {
     QStringList qlist;
     int i = 0, index = 0;
-    for(AdbDevice &dev : adb.devices)
+    for(AdbDevice &dev : adb.cachedDevices)
     {
         if(index == 0 && dev.devId == adb.device.devId)
             index = i + 1;
         ++i;
     }
-    std::transform(adb.devices.cbegin(), adb.devices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev) { return dev.displayName + " (" + dev.devId + ")"; });
+    std::transform(adb.cachedDevices.cbegin(), adb.cachedDevices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev) { return dev.displayName + " (" + dev.devId + ")"; });
     ui->comboBoxDevices->blockSignals(true);
     for(; ui->comboBoxDevices->count() > 1;)
         ui->comboBoxDevices->removeItem(1);
@@ -323,12 +328,6 @@ void MainWindow::showPage(int pageNum)
     {
         bool paged = x == pageNum;
         layout->itemAt(x)->widget()->setEnabled(paged);
-        if(paged)
-        {
-            QRect arrowPos = ui->arrowIconMark->geometry();
-            arrowPos.setY(layout->itemAt(x)->widget()->geometry().y()-20);
-            ui->arrowIconMark->setGeometry(arrowPos);
-        }
     }
     updatePageState();
     pageShown(curPage);
@@ -393,7 +392,7 @@ void MainWindow::pageShown(int page)
     {
         ui->pnext->setEnabled(false);
         adb.blockSignals(true);
-        adb.devices.clear();
+        adb.cachedDevices.clear();
         adb.disconnect();
         adb.blockSignals(false);
         ui->comboBoxDevices->blockSignals(true);
