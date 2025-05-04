@@ -1,3 +1,5 @@
+#include <utility>
+
 #include <QJsonObject>
 #include <QJsonArray>
 
@@ -38,6 +40,16 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
         retval.mdKey = jroot["mdKey"].toString();
     }
     return retval;
+}
+
+bool LabStatusInfo::ready() const
+{
+    return analyzeStatus == QString("verified");
+}
+
+bool LabStatusInfo::exists() const
+{
+    return analyzeStatus != QString("no-exists");
 }
 
 Network::Network(QObject *parent) : QObject(parent)
@@ -194,7 +206,7 @@ void Network::onAdsFinished()
                         authedId.expires = jsonResp["expires"].toInt();
                     labs = fromJsonLabs(jsonResp["labs"]);
                     QJsonArray adsData = jsonResp["result"].toArray();
-                    for(const QJsonValue & val : adsData)
+                    for(const QJsonValue & val : std::as_const(adsData))
                         adsList << val.toString();
                 }
             }
@@ -283,14 +295,4 @@ void Network::onFetchingLabs()
         emit fetchingLabs(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
-}
-
-bool LabStatusInfo::ready() const
-{
-    return analyzeStatus == QString("verified");
-}
-
-bool LabStatusInfo::exists() const
-{
-    return analyzeStatus != QString("no-exists");
 }

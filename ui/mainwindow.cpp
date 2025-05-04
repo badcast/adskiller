@@ -51,9 +51,10 @@ extern bool malwareClean();
 
 QByteArray randomKey()
 {
+    int x;
     QByteArray key;
     key.resize(8);
-    for ( int x = 0; x < key.length(); ++x)
+    for (x = 0; x < key.length(); ++x)
     {
         key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
     }
@@ -268,13 +269,8 @@ void MainWindow::hardUpdateAdbDevices()
     hNew = hash_from_AdbDevice(devicesNew);
     if(hOld == hNew)
         return;
-<<<<<<< HEAD
-    adb.devices = std::move(devicesNew);
-    softUpdateAdbDevices();
-=======
     adb.cachedDevices = std::move(devicesNew);
-    softUpdateDevices();
->>>>>>> main
+    softUpdateAdbDevices();
 }
 
 void MainWindow::softUpdateAdbDevices()
