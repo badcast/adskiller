@@ -202,7 +202,7 @@ void Adb::onDeviceWatch()
     if(deviceStatus != AdbConStatus::DEVICE)
     {
         AdbDevice old = device;
-        devices.removeOne(device);
+        cachedDevices.removeOne(device);
         device = {};
         emit onDeviceChanged(old, AdbConState::Removed);
         deviceWatchTimer->stop();

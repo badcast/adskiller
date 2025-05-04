@@ -41,10 +41,12 @@ private:
     void fetch();
 
 public:
-    QList<AdbDevice> devices;
     AdbDevice device;
+    QList<AdbDevice> cachedDevices;
+
     Adb(QObject * parent = nullptr);
     virtual ~Adb();
+
     AdbConStatus status() const;
     bool isConnected();
     void connectFirst();
@@ -56,12 +58,15 @@ public:
 
 signals:
     void onDeviceChanged(const AdbDevice& device, AdbConState state);
+
 private slots:
     void onDeviceWatch();
+
 public:
     static AdbConStatus deviceStatus(const AdbDevice &device);
     static QList<AdbDevice> getDevices();
     static uint deviceHash(const AdbDevice& device);
+
 private:
     QTimer *deviceWatchTimer;
 };
