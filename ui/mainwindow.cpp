@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 
 #include <QTimer>
 #include <QHash>
@@ -138,6 +139,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         QByteArray decData = unpackDC(settings->value("encrypted_token").toString());
         network._token = QLatin1String(decData);
+    }
+
+    if(!std::all_of(std::begin(network._token), std::end(network._token.end()), [](auto & lhs){return std::isalnum(lhs);}))
+    {
+        network._token.clear();
     }
 
     // Refresh TabPages to Content widget (Selective)
