@@ -141,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         network._token = QLatin1String(decData);
     }
 
-    if(!std::all_of(std::begin(network._token), std::end(network._token.end()), [](auto & lhs){return std::isalnum(lhs);}))
+    if(!std::all_of(std::begin(network._token), std::end(network._token), [](auto & lhs){return std::isalnum(lhs.toLatin1());}))
     {
         network._token.clear();
     }
@@ -151,7 +151,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         pages << ui->tabWidget->widget(x);
     for(x = 0; x < pages.count(); ++x)
         ui->contentLayout->layout()->addWidget(pages[x]);
-    for(x = 0; x< ui->tabWidget_2->count(); ++x)
+    for(x = 0; x < ui->tabWidget_2->count(); ++x)
         malwareStatusLayouts << ui->tabWidget_2->widget(x);
     for(x = 0; x < malwareStatusLayouts.count(); ++x)
         ui->malwareContentLayout->addWidget(malwareStatusLayouts[x]);
