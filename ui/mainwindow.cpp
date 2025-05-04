@@ -141,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         network._token = QLatin1String(decData);
     }
 
-    if(!std::all_of(std::begin(network._token), std::end(network._token), [](auto & lhs){return std::isalnum(lhs);}))
+    if(!std::all_of(std::begin(network._token), std::end(network._token), [](auto & lhs){return std::isalnum(lhs.toLatin1());}))
     {
         network._token.clear();
     }
