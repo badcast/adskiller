@@ -82,6 +82,10 @@ private slots:
 
     void replyFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
 
+    void on_textHidden_pressed();
+
+    void on_textHidden_released();
+
 public slots:
     void setThemeAction();
 

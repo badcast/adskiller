@@ -833,3 +833,15 @@ void MainWindow::cirlceMalwareStateReset()
     animation->setEndValue(color);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
+
+void MainWindow::on_textHidden_pressed()
+{
+    ui->lineEditToken->setEchoMode(QLineEdit::Normal);
+}
+
+
+void MainWindow::on_textHidden_released()
+{
+    ui->lineEditToken->setEchoMode(QLineEdit::Password);
+}
+
