@@ -64,7 +64,8 @@ QByteArray randomKey()
 QByteArray encryptData(const QByteArray& bytes, const QByteArray& key)
 {
     int x;
-    QByteArray retval {bytes};
+    QByteArray retval;
+    retval.resize(bytes.length());
     for(x = 0; x < bytes.length(); ++x)
     {
         retval[x] = bytes[x] ^ key[x % key.length()];
