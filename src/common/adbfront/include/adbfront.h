@@ -22,6 +22,7 @@ struct PackageIO
 {
     QString applicationName;
     QString packageName;
+    bool disabled;
 };
 
 struct AdbDevice
@@ -55,6 +56,8 @@ public:
     QList<PackageIO> getPackages();
     void killPackages(const QList<PackageIO> &packages, int& successCount);
     bool uninstallPackages(const QStringList& packages, int& successCount);
+    bool disablePackages(const QStringList& packages, int& successCount);
+    bool enablePackages(const QStringList& packages, int& successCount);
 
 signals:
     void onDeviceChanged(const AdbDevice& device, AdbConState state);

@@ -135,7 +135,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         network._token = settings->value("_token", "").toString();
         settings->remove("_token");
-        settings->setValue("encrypted_token", packDC(network._token.toLatin1(), randomKey()));
+        settings->setValue("encrypted_token", packDC(network._token.toLatin1(), randomKey() ));
     }
     else if(settings->contains("encrypted_token"))
     {
@@ -207,6 +207,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
+    malwareKill();
     delete ui;
 }
 
@@ -346,18 +347,14 @@ void MainWindow::pageShown(int page)
         ui->pnext->setEnabled(false);
         ui->authButton->setEnabled(true);
 
-        // Создаем модель данных
         QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
 
-        // Устанавливаем количество строк и столбцов
-        model->setRowCount(4);
+        model->setRowCount(7);
         model->setColumnCount(2);
 
-        // Устанавливаем заголовки столбцов
         model->setHorizontalHeaderItem(0, new QStandardItem("Параметр"));
         model->setHorizontalHeaderItem(1, new QStandardItem("Значение"));
 
-        // Заполняем модель данными
         model->setItem(0, 0, new QStandardItem("Логин"));
         model->setItem(0, 1, new QStandardItem("-"));
 
@@ -375,6 +372,9 @@ void MainWindow::pageShown(int page)
 
         model->setItem(5,0, new QStandardItem("Расположение"));
         model->setItem(5,1, new QStandardItem("-"));
+
+        model->setItem(6, 0, new QStandardItem("Заблокирован"));
+        model->setItem(6, 1, new QStandardItem("-"));
 
         ui->authInfo->setModel(model);
 
@@ -540,11 +540,15 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 value = QString::number(network.authedId.vipDays);
                 model->item(3,1)->setText(value);
 
-                value = QString::number(network.authedId.scores);
+                value = QString::number(network.authedId.connectedDevices);
                 model->item(4,1)->setText(value);
 
                 value = network.authedId.location;
                 model->item(5,1)->setText(value);
+
+                value = network.authedId.blocked ? "Да" : "Нет";
+                model->item(6,1)->setText(value);
+
                 value.clear();
 
                 if(network.authedId.expires == 0)
@@ -652,7 +656,6 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         appDir.mkdir(tempdir.filePath("tls"));
         QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
         QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
-        //#error BUG "EXISTS PROCESS NOT BY REPLACE"
         if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
         {
             QApplication::quit();

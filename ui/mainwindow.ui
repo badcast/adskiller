@@ -195,6 +195,9 @@
            <height>26</height>
           </rect>
          </property>
+         <property name="maxLength">
+          <number>128</number>
+         </property>
          <property name="echoMode">
           <enum>QLineEdit::EchoMode::Password</enum>
          </property>
@@ -778,34 +781,6 @@ background-color: #232323;
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="QWidget" name="arrowIconMark" native="true">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>40</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>40</width>
-      <height>61</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>40</width>
-      <height>61</height>
-     </size>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">image: url(:/resources/icon-arrow-right);
-background-color: transparent; 
-
-</string>
-    </property>
    </widget>
    <widget class="QWidget" name="gridLayoutWidget">
     <property name="geometry">

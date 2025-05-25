@@ -44,12 +44,12 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
 
 bool LabStatusInfo::ready() const
 {
-    return analyzeStatus == QString("verified");
+    return analyzeStatus == "verified" || analyzeStatus == "part-verify";
 }
 
 bool LabStatusInfo::exists() const
 {
-    return analyzeStatus != QString("no-exists");
+    return analyzeStatus != "no-exists";
 }
 
 Network::Network(QObject *parent) : QObject(parent)
@@ -170,9 +170,10 @@ void Network::onAuthFinished()
                 authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
                 authedId.expires = jsonResp["expires"].toInt();
-                authedId.scores = jsonResp["scores"].toInt();
+                authedId.connectedDevices = jsonResp["scores"].toInt();
                 authedId.vipDays = jsonResp["vip_period"].toInt();
                 authedId.location = jsonResp["location"].toString();
+                authedId.blocked = jsonResp["blocked"].toBool();
                 status = 0;
             }
             break;
@@ -185,8 +186,7 @@ void Network::onAuthFinished()
 void Network::onAdsFinished()
 {
     int status = NetworkStatus::NetworkError;
-    QStringList adsList;
-    LabStatusInfo labs;
+    AdsInfo adsData {};
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
@@ -204,15 +204,19 @@ void Network::onAdsFinished()
                 {
                     if(jsonResp["expires"].isDouble())
                         authedId.expires = jsonResp["expires"].toInt();
-                    labs = fromJsonLabs(jsonResp["labs"]);
-                    QJsonArray adsData = jsonResp["result"].toArray();
-                    for(const QJsonValue & val : std::as_const(adsData))
-                        adsList << val.toString();
+                    adsData.labs = fromJsonLabs(jsonResp["labs"]);
+                    QJsonArray jarray = jsonResp["result"].toArray();
+                    for(const QJsonValue & val : std::as_const(jarray))
+                        adsData.blacklist << val.toString();
+                    jarray = jsonResp["autodisable"].toArray();
+                    if(!jsonResp["autodisable"].isNull())
+                        for(const QJsonValue & val : std::as_const(jarray))
+                            adsData.disabling << val.toString();
                 }
             }
             break;
         }
-        emit labAdsFinish(status, {labs,adsList}, status == NetworkStatus::OK);
+        emit labAdsFinish(status, adsData, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }

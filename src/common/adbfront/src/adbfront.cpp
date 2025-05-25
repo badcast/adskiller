@@ -1,6 +1,7 @@
 #include <utility>
 
 #include <QStringList>
+#include <QSet>
 #include <QDebug>
 #include <QDir>
 #include <QCoreApplication>
@@ -113,14 +114,14 @@ bool Adb::isConnected()
 
 void Adb::connectFirst()
 {
-    QList<AdbDevice> devs = getDevices();
+    QList<AdbDevice> devs = std::move(getDevices());
     if(devs.count() > 0)
         connect(devs.front().devId);
 }
 
 void Adb::connect(const QString &devId)
 {
-    QList<AdbDevice> devs = getDevices();
+    QList<AdbDevice> devs = std::move(getDevices());
     QList<AdbDevice>::ConstIterator iter;
     iter = std::find_if(devs.cbegin(), devs.cend(), [&devId](const AdbDevice & dev) { return dev.devId == devId; });
     if(iter == devs.cend())
@@ -140,7 +141,9 @@ void Adb::connect(const QString &devId)
 QList<PackageIO> Adb::getPackages()
 {
     QList<PackageIO> packages;
-    QStringList packageList;
+    QStringList packageList,disableList;
+    QSet<QString> optimizedList;
+    int pkgSeprIndx = 0;
 
     if(!isConnected())
     {
@@ -148,17 +151,33 @@ QList<PackageIO> Adb::getPackages()
         return {};
     }
 
-    std::pair<bool,QString> reply = adb_send_cmd(QStringList() << "-s" << device.devId << "shell" << "pm" << "list" << "packages" << "-3");
-    if(reply.first)
+    std::pair<bool,QString> reply = adb_send_cmd(QStringList() << "-s" << device.devId << "shell"
+                                                                << "pm" << "list" << "packages"
+                                                                << "--user" << "0" << "-3");
+    std::pair<bool,QString> reply2dis = adb_send_cmd(QStringList() << "-s" << device.devId << "shell"
+                                                                << "pm" << "list" << "packages"
+                                                                    << "--user" << "0" << "-3" << "-d");
+    if(reply.first && reply2dis.first)
     {
         reply.second.remove('\t');
         packageList = reply.second.split('\n', Qt::SkipEmptyParts);
+        disableList = reply2dis.second.split('\n', Qt::SkipEmptyParts);
+        if(packageList.count() > 0)
+            pkgSeprIndx = packageList.first().indexOf(':')+1;
+
+        std::function<QString(QString&)> removeSeperators = [pkgSeprIndx](QString &pkg){
+            return pkg.remove(0,pkgSeprIndx);
+        };
+        std::transform(std::begin(disableList), std::end(disableList), std::begin(disableList), removeSeperators);
+        std::transform(std::begin(packageList), std::end(packageList), std::begin(packageList), removeSeperators);
+        optimizedList = std::move(QSet<QString>(disableList.begin(), disableList.end()));
+
         for(QString & item : packageList)
         {
-            item.remove(0, item.indexOf(':')+1);
             packages.append(PackageIO{});
             packages.last().packageName = item;
             packages.last().applicationName = "Unknown";
+            packages.last().disabled = optimizedList.contains(item);
         }
     }
     return packages;
@@ -168,14 +187,14 @@ void Adb::killPackages(const QList<PackageIO> &packages, int & successCount)
 {
     std::pair<bool,QString> reply;
     int exit;
+    successCount = 0;
     if(!isConnected())
         return;
-    successCount = 0;
     for(const PackageIO & package : packages)
     {
-        reply = adb_send_cmd(exit, QStringList() << "shell" << "am" << "force-stop" << package.packageName);
+        reply = adb_send_cmd(exit, QStringList() << "-s" << device.devId << "shell" << "am" << "force-stop" << package.packageName);
         if(!reply.first || exit != 0)
-            return;
+            continue;
         successCount++;
     }
 }
@@ -184,13 +203,48 @@ bool Adb::uninstallPackages(const QStringList &packages, int& successCount)
 {
     std::pair<bool,QString> reply;
     int exit;
+    successCount = 0;
     if(!isConnected())
         return false;
     for(const QString & package : packages)
     {
         reply = adb_send_cmd(exit, QStringList() << "uninstall" << package);
         if(!reply.first || exit != 0)
-            return false;
+            continue;
+        successCount++;
+    }
+    return true;
+}
+
+bool Adb::disablePackages(const QStringList &packages, int &successCount)
+{
+    std::pair<bool,QString> reply;
+    int exit;
+    successCount = 0;
+    if(!isConnected())
+        return false;
+    for(const QString& package : packages)
+    {
+        reply = adb_send_cmd(exit, QStringList() << "-s" << device.devId << "shell" << "pm" << "disable-user" << "--user" << "0" << package);
+        if(!reply.first || exit != 0)
+            continue;
+        successCount++;
+    }
+    return true;
+}
+
+bool Adb::enablePackages(const QStringList &packages, int &successCount)
+{
+    std::pair<bool,QString> reply;
+    int exit;
+    successCount = 0;
+    if(!isConnected())
+        return false;
+    for(const QString& package : packages)
+    {
+        reply = adb_send_cmd(exit, QStringList() << "-s" << device.devId << "shell" << "pm" << "enable" << "--user" << "0" << package);
+        if(!reply.first || exit != 0)
+            continue;
         successCount++;
     }
     return true;
