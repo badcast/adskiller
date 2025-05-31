@@ -7,26 +7,33 @@
 #include "network.h"
 
 constexpr auto NetworkTimeoutDefault = 5000;
-constexpr auto URL_Remote = "https://adskill.imister.kz";
-//constexpr auto URL_Remote = "http://localhost:8080";
+constexpr auto Protocol = "https";
+constexpr auto URL_Remote = "adskill.imister.kz";
+constexpr auto URL_CDN = "cdn";
 constexpr auto URL_SupVer = "v2";
 constexpr auto URL_Work = "action";
 constexpr auto URL_Version = "version";
 
 inline QString url_fetch()
 {
-    QString url = URL_Remote;
-    url += "/";
+    QString url = Protocol;
+    url += "://";
+    url += URL_Remote;
+    url += '/';
     url += URL_SupVer;
-    url += "/";
+    url += '/';
     url += URL_Work;
     return url;
 }
 
 inline QString url_version()
 {
-    QString url = URL_Remote;
-    url += "/cdn/";
+    QString url = Protocol;
+    url += "://";
+    url += URL_Remote;
+    url += '/';
+    url += URL_CDN;
+    url += '/';
     url += URL_Version;
     return url;
 }
