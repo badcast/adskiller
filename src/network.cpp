@@ -49,15 +49,6 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
     return retval;
 }
 
-bool LabStatusInfo::ready() const
-{
-    return analyzeStatus == "verified" || analyzeStatus == "part-verify";
-}
-
-bool LabStatusInfo::exists() const
-{
-    return analyzeStatus != "no-exists";
-}
 
 Network::Network(QObject *parent) : QObject(parent)
 {

@@ -14,17 +14,21 @@ class MainWindow;
 
 struct AdbDevice;
 
-struct AuthIDData
+struct UserData
 {
     QString token;
     QString idName;
     QString location;
     int vipDays;
+    int credits;
     int expires;
     int connectedDevices;
     QDateTime lastLogin;
     QDateTime serverLastTime;
     bool blocked;
+
+    bool hasBalance() const;
+    bool hasVipAccount() const;
 };
 
 struct LabStatusInfo
@@ -61,7 +65,7 @@ private:
     int hasInternet;
 
 public:
-    AuthIDData authedId;
+    UserData authedId;
 
     Network(QObject * parent = nullptr);
     void authenticate(const QString &token);
