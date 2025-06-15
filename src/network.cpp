@@ -7,26 +7,33 @@
 #include "network.h"
 
 constexpr auto NetworkTimeoutDefault = 5000;
-constexpr auto URL_Remote = "https://adskill.imister.kz";
-//constexpr auto URL_Remote = "http://localhost:8080";
+constexpr auto Protocol = "https";
+constexpr auto URL_Remote = "adskill.imister.kz";
+constexpr auto URL_CDN = "cdn";
 constexpr auto URL_SupVer = "v2";
 constexpr auto URL_Work = "action";
 constexpr auto URL_Version = "version";
 
 inline QString url_fetch()
 {
-    QString url = URL_Remote;
-    url += "/";
+    QString url = Protocol;
+    url += "://";
+    url += URL_Remote;
+    url += '/';
     url += URL_SupVer;
-    url += "/";
+    url += '/';
     url += URL_Work;
     return url;
 }
 
 inline QString url_version()
 {
-    QString url = URL_Remote;
-    url += "/cdn/";
+    QString url = Protocol;
+    url += "://";
+    url += URL_Remote;
+    url += '/';
+    url += URL_CDN;
+    url += '/';
     url += URL_Version;
     return url;
 }
@@ -42,15 +49,6 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
     return retval;
 }
 
-bool LabStatusInfo::ready() const
-{
-    return analyzeStatus == QString("verified");
-}
-
-bool LabStatusInfo::exists() const
-{
-    return analyzeStatus != QString("no-exists");
-}
 
 Network::Network(QObject *parent) : QObject(parent)
 {
@@ -170,9 +168,10 @@ void Network::onAuthFinished()
                 authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
                 authedId.expires = jsonResp["expires"].toInt();
-                authedId.scores = jsonResp["scores"].toInt();
+                authedId.connectedDevices = jsonResp["scores"].toInt();
                 authedId.vipDays = jsonResp["vip_period"].toInt();
                 authedId.location = jsonResp["location"].toString();
+                authedId.blocked = jsonResp["blocked"].toBool();
                 status = 0;
             }
             break;
@@ -185,8 +184,7 @@ void Network::onAuthFinished()
 void Network::onAdsFinished()
 {
     int status = NetworkStatus::NetworkError;
-    QStringList adsList;
-    LabStatusInfo labs;
+    AdsInfo adsData {};
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if(reply)
     {
@@ -204,15 +202,19 @@ void Network::onAdsFinished()
                 {
                     if(jsonResp["expires"].isDouble())
                         authedId.expires = jsonResp["expires"].toInt();
-                    labs = fromJsonLabs(jsonResp["labs"]);
-                    QJsonArray adsData = jsonResp["result"].toArray();
-                    for(const QJsonValue & val : std::as_const(adsData))
-                        adsList << val.toString();
+                    adsData.labs = fromJsonLabs(jsonResp["labs"]);
+                    QJsonArray jarray = jsonResp["result"].toArray();
+                    for(const QJsonValue & val : std::as_const(jarray))
+                        adsData.blacklist << val.toString();
+                    jarray = jsonResp["autodisable"].toArray();
+                    if(!jsonResp["autodisable"].isNull())
+                        for(const QJsonValue & val : std::as_const(jarray))
+                            adsData.disabling << val.toString();
                 }
             }
             break;
         }
-        emit labAdsFinish(status, {labs,adsList}, status == NetworkStatus::OK);
+        emit labAdsFinish(status, adsData, status == NetworkStatus::OK);
         reply->deleteLater();
     }
 }

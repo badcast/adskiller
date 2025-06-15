@@ -43,7 +43,7 @@ constexpr auto infoNoNetwork = "Не удалось связаться с сер
                                "Программа будет завершена.";
 
 extern QString malwareReadHeader();
-extern std::pair<QStringList,int> malwareReadLog();
+extern std::pair<QStringList, int> malwareReadLog();
 extern MalwareStatus malwareStatus();
 extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
@@ -61,25 +61,26 @@ QByteArray randomKey()
     return key;
 }
 
-QByteArray encryptData(const QByteArray& bytes, const QByteArray& key)
+QByteArray encryptData(const QByteArray &bytes, const QByteArray &key)
 {
     int x;
-    QByteArray retval {bytes};
-    for(x = 0; x < bytes.length(); ++x)
+    QByteArray retval;
+    retval.resize(bytes.length());
+    for (x = 0; x < bytes.length(); ++x)
     {
         retval[x] = bytes[x] ^ key[x % key.length()];
     }
     return retval;
 }
 
-inline QByteArray decryptData(const QByteArray& bytes, const QByteArray& key)
+inline QByteArray decryptData(const QByteArray &bytes, const QByteArray &key)
 {
     return encryptData(bytes, key);
 }
 
-QString packDC(const QByteArray& dataInit, const QByteArray& key)
+QString packDC(const QByteArray &dataInit, const QByteArray &key)
 {
-    QByteArray retval {};
+    QByteArray retval{};
     QByteArray data = encryptData(dataInit, key);
     int keylen = key.toHex().length();
     int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
@@ -91,17 +92,17 @@ QString packDC(const QByteArray& dataInit, const QByteArray& key)
     return QLatin1String(retval.toBase64());
 }
 
-QByteArray unpackDC(const QString& packed)
+QByteArray unpackDC(const QString &packed)
 {
     QByteArray key{}, data{};
     int keylen;
     int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
     data = QByteArray::fromBase64(packed.toLatin1());
-    if (!data.isEmpty() && data.mid(0,hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
+    if (!data.isEmpty() && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
     {
         keylen = data[hashlen];
         key = QByteArray::fromHex(data.mid(hashlen + 1, keylen));
-        data = decryptData(data.mid(hashlen + 1 + keylen),key);
+        data = decryptData(data.mid(hashlen + 1 + keylen), key);
     }
     else
     {
@@ -113,7 +114,7 @@ QByteArray unpackDC(const QString& packed)
 uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 {
     QString _compare;
-    for(const AdbDevice &dev : devs)
+    for (const AdbDevice &dev : devs)
     {
         _compare += dev.devId;
         _compare += dev.model;
@@ -130,34 +131,36 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Load settings
     settings = new QSettings("imister.kz-app.ads", "AdsKiller", this);
-    if(settings->contains("_token") && !settings->contains("encrypted_token"))
+    if (settings->contains("_token"))
     {
         network._token = settings->value("_token", "").toString();
         settings->remove("_token");
         settings->setValue("encrypted_token", packDC(network._token.toLatin1(), randomKey()));
     }
-    else if(settings->contains("encrypted_token"))
+    else if (settings->contains("encrypted_token"))
     {
         QByteArray decData = unpackDC(settings->value("encrypted_token").toString());
         network._token = QLatin1String(decData);
     }
 
-    if(!std::all_of(std::begin(network._token), std::end(network._token), [](auto & lhs){return std::isalnum(lhs.toLatin1());}))
+    if (!std::all_of(std::begin(network._token), std::end(network._token), [](auto &lhs)
+                     { return std::isalnum(lhs.toLatin1()); }))
     {
         network._token.clear();
     }
 
     // Refresh TabPages to Content widget (Selective)
-    for(x = 0; x < ui->tabWidget->count(); ++x)
+    for (x = 0; x < ui->tabWidget->count(); ++x)
         pages << ui->tabWidget->widget(x);
-    for(x = 0; x < pages.count(); ++x)
+    for (x = 0; x < pages.count(); ++x)
         ui->contentLayout->layout()->addWidget(pages[x]);
-    for(x = 0; x < ui->tabWidget_2->count(); ++x)
+    for (x = 0; x < ui->tabWidget_2->count(); ++x)
         malwareStatusLayouts << ui->tabWidget_2->widget(x);
-    for(x = 0; x < malwareStatusLayouts.count(); ++x)
+    for (x = 0; x < malwareStatusLayouts.count(); ++x)
         ui->malwareContentLayout->addWidget(malwareStatusLayouts[x]);
     malwareStatusLayouts[0]->show();
-    connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool){
+    connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool)
+            {
         for(auto & layout : malwareStatusLayouts)
         {
             if(layout->isHidden())
@@ -168,8 +171,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             {
                 layout->hide();
             }
-        }
-    });
+        } });
 
     ui->tabWidget->deleteLater();
     ui->tabWidget_2->deleteLater();
@@ -178,8 +180,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->progressCircleLayout->addWidget(malwareProgressCircle);
     malwareProgressCircle->setInfinilyMode(false);
 
-    QList<QAction*> menusTheme {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
-    for(QAction* q : menusTheme)
+    QList<QAction *> menusTheme{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
+    for (QAction *q : menusTheme)
     {
         q->setChecked(false);
         connect(q, &QAction::triggered, this, &MainWindow::setThemeAction);
@@ -198,7 +200,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
 
     // Set Default Theme is Light (1)
-    setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(),0,2))));
+    setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
 
     // Run check version
     checkVersion();
@@ -206,6 +208,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
+    malwareKill();
     delete ui;
 }
 
@@ -223,11 +226,11 @@ void MainWindow::on_actionAboutUs_triggered()
 
 void MainWindow::on_comboBoxDevices_currentIndexChanged(int index)
 {
-    if(index == -1)
+    if (index == -1)
         return;
-    if(index == 0)
+    if (index == 0)
         adb.disconnect();
-    else if(!adb.cachedDevices.isEmpty())
+    else if (!adb.cachedDevices.isEmpty())
         adb.connect(adb.cachedDevices[index - 1].devId);
 }
 
@@ -250,13 +253,13 @@ void MainWindow::on_action_Qt_triggered()
 
 void MainWindow::on_pnext_clicked()
 {
-    if(curPage < pages.count() - 1 && curPage > (-1))
+    if (curPage < pages.count() - 1 && curPage > (-1))
         showPage(curPage + 1);
 }
 
 void MainWindow::on_pprev_clicked()
 {
-    if(curPage < pages.count() && curPage > (0))
+    if (curPage < pages.count() && curPage > (0))
         showPage(curPage - 1);
 }
 
@@ -267,7 +270,7 @@ void MainWindow::hardUpdateAdbDevices()
     devicesNew = adb.getDevices();
     hOld = hash_from_AdbDevice(adb.cachedDevices);
     hNew = hash_from_AdbDevice(devicesNew);
-    if(hOld == hNew)
+    if (hOld == hNew)
         return;
     adb.cachedDevices = std::move(devicesNew);
     softUpdateAdbDevices();
@@ -277,15 +280,16 @@ void MainWindow::softUpdateAdbDevices()
 {
     QStringList qlist;
     int i = 0, index = 0;
-    for(AdbDevice &dev : adb.cachedDevices)
+    for (AdbDevice &dev : adb.cachedDevices)
     {
-        if(index == 0 && dev.devId == adb.device.devId)
+        if (index == 0 && dev.devId == adb.device.devId)
             index = i + 1;
         ++i;
     }
-    std::transform(adb.cachedDevices.cbegin(), adb.cachedDevices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev) { return dev.displayName + " (" + dev.devId + ")"; });
+    std::transform(adb.cachedDevices.cbegin(), adb.cachedDevices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev)
+                   { return dev.displayName + " (" + dev.devId + ")"; });
     ui->comboBoxDevices->blockSignals(true);
-    for(; ui->comboBoxDevices->count() > 1;)
+    for (; ui->comboBoxDevices->count() > 1;)
         ui->comboBoxDevices->removeItem(1);
     ui->comboBoxDevices->addItems(qlist);
     ui->comboBoxDevices->setCurrentIndex(index);
@@ -310,17 +314,17 @@ void MainWindow::updatePageState()
 
 void MainWindow::showPage(int pageNum)
 {
-    int x,y;
+    int x, y;
     curPage = -1;
-    for(x = 0,y=pages.count(); x < y; ++x)
+    for (x = 0, y = pages.count(); x < y; ++x)
     {
         bool paged = (x == pageNum);
-        if(paged)
+        if (paged)
             curPage = pageNum;
         pages[x]->setVisible(paged);
     }
-    QVBoxLayout * layout = qobject_cast<QVBoxLayout*>(ui->pageIconBoxes->layout());
-    for(x = 0,y=layout->count(); x < y; ++x)
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(ui->pageIconBoxes->layout());
+    for (x = 0, y = layout->count(); x < y; ++x)
     {
         bool paged = x == pageNum;
         layout->itemAt(x)->widget()->setEnabled(paged);
@@ -331,7 +335,7 @@ void MainWindow::showPage(int pageNum)
 
 void MainWindow::pageShown(int page)
 {
-    switch(page)
+    switch (page)
     {
         // WELCOME
     case 0:
@@ -345,18 +349,14 @@ void MainWindow::pageShown(int page)
         ui->pnext->setEnabled(false);
         ui->authButton->setEnabled(true);
 
-        // Создаем модель данных
         QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
 
-        // Устанавливаем количество строк и столбцов
-        model->setRowCount(4);
+        model->setRowCount(7);
         model->setColumnCount(2);
 
-        // Устанавливаем заголовки столбцов
         model->setHorizontalHeaderItem(0, new QStandardItem("Параметр"));
         model->setHorizontalHeaderItem(1, new QStandardItem("Значение"));
 
-        // Заполняем модель данными
         model->setItem(0, 0, new QStandardItem("Логин"));
         model->setItem(0, 1, new QStandardItem("-"));
 
@@ -366,14 +366,17 @@ void MainWindow::pageShown(int page)
         model->setItem(2, 0, new QStandardItem("Баланс"));
         model->setItem(2, 1, new QStandardItem("-"));
 
-        model->setItem(3,0, new QStandardItem("VIP дней"));
-        model->setItem(3,1, new QStandardItem("-"));
+        model->setItem(3, 0, new QStandardItem("VIP дней"));
+        model->setItem(3, 1, new QStandardItem("-"));
 
         model->setItem(4, 0, new QStandardItem("Подключений"));
         model->setItem(4, 1, new QStandardItem("-"));
 
-        model->setItem(5,0, new QStandardItem("Расположение"));
-        model->setItem(5,1, new QStandardItem("-"));
+        model->setItem(5, 0, new QStandardItem("Расположение"));
+        model->setItem(5, 1, new QStandardItem("-"));
+
+        model->setItem(6, 0, new QStandardItem("Заблокирован"));
+        model->setItem(6, 1, new QStandardItem("-"));
 
         ui->authInfo->setModel(model);
 
@@ -392,7 +395,7 @@ void MainWindow::pageShown(int page)
         adb.disconnect();
         adb.blockSignals(false);
         ui->comboBoxDevices->blockSignals(true);
-        for(; ui->comboBoxDevices->count() > 1;)
+        for (; ui->comboBoxDevices->count() > 1;)
             ui->comboBoxDevices->removeItem(1);
         ui->comboBoxDevices->blockSignals(false);
         ui->connectDeviceStateStat->setText("Выберите доступное устройство из списка.");
@@ -403,6 +406,7 @@ void MainWindow::pageShown(int page)
     case 3:
     {
         QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
+        QStringList place{};
         ui->processBarStatus->setValue(0);
         ui->buttonDecayMalware->setEnabled(true);
         ui->malwareStatusText0->setText("Malware не запущен.");
@@ -421,8 +425,7 @@ void MainWindow::pageShown(int page)
 
 void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
 {
-    softUpdateAdbDevices();
-    switch(curPage)
+    switch (curPage)
     {
     case 2:
     {
@@ -430,7 +433,7 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
         QString text = "Устройство ";
         text += device.displayName;
         text += " успешно ";
-        if(state == Add)
+        if (state == Add)
             text += "подключено.";
         else
             text += "отключено.";
@@ -439,7 +442,7 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
     }
     case 3:
     {
-        if(state == Removed)
+        if (state == Removed)
         {
             malwareKill();
         }
@@ -487,27 +490,28 @@ void MainWindow::on_authButton_clicked()
         [this]()
         {
             QString temp = ui->statusAuthText->text();
-            int dotCount = std::accumulate(temp.begin(), temp.end(), 0, [](int count, const QChar &c) { return count += (c == '.' ? 1 : 0); });
-            if(dotCount == 3)
+            int dotCount = std::accumulate(temp.begin(), temp.end(), 0, [](int count, const QChar &c)
+                                           { return count += (c == '.' ? 1 : 0); });
+            if (dotCount == 3)
                 temp.remove('.');
             else
                 temp += '.';
             ui->statusAuthText->setText(temp);
         });
 
-    QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
-    for(int x = model->rowCount()-1; x > -1; --x)
+    QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
+    for (int x = model->rowCount() - 1; x > -1; --x)
     {
-        model->item(x,1)->setText("-");
+        model->item(x, 1)->setText("-");
     }
 }
 
 void MainWindow::setThemeAction()
 {
-    QList<QAction*> menus {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
-    QAction * sel = qobject_cast<QAction*>(sender());
+    QList<QAction *> virtualSelectItems{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
+    QAction *selfSender = qobject_cast<QAction *>(sender());
     int scheme;
-    for(scheme = (0); scheme < menus.size() && sel != menus[scheme]; ++scheme)
+    for (scheme = (0); scheme < virtualSelectItems.size() && selfSender != virtualSelectItems[scheme]; ++scheme)
         ;
     setTheme(static_cast<ThemeScheme>(scheme));
 }
@@ -521,30 +525,34 @@ void MainWindow::replyAuthFinish(int status, bool ok)
             bool state = ok;
             timerAuthAnim->stop();
 
-            if(state)
+            if (state)
             {
                 QString value;
-                QStandardItemModel * model = qobject_cast<QStandardItemModel*>(ui->authInfo->model());
+                QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
                 value = network.authedId.idName;
-                model->item(0,1)->setText(value);
+                model->item(0, 1)->setText(value);
 
                 value = QDateTime::currentDateTime().toString(Qt::TextDate);
-                model->item(1,1)->setText(value);
+                model->item(1, 1)->setText(value);
 
                 value = network.authedId.expires > -1 ? QString::number(network.authedId.expires) : "(безлимит)";
-                model->item(2,1)->setText(value);
+                model->item(2, 1)->setText(value);
 
                 value = QString::number(network.authedId.vipDays);
-                model->item(3,1)->setText(value);
+                model->item(3, 1)->setText(value);
 
-                value = QString::number(network.authedId.scores);
-                model->item(4,1)->setText(value);
+                value = QString::number(network.authedId.connectedDevices);
+                model->item(4, 1)->setText(value);
 
                 value = network.authedId.location;
-                model->item(5,1)->setText(value);
+                model->item(5, 1)->setText(value);
+
+                value = network.authedId.blocked ? "Да" : "Нет";
+                model->item(6, 1)->setText(value);
+
                 value.clear();
 
-                if(network.authedId.expires == 0)
+                if (network.authedId.expires == 0)
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
                     showMessageFromStatus(601);
@@ -562,7 +570,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
             else
             {
                 QString errText;
-                switch(status)
+                switch (status)
                 {
                 case 0:
                     errText = "Успех.";
@@ -589,7 +597,8 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 
 void MainWindow::replyFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
 {
-    delayPush(1000, [=](){
+    delayPush(1000, [=]()
+              {
         if(status == NetworkStatus::NetworkError)
         {
             this->showMessageFromStatus(status);
@@ -649,20 +658,18 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         appDir.mkdir(tempdir.filePath("tls"));
         QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
         QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
-        //#error BUG "EXISTS PROCESS NOT BY REPLACE"
         if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
         {
             QApplication::quit();
             return;
         }
 #endif
-        QDesktopServices::openUrl(QUrl(url));
-    });
+        QDesktopServices::openUrl(QUrl(url)); });
 }
 
 void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
 {
-    if(status == 601)
+    if (status == 601)
     {
         showPage(1);
     }
@@ -672,15 +679,15 @@ void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
 void MainWindow::setTheme(ThemeScheme theme)
 {
     int scheme;
-    const char * resourceName;
-    QList<QAction*> menus {ui->mThemeSystem,ui->mThemeLight,ui->mThemeDark};
-    QAction * sel = qobject_cast<QAction*>(sender());
-    for(scheme = (0); scheme < menus.size(); ++scheme)
+    const char *resourceName;
+    QList<QAction *> menus{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
+    QAction *sel = qobject_cast<QAction *>(sender());
+    for (scheme = (0); scheme < menus.size(); ++scheme)
     {
         menus[scheme]->setChecked(theme == scheme);
     }
 
-    switch(theme)
+    switch (theme)
     {
     case System:
         resourceName = nullptr;
@@ -693,21 +700,28 @@ void MainWindow::setTheme(ThemeScheme theme)
         resourceName = ":/resources/app-style-light";
         break;
     }
+
+    QFile styleRes {};
+    QString styleSheet {};
+    if (resourceName)
+    {
+        styleRes.setFileName(resourceName);
+        styleRes.open(QFile::ReadOnly | QFile::Text);
+        styleSheet = styleRes.readAll();
+        styleRes.close();
+    }
+
     // Set application Design
-    QFile styleRes(resourceName);
-    styleRes.open(QFile::ReadOnly | QFile::Text);
-    QString styleSheet = styleRes.readAll();
-    styleRes.close();
     app->setStyleSheet(styleSheet);
     settings->setValue("theme", static_cast<int>(theme));
 }
 
 void MainWindow::showMessageFromStatus(int statusCode)
 {
-    if(statusCode == NetworkStatus::NetworkError)
+    if (statusCode == NetworkStatus::NetworkError)
         QMessageBox::warning(this, "Ошибка подключения", infoNoNetwork);
 
-    if(statusCode == NetworkStatus::NoEnoughMoney)
+    if (statusCode == NetworkStatus::NoEnoughMoney)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance);
 }
 
@@ -719,7 +733,7 @@ void MainWindow::on_buttonDecayMalware_clicked()
 void MainWindow::doMalware()
 {
     QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-    QStringList place {};
+    QStringList place{};
 
     place << "<< Запуск процесса удаления рекламы, пожалуйста подождите >>";
     place << "<< Не отсоединяйте устройство от компьютера >>";
@@ -730,7 +744,7 @@ void MainWindow::doMalware()
     malwareProgressCircle->setInfinilyMode(true);
     malwareProgressCircle->setValue(0);
 
-    ui->deviceLabelName->setText(adb.device.displayName  + " " + adb.device.devId);
+    ui->deviceLabelName->setText(adb.device.displayName + " " + adb.device.devId);
     ui->pprev->setEnabled(false);
     ui->buttonDecayMalware->setEnabled(false);
     delayPush(
@@ -749,23 +763,23 @@ void MainWindow::doMalware()
                 {
                     QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
                     MalwareStatus status = malwareStatus();
-                    std::pair<QStringList,int> reads;
                     QString header;
                     QStringList from;
+                    std::pair<QStringList, int> reads;
                     header = malwareReadHeader();
                     reads = malwareReadLog();
 
                     ui->malwareStatusText0->setText(header);
                     ui->processBarStatus->setValue(reads.second);
                     malwareProgressCircle->setValue(reads.second);
-                    if(!reads.first.isEmpty())
+                    if (!reads.first.isEmpty())
                     {
                         from = model->stringList();
                         from.append(reads.first);
                         model->setStringList(from);
                         ui->processLogStatus->scrollToBottom();
                     }
-                    if(status != MalwareStatus::Running)
+                    if (status != MalwareStatus::Running)
                     {
                         ui->pprev->setEnabled(true);
                         ui->buttonDecayMalware->setEnabled(true);
@@ -783,7 +797,7 @@ void MainWindow::cirlceMalwareState(bool success)
 {
     malwareProgressCircle->setInfinilyMode(false);
 
-    QPropertyAnimation * animation;
+    QPropertyAnimation *animation;
     // animation = new QPropertyAnimation(malwareProgressCircle, "outerRadius", malwareProgressCircle);
     // animation->setDuration(1500);
     // animation->setEasingCurve(QEasingCurve::OutQuad);
@@ -796,7 +810,7 @@ void MainWindow::cirlceMalwareState(bool success)
     animation->setEndValue(0.0);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 
-    QColor color = success ? QColor(155,219,58) : QColor(255,100,100);
+    QColor color = success ? QColor(155, 219, 58) : QColor(255, 100, 100);
 
     animation = new QPropertyAnimation(malwareProgressCircle, "color", malwareProgressCircle);
     animation->setDuration(750);
@@ -807,7 +821,7 @@ void MainWindow::cirlceMalwareState(bool success)
 
 void MainWindow::cirlceMalwareStateReset()
 {
-    QPropertyAnimation * animation;
+    QPropertyAnimation *animation;
     // animation = new QPropertyAnimation(malwareProgressCircle, "outerRadius", malwareProgressCircle);
     // animation->setDuration(1500);
     // animation->setEasingCurve(QEasingCurve::OutQuad);
@@ -820,7 +834,7 @@ void MainWindow::cirlceMalwareStateReset()
     animation->setEndValue(0.6);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 
-    QColor color {110,190,235};
+    QColor color{110, 190, 235};
 
     animation = new QPropertyAnimation(malwareProgressCircle, "color", malwareProgressCircle);
     animation->setDuration(750);

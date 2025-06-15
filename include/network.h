@@ -14,16 +14,21 @@ class MainWindow;
 
 struct AdbDevice;
 
-struct AuthIDData
+struct UserData
 {
     QString token;
     QString idName;
     QString location;
     int vipDays;
+    int credits;
     int expires;
-    int scores;
+    int connectedDevices;
     QDateTime lastLogin;
     QDateTime serverLastTime;
+    bool blocked;
+
+    bool hasBalance() const;
+    bool hasVipAccount() const;
 };
 
 struct LabStatusInfo
@@ -33,6 +38,13 @@ struct LabStatusInfo
 
     bool ready() const;
     bool exists() const;
+};
+
+struct AdsInfo
+{
+    LabStatusInfo labs;
+    QStringList blacklist;
+    QStringList disabling;
 };
 
 enum NetworkStatus
@@ -53,7 +65,7 @@ private:
     int hasInternet;
 
 public:
-    AuthIDData authedId;
+    UserData authedId;
 
     Network(QObject * parent = nullptr);
     void authenticate(const QString &token);
@@ -68,7 +80,7 @@ public:
 
 signals:
     void loginFinish(int status, bool ok);
-    void labAdsFinish(int status, const std::pair<LabStatusInfo,QStringList>& adsData, bool ok);
+    void labAdsFinish(int status, const AdsInfo& adsData, bool ok);
     void uploadUserPackages(int status, const LabStatusInfo& labs, bool ok);
     void fetchingVersion(int status, const QString& version, const QString& url, bool ok);
     void fetchingLabs(int status, const LabStatusInfo& labs, bool ok);

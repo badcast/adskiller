@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         include/ProgressCircle.h
         src/main.cpp
         src/network.cpp
+        src/user_identity.cpp
         src/malwareProcess.cpp
         src/widget/ProgressCircle.cpp
         resources.qrc
