@@ -161,7 +161,7 @@ void Network::onAuthFinished()
                     break;
                 }
                 QString tmp = jsonResp["token"].toString();
-                // Update current token with server replaced.
+                // Update current token from server replace.
                 _token = tmp;
                 authedId.token = _token;
                 authedId.idName = jsonResp["username"].toString();

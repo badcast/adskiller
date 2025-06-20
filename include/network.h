@@ -19,13 +19,13 @@ struct UserData
     QString token;
     QString idName;
     QString location;
+    bool blocked;
     int vipDays;
     int credits;
     int expires;
     int connectedDevices;
     QDateTime lastLogin;
     QDateTime serverLastTime;
-    bool blocked;
 
     bool hasBalance() const;
     bool hasVipAccount() const;

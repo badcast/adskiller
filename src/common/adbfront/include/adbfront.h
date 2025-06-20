@@ -1,6 +1,13 @@
 #ifndef ADBTRACE_H
 #define ADBTRACE_H
 
+#include <string>
+#include <thread>
+#include <mutex>
+#include <functional>
+#include <map>
+#include <utility>
+
 #include <QList>
 #include <QProcess>
 #include <QTimer>
@@ -34,12 +41,35 @@ struct AdbDevice
 };
 
 
+class AdbShell
+{
+public:
+    AdbShell(const QString &deviceId = {});
+    AdbShell(const AdbShell &) = delete;
+    ~AdbShell();
+
+    bool connect(const QString &deviceId);
+    bool isConnect();
+    std::pair<bool, QString> commandQueueWait(const QStringList &args);
+    int commandQueueAsync(const QStringList &args);
+    std::pair<bool, QString> commandResult(int requestId, bool waitResult = true);
+    bool hasCommandRequest(int requestId);
+    QString getprop(const QString &propname);
+    void reConnect();
+    void exit();
+
+private:
+    QString deviceId;
+    std::unordered_map<int,QStringList> requests;
+    std::unordered_map<int,QString> responces;
+    std::thread *thread;
+    std::mutex mutex;
+    int data;
+};
+
 class Adb : public QObject
 {
     Q_OBJECT
-
-private:
-    void fetch();
 
 public:
     AdbDevice device;
@@ -52,6 +82,7 @@ public:
     bool isConnected();
     void connectFirst();
     void connect(const QString& devId);
+    std::pair<bool, std::unique_ptr<AdbShell>> runShell();
     void disconnect();
     QList<PackageIO> getPackages();
     void killPackages(const QList<PackageIO> &packages, int& successCount);
@@ -66,6 +97,7 @@ private slots:
     void onDeviceWatch();
 
 public:
+    static AdbConStatus deviceStatus(const QString& deviceId);
     static AdbConStatus deviceStatus(const AdbDevice &device);
     static QList<AdbDevice> getDevices();
     static uint deviceHash(const AdbDevice& device);
