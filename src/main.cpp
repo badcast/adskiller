@@ -11,6 +11,10 @@ bool checkout();
 
 int main(int argc, char *argv[])
 {
+    AdbShell shell;
+    shell.connect(Adb::getDevices().first().devId);
+    QString res = shell.commandQueueWait(QStringList() << "ls").second;//.getprop("ro.product.model");
+
     QApplication app(argc, argv);
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
     if(sharedMemUpdate.attach() || !checkout())

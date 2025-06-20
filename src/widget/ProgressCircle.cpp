@@ -2,7 +2,7 @@
 // * MODIFIED: Add Progress Text *
 // * MODIFIED: Inifnily Mode Forcly *
 // * MODIFIED: Fix 0 - value is empty circle *
-// * MODIFIED: Set showing text
+// * MODIFIED: Set showing text *
 
 /////////////////////////////////////////////////////////////////////////////
 // Date of creation: 04.07.2013
@@ -243,10 +243,8 @@ QPixmap ProgressCircle::generatePixmap() const
     }
     else
     {
-
         int startAngle = 90 * 16;
         int spanAngle = -qreal(value) * 360 * 16 / mMaximum;
-
         painter.drawPie(rect, startAngle, spanAngle);
     }
 
