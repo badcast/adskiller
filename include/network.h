@@ -52,6 +52,7 @@ enum NetworkStatus
     OK,
     ServerError = 500,
     NoEnoughMoney = 601,
+    AccountBlocked = 666,
     NetworkError = 1000
 };
 

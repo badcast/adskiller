@@ -49,7 +49,6 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
     return retval;
 }
 
-
 Network::Network(QObject *parent) : QObject(parent)
 {
     manager = new QNetworkAccessManager {this};

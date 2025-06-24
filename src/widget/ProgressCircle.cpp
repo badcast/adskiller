@@ -3,6 +3,7 @@
 // * MODIFIED: Inifnily Mode Forcly *
 // * MODIFIED: Fix 0 - value is empty circle *
 // * MODIFIED: Set showing text *
+// * MODIFIED: Set ideal font *
 
 /////////////////////////////////////////////////////////////////////////////
 // Date of creation: 04.07.2013
@@ -258,7 +259,7 @@ QPixmap ProgressCircle::generatePixmap() const
     if(mVisibleText)
     {
         QString progressText = QString::number(value) + "%";
-        QFont font = painter.font();
+        QFont font = this->font();
         font.setPixelSize(rect.width() / 5);
         painter.setFont(font);
         painter.setPen(Qt::black);

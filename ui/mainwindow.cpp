@@ -14,6 +14,7 @@
 #include <QHeaderView>
 #include <QTemporaryDir>
 #include <QRandomGenerator>
+#include <QFontDatabase>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -41,6 +42,8 @@ constexpr auto infoNoBalance = "Попытка войти в аккаунт бы
 constexpr auto infoNoNetwork = "Не удалось связаться с сервером обновления.\n"
                                "Проверьте интернет соединение и повторите попытку еще раз.\n"
                                "Программа будет завершена.";
+constexpr auto infoAccountBlocked = "Ваш аккаунт заблокирован, если вы считаете что это не справедливо,\n"
+                                    "пожалуйста обратитесь в службу поддержки клиентов.";
 
 extern QString malwareReadHeader();
 extern std::pair<QStringList, int> malwareReadLog();
@@ -199,6 +202,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
     QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
     QObject::connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
+
+    // Font init
+    int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
+    QStringList fontFamils = QFontDatabase::applicationFontFamilies(fontId);
+    if(!fontFamils.isEmpty())
+    {
+        QString fontFamily = fontFamils.first();
+        malwareProgressCircle->setStyleSheet(QString("QWidget { Font-family: '%1'; }").arg(fontFamily));
+    }
 
     // Set Default Theme is Light (1)
     setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
@@ -558,12 +570,19 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 if (network.authedId.isBOMZH())
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
-                    showMessageFromStatus(601);
+                    showMessageFromStatus(NetworkStatus::NoEnoughMoney);
                     state = false;
                 }
                 else
                 {
                     ui->statusAuthText->setText("Аутентификация прошла успешно.");
+                }
+
+                if(network.authedId.blocked)
+                {
+                    ui->statusAuthText->setText("Аккаунт заблокирован");
+                    showMessageFromStatus(NetworkStatus::AccountBlocked);
+                    state = false;
                 }
 
                 settings->setValue("encrypted_token", packDC(network.authedId.token.toLatin1(), randomKey()));
@@ -726,6 +745,9 @@ void MainWindow::showMessageFromStatus(int statusCode)
 
     if (statusCode == NetworkStatus::NoEnoughMoney)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance);
+
+    if(statusCode == NetworkStatus::AccountBlocked)
+        QMessageBox::warning(this, "Сервер отклонил запрос", infoAccountBlocked);
 }
 
 void MainWindow::on_buttonDecayMalware_clicked()
