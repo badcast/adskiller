@@ -316,7 +316,7 @@ private:
         QDir dir(path);
         QStringList result;
         QStringList items = dir.entryList(QDir::Filter(flags & AllOF) | QDir::Dirs | QDir::NoDotAndDotDot);
-        for (const QString &item : items) {
+        for (const QString &item : std::as_const(items)) {
             QString fullPath = dir.filePath(item);
             QFileInfo file(fullPath);
             if (file.isDir())
@@ -355,13 +355,13 @@ private:
         }
         QStringList entries = GetFilesEx(sourcePath, GetDirs);
         QTemporaryDir _lostTemps;
-        for(const QString &entry : entries)
+        for(const QString &entry : std::as_const(entries))
         {
             destinationDir.mkdir(destinationDir.filePath(entry));
             destinationDir.mkdir(_lostTemps.filePath(entry));
         }
         entries = GetFilesEx(sourcePath, GetFiles);
-        for(const QString &entry : entries) {
+        for(const QString &entry : std::as_const(entries)) {
             QString sourceFilePath = sourceDir.filePath(entry);
             QString destinationFilePath = destinationDir.filePath(entry);
             QString destBackupFile = entry + "_old";

@@ -160,16 +160,15 @@ void Network::onAuthFinished()
                 {
                     break;
                 }
-                QString tmp = jsonResp["token"].toString();
+                _token = jsonResp["token"].toString();
                 // Update current token from server replace.
-                _token = tmp;
                 authedId.token = _token;
                 authedId.idName = jsonResp["username"].toString();
                 authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
-                authedId.expires = jsonResp["expires"].toInt();
                 authedId.connectedDevices = jsonResp["scores"].toInt();
-                authedId.vipDays = jsonResp["vip_period"].toInt();
+                authedId.credits = jsonResp["credits"].toVariant().toUInt();
+                authedId.vipDays = jsonResp["vip_period"].toVariant().toUInt();
                 authedId.location = jsonResp["location"].toString();
                 authedId.blocked = jsonResp["blocked"].toBool();
                 status = 0;
@@ -200,8 +199,6 @@ void Network::onAdsFinished()
                     status = jsonResp["status"].toInt();
                 if(status == NetworkStatus::OK)
                 {
-                    if(jsonResp["expires"].isDouble())
-                        authedId.expires = jsonResp["expires"].toInt();
                     adsData.labs = fromJsonLabs(jsonResp["labs"]);
                     QJsonArray jarray = jsonResp["result"].toArray();
                     for(const QJsonValue & val : std::as_const(jarray))

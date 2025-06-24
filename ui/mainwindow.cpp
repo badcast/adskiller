@@ -159,8 +159,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     for (x = 0; x < malwareStatusLayouts.count(); ++x)
         ui->malwareContentLayout->addWidget(malwareStatusLayouts[x]);
     malwareStatusLayouts[0]->show();
-    connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool)
+    QObject::connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool checked)
             {
+        (void)checked;
         for(auto & layout : malwareStatusLayouts)
         {
             if(layout->isHidden())
@@ -184,7 +185,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     for (QAction *q : menusTheme)
     {
         q->setChecked(false);
-        connect(q, &QAction::triggered, this, &MainWindow::setThemeAction);
+        QObject::connect(q, &QAction::triggered, this, &MainWindow::setThemeAction);
     }
 
     model = new QStringListModel(ui->processLogStatus);
@@ -195,9 +196,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     showPage(startPage);
 
     // Signals
-    connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
-    connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
-    connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
+    QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
+    QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
+    QObject::connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
 
     // Set Default Theme is Light (1)
     setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
@@ -461,7 +462,7 @@ void MainWindow::delayPush(int ms, std::function<void()> call, bool loop)
     (void)qtimer;
     qtimer->setSingleShot(!loop);
     qtimer->setInterval(ms);
-    connect(
+    QObject::connect(
         qtimer,
         &QTimer::timeout,
         [qtimer, call]()
@@ -485,7 +486,7 @@ void MainWindow::on_authButton_clicked()
     ui->pprev->setEnabled(false);
     ui->pnext->setEnabled(false);
     ui->lineEditToken->setEnabled(false);
-    connect(
+    QObject::connect(
         timerAuthAnim,
         &QTimer::timeout,
         this,
@@ -537,7 +538,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 value = QDateTime::currentDateTime().toString(Qt::TextDate);
                 model->item(1, 1)->setText(value);
 
-                value = network.authedId.expires > -1 ? QString::number(network.authedId.expires) : "(безлимит)";
+                value = QString::number(network.authedId.credits);
                 model->item(2, 1)->setText(value);
 
                 value = QString::number(network.authedId.vipDays);
@@ -554,7 +555,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 
                 value.clear();
 
-                if (network.authedId.expires == 0)
+                if (network.authedId.isBOMZH())
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
                     showMessageFromStatus(601);
@@ -757,7 +758,7 @@ void MainWindow::doMalware()
             malwareUpdateTimer->start(100);
             // START MALWARE
             malwareStart(this);
-            connect(
+            QObject::connect(
                 malwareUpdateTimer,
                 &QTimer::timeout,
                 this,

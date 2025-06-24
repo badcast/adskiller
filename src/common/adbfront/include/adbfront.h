@@ -53,7 +53,7 @@ public:
     std::pair<bool, QString> commandQueueWait(const QStringList &args);
     int commandQueueAsync(const QStringList &args);
     std::pair<bool, QString> commandResult(int requestId, bool waitResult = true);
-    bool hasCommandRequest(int requestId);
+    bool hasReqID(int requestId);
     QString getprop(const QString &propname);
     void reConnect();
     void exit();

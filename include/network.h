@@ -20,13 +20,13 @@ struct UserData
     QString idName;
     QString location;
     bool blocked;
-    int vipDays;
-    int credits;
-    int expires;
-    int connectedDevices;
+    std::uint32_t vipDays;
+    std::uint32_t connectedDevices;
+    std::uint32_t credits;
     QDateTime lastLogin;
     QDateTime serverLastTime;
 
+    bool isBOMZH() const;
     bool hasBalance() const;
     bool hasVipAccount() const;
 };

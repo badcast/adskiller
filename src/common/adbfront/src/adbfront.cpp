@@ -62,7 +62,10 @@ bool AdbShell::connect(const QString &deviceId)
     std::function<void(void)> __waitshell__ = [this](void)
     {
         QProcess process;
+        QStringList _args;
+        QString fullArgs;
         QByteArray output;
+        std::unordered_map<int,QStringList>::iterator iter;
         process.start(ADBExecFilePath(), QStringList() << "-s" << this->deviceId << "shell", QIODevice::ReadWrite);
 
         if(process.waitForStarted())
@@ -71,18 +74,25 @@ bool AdbShell::connect(const QString &deviceId)
             while(isConnect() && process.state() == QProcess::ProcessState::Running)
             {
                 mutex.lock();
-                auto iter = std::begin(requests);
+                iter = std::begin(requests);
                 if(iter != std::end(requests))
                 {
                     int reqId = iter->first;
-                    QStringList _args = iter->second;
+                    _args = iter->second;
                     mutex.unlock();
 
-                    QString fullArgs = _args.join(' ') + "\n";
+                    fullArgs = std::move(_args.join(' '));
+                    fullArgs += "\n";
                     process.write(fullArgs.toUtf8());
                     process.waitForBytesWritten();
                     process.waitForReadyRead(10000);
                     output = process.readAllStandardOutput();
+
+                    if(process.state() != QProcess::ProcessState::Running)
+                    {
+                        break;
+                    }
+
                     if(!output.isEmpty())
                         output.remove(output.length()-1, 1);
 
@@ -147,32 +157,30 @@ std::pair<bool, QString> AdbShell::commandResult(int requestId, bool waitResult)
 {
     bool found;
     QString output {};
-    decltype(responces)::iterator iter;
-    if((found = hasCommandRequest(requestId)))
+    std::unordered_map<int,QString>::iterator iter;
+    if((found = hasReqID(requestId)))
     {
-        mutex.lock();
         do
         {
             if(waitResult)
             {
-                mutex.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                mutex.lock();
             }
+            mutex.lock();
             if((found=((iter=responces.find(requestId)) != std::end(responces))))
             {
                 output = iter->second;
                 // erase after use.
                 responces.erase(iter);
             }
+            mutex.unlock();
         }
-        while(waitResult && !found);
-        mutex.unlock();
+        while(isConnect() && waitResult && !found);
     }
     return {found, output};
 }
 
-bool AdbShell::hasCommandRequest(int requestId)
+bool AdbShell::hasReqID(int requestId)
 {
     bool found;
     mutex.lock();
