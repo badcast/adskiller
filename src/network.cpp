@@ -82,7 +82,7 @@ void Network::getAdsData(const QString& mdKey)
     json["request"] = "GETADS";
     json["mdKey"] = mdKey;
     reply = manager->post(request, QJsonDocument(json).toJson());
-    connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
 }
 
 bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packages)
@@ -104,7 +104,7 @@ bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packa
         array.append(str);
     json["packages"] = array;
     reply = manager->post(request, QJsonDocument(json).toJson());
-    connect(reply, &QNetworkReply::finished, this, &Network::onUserPackagesUploadFinished);
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onUserPackagesUploadFinished);
     return true;
 }
 
@@ -121,7 +121,7 @@ void Network::fetchLabState(const QString &mdKey)
     json["request"] = "MDKEYSTATUS";
     json["mdKey"] = mdKey;
     reply = manager->post(request, QJsonDocument(json).toJson());
-    connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
 }
 
 bool Network::isAuthed()
@@ -135,7 +135,7 @@ void Network::fetchVersion()
     QUrl url(url_version());
     QNetworkRequest request(url);
     reply = manager->get(request);
-    connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
 }
 
 void Network::onAuthFinished()
