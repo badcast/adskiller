@@ -19,10 +19,13 @@ struct UserData
     QString token;
     QString idName;
     QString location;
+    QString currencyType;
+
     bool blocked;
     std::uint32_t vipDays;
     std::uint32_t connectedDevices;
     std::uint32_t credits;
+    std::uint32_t basePrice;
     QDateTime lastLogin;
     QDateTime serverLastTime;
 
@@ -35,6 +38,7 @@ struct LabStatusInfo
 {
     QString mdKey;
     QString analyzeStatus;
+    bool purchased;
 
     bool ready() const;
     bool exists() const;

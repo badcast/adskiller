@@ -15,6 +15,9 @@
 #include <QTemporaryDir>
 #include <QRandomGenerator>
 #include <QFontDatabase>
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
+#include <QEventLoop>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -51,6 +54,8 @@ extern MalwareStatus malwareStatus();
 extern void malwareStart(MainWindow *handler);
 extern void malwareKill();
 extern bool malwareClean();
+extern void malwareWriteVal(int userValue);
+extern bool malwareRequireUser();
 
 QByteArray randomKey()
 {
@@ -422,13 +427,13 @@ void MainWindow::pageShown(int page)
         QStringList place{};
         ui->processBarStatus->setValue(0);
         ui->buttonDecayMalware->setEnabled(true);
-        place << "<< Все готово для запуска >>";
-        place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
-        ui->malwareStatusText0->setText("Malware не запущен.");
+        ui->malwareStatusText0->setText("Anti-Malware не запущен.");
         malwareProgressCircle->setValue(0);
         malwareProgressCircle->setMaximum(100);
         malwareProgressCircle->setInfinilyMode(false);
         cirlceMalwareStateReset();
+        place << "<< Все готово для запуска >>";
+        place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
         model->setStringList(place);
         break;
     }
@@ -550,7 +555,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 value = QDateTime::currentDateTime().toString(Qt::TextDate);
                 model->item(1, 1)->setText(value);
 
-                value = QString::number(network.authedId.credits);
+                value = QString::number(network.authedId.credits) + " " + network.authedId.currencyType;
                 model->item(2, 1)->setText(value);
 
                 value = QString::number(network.authedId.vipDays);
@@ -814,6 +819,20 @@ void MainWindow::doMalware()
                         malwareUpdateTimer->deleteLater();
                         malwareClean();
                     }
+                    else if(malwareRequireUser())
+                    {
+                        QString buyText = "Подтвердите свою покупку удаление вредоносных программ из устройства %1 за %2 %3\nВаш баланс %4 %5\nПосле покупки станет %6 %7\nЖелаете продолжить?";
+                        int num0 = qMax<int>(0,static_cast<int>(network.authedId.credits) - static_cast<int>(network.authedId.basePrice));
+                        buyText = buyText.arg(adb.device.displayName)
+                                      .arg(network.authedId.basePrice)
+                                      .arg(network.authedId.currencyType)
+                                      .arg(network.authedId.credits)
+                                      .arg(network.authedId.currencyType)
+                                      .arg(num0)
+                                      .arg(network.authedId.currencyType);
+                        num0 = QMessageBox::question(this, QString("Подтверждение покупки"), buyText, QMessageBox::StandardButton::Yes, QMessageBox::StandardButton::No);
+                        malwareWriteVal(num0);
+                    }
                 });
         });
 }
@@ -867,3 +886,5 @@ void MainWindow::cirlceMalwareStateReset()
     animation->setEndValue(color);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
+
+

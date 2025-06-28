@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     {
         return 1;
     }
-
     MainWindow w;
     int exitCode;
     w.app = &app;

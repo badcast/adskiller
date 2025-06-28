@@ -45,6 +45,7 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
     {
         retval.analyzeStatus = jroot["analyzeStatus"].toString();
         retval.mdKey = jroot["mdKey"].toString();
+        retval.purchased = jroot["purchased"].toBool();
     }
     return retval;
 }
@@ -161,7 +162,10 @@ void Network::onAuthFinished()
                 }
                 _token = jsonResp["token"].toString();
                 // Update current token from server replace.
-                authedId.token = _token;
+                if(authedId.token != _token)
+                {
+                    authedId.token = _token;
+                }
                 authedId.idName = jsonResp["username"].toString();
                 authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
@@ -170,6 +174,8 @@ void Network::onAuthFinished()
                 authedId.vipDays = jsonResp["vip_period"].toVariant().toUInt();
                 authedId.location = jsonResp["location"].toString();
                 authedId.blocked = jsonResp["blocked"].toBool();
+                authedId.basePrice = jsonResp["base_price"].toVariant().toUInt();
+                authedId.currencyType = jsonResp["currency_type"].toString();
                 status = 0;
             }
             break;
