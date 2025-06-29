@@ -22,7 +22,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-constexpr auto AdskillerCompiledVersion = ADSVERSION;
+constexpr int AppVerMajor=ADS_VER_MAJOR;
+constexpr int AppVerMinor=ADS_VER_MINOR;
+constexpr int AppVerPatch=ADS_VER_PATCH;
 
 #ifdef WIN32
 constexpr auto UpdateManagerExecute = "update.exe";
@@ -234,7 +236,7 @@ void MainWindow::on_actionAboutUs_triggered()
 {
     QString text;
     QMessageBox msg(this);
-    text = QString("Версия программного обеспечения: %1\n\n").arg(ADSVERSION);
+    text = QString("Версия программного обеспечения: %1.%2.%3\n\n").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     text += infoMessage;
     msg.setWindowTitle("О программе");
     msg.setText(text);
@@ -637,7 +639,10 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
             return str.toInt();
         };
         QVector<int> ints;
-        QStringList list = std::move(QString(ADSVERSION).split('.', Qt::SkipEmptyParts));
+        QStringList list;
+        list << QString::number(AppVerMajor);
+        list << QString::number(AppVerMinor);
+        list << QString::number(AppVerPatch);
         std::transform(std::begin(list), std::end(list), std::back_inserter(ints), _convertToInt);
         QVersionNumber verApp(ints);
         list = std::move(version.split('.', Qt::SkipEmptyParts));

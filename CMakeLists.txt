@@ -73,7 +73,7 @@ target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SO
 target_link_libraries(adskiller PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
-target_compile_definitions(adskiller PRIVATE ADSVERSION="${ADSVERSION}")
+target_compile_definitions(adskiller PRIVATE ADS_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR} ADS_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR} ADS_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH} )
 target_compile_definitions(update PRIVATE APPVERSION="${ADSVERSION}")
 
 if(WIN32)

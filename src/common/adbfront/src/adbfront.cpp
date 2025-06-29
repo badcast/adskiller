@@ -93,6 +93,10 @@ bool AdbShell::connect(const QString &deviceId)
                         break;
                     }
 
+#ifdef WIN32
+                    if(!output.isEmpty())
+                        output.replace("\r\n", "\n");
+#endif
                     if(!output.isEmpty())
                         output.remove(output.length()-1, 1);
 
@@ -198,7 +202,7 @@ void AdbShell::exit()
 {
     if (thread == nullptr)
         return;
-    commandQueueWait(QStringList() << "exit");
+    commandQueueWait(QStringList() << "exit" << "&&" << "echo 1");
     deviceId.clear();
     thread->join();
     for(const std::pair<int, QStringList> & q : std::as_const(requests))

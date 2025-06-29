@@ -14,10 +14,6 @@
 #include "adbfront.h"
 #include "network.h"
 
-#ifndef ADSVERSION
-#define ADSVERSION "custom"
-#endif
-
 enum MalwareStatus
 {
     Idle,
