@@ -22,11 +22,13 @@ set(PROJECT_SOURCES
         ui/mainwindow.cpp
         include/network.h
         include/ProgressCircle.h
+        include/SystemTray.h
         src/main.cpp
         src/network.cpp
         src/user_identity.cpp
         src/malwareProcess.cpp
         src/widget/ProgressCircle.cpp
+        src/SystemTray.cpp
         resources.qrc
 )
 

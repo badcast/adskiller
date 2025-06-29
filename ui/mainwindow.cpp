@@ -21,6 +21,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "SystemTray.h"
 
 constexpr int AppVerMajor=ADS_VER_MAJOR;
 constexpr int AppVerMinor=ADS_VER_MINOR;
@@ -221,6 +222,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Set Default Theme is Light (1)
     setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
+
+    // Init tray
+    AdsAppSystemTray * tray = new AdsAppSystemTray(this);
 
     // Run check version
     checkVersion();
@@ -713,7 +717,6 @@ void MainWindow::setTheme(ThemeScheme theme)
     int scheme;
     const char *resourceName;
     QList<QAction *> menus{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
-    QAction *sel = qobject_cast<QAction *>(sender());
     for (scheme = (0); scheme < menus.size(); ++scheme)
     {
         menus[scheme]->setChecked(theme == scheme);
