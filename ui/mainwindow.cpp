@@ -634,8 +634,10 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
               {
         if(status == NetworkStatus::NetworkError)
         {
+            ui->labelStat->setText("Завершение...");
             this->showMessageFromStatus(status);
-            this->close();
+            delayPush(5000, [this](){this->close();}, false);
+            QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
             return;
         }
         auto _convertToInt = [](const QString& str) -> int
@@ -700,7 +702,8 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
             return;
         }
 #endif
-        QDesktopServices::openUrl(QUrl(url)); });
+        QDesktopServices::openUrl(QUrl(url));
+    });
 }
 
 void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
@@ -749,6 +752,13 @@ void MainWindow::setTheme(ThemeScheme theme)
     // Set application Design
     app->setStyleSheet(styleSheet);
     settings->setValue("theme", static_cast<int>(theme));
+}
+
+ThemeScheme MainWindow::getTheme()
+{
+    ThemeScheme scheme;
+    scheme = static_cast<ThemeScheme>(settings->value("theme", static_cast<int>(ThemeScheme::Light)).toInt());
+    return scheme;
 }
 
 void MainWindow::showMessageFromStatus(int statusCode)

@@ -45,6 +45,7 @@ public:
     void updateAdbDevices();
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
+    ThemeScheme getTheme();
 
     Adb adb;
     Network network;
