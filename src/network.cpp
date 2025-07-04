@@ -151,12 +151,12 @@ void Network::onAuthFinished()
             {
                 QByteArray responce = reply->readAll();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
+                status = NetworkStatus::ServerError;
                 if(jsonResp.isNull())
                 {
-                    status = NetworkStatus::ServerError;
                     break;
                 }
-                if((status=jsonResp["status"].toInt()) != NetworkStatus::OK)
+                if(!jsonResp["status"].isDouble() || (status=jsonResp["status"].toInt()) != NetworkStatus::OK)
                 {
                     break;
                 }
