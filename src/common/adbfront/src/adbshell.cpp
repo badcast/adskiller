@@ -40,31 +40,54 @@ bool AdbShell::connect(const QString &deviceId)
                 iter = std::begin(requests);
                 if(iter != std::end(requests))
                 {
+                    int lastIndex;
+                    int len;
                     int reqId = iter->first;
+                    int retCode;
                     _args = iter->second;
                     mutex.unlock();
 
                     fullArgs = std::move(_args.join(' '));
-                    fullArgs += "\n";
+                    fullArgs += "\necho \"|$?\"\n";
                     process.write(fullArgs.toUtf8());
                     process.waitForBytesWritten();
-                    process.waitForReadyRead(10000);
-                    output = process.readAllStandardOutput();
 
-                    if(process.state() != QProcess::ProcessState::Running)
+                    lastIndex = -1;
+                    do
+                    {
+                        process.waitForReadyRead(10000);
+                        output += process.readAllStandardOutput();
+                        lastIndex = output.lastIndexOf('|');
+                    }
+                    while(lastIndex == -1 && process.state() == QProcess::ProcessState::Running);
+
+                    if(lastIndex == -1 || process.state() != QProcess::ProcessState::Running)
                     {
                         break;
                     }
 
 #ifdef WIN32
                     if(!output.isEmpty())
+                    {
                         output.replace("\r\n", "\n");
+                    }
 #endif
+
                     if(!output.isEmpty())
-                        output.remove(output.length()-1, 1);
+                    {
+                        len = 1;
+
+                        QByteArray dupNum = output.mid(lastIndex+1, (output.length()-lastIndex+1));
+                        retCode = dupNum.toInt();
+                        if(lastIndex > 0)
+                            lastIndex--;
+                        len += output.length()-lastIndex;
+
+                        output.remove(lastIndex, len);
+                    }
 
                     mutex.lock();
-                    responces[reqId] = output;
+                    responces[reqId] = std::move(output);
                     output.clear();
                     // erase after use.
                     requests.erase(reqId);
@@ -165,7 +188,7 @@ void AdbShell::exit()
 {
     if (thread == nullptr)
         return;
-    commandQueueWait(QStringList() << "exit" << ";" << "echo 1");
+    commandQueueWait(QStringList() << "exit");
     deviceId.clear();
     thread->join();
     for(const std::pair<int, QStringList> & q : std::as_const(requests))

@@ -198,7 +198,7 @@ void Adb::killPackages(const QList<PackageIO> &packages, int &successCount)
     std::unique_ptr<AdbShell> shell = runShell().second;
     for (const PackageIO &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "am" << "force-stop" << package.packageName << ";" << "echo 1");
+        reply = shell->commandQueueWait(QStringList() << "am" << "force-stop" << package.packageName);
         if (!reply.first)
             continue;
         successCount++;
@@ -214,7 +214,7 @@ bool Adb::uninstallPackages(const QStringList &packages, int &successCount)
     std::unique_ptr<AdbShell> shell = runShell().second;
     for (const QString &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "pm" << "uninstall" << "--user" << "0" << package << ";" << "echo 1");
+        reply = shell->commandQueueWait(QStringList() << "pm" << "uninstall" << "--user" << "0" << package);
         if (!reply.first)
             continue;
         successCount++;
@@ -231,7 +231,7 @@ bool Adb::disablePackages(const QStringList &packages, int &successCount)
     std::unique_ptr<AdbShell> shell = runShell().second;
     for (const QString &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "pm" << "disable-user" << "--user" << "0" << package << ";" << "echo 1");
+        reply = shell->commandQueueWait(QStringList() << "pm" << "disable-user" << "--user" << "0" << package);
         if (!reply.first)
             continue;
         successCount++;
@@ -248,7 +248,7 @@ bool Adb::enablePackages(const QStringList &packages, int &successCount)
     std::unique_ptr<AdbShell> shell = runShell().second;
     for (const QString &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "pm" << "enable" << "--user" << "0" << package << ";" << "echo 1");
+        reply = shell->commandQueueWait(QStringList() << "pm" << "enable" << "--user" << "0" << package);
         if (!reply.first)
             continue;
         successCount++;
