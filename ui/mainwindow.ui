@@ -149,8 +149,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>2066</width>
-              <height>2178</height>
+              <width>697</width>
+              <height>380</height>
              </rect>
             </property>
             <property name="layoutDirection">
@@ -163,7 +163,7 @@
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/resources/noads&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Освободите&lt;/span&gt; свое устройство Android от назойливых вирусов и реклам с помощью &lt;span style=&quot; font-weight:700; font-style:italic; text-decoration: underline;&quot;&gt;Ads Killer&lt;/span&gt;! Мощная программа эффективно удаляет вредоносные приложения и блокирует нежелательные рекламные объявления, обеспечивая вам безопасный и комфортный опыт использования вашего смартфона или планшета.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:22pt; font-weight:700; font-style:italic; text-decoration: underline; color:#00aa7f;&quot;&gt;ЧТО ВАЖНО? БЕЗ УДАЛЕНИЯ ВСЕХ ДАННЫХ. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;Проект реализован под свободной лицензией GPLv3 и разработан командой imister.kz. Защитите свое устройство с Ads Killer!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img  width=&quot;150&quot; src=&quot;:/resources/noads&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Освободите&lt;/span&gt; свое устройство Android от назойливых вирусов и реклам с помощью &lt;span style=&quot; font-weight:700; font-style:italic; text-decoration: underline;&quot;&gt;Ads Killer&lt;/span&gt;! Мощная программа эффективно удаляет вредоносные приложения и блокирует нежелательные рекламные объявления, обеспечивая вам безопасный и комфортный опыт использования вашего смартфона или планшета.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:22pt; font-weight:700; font-style:italic; text-decoration: underline; color:#00aa7f;&quot;&gt;ЧТО ВАЖНО? БЕЗ УДАЛЕНИЯ ВСЕХ ДАННЫХ. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;Проект реализован под свободной лицензией GPLv3 и разработан командой imister.kz. Защитите свое устройство с Ads Killer!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
