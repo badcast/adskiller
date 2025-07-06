@@ -1,5 +1,4 @@
-#ifndef ADBTRACE_H
-#define ADBTRACE_H
+#pragma once
 
 #include <string>
 #include <thread>
@@ -50,12 +49,15 @@ public:
 
     bool connect(const QString &deviceId);
     bool isConnect();
+    inline void disconnect(){
+        exit();
+    }
     std::pair<bool, QString> commandQueueWait(const QStringList &args);
     int commandQueueAsync(const QStringList &args);
     std::pair<bool, QString> commandResult(int requestId, bool waitResult = true);
     bool hasReqID(int requestId);
     QString getprop(const QString &propname);
-    void reConnect();
+    bool reConnect();
     void exit();
 
 private:
@@ -109,5 +111,3 @@ private:
 bool operator ==(const AdbDevice& lhs, const AdbDevice& rhs);
 
 QString ADBExecFilePath();
-
-#endif // ADBTRACE_H

@@ -184,6 +184,13 @@ QString AdbShell::getprop(const QString &propname)
     return commandQueueWait(QStringList() << "getprop" << propname).second;
 }
 
+bool AdbShell::reConnect()
+{
+    if(isConnect())
+        exit();
+    return connect(deviceId);
+}
+
 void AdbShell::exit()
 {
     if (thread == nullptr)

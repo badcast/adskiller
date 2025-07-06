@@ -1,5 +1,4 @@
-#ifndef ADBCMDS_H
-#define ADBCMDS_H
+#pragma once
 
 #ifdef __linux__
 constexpr const char AdbFilename[] = "adb";
@@ -10,6 +9,3 @@ constexpr const char AdbFilename[] = "adb.exe";
 constexpr const char CmdGetProductModel[] = "ro.product.model";
 constexpr const char CmdGetProductMarketname[] = "ro.product.marketname";
 constexpr const char CmdGetProductManufacturer[] = "ro.product.manufacturer";
-
-
-#endif // ADBCMDS_H
