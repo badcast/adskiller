@@ -49,6 +49,11 @@ bool AdbShell::connect(const QString &deviceId)
 
                     fullArgs = std::move(_args.join(' '));
                     fullArgs += "\necho \"|$?\"\n";
+
+#ifdef WIN32
+                    fullArgs.replace('\n', "\r\n");
+#endif
+
                     process.write(fullArgs.toUtf8());
                     process.waitForBytesWritten();
 
