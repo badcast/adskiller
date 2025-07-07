@@ -37,8 +37,6 @@ AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
         restoreWindow->setText((mainWindow->isHidden() ? "Restore" : "Hide"));
     });
 
-    QObject::connect(this, &AdsAppSystemTray::activated, restoreWindow, &QAction::triggered);
-
     menu->addAction(restoreWindow);
     menu->addSeparator();
     menu->addAction(setThemeToDark);

@@ -62,6 +62,9 @@ bool AdbShell::connect(const QString &deviceId)
                     {
                         process.waitForReadyRead(10000);
                         output += process.readAllStandardOutput();
+#ifdef WIN32
+                        output.replace("\r\n", "\n");
+#endif
                         lastIndex = output.lastIndexOf('|');
                     }
                     while(lastIndex == -1 && process.state() == QProcess::ProcessState::Running);
@@ -70,13 +73,6 @@ bool AdbShell::connect(const QString &deviceId)
                     {
                         break;
                     }
-
-#ifdef WIN32
-                    if(!output.isEmpty())
-                    {
-                        output.replace("\r\n", "\n");
-                    }
-#endif
 
                     if(!output.isEmpty())
                     {

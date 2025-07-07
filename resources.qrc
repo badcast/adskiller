@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/resources">
-        <file alias="noads">res/noads.png</file>
         <file alias="shield">res/shield.png</file>
         <file alias="update-list">res/update-list.png</file>
         <file alias="app-style-light">res/style/metro-blue.qss</file>
