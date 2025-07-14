@@ -586,24 +586,26 @@ void MainWindow::replyAuthFinish(int status, bool ok)
             }
             else
             {
-                QString errText;
+                QString resText;
                 switch (status)
                 {
                 case 0:
-                    errText = "Успех.";
+                    resText = "Токен успешно прошел проверку. Добро пожаловать, ";
+                    resText += network.authedId.idName;
+                    resText += "!";
                     break;
                 case 401:
-                    errText = "Не действительный токен.";
+                    resText = "Сервер вернул код 401 - не действительный токен или запрос обработан с ошибкой.";
                     break;
                 case NetworkStatus::NoEnoughMoney:
-                    errText = infoNoBalance;
+                    resText = infoNoBalance;
                     break;
                 default:
-                    errText = "Проверьте интернет соединение.";
+                    resText = "Проверьте интернет соединение.";
                     break;
                 }
 
-                ui->statusAuthText->setText(errText);
+                ui->statusAuthText->setText(resText);
             }
             ui->lineEditToken->setEnabled(true);
             ui->authButton->setEnabled(true);
