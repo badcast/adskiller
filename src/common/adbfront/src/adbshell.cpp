@@ -57,7 +57,6 @@ bool AdbShell::connect(const QString &deviceId)
                     process.write(fullArgs.toUtf8());
                     process.waitForBytesWritten();
 
-                    lastIndex = -1;
                     do
                     {
                         process.waitForReadyRead(10000);
@@ -94,7 +93,7 @@ bool AdbShell::connect(const QString &deviceId)
                     requests.erase(reqId);
                 }
                 mutex.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
             process.close();
         }

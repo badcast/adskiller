@@ -224,7 +224,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
 
     // Init tray
-    AdsAppSystemTray * tray = new AdsAppSystemTray(this);
+    (void)new AdsAppSystemTray(this);
 
     // Run check version
     checkVersion();
