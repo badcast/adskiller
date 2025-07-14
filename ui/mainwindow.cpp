@@ -323,7 +323,6 @@ void MainWindow::softUpdateDevices()
 void MainWindow::checkVersion()
 {
     ui->labelStat->setText("Проверка обновления");
-    ui->pnext->setEnabled(false);
     network.fetchVersion();
 }
 
@@ -331,8 +330,6 @@ void MainWindow::updatePageState()
 {
     constexpr char labelPage[] = "Странница <u><b>%1</b></u> из <u><b>%2</b></u>";
     QString labelText = QString::fromUtf8(labelPage);
-    ui->pprev->setEnabled(curPage > 0 && curPage != -1 && curPage > minPage);
-    ui->pnext->setEnabled(curPage < pages.count() - 1 && curPage != -1);
     ui->labelStat->setText(labelText.arg(curPage + 1).arg(pages.count()));
 }
 
@@ -363,18 +360,15 @@ void MainWindow::pageShown(int page)
     {
         // WELCOME
     case 0:
-
-        break;
-        // AUTH
-    case 1:
-    {
         ui->lineEditToken->setText(network._token);
         ui->statusAuthText->setText("Выполните аутентификацию");
-        ui->pnext->setEnabled(false);
         ui->authButton->setEnabled(true);
 
-        QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
+        break;
+    case 1:
+    {
 
+        QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
         model->setRowCount(7);
         model->setColumnCount(2);
 
@@ -413,7 +407,6 @@ void MainWindow::pageShown(int page)
     // DEVICES
     case 2:
     {
-        ui->pnext->setEnabled(false);
         adb.blockSignals(true);
         adb.cachedDevices.clear();
         adb.disconnect();
@@ -455,7 +448,6 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
     case 2:
     {
         softUpdateDevices();
-        ui->pnext->setEnabled(state == Add);
         QString text = "Устройство ";
         text += device.displayName;
         text += " успешно ";
@@ -506,8 +498,6 @@ void MainWindow::on_authButton_clicked()
     timerAuthAnim->start(350);
 
     qobject_cast<QWidget *>(sender())->setEnabled(false);
-    ui->pprev->setEnabled(false);
-    ui->pnext->setEnabled(false);
     ui->lineEditToken->setEnabled(false);
     QObject::connect(
         timerAuthAnim,
@@ -519,17 +509,11 @@ void MainWindow::on_authButton_clicked()
             int dotCount = std::accumulate(temp.begin(), temp.end(), 0, [](int count, const QChar &c)
                                            { return count += (c == '.' ? 1 : 0); });
             if (dotCount == 3)
-                temp.remove('.');
+                temp.remove(temp.length()-3,3);
             else
                 temp += '.';
             ui->statusAuthText->setText(temp);
         });
-
-    QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
-    for (int x = model->rowCount() - 1; x > -1; --x)
-    {
-        model->item(x, 1)->setText("-");
-    }
 }
 
 void MainWindow::setThemeAction()
@@ -551,7 +535,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
             bool state = ok;
             timerAuthAnim->stop();
 
-            if (state)
+            if (state && curPage == 1)
             {
                 QString value;
                 QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
@@ -578,7 +562,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 
                 value.clear();
 
-                if (network.authedId.isBOMZH())
+                if (network.authedId.isNotValidBalance())
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
                     showMessageFromStatus(NetworkStatus::NoEnoughMoney);
@@ -602,28 +586,28 @@ void MainWindow::replyAuthFinish(int status, bool ok)
             }
             else
             {
-                QString errText;
+                QString resText;
                 switch (status)
                 {
                 case 0:
-                    errText = "Успех.";
+                    resText = "Токен успешно прошел проверку. Добро пожаловать, ";
+                    resText += network.authedId.idName;
+                    resText += "!";
                     break;
                 case 401:
-                    errText = "Не действительный токен.";
+                    resText = "Сервер вернул код 401 - не действительный токен или запрос обработан с ошибкой.";
                     break;
                 case NetworkStatus::NoEnoughMoney:
-                    errText = infoNoBalance;
+                    resText = infoNoBalance;
                     break;
                 default:
-                    errText = "Проверьте интернет соединение.";
+                    resText = "Проверьте интернет соединение.";
                     break;
                 }
 
-                ui->statusAuthText->setText(errText);
-                ui->pprev->setEnabled(true);
+                ui->statusAuthText->setText(resText);
             }
             ui->lineEditToken->setEnabled(true);
-            ui->pnext->setEnabled(state);
             ui->authButton->setEnabled(true);
         });
 }
@@ -659,7 +643,6 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
         if(verApp >= verServer)
         {
             ui->labelStat->setText("Вы используете последнюю версию. Нажмите <b>Далее ></b>, чтобы продолжить.");
-            ui->pnext->setEnabled(true);
             return;
         }
 
@@ -793,7 +776,6 @@ void MainWindow::doMalware()
     malwareProgressCircle->setValue(0);
 
     ui->deviceLabelName->setText(adb.device.displayName + " " + adb.device.devId);
-    ui->pprev->setEnabled(false);
     ui->buttonDecayMalware->setEnabled(false);
     delayPush(
         500,
@@ -829,7 +811,6 @@ void MainWindow::doMalware()
                     }
                     if (status != MalwareStatus::Running)
                     {
-                        ui->pprev->setEnabled(true);
                         ui->buttonDecayMalware->setEnabled(true);
                         cirlceMalwareState(status != MalwareStatus::Error);
                         malwareProgressCircle->setInfinilyMode(false);
@@ -904,5 +885,3 @@ void MainWindow::cirlceMalwareStateReset()
     animation->setEndValue(color);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
-
-

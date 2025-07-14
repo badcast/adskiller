@@ -1,6 +1,6 @@
 #include "network.h"
 
-bool UserData::isBOMZH() const
+bool UserData::isNotValidBalance() const
 {
     return credits == 0 && vipDays == 0;
 }

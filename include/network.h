@@ -29,7 +29,7 @@ struct UserData
     QDateTime lastLogin;
     QDateTime serverLastTime;
 
-    bool isBOMZH() const;
+    bool isNotValidBalance() const;
     bool hasBalance() const;
     bool hasVipAccount() const;
 };

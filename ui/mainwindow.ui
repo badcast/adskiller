@@ -42,62 +42,6 @@
     <normaloff>:/resources/app-icon</normaloff>:/resources/app-icon</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>600</x>
-      <y>446</y>
-      <width>191</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
-     </property>
-     <item>
-      <widget class="QPushButton" name="pprev">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>&lt; Назад</string>
-       </property>
-       <property name="default">
-        <bool>false</bool>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pnext">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Далее &gt;</string>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QGroupBox" name="contentLayout">
     <property name="geometry">
      <rect>
@@ -123,65 +67,11 @@
      <property name="spacing">
       <number>0</number>
      </property>
-     <item row="0" column="0">
+     <item row="1" column="0">
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <widget class="QWidget" name="tab0">
-        <attribute name="title">
-         <string>Hello Page</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <widget class="QScrollArea" name="scrollArea">
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-           </property>
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContents">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>697</width>
-              <height>380</height>
-             </rect>
-            </property>
-            <property name="layoutDirection">
-             <enum>Qt::LayoutDirection::LeftToRight</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_2">
-               <property name="tabletTracking">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img  width=&quot;150&quot; src=&quot;:/resources/app-icon&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Освободите&lt;/span&gt; свое устройство Android от назойливых вирусов и реклам с помощью &lt;span style=&quot; font-weight:700; font-style:italic; text-decoration: underline;&quot;&gt;Ads Killer&lt;/span&gt;! Мощная программа эффективно удаляет вредоносные приложения и блокирует нежелательные рекламные объявления, обеспечивая вам безопасный и комфортный опыт использования вашего смартфона или планшета.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:22pt; font-weight:700; font-style:italic; text-decoration: underline; color:#00aa7f;&quot;&gt;ЧТО ВАЖНО? БЕЗ УДАЛЕНИЯ ВСЕХ ДАННЫХ. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;Проект реализован под свободной лицензией GPLv3 и разработан командой imister.kz. Защитите свое устройство с Ads Killer!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-               <property name="openExternalLinks">
-                <bool>true</bool>
-               </property>
-               <property name="textInteractionFlags">
-                <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="tab">
         <attribute name="title">
          <string>Auth Page</string>
@@ -189,9 +79,9 @@
         <widget class="QLineEdit" name="lineEditToken">
          <property name="geometry">
           <rect>
-           <x>130</x>
-           <y>80</y>
-           <width>271</width>
+           <x>10</x>
+           <y>260</y>
+           <width>591</width>
            <height>26</height>
           </rect>
          </property>
@@ -205,8 +95,8 @@
         <widget class="QPushButton" name="authButton">
          <property name="geometry">
           <rect>
-           <x>410</x>
-           <y>80</y>
+           <x>610</x>
+           <y>260</y>
            <width>111</width>
            <height>26</height>
           </rect>
@@ -218,23 +108,23 @@
         <widget class="QLabel" name="label_4">
          <property name="geometry">
           <rect>
-           <x>130</x>
-           <y>50</y>
-           <width>301</width>
+           <x>10</x>
+           <y>240</y>
+           <width>361</width>
            <height>18</height>
           </rect>
          </property>
          <property name="text">
-          <string>Авторизуйтесь своим ID чтобы продолжить.</string>
+          <string>Введите Токен-доступа для авторизаций в приложений</string>
          </property>
         </widget>
         <widget class="QLabel" name="statusAuthText">
          <property name="geometry">
           <rect>
-           <x>130</x>
-           <y>110</y>
-           <width>391</width>
-           <height>71</height>
+           <x>10</x>
+           <y>290</y>
+           <width>591</width>
+           <height>61</height>
           </rect>
          </property>
          <property name="text">
@@ -247,25 +137,157 @@
           <bool>true</bool>
          </property>
         </widget>
-        <widget class="QTableView" name="authInfo">
+        <widget class="QLabel" name="label_2">
+         <property name="geometry">
+          <rect>
+           <x>460</x>
+           <y>240</y>
+           <width>141</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>&lt;a href=&quot;index&quot;&gt;Забыли свой токен?&lt;/a&gt;</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>false</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextInteractionFlag::LinksAccessibleByKeyboard|Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextBrowserInteraction|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+         </property>
+        </widget>
+        <widget class="QFrame" name="frame">
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>190</y>
-           <width>711</width>
+           <y>20</y>
+           <width>221</width>
            <height>201</height>
           </rect>
          </property>
-         <property name="editTriggers">
-          <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+         <property name="styleSheet">
+          <string notr="true">image: url(:/resources/app-icon);</string>
          </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Plain</enum>
          </property>
         </widget>
+        <widget class="QFrame" name="frame_2">
+         <property name="geometry">
+          <rect>
+           <x>250</x>
+           <y>20</y>
+           <width>461</width>
+           <height>201</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="styleSheet">
+             <string notr="true">background-color: #fc234c;
+color: white;
+padding: 0;
+margin: 0;</string>
+            </property>
+            <property name="text">
+             <string>УДАЛЕНИЕ РЕКЛАМНЫХ ПО</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="styleSheet">
+             <string notr="true">background-color: #21d796;
+color: white;
+padding: 0;
+margin: 0;</string>
+            </property>
+            <property name="text">
+             <string>ПЕРЕНОС ДАННЫХ С 2 устройств</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="styleSheet">
+             <string notr="true">background-color: #25a6f7;
+color: white;
+padding: 0;
+margin: 0;</string>
+            </property>
+            <property name="text">
+             <string>РАЗБЛОКИРОВКА УСТРОЙСТВ</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab0">
+        <attribute name="title">
+         <string>Hello Page</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QTableView" name="authInfo">
+           <property name="editTriggers">
+            <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="tab1">
         <attribute name="title">
@@ -787,7 +809,7 @@ background-color: #232323;
      <rect>
       <x>10</x>
       <y>442</y>
-      <width>581</width>
+      <width>791</width>
       <height>48</height>
      </rect>
     </property>
@@ -934,6 +956,22 @@ background-color: #232323;
     <hint type="destinationlabel">
      <x>249</x>
      <y>149</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>label_2</sender>
+   <signal>linkActivated(QString)</signal>
+   <receiver>action_WhatsApp</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>534</x>
+     <y>77</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
     </hint>
    </hints>
   </connection>
