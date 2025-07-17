@@ -66,6 +66,7 @@ private:
     std::unordered_map<int,QString> responces;
     std::thread *thread;
     std::mutex mutex;
+    std::pair<std::uint32_t,std::uint32_t> dataRxTx;
     int data;
 };
 
