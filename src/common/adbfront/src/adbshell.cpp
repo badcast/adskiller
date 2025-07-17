@@ -28,9 +28,9 @@ bool AdbShell::connect(const QString &deviceId)
         QStringList _args;
         QString fullArgs;
         QByteArray output;
+        QByteArray session;
         std::unordered_map<int,QStringList>::iterator iter;
         process.start(ADBExecFilePath(), QStringList() << "-s" << this->deviceId << "shell", QIODevice::ReadWrite);
-
         if(process.waitForStarted())
         {
             this->data = 1;
@@ -53,14 +53,17 @@ bool AdbShell::connect(const QString &deviceId)
 #ifdef WIN32
                     fullArgs.replace('\n', "\r\n");
 #endif
-
-                    process.write(fullArgs.toUtf8());
+                    session = std::move(fullArgs.toUtf8());
+                    dataRxTx.second += static_cast<std::uint32_t>(session.size());
+                    process.write(session);
                     process.waitForBytesWritten();
 
                     do
                     {
                         process.waitForReadyRead(10000);
-                        output += process.readAllStandardOutput();
+                        session = std::move(process.readAllStandardOutput());
+                        output += session;
+                        dataRxTx.first += static_cast<std::uint32_t>(session.size());
 #ifdef WIN32
                         output.replace("\r\n", "\n");
 #endif
@@ -104,6 +107,8 @@ bool AdbShell::connect(const QString &deviceId)
         this->data = 0;
     };
 
+
+    dataRxTx = {};
     requests.clear();
     responces.clear();
     this->deviceId = deviceId;
