@@ -16,7 +16,6 @@
 #include <QRandomGenerator>
 #include <QFontDatabase>
 #include <QFuture>
-#include <QtConcurrent/QtConcurrent>
 #include <QEventLoop>
 
 #include "mainwindow.h"

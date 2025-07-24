@@ -30,6 +30,7 @@ bool AdbShell::connect(const QString &deviceId)
         QByteArray output;
         QByteArray session;
         std::unordered_map<int,QStringList>::iterator iter;
+        int lastIndex,len,reqId, retCode;
         process.start(ADBExecFilePath(), QStringList() << "-s" << this->deviceId << "shell", QIODevice::ReadWrite);
         if(process.waitForStarted())
         {
@@ -40,10 +41,7 @@ bool AdbShell::connect(const QString &deviceId)
                 iter = std::begin(requests);
                 if(iter != std::end(requests))
                 {
-                    int lastIndex;
-                    int len;
-                    int reqId = iter->first;
-                    int retCode;
+                    reqId = iter->first;
                     _args = iter->second;
                     mutex.unlock();
 

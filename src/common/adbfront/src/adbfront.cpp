@@ -112,7 +112,7 @@ bool Adb::isConnected()
 
 std::pair<bool, std::unique_ptr<AdbShell>> Adb::runShell()
 {
-    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>();
+    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(QString{});
     bool connectStatus = shell->connect(device.devId);
     return std::make_pair(connectStatus, std::move(shell));
 }
