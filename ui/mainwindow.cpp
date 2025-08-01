@@ -10,10 +10,8 @@
 #include <QTableView>
 #include <QVector>
 #include <QStandardItemModel>
-#include <QCryptographicHash>
 #include <QHeaderView>
 #include <QTemporaryDir>
-#include <QRandomGenerator>
 #include <QFontDatabase>
 #include <QFuture>
 #include <QEventLoop>
@@ -21,107 +19,23 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "SystemTray.h"
+#include "extension.h"
+#include "AntiMalware.h"
+#include "network.h"
 
-constexpr int AppVerMajor=ADS_VER_MAJOR;
-constexpr int AppVerMinor=ADS_VER_MINOR;
-constexpr int AppVerPatch=ADS_VER_PATCH;
+#include "Strings.h"
 
-#ifdef WIN32
-constexpr auto UpdateManagerExecute = "update.exe";
-#endif
+constexpr struct {
+    PageIndex index;
+    char widgetName[16];
+} PageConstNames[LengthPages] = {
+    {AuthPage, "page_auth"},
+    {CabinetPage, "page_cabinet"},
+    {MalwarePage, "page_adsmalware"},
+    {LoaderPage, "page_loader"}
+};
 
-constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/dGV4dD3QryUyMNGF0L7RgtC10LslMjDQsdGLJTIw"
-                                "0L/QvtC00LXQu9C40YLRjNGB0Y8lMjDRgdCy0L7QuNC8JTIw0L7RgtC30YvQstC+0LwlMjDQuCUy"
-                                "MNC+0LHRgdGD0LTQuNGC0YwlMjDQv9GA0L7Qs9GA0LDQvNC80YMlMjDQv9C+JTIw0YPQtNCw0LvQ"
-                                "tdC90LjRjiUyMNGA0LXQutC70LDQvNGLJTIw0LTQu9GPJTIwQW5kcm9pZC0lRDElODMlRDElODEl"
-                                "RDElODIlRDElODAlRDAlQkUlRDAlQjklRDElODElRDElODIlRDAlQjIuCg==";
-constexpr auto acceptLinkMail = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQK";
-
-constexpr auto infoMessage = "Программа для удаления реклам (назоиливых и не приятных) на телефонах/смартфонах Android.\n\n"
-                             "Программа предоставлена из imister.kz.";
-
-constexpr auto infoNoBalance = "Попытка войти в аккаунт была безуспешной, так как у вас закончился баланс. "
-                               "Если вы хотите пополнить баланс, пожалуйста, свяжитесь с нашей службой поддержки. "
-                               "Для этого перейдите в меню и выберите раздел 'Поддержка', затем нажмите на опцию "
-                               "'Связаться через WhatsApp'.";
-constexpr auto infoNoNetwork = "Не удалось связаться с сервером обновления.\n"
-                               "Проверьте интернет соединение и повторите попытку еще раз.\n"
-                               "Программа будет завершена.";
-constexpr auto infoAccountBlocked = "Ваш аккаунт заблокирован, если вы считаете что это не справедливо,\n"
-                                    "пожалуйста обратитесь в службу поддержки клиентов.";
-
-extern QString malwareReadHeader();
-extern std::pair<QStringList, int> malwareReadLog();
-extern MalwareStatus malwareStatus();
-extern void malwareStart(MainWindow *handler);
-extern void malwareKill();
-extern bool malwareClean();
-extern void malwareWriteVal(int userValue);
-extern bool malwareRequireUser();
-
-QByteArray randomKey()
-{
-    int x;
-    QByteArray key;
-    key.resize(8);
-    for (x = 0; x < key.length(); ++x)
-    {
-        key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
-    }
-    return key;
-}
-
-QByteArray encryptData(const QByteArray &bytes, const QByteArray &key)
-{
-    int x;
-    QByteArray retval;
-    retval.resize(bytes.length());
-    for (x = 0; x < bytes.length(); ++x)
-    {
-        retval[x] = bytes[x] ^ key[x % key.length()];
-    }
-    return retval;
-}
-
-inline QByteArray decryptData(const QByteArray &bytes, const QByteArray &key)
-{
-    return encryptData(bytes, key);
-}
-
-QString packDC(const QByteArray &dataInit, const QByteArray &key)
-{
-    QByteArray retval{};
-    QByteArray data = encryptData(dataInit, key);
-    int keylen = key.toHex().length();
-    int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
-    retval.resize(hashlen + data.length() + keylen + 1);
-    retval[hashlen] = static_cast<char>(keylen);
-    retval.replace(hashlen + 1, keylen, key.toHex());
-    retval.replace(hashlen + 1 + keylen, data.length(), data);
-    retval.replace(0, hashlen, QCryptographicHash::hash(retval.mid(hashlen), QCryptographicHash::Sha256));
-    return QLatin1String(retval.toBase64());
-}
-
-QByteArray unpackDC(const QString &packed)
-{
-    QByteArray key{}, data{};
-    int keylen;
-    int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
-    data = QByteArray::fromBase64(packed.toLatin1());
-    if (!data.isEmpty() && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
-    {
-        keylen = data[hashlen];
-        key = QByteArray::fromHex(data.mid(hashlen + 1, keylen));
-        data = decryptData(data.mid(hashlen + 1 + keylen), key);
-    }
-    else
-    {
-        data.clear();
-    }
-    return data;
-}
-
-uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
+inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 {
     QString _compare;
     for (const AdbDevice &dev : devs)
@@ -141,15 +55,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Load settings
     settings = new QSettings("imister.kz-app.ads", "AdsKiller", this);
-    if (settings->contains("_token"))
+    if (settings->contains("encrypted_token"))
     {
-        network._token = settings->value("_token", "").toString();
-        settings->remove("_token");
-        settings->setValue("encrypted_token", packDC(network._token.toLatin1(), randomKey()));
-    }
-    else if (settings->contains("encrypted_token"))
-    {
-        QByteArray decData = unpackDC(settings->value("encrypted_token").toString());
+        QByteArray decData = CipherAlgoCrypto::UnpackDC(settings->value("encrypted_token").toString());
         network._token = QLatin1String(decData);
     }
 
@@ -160,36 +68,45 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     // Refresh TabPages to Content widget (Selective)
+    QList<QWidget*> _w;
     for (x = 0; x < ui->tabWidget->count(); ++x)
-        pages << ui->tabWidget->widget(x);
-    for (x = 0; x < pages.count(); ++x)
-        ui->contentLayout->layout()->addWidget(pages[x]);
+        _w << ui->tabWidget->widget(x);
+
+    for(const auto & item : std::as_const(PageConstNames))
+    {
+        auto iter = std::find_if(_w.begin(), _w.end(), [&item](const QWidget* it) { return it->objectName() == item.widgetName;});
+        if(iter != std::end(_w))
+            pages.insert(item.index, *iter);
+    }
+
+
+    for (x = 0; x < _w.count(); ++x)
+        ui->contentLayout->layout()->addWidget(_w[x]);
     for (x = 0; x < ui->tabWidget_2->count(); ++x)
         malwareStatusLayouts << ui->tabWidget_2->widget(x);
     for (x = 0; x < malwareStatusLayouts.count(); ++x)
         ui->malwareContentLayout->addWidget(malwareStatusLayouts[x]);
     malwareStatusLayouts[0]->show();
     QObject::connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool checked)
-            {
-        (void)checked;
-        for(auto & layout : malwareStatusLayouts)
-        {
-            if(layout->isHidden())
-            {
-                layout->show();
-            }
-            else
-            {
-                layout->hide();
-            }
-        } });
+                     {
+                         (void)checked;
+                         for(auto & layout : malwareStatusLayouts)
+                         {
+                             layout->isHidden() ? layout->show() : layout->hide();
+                         } });
 
     ui->tabWidget->deleteLater();
     ui->tabWidget_2->deleteLater();
 
     malwareProgressCircle = new ProgressCircle(this);
-    ui->progressCircleLayout->addWidget(malwareProgressCircle);
     malwareProgressCircle->setInfinilyMode(false);
+    ui->progressCircleLayout->addWidget(malwareProgressCircle);
+
+    loaderProgressCircle = new ProgressCircle(this);
+    loaderProgressCircle->setInfinilyMode(true);
+    loaderProgressCircle->setVisibleText(false);
+    loaderProgressCircle->setInnerRadius(0);
+    ui->loaderLayout->addWidget(loaderProgressCircle);
 
     QList<QAction *> menusTheme{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
     for (QAction *q : menusTheme)
@@ -200,10 +117,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     model = new QStringListModel(ui->processLogStatus);
     ui->processLogStatus->setModel(model);
-
-    // Show First Page
-    minPage = 0;
-    showPage(startPage);
 
     // Signals
     QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
@@ -224,6 +137,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Init tray
     (void)new AdsAppSystemTray(this);
+
+    QString _version;
+    _version += QString::number(AppVerMajor);
+    _version += ".";
+    _version += QString::number(AppVerMinor);
+    _version += ".";
+    _version += QString::number(AppVerPatch);
+
+    selfVersion = { _version, {}, 0};
 
     // Run check version
     checkVersion();
@@ -274,18 +196,6 @@ void MainWindow::on_action_Qt_triggered()
     QMessageBox::aboutQt(this);
 }
 
-void MainWindow::on_pnext_clicked()
-{
-    if (curPage < pages.count() - 1 && curPage > (-1))
-        showPage(curPage + 1);
-}
-
-void MainWindow::on_pprev_clicked()
-{
-    if (curPage < pages.count() && curPage > (0))
-        showPage(curPage - 1);
-}
-
 void MainWindow::updateAdbDevices()
 {
     QList<AdbDevice> devicesNew;
@@ -311,45 +221,64 @@ void MainWindow::softUpdateDevices()
     }
     std::transform(adb.cachedDevices.cbegin(), adb.cachedDevices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev)
                    { return dev.displayName + " (" + dev.devId + ")"; });
-    ui->comboBoxDevices->blockSignals(true);
-    for (; ui->comboBoxDevices->count() > 1;)
-        ui->comboBoxDevices->removeItem(1);
-    ui->comboBoxDevices->addItems(qlist);
-    ui->comboBoxDevices->setCurrentIndex(index);
-    ui->comboBoxDevices->blockSignals(false);
 }
 
 void MainWindow::checkVersion()
 {
-    ui->labelStat->setText("Проверка обновления");
-    network.fetchVersion();
+    ui->loaderPageText->setText("Проверка обновления");
+    // Show First Page
+    showPageLoader(startPage, 1000, [this]()->bool {
+        if(actualVersion.empty())
+            return false;
+        if(actualVersion.mStatus != NetworkStatus::OK)
+        {
+            ui->loaderPageText->setText("Проблема с интернетом?");
+        }
+        else
+        {
+            ui->loaderPageText->setText("Ваша версия актуальная!");
+        }
+        delayTimer(2000);
+        return true;
+    });
+
+    network.fetchVersion(true);
 }
 
-void MainWindow::updatePageState()
+template<typename Pred>
+void MainWindow::showPageLoader(PageIndex pageNum, int msWait, Pred &&pred)
 {
-    constexpr char labelPage[] = "Странница <u><b>%1</b></u> из <u><b>%2</b></u>";
-    QString labelText = QString::fromUtf8(labelPage);
-    ui->labelStat->setText(labelText.arg(curPage + 1).arg(pages.count()));
+    if(pageNum == LoaderPage)
+        return;
+
+    showPage(LoaderPage);
+    delayPushLoop(msWait, [this,pageNum,pred]()
+                  {
+                      if(pred())
+                      {
+                          showPage(pageNum);
+                          return false;
+                      }
+                      return true;
+                  });
 }
 
-void MainWindow::showPage(int pageNum)
+void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
 {
-    int x, y;
-    curPage = -1;
-    for (x = 0, y = pages.count(); x < y; ++x)
-    {
-        bool paged = (x == pageNum);
-        if (paged)
-            curPage = pageNum;
-        pages[x]->setVisible(paged);
-    }
-    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(ui->pageIconBoxes->layout());
-    for (x = 0, y = layout->count(); x < y; ++x)
-    {
-        bool paged = x == pageNum;
-        layout->itemAt(x)->widget()->setEnabled(paged);
-    }
-    updatePageState();
+    if(text.isEmpty())
+        text = "Ожидайте";
+
+    ui->loaderPageText->setText(text);
+    showPageLoader(pageNum, msWait, [](){return false;});
+}
+
+void MainWindow::showPage(PageIndex pageNum)
+{
+    if(pages.contains(curPage))
+        pages[curPage]->setVisible(false);
+    curPage=pageNum;
+    if(pages.contains(curPage))
+        pages[curPage]->setVisible(true);
     pageShown(curPage);
 }
 
@@ -358,11 +287,10 @@ void MainWindow::pageShown(int page)
     switch (page)
     {
         // WELCOME
-    case 0:
+    case AuthPage:
         ui->lineEditToken->setText(network._token);
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->authButton->setEnabled(true);
-
         break;
     case 1:
     {
@@ -403,18 +331,12 @@ void MainWindow::pageShown(int page)
         ui->authInfo->resizeColumnToContents(0);
         break;
     }
-    // DEVICES
-    case 2:
+    case MalwarePage:
     {
         adb.blockSignals(true);
         adb.cachedDevices.clear();
         adb.disconnect();
         adb.blockSignals(false);
-        ui->comboBoxDevices->blockSignals(true);
-        for (; ui->comboBoxDevices->count() > 1;)
-            ui->comboBoxDevices->removeItem(1);
-        ui->comboBoxDevices->blockSignals(false);
-        ui->connectDeviceStateStat->setText("Выберите доступное устройство из списка.");
         updateAdbDevices();
         break;
     }
@@ -440,6 +362,18 @@ void MainWindow::pageShown(int page)
     }
 }
 
+void MainWindow::delayTimer(int ms)
+{
+    QEventLoop loop;
+    QTimer timer;
+    timer.setSingleShot(true);
+
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+    timer.start(ms);
+    loop.exec();
+}
+
 void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
 {
     switch (curPage)
@@ -454,7 +388,6 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
             text += "подключено.";
         else
             text += "отключено.";
-        ui->connectDeviceStateStat->setText(text);
         break;
     }
     case 3:
@@ -470,26 +403,34 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
     }
 }
 
-void MainWindow::delayPush(int ms, std::function<void()> call, bool loop)
+void MainWindow::delayPushLoop(int ms, std::function<bool()> call)
 {
     QTimer *qtimer = new QTimer(this);
     (void)qtimer;
-    qtimer->setSingleShot(!loop);
+    qtimer->setSingleShot(false);
     qtimer->setInterval(ms);
     QObject::connect(
         qtimer,
         &QTimer::timeout,
         [qtimer, call]()
         {
-            call();
-            qtimer->stop();
-            qtimer->deleteLater();
+            if(!call())
+            {
+                qtimer->stop();
+                qtimer->deleteLater();
+            }
         });
     qtimer->start();
 }
 
+void MainWindow::delayPush(int ms, std::function<void()> call)
+{
+    delayPushLoop(ms, [call]() -> bool { call(); return true;});
+}
+
 void MainWindow::on_authButton_clicked()
 {
+    constexpr int Dots = 3;
     QString tryToken = ui->lineEditToken->text();
     network.authenticate(tryToken);
     ui->statusAuthText->setText("Подключение");
@@ -501,14 +442,13 @@ void MainWindow::on_authButton_clicked()
     QObject::connect(
         timerAuthAnim,
         &QTimer::timeout,
-        this,
         [this]()
         {
             QString temp = ui->statusAuthText->text();
             int dotCount = std::accumulate(temp.begin(), temp.end(), 0, [](int count, const QChar &c)
                                            { return count += (c == '.' ? 1 : 0); });
-            if (dotCount == 3)
-                temp.remove(temp.length()-3,3);
+            if (dotCount >= Dots)
+                temp.remove(temp.length()-Dots,Dots);
             else
                 temp += '.';
             ui->statusAuthText->setText(temp);
@@ -531,10 +471,9 @@ void MainWindow::replyAuthFinish(int status, bool ok)
         1000,
         [ok, status, this]()
         {
-            bool state = ok;
             timerAuthAnim->stop();
 
-            if (state && curPage == 1)
+            if (ok && curPage == CabinetPage)
             {
                 QString value;
                 QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
@@ -565,7 +504,6 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
                     showMessageFromStatus(NetworkStatus::NoEnoughMoney);
-                    state = false;
                 }
                 else
                 {
@@ -576,12 +514,9 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 {
                     ui->statusAuthText->setText("Аккаунт заблокирован");
                     showMessageFromStatus(NetworkStatus::AccountBlocked);
-                    state = false;
                 }
 
-                settings->setValue("encrypted_token", packDC(network.authedId.token.toLatin1(), randomKey()));
-                minPage = curPage + 1;
-                updatePageState();
+                settings->setValue("encrypted_token", CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
             }
             else
             {
@@ -605,6 +540,15 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 }
 
                 ui->statusAuthText->setText(resText);
+
+                if(status == NetworkStatus::OK)
+                {
+                    delayPush(0, [this]()
+                              {
+                        showPageLoader(CabinetPage);
+                    });
+                }
+
             }
             ui->lineEditToken->setEnabled(true);
             ui->authButton->setEnabled(true);
@@ -613,87 +557,69 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 
 void MainWindow::replyFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
 {
-    delayPush(1000, [=]()
-              {
-        if(status == NetworkStatus::NetworkError)
-        {
-            ui->labelStat->setText("Завершение...");
-            this->showMessageFromStatus(status);
-            delayPush(5000, [this](){this->close();}, false);
-            QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
-            return;
-        }
-        auto _convertToInt = [](const QString& str) -> int
-        {
-            return str.toInt();
-        };
-        QVector<int> ints;
-        QStringList list;
-        list << QString::number(AppVerMajor);
-        list << QString::number(AppVerMinor);
-        list << QString::number(AppVerPatch);
-        std::transform(std::begin(list), std::end(list), std::back_inserter(ints), _convertToInt);
-        QVersionNumber verApp(ints);
-        list = std::move(version.split('.', Qt::SkipEmptyParts));
-        ints.clear();
-        std::transform(std::begin(list), std::end(list), std::back_inserter(ints), _convertToInt);
-        QVersionNumber verServer(ints);
+    VersionInfo actualVersion = {{}, {}, status};
+    if(status == NetworkStatus::NetworkError)
+    {
+        this->showMessageFromStatus(status);
+        delayPush(5000, [this](){this->close();});
+        QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
+        this->actualVersion = actualVersion;
+        return;
+    }
 
-        if(verApp >= verServer)
-        {
-            ui->labelStat->setText("Вы используете последнюю версию. Нажмите <b>Далее ></b>, чтобы продолжить.");
-            return;
-        }
+    actualVersion = {version, url, status};
+    this->actualVersion = actualVersion;
+    if(selfVersion.mVersion >= actualVersion.mVersion)
+    {
+        // TODO: Text update is latest
+        return;
+    }
 
-        QString text;
-        text = "Обнаружена новая версия программного обеспечения. После нажатия кнопки \"ОК\" ";
+    QString text;
+    text = "Обнаружена новая версия программного обеспечения. После нажатия кнопки \"ОК\" ";
 #ifdef WIN32
-        text += "будет запущена обновление ПО.";
+    text += "будет запущена обновление ПО.";
 #else
-        text += "откроется ссылка в вашем браузере.\n"
-                "Пожалуйста, скачайте обновление по прямой ссылке.\n";
+    text += "откроется ссылка в вашем браузере.\n"
+            "Пожалуйста, скачайте обновление по прямой ссылке.\n";
 #endif
-        text += "\nС уважением ваша команда imister.kz.";
-        text += "\n\nВаша версия: v";
-        text +=  verApp.toString();
-        text += "\nВерсия на сервере: v";
-        text += verServer.toString();
-        // TURNED OFF INFO ABOUT UPDATE
-        // QMessageBox::information(this, "Обнаружена новая версия", text);
-        this->close();
+    text += "\nС уважением ваша команда imister.kz.";
+    text += "\n\nВаша версия: v";
+    text +=  selfVersion.mVersion.toString();
+    text += "\nВерсия на сервере: v";
+    text += actualVersion.mVersion.toString();
+    // TURNED OFF INFO ABOUT UPDATE
+    // QMessageBox::information(this, "Обнаружена новая версия", text);
+    this->close();
 
 #ifdef WIN32
-        QTemporaryDir tempdir;
-        tempdir.setAutoRemove(false);
-        QDir appDir(QCoreApplication::applicationDirPath());
-        QStringList entries = appDir.entryList(QStringList() << "*.dll" << UpdateManagerExecute, QDir::Files);
-        for(const QString & e : entries)
-        {
-            QFile::copy(appDir.filePath(e), tempdir.filePath(e));
-        }
-        appDir.mkdir(tempdir.filePath("platforms"));
-        QFile::copy(appDir.filePath("platforms/qwindows.dll"), tempdir.filePath("platforms/qwindows.dll"));
-        appDir.mkdir(tempdir.filePath("networkinformation"));
-        QFile::copy(appDir.filePath("networkinformation/qnetworklistmanager.dll"), tempdir.filePath("networkinformation/qnetworklistmanager.dll"));
-        appDir.mkdir(tempdir.filePath("tls"));
-        QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
-        QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
-        if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
-        {
-            QApplication::quit();
-            return;
-        }
+    QTemporaryDir tempdir;
+    tempdir.setAutoRemove(false);
+    QDir appDir(QCoreApplication::applicationDirPath());
+    QStringList entries = appDir.entryList(QStringList() << "*.dll" << UpdateManagerExecute, QDir::Files);
+    for(const QString & e : entries)
+    {
+        QFile::copy(appDir.filePath(e), tempdir.filePath(e));
+    }
+    appDir.mkdir(tempdir.filePath("platforms"));
+    QFile::copy(appDir.filePath("platforms/qwindows.dll"), tempdir.filePath("platforms/qwindows.dll"));
+    appDir.mkdir(tempdir.filePath("networkinformation"));
+    QFile::copy(appDir.filePath("networkinformation/qnetworklistmanager.dll"), tempdir.filePath("networkinformation/qnetworklistmanager.dll"));
+    appDir.mkdir(tempdir.filePath("tls"));
+    QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
+    QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
+    if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
+    {
+        QApplication::quit();
+        return;
+    }
 #endif
-        QDesktopServices::openUrl(QUrl(url));
-    });
+    QDesktopServices::openUrl(QUrl(url));
+
 }
 
 void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
 {
-    if (status == 601)
-    {
-        showPage(1);
-    }
     showMessageFromStatus(status);
 }
 

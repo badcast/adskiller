@@ -5,12 +5,14 @@
 
 #include <QMainWindow>
 #include <QList>
+#include <QMap>
 #include <QComboBox>
 #include <QSettings>
 #include <QVersionNumber>
 
 #include "ProgressCircle.h"
 
+#include "begin.h"
 #include "adbfront.h"
 #include "network.h"
 
@@ -21,11 +23,20 @@ enum MalwareStatus
     Error
 };
 
-enum ThemeScheme : int
+enum ThemeScheme
 {
     System,
     Light,
     Dark
+};
+
+enum PageIndex
+{
+    AuthPage,
+    CabinetPage,
+    MalwarePage,
+    LoaderPage,
+    LengthPages
 };
 
 QT_BEGIN_NAMESPACE
@@ -51,6 +62,8 @@ public:
     Network network;
     QTimer *timerAuthAnim;
     QApplication *app;
+    VersionInfo selfVersion;
+    VersionInfo actualVersion;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -62,10 +75,6 @@ private slots:
     void on_action_WhatsApp_triggered();
 
     void on_action_Qt_triggered();
-
-    void on_pnext_clicked();
-
-    void on_pprev_clicked();
 
     void on_authButton_clicked();
 
@@ -87,16 +96,20 @@ private:
     QTimer * malwareUpdateTimer;
     QSettings* settings;
     ProgressCircle* malwareProgressCircle;
-    int minPage;
-    QList<QWidget*> pages;
+    ProgressCircle* loaderProgressCircle;
     QList<QWidget*> malwareStatusLayouts;
-    int curPage;
-    int startPage = 0;
+    QMap<PageIndex,QWidget*> pages;
+    PageIndex curPage;
+    PageIndex startPage = PageIndex::AuthPage;
 
-    void updatePageState();
-    void showPage(int pageNum);
+    template<typename Pred>
+    void showPageLoader(PageIndex pageNum, int msWait, Pred&& pred);
+    void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
+    void showPage(PageIndex pageNum);
     void pageShown(int page);
-    void delayPush(int ms, std::function<void ()> call, bool loop = false);
+    void delayTimer(int ms);
+    void delayPushLoop(int ms, std::function<bool ()> call);
+    void delayPush(int ms, std::function<void ()> call);
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();

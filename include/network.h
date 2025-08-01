@@ -9,6 +9,7 @@
 #include <QNetworkReply>
 #include <QDateTime>
 #include <QList>
+#include <QVersionNumber>
 
 class MainWindow;
 
@@ -32,6 +33,18 @@ struct UserData
     bool isNotValidBalance() const;
     bool hasBalance() const;
     bool hasVipAccount() const;
+};
+
+struct VersionInfo
+{
+    int mStatus;
+    QVersionNumber mVersion;
+    QString mDownloadUrl;
+
+    VersionInfo() = default;
+    VersionInfo(const QString& version, const QString& url, int status);
+
+    bool empty() const;
 };
 
 struct LabStatusInfo
@@ -75,7 +88,7 @@ public:
     Network(QObject * parent = nullptr);
     void authenticate(const QString &token);
     bool isAuthed();
-    void fetchVersion();
+    void fetchVersion(bool populate);
 
     void getAdsData(const QString &mdKey);
     bool sendUserPackages(const AdbDevice& device, const QStringList& packages);

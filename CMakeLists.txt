@@ -20,15 +20,20 @@ set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
+        include/begin.h
+        include/extension.h
         include/network.h
         include/ProgressCircle.h
         include/SystemTray.h
+        include/Strings.h
+        include/AntiMalware.h
         src/main.cpp
         src/network.cpp
         src/user_identity.cpp
         src/malwareProcess.cpp
         src/widget/ProgressCircle.cpp
         src/SystemTray.cpp
+        src/extension.cpp
         resources.qrc
 )
 

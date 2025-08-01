@@ -4,6 +4,7 @@
 // * MODIFIED: Fix 0 - value is empty circle *
 // * MODIFIED: Set showing text *
 // * MODIFIED: Set ideal font *
+// *** Modifier author: badcast <bad cast for cast> ***
 
 /////////////////////////////////////////////////////////////////////////////
 // Date of creation: 04.07.2013
@@ -180,7 +181,7 @@ void ProgressCircle::paintEvent(QPaintEvent *)
 
     // Draw pixmap at center of item
     QPainter painter(this);
-    painter.drawPixmap( 0.5 * ( width() - pixmap.width() ), 0.5 * ( height() - pixmap.height() ), pixmap );
+    painter.drawPixmap( 0.5 * ( width() - pixmap.width() ), 0.5 * ( height() - pixmap.height() ), pixmap);
 }
 
 void ProgressCircle::setInfiniteAnimationValue(qreal value)

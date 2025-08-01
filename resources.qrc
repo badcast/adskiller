@@ -13,5 +13,9 @@
         <file alias="icon-authlogin">res/icon-authlogin.png</file>
         <file alias="icon-arrow-right">res/icon-arrow-right.png</file>
         <file alias="font-DigitalNumbers">res/fonts/font-DigitalNumbers/DigitalNumbers-Regular.ttf</file>
+        <file alias="android-mobile-source">res/mobile-phone.png</file>
+        <file alias="back-texture-dark">res/back_texture.png</file>
+        <file alias="usb-port">res/usbport.png</file>
+        <file alias="remove-ads">res/icon_remads.png</file>
     </qresource>
 </RCC>

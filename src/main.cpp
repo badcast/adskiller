@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QSharedMemory>
 
+#include "begin.h"
 #include "mainwindow.h"
 #include "network.h"
 
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
 bool checkout()
 {
     QDir qdir;
-    QString adbfile = ADBExecFilePath();
+    QString adbfile = AdbExecutableFilename();
     if(!qdir.exists(adbfile))
     {
         qDebug() << "Adb not found";
