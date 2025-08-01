@@ -11,6 +11,7 @@
 
 #include "ProgressCircle.h"
 
+#include "begin.h"
 #include "adbfront.h"
 #include "network.h"
 

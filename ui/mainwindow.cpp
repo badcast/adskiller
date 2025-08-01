@@ -22,10 +22,6 @@
 #include "ui_mainwindow.h"
 #include "SystemTray.h"
 
-constexpr int AppVerMajor=ADS_VER_MAJOR;
-constexpr int AppVerMinor=ADS_VER_MINOR;
-constexpr int AppVerPatch=ADS_VER_PATCH;
-
 #ifdef WIN32
 constexpr auto UpdateManagerExecute = "update.exe";
 #endif

@@ -10,7 +10,7 @@
 #include "adbcmds.h"
 #include "adbfront.h"
 
-QString ADBExecFilePath()
+QString AdbExecutableFilename()
 {
     QString adbFile;
 #ifdef WIN32
@@ -26,7 +26,7 @@ std::pair<bool, QString> adb_send_cmd(int &exitCode, const QStringList &argument
 {
     QProcess process;
     QString retval;
-    process.start(ADBExecFilePath(), arguments);
+    process.start(AdbExecutableFilename(), arguments);
     if (!process.waitForFinished())
     {
         qDebug() << "ADB Failed";
@@ -120,7 +120,7 @@ std::pair<bool, std::unique_ptr<AdbShell>> Adb::runShell()
 void Adb::connectFirst()
 {
     QList<AdbDevice> devs = std::move(getDevices());
-    if (devs.count() > 0)
+    if (!devs.isEmpty())
         connect(devs.front().devId);
 }
 

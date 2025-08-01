@@ -111,4 +111,4 @@ private:
 
 bool operator ==(const AdbDevice& lhs, const AdbDevice& rhs);
 
-QString ADBExecFilePath();
+QString AdbExecutableFilename();

@@ -31,7 +31,7 @@ bool AdbShell::connect(const QString &deviceId)
         QByteArray session;
         std::unordered_map<int,QStringList>::iterator iter;
         int lastIndex,len,reqId, retCode;
-        process.start(ADBExecFilePath(), QStringList() << "-s" << this->deviceId << "shell", QIODevice::ReadWrite);
+        process.start(AdbExecutableFilename(), QStringList() << "-s" << this->deviceId << "shell", QIODevice::ReadWrite);
         if(process.waitForStarted())
         {
             this->data = 1;

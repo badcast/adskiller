@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
+        include/begin.h
         include/network.h
         include/ProgressCircle.h
         include/SystemTray.h

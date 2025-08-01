@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+#include "begin.h"
 #include "adbfront.h"
 #include "network.h"
 
@@ -66,7 +67,7 @@ void Network::authenticate(const QString &token)
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", token.toUtf8());
     json["request"] = "TOKENVERIFY";
-    reply = manager->post(request, QJsonDocument(json).toJson());
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
@@ -82,7 +83,7 @@ void Network::getAdsData(const QString& mdKey)
     request.setRawHeader("Token", authedId.token.toUtf8());
     json["request"] = "GETADS";
     json["mdKey"] = mdKey;
-    reply = manager->post(request, QJsonDocument(json).toJson());
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
 }
 
@@ -104,7 +105,7 @@ bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packa
     for(const QString &str : packages)
         array.append(str);
     json["packages"] = array;
-    reply = manager->post(request, QJsonDocument(json).toJson());
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onUserPackagesUploadFinished);
     return true;
 }
@@ -121,7 +122,7 @@ void Network::fetchLabState(const QString &mdKey)
     request.setRawHeader("Token", authedId.token.toUtf8());
     json["request"] = "MDKEYSTATUS";
     json["mdKey"] = mdKey;
-    reply = manager->post(request, QJsonDocument(json).toJson());
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
 }
 
@@ -132,10 +133,12 @@ bool Network::isAuthed()
 
 void Network::fetchVersion()
 {
+    QJsonObject json;
     QNetworkReply *reply;
     QUrl url(url_version());
     QNetworkRequest request(url);
-    reply = manager->get(request);
+    json["currentClient"] = QString("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
 }
 
