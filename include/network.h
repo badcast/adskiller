@@ -75,7 +75,7 @@ public:
     Network(QObject * parent = nullptr);
     void authenticate(const QString &token);
     bool isAuthed();
-    void fetchVersion();
+    void fetchVersion(bool populate);
 
     void getAdsData(const QString &mdKey);
     bool sendUserPackages(const AdbDevice& device, const QStringList& packages);

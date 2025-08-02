@@ -27,6 +27,7 @@
 
 #include "update_window.h"
 
+constexpr int MaxTimeout = 10000;
 constexpr int MaxDownloadAtemp = 4;
 constexpr char URLFetch[] = "https://adskill.imister.kz/cdn/update";
 
@@ -55,7 +56,7 @@ class UpdateManager : public QObject
     enum {
         GetDirs = QDir::Dirs,
         GetFiles = QDir::Files,
-        AllOF = 3,
+        AllOF = GetDirs | GetFiles,
         WriteFullpath = 4
     };
 
@@ -75,6 +76,7 @@ public:
         QEventLoop loop;
         QNetworkReply * reply;
         QList<FetchResult> contents;
+        m_manager->setTransferTimeout(MaxTimeout);
         reply = m_manager->get(QNetworkRequest(QUrl(URLFetch)));
         connect(reply, &QNetworkReply::finished, this, [&]()
                 {
@@ -129,7 +131,7 @@ public:
         {
             if(!dir.exists())
             {
-                m_lastError = "Invlid Application directory found.";
+                m_lastError = "Invalid Application directory found.";
                 m_lastStatus = -1;
                 break;
             }
@@ -204,6 +206,7 @@ public:
             {
                 const FetchResult* fetch = &contents[x];
                 QNetworkRequest request(QUrl(m_rootUrl + "/" + fetch->remoteLink));
+                request.setTransferTimeout(MaxTimeout);
                 QNetworkReply * reply = m_manager->get(request);
                 QEventLoop loop;
                 QFile file(tempDir.path() + QDir::separator() + fetch->remoteLink);

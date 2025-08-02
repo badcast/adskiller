@@ -10,10 +10,8 @@
 #include <QTableView>
 #include <QVector>
 #include <QStandardItemModel>
-#include <QCryptographicHash>
 #include <QHeaderView>
 #include <QTemporaryDir>
-#include <QRandomGenerator>
 #include <QFontDatabase>
 #include <QFuture>
 #include <QEventLoop>
@@ -21,103 +19,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "SystemTray.h"
+#include "extension.h"
+#include "AntiMalware.h"
 
-#ifdef WIN32
-constexpr auto UpdateManagerExecute = "update.exe";
-#endif
+#include "Strings.h"
 
-constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/dGV4dD3QryUyMNGF0L7RgtC10LslMjDQsdGLJTIw"
-                                "0L/QvtC00LXQu9C40YLRjNGB0Y8lMjDRgdCy0L7QuNC8JTIw0L7RgtC30YvQstC+0LwlMjDQuCUy"
-                                "MNC+0LHRgdGD0LTQuNGC0YwlMjDQv9GA0L7Qs9GA0LDQvNC80YMlMjDQv9C+JTIw0YPQtNCw0LvQ"
-                                "tdC90LjRjiUyMNGA0LXQutC70LDQvNGLJTIw0LTQu9GPJTIwQW5kcm9pZC0lRDElODMlRDElODEl"
-                                "RDElODIlRDElODAlRDAlQkUlRDAlQjklRDElODElRDElODIlRDAlQjIuCg==";
-constexpr auto acceptLinkMail = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQK";
-
-constexpr auto infoMessage = "Программа для удаления реклам (назоиливых и не приятных) на телефонах/смартфонах Android.\n\n"
-                             "Программа предоставлена из imister.kz.";
-
-constexpr auto infoNoBalance = "Попытка войти в аккаунт была безуспешной, так как у вас закончился баланс. "
-                               "Если вы хотите пополнить баланс, пожалуйста, свяжитесь с нашей службой поддержки. "
-                               "Для этого перейдите в меню и выберите раздел 'Поддержка', затем нажмите на опцию "
-                               "'Связаться через WhatsApp'.";
-constexpr auto infoNoNetwork = "Не удалось связаться с сервером обновления.\n"
-                               "Проверьте интернет соединение и повторите попытку еще раз.\n"
-                               "Программа будет завершена.";
-constexpr auto infoAccountBlocked = "Ваш аккаунт заблокирован, если вы считаете что это не справедливо,\n"
-                                    "пожалуйста обратитесь в службу поддержки клиентов.";
-
-extern QString malwareReadHeader();
-extern std::pair<QStringList, int> malwareReadLog();
-extern MalwareStatus malwareStatus();
-extern void malwareStart(MainWindow *handler);
-extern void malwareKill();
-extern bool malwareClean();
-extern void malwareWriteVal(int userValue);
-extern bool malwareRequireUser();
-
-QByteArray randomKey()
-{
-    int x;
-    QByteArray key;
-    key.resize(8);
-    for (x = 0; x < key.length(); ++x)
-    {
-        key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
-    }
-    return key;
-}
-
-QByteArray encryptData(const QByteArray &bytes, const QByteArray &key)
-{
-    int x;
-    QByteArray retval;
-    retval.resize(bytes.length());
-    for (x = 0; x < bytes.length(); ++x)
-    {
-        retval[x] = bytes[x] ^ key[x % key.length()];
-    }
-    return retval;
-}
-
-inline QByteArray decryptData(const QByteArray &bytes, const QByteArray &key)
-{
-    return encryptData(bytes, key);
-}
-
-QString packDC(const QByteArray &dataInit, const QByteArray &key)
-{
-    QByteArray retval{};
-    QByteArray data = encryptData(dataInit, key);
-    int keylen = key.toHex().length();
-    int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
-    retval.resize(hashlen + data.length() + keylen + 1);
-    retval[hashlen] = static_cast<char>(keylen);
-    retval.replace(hashlen + 1, keylen, key.toHex());
-    retval.replace(hashlen + 1 + keylen, data.length(), data);
-    retval.replace(0, hashlen, QCryptographicHash::hash(retval.mid(hashlen), QCryptographicHash::Sha256));
-    return QLatin1String(retval.toBase64());
-}
-
-QByteArray unpackDC(const QString &packed)
-{
-    QByteArray key{}, data{};
-    int keylen;
-    int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
-    data = QByteArray::fromBase64(packed.toLatin1());
-    if (!data.isEmpty() && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
-    {
-        keylen = data[hashlen];
-        key = QByteArray::fromHex(data.mid(hashlen + 1, keylen));
-        data = decryptData(data.mid(hashlen + 1 + keylen), key);
-    }
-    else
-    {
-        data.clear();
-    }
-    return data;
-}
-
-uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
+inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 {
     QString _compare;
     for (const AdbDevice &dev : devs)
@@ -141,11 +48,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         network._token = settings->value("_token", "").toString();
         settings->remove("_token");
-        settings->setValue("encrypted_token", packDC(network._token.toLatin1(), randomKey()));
+        settings->setValue("encrypted_token", CaesarAlgo::PackDC(network._token.toLatin1(), CaesarAlgo::RandomKey()));
     }
     else if (settings->contains("encrypted_token"))
     {
-        QByteArray decData = unpackDC(settings->value("encrypted_token").toString());
+        QByteArray decData = CaesarAlgo::UnpackDC(settings->value("encrypted_token").toString());
         network._token = QLatin1String(decData);
     }
 
@@ -307,25 +214,11 @@ void MainWindow::softUpdateDevices()
     }
     std::transform(adb.cachedDevices.cbegin(), adb.cachedDevices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev)
                    { return dev.displayName + " (" + dev.devId + ")"; });
-    ui->comboBoxDevices->blockSignals(true);
-    for (; ui->comboBoxDevices->count() > 1;)
-        ui->comboBoxDevices->removeItem(1);
-    ui->comboBoxDevices->addItems(qlist);
-    ui->comboBoxDevices->setCurrentIndex(index);
-    ui->comboBoxDevices->blockSignals(false);
 }
 
 void MainWindow::checkVersion()
 {
-    ui->labelStat->setText("Проверка обновления");
-    network.fetchVersion();
-}
-
-void MainWindow::updatePageState()
-{
-    constexpr char labelPage[] = "Странница <u><b>%1</b></u> из <u><b>%2</b></u>";
-    QString labelText = QString::fromUtf8(labelPage);
-    ui->labelStat->setText(labelText.arg(curPage + 1).arg(pages.count()));
+    network.fetchVersion(true);
 }
 
 void MainWindow::showPage(int pageNum)
@@ -339,13 +232,6 @@ void MainWindow::showPage(int pageNum)
             curPage = pageNum;
         pages[x]->setVisible(paged);
     }
-    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(ui->pageIconBoxes->layout());
-    for (x = 0, y = layout->count(); x < y; ++x)
-    {
-        bool paged = x == pageNum;
-        layout->itemAt(x)->widget()->setEnabled(paged);
-    }
-    updatePageState();
     pageShown(curPage);
 }
 
@@ -354,7 +240,7 @@ void MainWindow::pageShown(int page)
     switch (page)
     {
         // WELCOME
-    case 0:
+    case AuthPage:
         ui->lineEditToken->setText(network._token);
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->authButton->setEnabled(true);
@@ -399,18 +285,12 @@ void MainWindow::pageShown(int page)
         ui->authInfo->resizeColumnToContents(0);
         break;
     }
-    // DEVICES
-    case 2:
+    case MalwarePage:
     {
         adb.blockSignals(true);
         adb.cachedDevices.clear();
         adb.disconnect();
         adb.blockSignals(false);
-        ui->comboBoxDevices->blockSignals(true);
-        for (; ui->comboBoxDevices->count() > 1;)
-            ui->comboBoxDevices->removeItem(1);
-        ui->comboBoxDevices->blockSignals(false);
-        ui->connectDeviceStateStat->setText("Выберите доступное устройство из списка.");
         updateAdbDevices();
         break;
     }
@@ -450,7 +330,6 @@ void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
             text += "подключено.";
         else
             text += "отключено.";
-        ui->connectDeviceStateStat->setText(text);
         break;
     }
     case 3:
@@ -527,10 +406,9 @@ void MainWindow::replyAuthFinish(int status, bool ok)
         1000,
         [ok, status, this]()
         {
-            bool state = ok;
             timerAuthAnim->stop();
 
-            if (state && curPage == 1)
+            if (ok && curPage == 1)
             {
                 QString value;
                 QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
@@ -561,7 +439,6 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
                     showMessageFromStatus(NetworkStatus::NoEnoughMoney);
-                    state = false;
                 }
                 else
                 {
@@ -572,12 +449,10 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 {
                     ui->statusAuthText->setText("Аккаунт заблокирован");
                     showMessageFromStatus(NetworkStatus::AccountBlocked);
-                    state = false;
                 }
 
-                settings->setValue("encrypted_token", packDC(network.authedId.token.toLatin1(), randomKey()));
+                settings->setValue("encrypted_token", CaesarAlgo::PackDC(network.authedId.token.toLatin1(), CaesarAlgo::RandomKey()));
                 minPage = curPage + 1;
-                updatePageState();
             }
             else
             {
@@ -601,6 +476,11 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 }
 
                 ui->statusAuthText->setText(resText);
+
+                if(status == NetworkStatus::OK)
+                {
+                    delayPush(1500, [this](){ showPage(2); });
+                }
             }
             ui->lineEditToken->setEnabled(true);
             ui->authButton->setEnabled(true);
@@ -613,7 +493,6 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
               {
         if(status == NetworkStatus::NetworkError)
         {
-            ui->labelStat->setText("Завершение...");
             this->showMessageFromStatus(status);
             delayPush(5000, [this](){this->close();}, false);
             QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
@@ -637,7 +516,7 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
 
         if(verApp >= verServer)
         {
-            ui->labelStat->setText("Вы используете последнюю версию. Нажмите <b>Далее ></b>, чтобы продолжить.");
+            // TODO: Text update is latest
             return;
         }
 

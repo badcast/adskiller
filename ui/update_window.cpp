@@ -36,8 +36,11 @@ void update_window::delayPush(int ms, std::function<void()> call, bool loop)
         [qtimer, call]()
         {
             call();
-            qtimer->stop();
-            qtimer->deleteLater();
+            if(qtimer->isSingleShot())
+            {
+                qtimer->stop();
+                qtimer->deleteLater();
+            }
         });
     qtimer->start();
 }

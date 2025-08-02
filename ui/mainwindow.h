@@ -29,6 +29,14 @@ enum ThemeScheme : int
     Dark
 };
 
+enum PageIndex : int
+{
+    AuthPage,
+    CabinetPage,
+    MalwarePage,
+    LoaderPage
+};
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -94,7 +102,7 @@ private:
     int curPage;
     int startPage = 0;
 
-    void updatePageState();
+    void showPageLoader(int pageNum, int msWait = 1000);
     void showPage(int pageNum);
     void pageShown(int page);
     void delayPush(int ms, std::function<void ()> call, bool loop = false);

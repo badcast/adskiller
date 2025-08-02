@@ -4,6 +4,7 @@
 // * MODIFIED: Fix 0 - value is empty circle *
 // * MODIFIED: Set showing text *
 // * MODIFIED: Set ideal font *
+// *** Modifier author: badcast <bad cast for cast> ***
 
 /////////////////////////////////////////////////////////////////////////////
 // Date of creation: 04.07.2013
