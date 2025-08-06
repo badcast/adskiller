@@ -16,5 +16,6 @@
         <file alias="android-mobile-source">res/mobile-phone.png</file>
         <file alias="back-texture-dark">res/back_texture.png</file>
         <file alias="usb-port">res/usbport.png</file>
+        <file alias="remove-ads">res/icon_remads.png</file>
     </qresource>
 </RCC>
