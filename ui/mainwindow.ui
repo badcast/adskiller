@@ -78,6 +78,126 @@
          <property name="currentIndex">
           <number>0</number>
          </property>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>Auth Page</string>
+          </attribute>
+          <widget class="QLineEdit" name="lineEditToken">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>300</y>
+             <width>461</width>
+             <height>26</height>
+            </rect>
+           </property>
+           <property name="maxLength">
+            <number>128</number>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::EchoMode::Password</enum>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="authButton">
+           <property name="geometry">
+            <rect>
+             <x>530</x>
+             <y>330</y>
+             <width>111</width>
+             <height>26</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Войти</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_4">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>280</y>
+             <width>361</width>
+             <height>18</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Введите Токен-доступа для авторизаций в приложений</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="statusAuthText">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>370</y>
+             <width>461</width>
+             <height>61</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_2">
+           <property name="geometry">
+            <rect>
+             <x>390</x>
+             <y>334</y>
+             <width>131</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>&lt;a href=&quot;index&quot;&gt;Забыли свой токен?&lt;/a&gt;</string>
+           </property>
+           <property name="openExternalLinks">
+            <bool>false</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::TextInteractionFlag::LinksAccessibleByKeyboard|Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextBrowserInteraction|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+           </property>
+          </widget>
+          <widget class="QFrame" name="frame">
+           <property name="geometry">
+            <rect>
+             <x>290</x>
+             <y>60</y>
+             <width>221</width>
+             <height>201</height>
+            </rect>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">image: url(:/resources/app-icon);</string>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Shape::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Shadow::Plain</enum>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="checkBox">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>330</y>
+             <width>191</width>
+             <height>23</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Войти при запуске</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </widget>
          <widget class="QWidget" name="tab0">
           <attribute name="title">
            <string>Cabinet</string>
@@ -158,19 +278,11 @@
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton {
+                  <string notr="true">
     padding: 10px;
 	text-align: bottom center;
-	image: url(:/resources/shield);
+	image: url(:/resources/remove-ads);
     image-position: top center; 
-}
-QPushButton:hover {
-	 image: url(:/resources/shield-hover);
-}
-QPushButton:disabled 
-{
-      	 image: url(:/resources/shield-close);
-}
 </string>
                  </property>
                  <property name="text">
@@ -390,126 +502,6 @@ QPushButton:disabled
              </item>
             </layout>
            </widget>
-          </widget>
-         </widget>
-         <widget class="QWidget" name="tab">
-          <attribute name="title">
-           <string>Auth Page</string>
-          </attribute>
-          <widget class="QLineEdit" name="lineEditToken">
-           <property name="geometry">
-            <rect>
-             <x>180</x>
-             <y>250</y>
-             <width>461</width>
-             <height>26</height>
-            </rect>
-           </property>
-           <property name="maxLength">
-            <number>128</number>
-           </property>
-           <property name="echoMode">
-            <enum>QLineEdit::EchoMode::Password</enum>
-           </property>
-          </widget>
-          <widget class="QPushButton" name="authButton">
-           <property name="geometry">
-            <rect>
-             <x>530</x>
-             <y>280</y>
-             <width>111</width>
-             <height>26</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Войти</string>
-           </property>
-          </widget>
-          <widget class="QLabel" name="label_4">
-           <property name="geometry">
-            <rect>
-             <x>180</x>
-             <y>230</y>
-             <width>361</width>
-             <height>18</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Введите Токен-доступа для авторизаций в приложений</string>
-           </property>
-          </widget>
-          <widget class="QLabel" name="statusAuthText">
-           <property name="geometry">
-            <rect>
-             <x>180</x>
-             <y>320</y>
-             <width>461</width>
-             <height>61</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-          <widget class="QLabel" name="label_2">
-           <property name="geometry">
-            <rect>
-             <x>390</x>
-             <y>284</y>
-             <width>131</width>
-             <height>20</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>&lt;a href=&quot;index&quot;&gt;Забыли свой токен?&lt;/a&gt;</string>
-           </property>
-           <property name="openExternalLinks">
-            <bool>false</bool>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::TextInteractionFlag::LinksAccessibleByKeyboard|Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextBrowserInteraction|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-           </property>
-          </widget>
-          <widget class="QFrame" name="frame">
-           <property name="geometry">
-            <rect>
-             <x>290</x>
-             <y>10</y>
-             <width>221</width>
-             <height>201</height>
-            </rect>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">image: url(:/resources/app-icon);</string>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Shape::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Shadow::Plain</enum>
-           </property>
-          </widget>
-          <widget class="QCheckBox" name="checkBox">
-           <property name="geometry">
-            <rect>
-             <x>180</x>
-             <y>280</y>
-             <width>191</width>
-             <height>23</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Войти при запуске</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
           </widget>
          </widget>
          <widget class="QWidget" name="tab1">

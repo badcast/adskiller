@@ -22,14 +22,14 @@ enum MalwareStatus
     Error
 };
 
-enum ThemeScheme : int
+enum ThemeScheme
 {
     System,
     Light,
     Dark
 };
 
-enum PageIndex : int
+enum PageIndex
 {
     AuthPage,
     CabinetPage,
