@@ -9,6 +9,7 @@
 #include <QNetworkReply>
 #include <QDateTime>
 #include <QList>
+#include <QVersionNumber>
 
 class MainWindow;
 
@@ -32,6 +33,18 @@ struct UserData
     bool isNotValidBalance() const;
     bool hasBalance() const;
     bool hasVipAccount() const;
+};
+
+struct VersionInfo
+{
+    int mStatus;
+    QVersionNumber mVersion;
+    QString mDownloadUrl;
+
+    VersionInfo() = default;
+    VersionInfo(const QString& version, const QString& url, int status);
+
+    bool empty() const;
 };
 
 struct LabStatusInfo

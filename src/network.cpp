@@ -2,6 +2,7 @@
 
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QVersionNumber>
 
 #include "begin.h"
 #include "adbfront.h"
@@ -303,4 +304,20 @@ void Network::onFetchingLabs()
         emit fetchingLabs(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+}
+
+VersionInfo::VersionInfo(const QString &version, const QString &url, int status) : mDownloadUrl(url), mStatus(status)
+{
+    QVector<int> ints;
+    QStringList list = std::move(version.split('.', Qt::SkipEmptyParts));
+    std::transform(std::begin(list), std::end(list), std::back_inserter(ints), [](const QString& str) -> int
+                   {
+                       return str.toInt();
+                   });
+    mVersion = QVersionNumber{ints};
+}
+
+bool VersionInfo::empty() const
+{
+    return mStatus == 0 && mDownloadUrl.isEmpty() && mVersion.isNull();
 }

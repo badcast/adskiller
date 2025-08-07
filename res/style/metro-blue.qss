@@ -60,8 +60,6 @@ QComboBox:focus {
 QComboBox::drop-down {
     background-color: #B71C1C;
     border: none;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
     padding: 0px 8px;
 }
 QComboBox QAbstractItemView {
@@ -124,7 +122,6 @@ QSlider::handle:horizontal {
     width: 16px;
     height: 16px;
     margin: -4px 0;
-    border-radius: 8px;
     border: none;
 }
 QSlider::handle:horizontal:hover {
@@ -148,7 +145,6 @@ QSlider::handle:vertical {
     width: 16px;
     height: 16px;
     margin: 0 -4px;
-    border-radius: 8px;
     border: none;
 }
 QSlider::handle:vertical:hover {
@@ -171,7 +167,6 @@ QStatusBar {
 QDialog {
     background-color: #F0F0F0;
     border: 1px solid #D0D0D0;
-    border-radius: 8px;
     color: #1E1E1E;
 }
 QMenuBar {
@@ -264,7 +259,6 @@ QScrollBar:vertical {
 QScrollBar::handle:vertical {
     background: #D0D0D0;
     min-height: 20px;
-    border-radius: 5px;
 }
 QScrollBar::add-line:vertical {
     border: none;
@@ -292,7 +286,6 @@ QScrollBar:horizontal {
 QScrollBar::handle:horizontal {
     background: #D0D0D0;
     min-width: 20px;
-    border-radius: 5px;
 }
 QScrollBar::add-line:horizontal {
     border: none;

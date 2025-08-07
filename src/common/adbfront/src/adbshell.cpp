@@ -78,8 +78,8 @@ bool AdbShell::connect(const QString &deviceId)
                     {
                         len = 1;
 
-                        QByteArray dupNum = output.mid(lastIndex+1, (output.length()-lastIndex+1));
-                        retCode = dupNum.toInt();
+                        session = std::move(output.mid(lastIndex+1, (output.length()-lastIndex+1)));
+                        retCode = session.toInt();
                         if(lastIndex > 0)
                             lastIndex--;
                         len += output.length()-lastIndex;

@@ -3,7 +3,7 @@
 
 #include "extension.h"
 
-QByteArray CaesarAlgo::RandomKey()
+QByteArray CipherAlgoCrypto::RandomKey()
 {
     int x;
     QByteArray key;
@@ -15,7 +15,7 @@ QByteArray CaesarAlgo::RandomKey()
     return key;
 }
 
-QByteArray CaesarAlgo::ConvBytes(const QByteArray &bytes, const QByteArray &key)
+QByteArray CipherAlgoCrypto::ConvBytes(const QByteArray &bytes, const QByteArray &key)
 {
     int x;
     QByteArray retval;
@@ -25,7 +25,7 @@ QByteArray CaesarAlgo::ConvBytes(const QByteArray &bytes, const QByteArray &key)
     return retval;
 }
 
-QString CaesarAlgo::PackDC(const QByteArray &dataInit, const QByteArray &key)
+QString CipherAlgoCrypto::PackDC(const QByteArray &dataInit, const QByteArray &key)
 {
     QByteArray retval{};
     QByteArray data = ConvBytes(dataInit, key);
@@ -39,7 +39,7 @@ QString CaesarAlgo::PackDC(const QByteArray &dataInit, const QByteArray &key)
     return QLatin1String(retval.toBase64());
 }
 
-QByteArray CaesarAlgo::UnpackDC(const QString &packed)
+QByteArray CipherAlgoCrypto::UnpackDC(const QString &packed)
 {
     QByteArray key{}, data{};
     int keylen;

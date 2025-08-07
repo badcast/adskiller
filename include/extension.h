@@ -5,7 +5,7 @@
 
 #include "begin.h"
 
-class CaesarAlgo
+class CipherAlgoCrypto
 {
 private:
     static QByteArray ConvBytes(const QByteArray &bytes, const QByteArray &key);
