@@ -15,6 +15,7 @@
 #include <QFontDatabase>
 #include <QFuture>
 #include <QEventLoop>
+#include <QCloseEvent>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -136,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
 
     // Init tray
-    (void)new AdsAppSystemTray(this);
+    tray = new AdsAppSystemTray(this);
 
     QString _version;
     _version += QString::number(AppVerMajor);
@@ -463,6 +464,12 @@ void MainWindow::setThemeAction()
     for (scheme = (0); scheme < virtualSelectItems.size() && selfSender != virtualSelectItems[scheme]; ++scheme)
         ;
     setTheme(static_cast<ThemeScheme>(scheme));
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    tray->deleteLater();
+    event->accept();
 }
 
 void MainWindow::replyAuthFinish(int status, bool ok)

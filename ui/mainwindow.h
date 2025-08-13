@@ -15,6 +15,7 @@
 #include "begin.h"
 #include "adbfront.h"
 #include "network.h"
+#include "SystemTray.h"
 
 enum MalwareStatus
 {
@@ -64,6 +65,7 @@ public:
     QApplication *app;
     VersionInfo selfVersion;
     VersionInfo actualVersion;
+    AdsAppSystemTray * tray;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -90,6 +92,8 @@ private slots:
 
 public slots:
     void setThemeAction();
+
+    void closeEvent(QCloseEvent * event) override;
 
 private:
     Ui::MainWindow *ui;
