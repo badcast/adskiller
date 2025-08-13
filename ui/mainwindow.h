@@ -15,6 +15,7 @@
 #include "begin.h"
 #include "adbfront.h"
 #include "network.h"
+#include "SystemTray.h"
 
 enum MalwareStatus
 {
@@ -57,6 +58,9 @@ public:
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
+    void delayTimer(int ms);
+    void delayPushLoop(int ms, std::function<bool ()> call);
+    void delayPush(int ms, std::function<void ()> call);
 
     Adb adb;
     Network network;
@@ -64,6 +68,7 @@ public:
     QApplication *app;
     VersionInfo selfVersion;
     VersionInfo actualVersion;
+    AdsAppSystemTray * tray;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -91,6 +96,8 @@ private slots:
 public slots:
     void setThemeAction();
 
+    void closeEvent(QCloseEvent * event) override;
+
 private:
     Ui::MainWindow *ui;
     QTimer * malwareUpdateTimer;
@@ -107,9 +114,6 @@ private:
     void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
     void showPage(PageIndex pageNum);
     void pageShown(int page);
-    void delayTimer(int ms);
-    void delayPushLoop(int ms, std::function<bool ()> call);
-    void delayPush(int ms, std::function<void ()> call);
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();

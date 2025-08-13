@@ -4,7 +4,7 @@
 
 update_window::update_window(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::update_window)
+    , ui(new Ui::UpdateWindow)
 {
     ui->setupUi(this);
 }
