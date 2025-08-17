@@ -58,6 +58,9 @@ public:
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
+    void delayTimer(int ms);
+    void delayPushLoop(int ms, std::function<bool ()> call);
+    void delayPush(int ms, std::function<void ()> call);
 
     Adb adb;
     Network network;
@@ -111,9 +114,6 @@ private:
     void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
     void showPage(PageIndex pageNum);
     void pageShown(int page);
-    void delayTimer(int ms);
-    void delayPushLoop(int ms, std::function<bool ()> call);
-    void delayPush(int ms, std::function<void ()> call);
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();

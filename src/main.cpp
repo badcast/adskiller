@@ -3,6 +3,8 @@
 #include <QDir>
 #include <QFile>
 #include <QSharedMemory>
+#include <QBuffer>
+#include <QDataStream>
 
 #include "begin.h"
 #include "mainwindow.h"
@@ -12,6 +14,7 @@ bool checkout();
 
 int main(int argc, char *argv[])
 {
+    int exitCode;
     QApplication app(argc, argv);
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
     if(sharedMemUpdate.attach() || !checkout())
@@ -21,18 +24,48 @@ int main(int argc, char *argv[])
     QSharedMemory sharedMem("imister.kz-app_adskiller_v1");
     if(sharedMem.attach())
     {
-        QMessageBox::warning(nullptr, "Внимание", "Приложение уже запущено.");
+        QBuffer buffer(&sharedMem);
+        if(!buffer.open(QBuffer::WriteOnly))
+            qDebug() << "fail open buffer sharedmem";
+        QDataStream outStream(&buffer);
+        outStream << QString("show_window");
+        buffer.close();
+        sharedMem.detach();
         return 1;
     }
-    if(!sharedMem.create(1))
+    if(!sharedMem.create(1024))
     {
         return 1;
     }
+
     MainWindow w;
-    int exitCode;
+    w.delayPushLoop(100, [&sharedMem,&w]()->bool{
+
+        QBuffer buffer(&sharedMem);
+        if(!buffer.open(QBuffer::ReadOnly))
+            qDebug() << "Fail init shared mem buffer";
+
+        QDataStream inStream(&buffer);
+
+
+        QString cmd;
+        inStream >> cmd;
+
+        if(!cmd.isEmpty())
+        {
+            int xx = 0;
+        }
+        if(cmd == "show_window")
+        {
+            w.show();
+        }
+        buffer.close();
+        return true;
+    });
     w.app = &app;
     w.show();
     exitCode = app.exec();
+
     sharedMem.detach();
     return exitCode;
 }
