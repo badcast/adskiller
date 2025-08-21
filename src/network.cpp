@@ -127,6 +127,11 @@ void Network::fetchLabState(const QString &mdKey)
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
 }
 
+bool Network::checkNet()
+{
+    return _lastBytes <= 0;
+}
+
 bool Network::isAuthed()
 {
     return !authedId.token.isEmpty();
@@ -148,6 +153,7 @@ void Network::onAuthFinished()
 {
     int status = NetworkStatus::NetworkError;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
     if(reply)
     {
         for(;;)
@@ -155,6 +161,7 @@ void Network::onAuthFinished()
             if(reply->error() == QNetworkReply::NoError)
             {
                 QByteArray responce = reply->readAll();
+                _lastBytes = responce.size();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
                 status = NetworkStatus::ServerError;
                 if(jsonResp.isNull())
@@ -195,6 +202,7 @@ void Network::onAdsFinished()
     int status = NetworkStatus::NetworkError;
     AdsInfo adsData {};
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
     if(reply)
     {
         for(;;)
@@ -202,6 +210,7 @@ void Network::onAdsFinished()
             if(reply->error() == QNetworkReply::NoError)
             {
                 QByteArray responce = reply->readAll();
+                _lastBytes = responce.size();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
                 if(jsonResp.isNull() || !jsonResp["status"].isDouble() || !jsonResp["labs"].isObject())
                     status = NetworkStatus::ServerError;
@@ -231,6 +240,7 @@ void Network::onUserPackagesUploadFinished()
     int status = NetworkStatus::NetworkError;
     LabStatusInfo labs;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
     if(reply)
     {
         for(;;)
@@ -238,6 +248,7 @@ void Network::onUserPackagesUploadFinished()
             if(reply->error() == QNetworkReply::NoError)
             {
                 QByteArray responce = reply->readAll();
+                _lastBytes = responce.size();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
                 if(jsonResp.isNull() || !jsonResp["status"].isDouble())
                     status = NetworkStatus::ServerError;
@@ -262,6 +273,7 @@ void Network::onFetchingVersion()
     int status = NetworkStatus::NetworkError;
     QString version, url;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
     if(reply)
     {
         for(;;)
@@ -269,6 +281,7 @@ void Network::onFetchingVersion()
             if(reply->error() == QNetworkReply::NoError)
             {
                 QByteArray resp = std::move(reply->readAll());
+                _lastBytes = resp.size();
                 QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
                 if(!jsonResp.isNull() && !jsonResp["version"].isNull() && !jsonResp["url"].isNull())
                 {
@@ -289,11 +302,13 @@ void Network::onFetchingLabs()
     int status = NetworkStatus::NetworkError;
     LabStatusInfo labs;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
     if(reply)
     {
         if(reply->error() == QNetworkReply::NoError)
         {
             QByteArray resp = std::move(reply->readAll());
+            _lastBytes = resp.size();
             QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
             if(!jsonResp.isNull() && jsonResp["labs"].isObject())
             {
@@ -319,5 +334,5 @@ VersionInfo::VersionInfo(const QString &version, const QString &url, int status)
 
 bool VersionInfo::empty() const
 {
-    return mStatus == 0 && mDownloadUrl.isEmpty() && mVersion.isNull();
+    return mStatus == -1 && mDownloadUrl.isEmpty() && mVersion.isNull();
 }

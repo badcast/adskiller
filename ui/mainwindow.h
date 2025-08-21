@@ -114,6 +114,8 @@ private:
     void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
     void showPage(PageIndex pageNum);
     void pageShown(int page);
+    void clearAuthInfoPage();
+    void fillAuthInfoPage();
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();
