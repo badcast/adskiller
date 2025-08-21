@@ -10,6 +10,9 @@
 #include "mainwindow.h"
 #include "network.h"
 
+constexpr auto ShowCommandPipe = "adskiller_window_show";
+constexpr auto HideCommandPipe = "adskiller_window_hide";
+
 bool checkout();
 
 int main(int argc, char *argv[])
@@ -19,53 +22,44 @@ int main(int argc, char *argv[])
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
     if(sharedMemUpdate.attach() || !checkout())
     {
-        return 1;
+        return EXIT_FAILURE;
     }
     QSharedMemory sharedMem("imister.kz-app_adskiller_v1");
     if(sharedMem.attach())
     {
-        QBuffer buffer(&sharedMem);
-        if(!buffer.open(QBuffer::WriteOnly))
-            qDebug() << "fail open buffer sharedmem";
-        QDataStream outStream(&buffer);
-        outStream << QString("show_window");
-        buffer.close();
+        sharedMem.lock();
+        int len = qMin<int>(strlen(ShowCommandPipe),sharedMem.size());
+        memcpy(sharedMem.data(), ShowCommandPipe, len);
+        sharedMem.unlock();
         sharedMem.detach();
-        return 1;
+        return EXIT_SUCCESS;
     }
-    if(!sharedMem.create(1024))
+    if(!sharedMem.create(128))
     {
-        return 1;
+        return EXIT_FAILURE;
     }
 
     MainWindow w;
+    w.current = &w;
     w.delayPushLoop(100, [&sharedMem,&w]()->bool{
-
-        QBuffer buffer(&sharedMem);
-        if(!buffer.open(QBuffer::ReadOnly))
-            qDebug() << "Fail init shared mem buffer";
-
-        QDataStream inStream(&buffer);
-
-
-        QString cmd;
-        inStream >> cmd;
-
-        if(!cmd.isEmpty())
+        if(!sharedMem.lock())
+            return true;
+        QString cmd = QLatin1String(reinterpret_cast<const char*>(sharedMem.constData()));
+        if(cmd == ShowCommandPipe)
         {
-            int xx = 0;
+            w.showNormal();
         }
-        if(cmd == "show_window")
+        if(cmd == HideCommandPipe)
         {
-            w.show();
+            w.hide();
         }
-        buffer.close();
+        memset(sharedMem.data(), 0, 1);
+        sharedMem.unlock();
         return true;
     });
     w.app = &app;
     w.show();
     exitCode = app.exec();
-
     sharedMem.detach();
     return exitCode;
 }

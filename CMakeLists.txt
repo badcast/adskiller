@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 
 # READ VERSION
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" ADSVERSION)
@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
+        ui/icontextbutton.cpp
+        ui/icontextbutton.h
         include/begin.h
         include/extension.h
         include/network.h
@@ -34,6 +36,7 @@ set(PROJECT_SOURCES
         src/widget/ProgressCircle.cpp
         src/SystemTray.cpp
         src/extension.cpp
+        src/task.cpp
         resources.qrc
 )
 

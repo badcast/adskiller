@@ -16,13 +16,7 @@
 #include "adbfront.h"
 #include "network.h"
 #include "SystemTray.h"
-
-enum MalwareStatus
-{
-    Idle,
-    Running,
-    Error
-};
+#include "extension.h"
 
 enum ThemeScheme
 {
@@ -69,6 +63,9 @@ public:
     VersionInfo selfVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
+    std::unique_ptr<Task> currentTask;
+
+    static MainWindow * current;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -114,6 +111,8 @@ private:
     void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
     void showPage(PageIndex pageNum);
     void pageShown(int page);
+    void clearAuthInfoPage();
+    void fillAuthInfoPage();
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();

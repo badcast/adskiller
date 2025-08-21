@@ -37,7 +37,7 @@ struct UserData
 
 struct VersionInfo
 {
-    int mStatus;
+    int mStatus = -1;
     QVersionNumber mVersion;
     QString mDownloadUrl;
 
@@ -80,7 +80,7 @@ class Network : public QObject
 private:
     QNetworkAccessManager* manager;
     QString _token;
-    int hasInternet;
+    std::int64_t _lastBytes;
 
 public:
     UserData authedId;
@@ -93,7 +93,6 @@ public:
     void getAdsData(const QString &mdKey);
     bool sendUserPackages(const AdbDevice& device, const QStringList& packages);
     void fetchLabState(const QString &mdKey);
-    // TODO: Check Network
     bool checkNet();
 
 signals:

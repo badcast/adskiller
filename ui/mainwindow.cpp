@@ -24,7 +24,11 @@
 #include "AntiMalware.h"
 #include "network.h"
 
+#include "icontextbutton.h"
+
 #include "Strings.h"
+
+MainWindow * MainWindow::current;
 
 constexpr struct {
     PageIndex index;
@@ -34,6 +38,21 @@ constexpr struct {
     {CabinetPage, "page_cabinet"},
     {MalwarePage, "page_adsmalware"},
     {LoaderPage, "page_loader"}
+};
+
+constexpr struct {
+    char title[64];
+    char iconName[24];
+    bool active;
+    int price;
+} AvailableServices[] = {
+    {"Удалить рекламу", "remove-ads", true, 0},
+    {"Мои устроства и гарантия", "icon-malware", false,0},
+    {"Очистка Мусора", "icon-malware", false, 0},
+    {"Samsung FRP", "icon-malware", false, 0},
+    {"Перенос WhatsApp", "icon-malware", false,0},
+    {"Перенос на iOS", "icon-malware", false, 0},
+    {"Сброс к заводским", "icon-malware", false,0}
 };
 
 inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
@@ -50,7 +69,7 @@ inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    int x;
+    int x,y;
     QStringListModel *model;
     ui->setupUi(this);
 
@@ -79,7 +98,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         if(iter != std::end(_w))
             pages.insert(item.index, *iter);
     }
-
 
     for (x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
@@ -123,6 +141,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
     QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
     QObject::connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
+    QObject::connect(ui->authpageUpdate, &QPushButton::clicked, [this](){ ui->authButton->click(); showPageLoader((network.checkNet() ? CabinetPage : AuthPage), 1000, QString("Обновление странницы")); });
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -226,6 +245,7 @@ void MainWindow::softUpdateDevices()
 
 void MainWindow::checkVersion()
 {
+#ifdef NDEBUG
     ui->loaderPageText->setText("Проверка обновления");
     // Show First Page
     showPageLoader(startPage, 1000, [this]()->bool {
@@ -244,6 +264,9 @@ void MainWindow::checkVersion()
     });
 
     network.fetchVersion(true);
+#else
+    showPageLoader(AuthPage);
+#endif
 }
 
 template<typename Pred>
@@ -270,7 +293,7 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
         text = "Ожидайте";
 
     ui->loaderPageText->setText(text);
-    showPageLoader(pageNum, msWait, [](){return false;});
+    showPageLoader(pageNum, msWait, [](){return true;});
 }
 
 void MainWindow::showPage(PageIndex pageNum)
@@ -292,44 +315,11 @@ void MainWindow::pageShown(int page)
         ui->lineEditToken->setText(network._token);
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->authButton->setEnabled(true);
+        clearAuthInfoPage();
         break;
-    case 1:
+    case CabinetPage:
     {
-
-        QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
-        model->setRowCount(7);
-        model->setColumnCount(2);
-
-        model->setHorizontalHeaderItem(0, new QStandardItem("Параметр"));
-        model->setHorizontalHeaderItem(1, new QStandardItem("Значение"));
-
-        model->setItem(0, 0, new QStandardItem("Логин"));
-        model->setItem(0, 1, new QStandardItem("-"));
-
-        model->setItem(1, 0, new QStandardItem("Последний вход"));
-        model->setItem(1, 1, new QStandardItem("-"));
-
-        model->setItem(2, 0, new QStandardItem("Баланс"));
-        model->setItem(2, 1, new QStandardItem("-"));
-
-        model->setItem(3, 0, new QStandardItem("VIP дней"));
-        model->setItem(3, 1, new QStandardItem("-"));
-
-        model->setItem(4, 0, new QStandardItem("Подключений"));
-        model->setItem(4, 1, new QStandardItem("-"));
-
-        model->setItem(5, 0, new QStandardItem("Расположение"));
-        model->setItem(5, 1, new QStandardItem("-"));
-
-        model->setItem(6, 0, new QStandardItem("Заблокирован"));
-        model->setItem(6, 1, new QStandardItem("-"));
-
-        ui->authInfo->setModel(model);
-
-        ui->authInfo->horizontalHeader()->setStretchLastSection(true);
-        ui->authInfo->verticalHeader()->setVisible(false);
-
-        ui->authInfo->resizeColumnToContents(0);
+        fillAuthInfoPage();
         break;
     }
     case MalwarePage:
@@ -344,6 +334,7 @@ void MainWindow::pageShown(int page)
     // Malware
     case 3:
     {
+        break;
         QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
         QStringList place{};
         ui->processBarStatus->setValue(0);
@@ -361,6 +352,133 @@ void MainWindow::pageShown(int page)
     default:
         break;
     }
+}
+
+void MainWindow::clearAuthInfoPage()
+{
+    int x,y;
+    QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
+    model->setRowCount(7);
+    model->setColumnCount(2);
+
+    model->setHorizontalHeaderItem(0, new QStandardItem("Параметр"));
+    model->setHorizontalHeaderItem(1, new QStandardItem("Значение"));
+
+    model->setItem(0, 0, new QStandardItem("Логин"));
+    model->setItem(0, 1, new QStandardItem("-"));
+
+    model->setItem(1, 0, new QStandardItem("Последний вход"));
+    model->setItem(1, 1, new QStandardItem("-"));
+
+    model->setItem(2, 0, new QStandardItem("Баланс"));
+    model->setItem(2, 1, new QStandardItem("-"));
+
+    model->setItem(3, 0, new QStandardItem("VIP дней"));
+    model->setItem(3, 1, new QStandardItem("-"));
+
+    model->setItem(4, 0, new QStandardItem("Подключений"));
+    model->setItem(4, 1, new QStandardItem("-"));
+
+    model->setItem(5, 0, new QStandardItem("Расположение"));
+    model->setItem(5, 1, new QStandardItem("-"));
+
+    model->setItem(6, 0, new QStandardItem("Заблокирован"));
+    model->setItem(6, 1, new QStandardItem("-"));
+
+    ui->authInfo->setModel(model);
+
+    ui->authInfo->horizontalHeader()->setStretchLastSection(true);
+    ui->authInfo->verticalHeader()->setVisible(false);
+
+    ui->authInfo->resizeColumnToContents(0);
+
+
+    for(x = 0, y = ui->serviceContents->layout()->count(); x < y; ++x)
+        ui->serviceContents->layout()->takeAt(0)->widget()->deleteLater();
+}
+
+void MainWindow::fillAuthInfoPage()
+{
+    QString value;
+    int x,y;
+    QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
+    value = network.authedId.idName;
+    model->item(0, 1)->setText(value);
+
+    value = QDateTime::currentDateTime().toString(Qt::TextDate);
+    model->item(1, 1)->setText(value);
+
+    value = QString::number(network.authedId.credits) + " кредитов";
+    model->item(2, 1)->setText(value);
+
+    value = QString::number(network.authedId.vipDays);
+    model->item(3, 1)->setText(value);
+
+    value = QString::number(network.authedId.connectedDevices);
+    model->item(4, 1)->setText(value);
+
+    value = network.authedId.location;
+    model->item(5, 1)->setText(value);
+
+    value = network.authedId.blocked ? "Да" : "Нет";
+    model->item(6, 1)->setText(value);
+
+    ui->labelLoginAuthed->setText(network.authedId.idName);
+
+    // Fill services
+
+    for(x = 0, y = static_cast<int>(sizeof(AvailableServices) / sizeof(AvailableServices[0])); x < y; ++x)
+    {
+        QString info;
+        info += AvailableServices[x].title;
+        info += '\n';
+        if(AvailableServices[x].active)
+            if(network.authedId.hasVipAccount())
+                info += "(безлимит)";
+            else
+                info += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : AvailableServices[x].price).arg(network.authedId.currencyType);
+        else
+            info += "(Недоступно)";
+        QPushButton * push = new QPushButton(QIcon(QString(":/resources/") + AvailableServices[x].iconName),
+                                            info,
+                                            ui->serviceContents);
+        push->setStyleSheet("QPushButton {"
+                            "   text-align: left;"
+                            "   padding: 10px;"
+                            "   font-size: 14px;"
+                            "   border: 2px dashed black;"
+                            "   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #B71C1C);"
+                            "   color: white;"
+                            "}"
+                            "QPushButton:hover {"
+                            "   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #B71C1C, stop: 1 #3d3d3d);"
+                            "   color: white;"
+                            "   border: 2px solid black;"
+                            "}"
+                            "QPushButton:pressed {"
+                            "   background: #B71C1C;"
+                            "   color: white;"
+                            "   border: 2px solid black;"
+                            "}");
+
+        if(!AvailableServices[x].active)
+            push->setStyleSheet( push->styleSheet() + "QPushButton { background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #232323); }" );
+
+
+        if( x == 0)
+        {
+            QObject::connect(push, &QPushButton::clicked, [this](){showPageLoader(MalwarePage);});
+        }
+
+        push->setIconSize({50,50});
+        push->setFixedSize(259,64);
+        push->setEnabled(AvailableServices[x].active);
+        static_cast<QGridLayout*>(ui->serviceContents->layout())->addWidget(push, x / 3, x % 3);
+    }
+
+    ui->labelCredits->setText(QString("%1\n(%2)").arg(network.authedId.credits).arg(network.authedId.currencyType));
+    ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
+
 }
 
 void MainWindow::delayTimer(int ms)
@@ -426,7 +544,7 @@ void MainWindow::delayPushLoop(int ms, std::function<bool()> call)
 
 void MainWindow::delayPush(int ms, std::function<void()> call)
 {
-    delayPushLoop(ms, [call]() -> bool { call(); return true;});
+    delayPushLoop(ms, [call]() -> bool { call(); return false;});
 }
 
 void MainWindow::on_authButton_clicked()
@@ -476,37 +594,17 @@ void MainWindow::replyAuthFinish(int status, bool ok)
 {
     delayPush(
         1000,
-        [ok, status, this]()
+        [ok, status, this]() -> void
         {
             timerAuthAnim->stop();
 
-            if (ok && curPage == CabinetPage)
+            QString resText;
+            switch (status)
             {
-                QString value;
-                QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
-                value = network.authedId.idName;
-                model->item(0, 1)->setText(value);
-
-                value = QDateTime::currentDateTime().toString(Qt::TextDate);
-                model->item(1, 1)->setText(value);
-
-                value = QString::number(network.authedId.credits) + " " + network.authedId.currencyType;
-                model->item(2, 1)->setText(value);
-
-                value = QString::number(network.authedId.vipDays);
-                model->item(3, 1)->setText(value);
-
-                value = QString::number(network.authedId.connectedDevices);
-                model->item(4, 1)->setText(value);
-
-                value = network.authedId.location;
-                model->item(5, 1)->setText(value);
-
-                value = network.authedId.blocked ? "Да" : "Нет";
-                model->item(6, 1)->setText(value);
-
-                value.clear();
-
+            case 0:
+                resText = "Токен успешно прошел проверку. Добро пожаловать, ";
+                resText += network.authedId.idName;
+                resText += "!";
                 if (network.authedId.isNotValidBalance())
                 {
                     ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
@@ -523,40 +621,30 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                     showMessageFromStatus(NetworkStatus::AccountBlocked);
                 }
 
-                settings->setValue("encrypted_token", CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
+                if(!network.authedId.token.isEmpty())
+                    settings->setValue("encrypted_token", CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
+
+                break;
+            case 401:
+                resText = "Сервер вернул код 401 - не действительный токен или запрос обработан с ошибкой.";
+                break;
+            case NetworkStatus::NoEnoughMoney:
+                resText = infoNoBalance;
+                break;
+            default:
+                resText = "Проверьте интернет соединение.";
+                break;
             }
-            else
+
+            ui->statusAuthText->setText(resText);
+
+            if(status == NetworkStatus::OK)
             {
-                QString resText;
-                switch (status)
-                {
-                case 0:
-                    resText = "Токен успешно прошел проверку. Добро пожаловать, ";
-                    resText += network.authedId.idName;
-                    resText += "!";
-                    break;
-                case 401:
-                    resText = "Сервер вернул код 401 - не действительный токен или запрос обработан с ошибкой.";
-                    break;
-                case NetworkStatus::NoEnoughMoney:
-                    resText = infoNoBalance;
-                    break;
-                default:
-                    resText = "Проверьте интернет соединение.";
-                    break;
-                }
 
-                ui->statusAuthText->setText(resText);
-
-                if(status == NetworkStatus::OK)
-                {
-                    delayPush(0, [this]()
-                              {
-                        showPageLoader(CabinetPage);
-                    });
-                }
+                showPageLoader(CabinetPage);
 
             }
+
             ui->lineEditToken->setEnabled(true);
             ui->authButton->setEnabled(true);
         });
@@ -716,7 +804,7 @@ void MainWindow::doMalware()
             malwareUpdateTimer = new QTimer(this);
             malwareUpdateTimer->start(100);
             // START MALWARE
-            malwareStart(this);
+            malwareStart();
             QObject::connect(
                 malwareUpdateTimer,
                 &QTimer::timeout,

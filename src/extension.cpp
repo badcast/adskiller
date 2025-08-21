@@ -1,7 +1,10 @@
+#include <memory>
+
 #include <QRandomGenerator>
 #include <QCryptographicHash>
 
 #include "extension.h"
+#include "AntiMalware.h"
 
 QByteArray CipherAlgoCrypto::RandomKey()
 {
@@ -56,4 +59,55 @@ QByteArray CipherAlgoCrypto::UnpackDC(const QString &packed)
         data.clear();
     }
     return data;
+}
+
+Task::Task(Task::Invoker invoker, Invoker deInvoker, Checker checker) : _invoker(invoker), _deinvoker(deInvoker), _checker(checker)
+{}
+
+bool Task::isNone()
+{
+    return _checker() == 0;
+}
+
+bool Task::isRunning()
+{
+    return _checker() == 1;
+}
+
+bool Task::isFinish()
+{
+    return _checker() == 2;
+}
+
+bool Task::run()
+{
+    if(!_invoker || !isNone())
+        return false;
+    return _invoker();
+}
+
+std::unique_ptr<Task> TaskManager::CreateTask(TaskType type)
+{
+    std::unique_ptr<Task> _task;
+    switch(type)
+    {
+    case TaskType::AdsKiller:
+    {
+        _task = std::make_unique<Task>([](void)->bool{malwareStart(); return malwareStatus() == Running; }, [](void)->bool {malwareKill(); return true; }, [](void)->int
+                                       {
+                                           MalwareStatus ms = malwareStatus();
+                                           if(ms == Idle)
+                                               return 0;
+                                           if(ms == Running)
+                                               return 1;
+                                           if(ms == Error)
+                                               return 2;
+                                       });
+        break;
+    }
+    default:
+        _task = nullptr;
+        break;
+    }
+    return _task;
 }

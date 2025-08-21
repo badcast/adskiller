@@ -12,6 +12,7 @@ QPushButton {
     color: #F0F0F0;
     border: 1px solid #D0D0D0;
     padding: 3px 3px;
+    border-radius: 10px;
 }
 QPushButton:hover {
     background-color: #9B1C1C;
@@ -196,33 +197,9 @@ QCheckBox {
     spacing: 5px;
     color: #1E1E1E;
 }
-QCheckBox::indicator {
-    width: 20px;
-    height: 20px;
-}
-QCheckBox::indicator:unchecked {
-    background-color: #FFFFFF;
-    border: 1px solid #D0D0D0;
-}
-QCheckBox::indicator:checked {
-    background-color: #B71C1C;
-    border: 1px solid #B71C1C;
-}
 QRadioButton {
     spacing: 5px;
     color: #1E1E1E;
-}
-QRadioButton::indicator {
-    width: 20px;
-    height: 20px;
-}
-QRadioButton::indicator:unchecked {
-    background-color: #FFFFFF;
-    border: 1px solid #D0D0D0;
-}
-QRadioButton::indicator:checked {
-    background-color: #B71C1C;
-    border: 1px solid #B71C1C;
 }
 QTableWidget, QTableView {
     background-color: #FFFFFF;

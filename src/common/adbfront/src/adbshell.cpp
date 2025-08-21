@@ -104,8 +104,6 @@ bool AdbShell::connect(const QString &deviceId)
         }
         this->data = 0;
     };
-
-
     dataRxTx = {};
     requests.clear();
     responces.clear();
@@ -189,23 +187,24 @@ QString AdbShell::getprop(const QString &propname)
 
 bool AdbShell::reConnect()
 {
+    QString devId = deviceId;
     if(isConnect())
         exit();
-    return connect(deviceId);
+    return connect(devId);
 }
 
 void AdbShell::exit()
 {
-    if (thread == nullptr)
-        return;
-    commandQueueWait(QStringList() << "exit");
-    deviceId.clear();
-    thread->join();
-    for(const std::pair<int, QStringList> & q : std::as_const(requests))
+    if (thread)
     {
-        responces[q.first] = QString{};
+        commandQueueWait(QStringList() << "exit");
+        deviceId.clear();
+        thread->join();
+        for(const std::pair<int, QStringList> & q : std::as_const(requests))
+            responces[q.first] = QString{};
+        dataRxTx = {};
+        requests.clear();
+        delete thread;
+        thread = nullptr;
     }
-    requests.clear();
-    delete thread;
-    thread = nullptr;
 }
