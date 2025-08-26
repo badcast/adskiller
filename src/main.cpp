@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
     }
 
     MainWindow w;
+    w.current = &w;
     w.delayPushLoop(100, [&sharedMem,&w]()->bool{
         if(!sharedMem.lock())
             return true;
@@ -47,6 +48,10 @@ int main(int argc, char *argv[])
         if(cmd == ShowCommandPipe)
         {
             w.showNormal();
+        }
+        if(cmd == HideCommandPipe)
+        {
+            w.hide();
         }
         memset(sharedMem.data(), 0, 1);
         sharedMem.unlock();

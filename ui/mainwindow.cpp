@@ -24,7 +24,11 @@
 #include "AntiMalware.h"
 #include "network.h"
 
+#include "icontextbutton.h"
+
 #include "Strings.h"
+
+MainWindow * MainWindow::current;
 
 constexpr struct {
     PageIndex index;
@@ -34,6 +38,21 @@ constexpr struct {
     {CabinetPage, "page_cabinet"},
     {MalwarePage, "page_adsmalware"},
     {LoaderPage, "page_loader"}
+};
+
+constexpr struct {
+    char title[64];
+    char iconName[24];
+    bool active;
+    int price;
+} AvailableServices[] = {
+    {"Удалить рекламу", "remove-ads", true, 0},
+    {"Мои устроства и гарантия", "icon-malware", false,0},
+    {"Очистка Мусора", "icon-malware", false, 0},
+    {"Samsung FRP", "icon-malware", false, 0},
+    {"Перенос WhatsApp", "icon-malware", false,0},
+    {"Перенос на iOS", "icon-malware", false, 0},
+    {"Сброс к заводским", "icon-malware", false,0}
 };
 
 inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
@@ -50,7 +69,7 @@ inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    int x;
+    int x,y;
     QStringListModel *model;
     ui->setupUi(this);
 
@@ -79,7 +98,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         if(iter != std::end(_w))
             pages.insert(item.index, *iter);
     }
-
 
     for (x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
@@ -227,6 +245,7 @@ void MainWindow::softUpdateDevices()
 
 void MainWindow::checkVersion()
 {
+#ifdef NDEBUG
     ui->loaderPageText->setText("Проверка обновления");
     // Show First Page
     showPageLoader(startPage, 1000, [this]()->bool {
@@ -245,6 +264,9 @@ void MainWindow::checkVersion()
     });
 
     network.fetchVersion(true);
+#else
+    showPageLoader(AuthPage);
+#endif
 }
 
 template<typename Pred>
@@ -334,6 +356,7 @@ void MainWindow::pageShown(int page)
 
 void MainWindow::clearAuthInfoPage()
 {
+    int x,y;
     QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
     model->setRowCount(7);
     model->setColumnCount(2);
@@ -368,11 +391,16 @@ void MainWindow::clearAuthInfoPage()
     ui->authInfo->verticalHeader()->setVisible(false);
 
     ui->authInfo->resizeColumnToContents(0);
+
+
+    for(x = 0, y = ui->serviceContents->layout()->count(); x < y; ++x)
+        ui->serviceContents->layout()->takeAt(0)->widget()->deleteLater();
 }
 
 void MainWindow::fillAuthInfoPage()
 {
     QString value;
+    int x,y;
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
     value = network.authedId.idName;
     model->item(0, 1)->setText(value);
@@ -380,7 +408,7 @@ void MainWindow::fillAuthInfoPage()
     value = QDateTime::currentDateTime().toString(Qt::TextDate);
     model->item(1, 1)->setText(value);
 
-    value = QString::number(network.authedId.credits) + " " + network.authedId.currencyType;
+    value = QString::number(network.authedId.credits) + " кредитов";
     model->item(2, 1)->setText(value);
 
     value = QString::number(network.authedId.vipDays);
@@ -395,7 +423,62 @@ void MainWindow::fillAuthInfoPage()
     value = network.authedId.blocked ? "Да" : "Нет";
     model->item(6, 1)->setText(value);
 
-    value.clear();
+    ui->labelLoginAuthed->setText(network.authedId.idName);
+
+    // Fill services
+
+    for(x = 0, y = static_cast<int>(sizeof(AvailableServices) / sizeof(AvailableServices[0])); x < y; ++x)
+    {
+        QString info;
+        info += AvailableServices[x].title;
+        info += '\n';
+        if(AvailableServices[x].active)
+            if(network.authedId.hasVipAccount())
+                info += "(безлимит)";
+            else
+                info += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : AvailableServices[x].price).arg(network.authedId.currencyType);
+        else
+            info += "(Недоступно)";
+        QPushButton * push = new QPushButton(QIcon(QString(":/resources/") + AvailableServices[x].iconName),
+                                            info,
+                                            ui->serviceContents);
+        push->setStyleSheet("QPushButton {"
+                            "   text-align: left;"
+                            "   padding: 10px;"
+                            "   font-size: 14px;"
+                            "   border: 2px dashed black;"
+                            "   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #B71C1C);"
+                            "   color: white;"
+                            "}"
+                            "QPushButton:hover {"
+                            "   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #B71C1C, stop: 1 #3d3d3d);"
+                            "   color: white;"
+                            "   border: 2px solid black;"
+                            "}"
+                            "QPushButton:pressed {"
+                            "   background: #B71C1C;"
+                            "   color: white;"
+                            "   border: 2px solid black;"
+                            "}");
+
+        if(!AvailableServices[x].active)
+            push->setStyleSheet( push->styleSheet() + "QPushButton { background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #232323); }" );
+
+
+        if( x == 0)
+        {
+            QObject::connect(push, &QPushButton::clicked, [this](){showPageLoader(MalwarePage);});
+        }
+
+        push->setIconSize({50,50});
+        push->setFixedSize(259,64);
+        push->setEnabled(AvailableServices[x].active);
+        static_cast<QGridLayout*>(ui->serviceContents->layout())->addWidget(push, x / 3, x % 3);
+    }
+
+    ui->labelCredits->setText(QString("%1\n(%2)").arg(network.authedId.credits).arg(network.authedId.currencyType));
+    ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
+
 }
 
 void MainWindow::delayTimer(int ms)
@@ -721,7 +804,7 @@ void MainWindow::doMalware()
             malwareUpdateTimer = new QTimer(this);
             malwareUpdateTimer->start(100);
             // START MALWARE
-            malwareStart(this);
+            malwareStart();
             QObject::connect(
                 malwareUpdateTimer,
                 &QTimer::timeout,

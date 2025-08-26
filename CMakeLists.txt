@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
+        ui/icontextbutton.cpp
+        ui/icontextbutton.h
         include/begin.h
         include/extension.h
         include/network.h
@@ -34,6 +36,7 @@ set(PROJECT_SOURCES
         src/widget/ProgressCircle.cpp
         src/SystemTray.cpp
         src/extension.cpp
+        src/task.cpp
         resources.qrc
 )
 
