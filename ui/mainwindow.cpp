@@ -37,7 +37,8 @@ constexpr struct {
     {AuthPage, "page_auth"},
     {CabinetPage, "page_cabinet"},
     {MalwarePage, "page_adsmalware"},
-    {LoaderPage, "page_loader"}
+    {LoaderPage, "page_loader"},
+    {DevicesPage, "page_devices"}
 };
 
 constexpr struct {
@@ -142,6 +143,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
     QObject::connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, [this](){ ui->authButton->click(); showPageLoader((network.checkNet() ? CabinetPage : AuthPage), 1000, QString("Обновление странницы")); });
+    QObject::connect(ui->buttonDecayMalware, &QPushButton::clicked, [this](){startMalwareProcess();});
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -547,6 +549,11 @@ void MainWindow::delayPush(int ms, std::function<void()> call)
     delayPushLoop(ms, [call]() -> bool { call(); return false;});
 }
 
+bool MainWindow::startDeviceConnect(DeviceConnectType targetType)
+{
+    showPage(DevicesPage);
+}
+
 void MainWindow::on_authButton_clicked()
 {
     constexpr int Dots = 3;
@@ -776,12 +783,7 @@ void MainWindow::showMessageFromStatus(int statusCode)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoAccountBlocked);
 }
 
-void MainWindow::on_buttonDecayMalware_clicked()
-{
-    doMalware();
-}
-
-void MainWindow::doMalware()
+void MainWindow::startMalwareProcess()
 {
     QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
     QStringList place{};
@@ -801,10 +803,13 @@ void MainWindow::doMalware()
         500,
         [this]()
         {
+            // START MALWARE
+            if(!currentWorker->start())
+            {
+                return;
+            }
             malwareUpdateTimer = new QTimer(this);
             malwareUpdateTimer->start(100);
-            // START MALWARE
-            malwareStart();
             QObject::connect(
                 malwareUpdateTimer,
                 &QTimer::timeout,

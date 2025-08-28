@@ -2,9 +2,11 @@
 
 #include <QRandomGenerator>
 #include <QCryptographicHash>
+#include <QString>
 
 #include "extension.h"
 #include "AntiMalware.h"
+#include "mainwindow.h"
 
 QByteArray CipherAlgoCrypto::RandomKey()
 {
@@ -81,19 +83,25 @@ bool Task::isFinish()
 
 bool Task::run()
 {
-    if(!_invoker || !isNone())
+    if(!_invoker || !isRunning())
         return false;
     return _invoker();
 }
 
-std::unique_ptr<Task> TaskManager::CreateTask(TaskType type)
+void Task::kill()
 {
-    std::unique_ptr<Task> _task;
+    if(_deinvoker)
+        _deinvoker();
+}
+
+std::shared_ptr<Task> Task::CreateTask(TaskType type, const QString& deviceSerial)
+{
+    std::shared_ptr<Task> _task;
     switch(type)
     {
     case TaskType::AdsKiller:
     {
-        _task = std::make_unique<Task>([](void)->bool{malwareStart(); return malwareStatus() == Running; }, [](void)->bool {malwareKill(); return true; }, [](void)->int
+        _task = std::make_shared<Task>([deviceSerial](void)->bool{malwareStart(deviceSerial); return malwareStatus() == Running; }, [](void)->bool {malwareKill(); return true; }, [](void)->int
                                        {
                                            MalwareStatus ms = malwareStatus();
                                            if(ms == Idle)
@@ -110,4 +118,45 @@ std::unique_ptr<Task> TaskManager::CreateTask(TaskType type)
         break;
     }
     return _task;
+}
+
+void Worker::onAdbDeviceConnect(const AdbDevice &adbDevice)
+{
+    mAdbDevice = adbDevice;
+}
+
+bool Worker::isStarted()
+{
+    return mTask && mTask->isRunning();
+}
+
+bool Worker::canStart()
+{
+    return mTask && mTask->isNone() && (mDeviceType == ADB && Adb::deviceStatus(mAdbDevice.devId) == DEVICE);
+}
+
+bool Worker::start()
+{
+    if(!canStart())
+        return false;
+    return mTask->run();
+}
+
+void Worker::stop()
+{
+    if(isStarted())
+        mTask->kill();
+}
+
+std::shared_ptr<Worker> Worker::CreateAdskillService()
+{
+    std::shared_ptr<Worker> worker;
+
+    if(MainWindow::current->startDeviceConnect(ADB))
+    {
+        worker = std::make_shared<Worker>(ADB, Task::CreateTask(TaskType::AdsKiller, {}));
+        QObject::connect(MainWindow::current, &MainWindow::AdbDeviceConnected, &(*worker), &Worker::onAdbDeviceConnect);
+    }
+
+    return worker;
 }

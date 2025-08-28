@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <functional>
 
 #include <QByteArray>
@@ -7,6 +8,11 @@
 
 #include "begin.h"
 #include "adbfront.h"
+
+enum DeviceConnectType
+{
+    ADB
+};
 
 enum MalwareStatus
 {
@@ -17,9 +23,11 @@ enum MalwareStatus
 
 enum TaskType
 {
+    Unknown,
     AdsKiller
 };
 
+class Worker;
 class TaskManager;
 class Task;
 
@@ -36,7 +44,7 @@ public:
 
 class Task
 {
-    friend class TaskManager;
+    friend class Worker;
 public:
     using Invoker = std::function<bool(void)>;
     using Checker = std::function<int(void)>;
@@ -50,14 +58,34 @@ public:
     bool run();
     void kill();
 
+    static std::shared_ptr<Task> CreateTask(TaskType type, const QString& deviceSerial);
+
 private:
     Invoker _invoker;
     Invoker _deinvoker;
     Checker _checker;
 };
 
-class TaskManager
+class Worker : public QObject
 {
+    Q_OBJECT
+
+private:
+    DeviceConnectType mDeviceType;
+    AdbDevice mAdbDevice;
+    std::shared_ptr<Task> mTask;
+
+private slots:
+    void onAdbDeviceConnect(const AdbDevice& adbDevice);
+
 public:
-    std::unique_ptr<Task> CreateTask(TaskType type);
+    Worker(DeviceConnectType deviceType, std::shared_ptr<Task> task, QObject * parent = nullptr) : QObject(parent), mDeviceType(deviceType), mTask(task) {}
+
+    bool isStarted();
+    bool canStart();
+    bool start();
+    void stop();
+
+    static std::shared_ptr<Worker> CreateAdskillService();
 };
+
