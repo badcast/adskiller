@@ -74,16 +74,7 @@ QList<AdbDevice> Adb::getDevices()
         {
             if (line.startsWith("List of devices"))
                 continue;
-            AdbDevice dev{};
-            AdbShell shell;
-            dev.devId = line.split('\t').first();
-            if(shell.connect(dev.devId))
-            {
-                dev.model = shell.getprop(CmdGetProductModel);
-                dev.vendor = shell.getprop(CmdGetProductManufacturer);
-                dev.displayName = dev.vendor + " " + dev.model;
-            }
-            devices.append(dev);
+            devices.append(getDevice(line.split('\t').first()));
         }
     }
     return devices;
@@ -144,7 +135,7 @@ void Adb::connect(const QString &devId)
     QObject::connect(deviceWatchTimer, &QTimer::timeout, this, &Adb::onDeviceWatch);
 }
 
-QList<PackageIO> Adb::getPackages()
+QList<PackageIO> Adb::getPackages(const QString &deviceSerial)
 {
     QList<PackageIO> packages;
     QStringList packageList, disableList;
@@ -152,12 +143,12 @@ QList<PackageIO> Adb::getPackages()
     std::pair<bool, QString> reply;
     std::pair<bool, QString> reply2dis;
     int pkgSeprIndx = 0;
-    if (!isConnected())
+    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
+    if (shell->isConnect())
     {
         qDebug() << "Device is not connected";
         return {};
     }
-    std::unique_ptr<AdbShell> shell = runShell().second;
     reply = shell->commandQueueWait(QStringList() << "pm" << "list" << "packages"
                                                   << "--user" << "0" << "-3");
     reply2dis = shell->commandQueueWait(QStringList() << "pm" << "list" << "packages"
@@ -189,13 +180,13 @@ QList<PackageIO> Adb::getPackages()
     return packages;
 }
 
-void Adb::killPackages(const QList<PackageIO> &packages, int &successCount)
+void Adb::killPackages(const QString& deviceSerial, const QList<PackageIO> &packages, int &successCount)
 {
     std::pair<bool, QString> reply;
     successCount = 0;
-    if (!isConnected())
+    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
+    if (!shell->isConnect())
         return;
-    std::unique_ptr<AdbShell> shell = runShell().second;
     for (const PackageIO &package : packages)
     {
         reply = shell->commandQueueWait(QStringList() << "am" << "force-stop" << package.packageName);
@@ -205,13 +196,13 @@ void Adb::killPackages(const QList<PackageIO> &packages, int &successCount)
     }
 }
 
-bool Adb::uninstallPackages(const QStringList &packages, int &successCount)
+bool Adb::uninstallPackages(const QString& deviceSerial, const QStringList &packages, int &successCount)
 {
     std::pair<bool, QString> reply;
     successCount = 0;
-    if (!isConnected())
+    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
+    if (!shell->isConnect())
         return false;
-    std::unique_ptr<AdbShell> shell = runShell().second;
     for (const QString &package : packages)
     {
         reply = shell->commandQueueWait(QStringList() << "pm" << "uninstall" << "--user" << "0" << package);
@@ -222,13 +213,13 @@ bool Adb::uninstallPackages(const QStringList &packages, int &successCount)
     return true;
 }
 
-bool Adb::disablePackages(const QStringList &packages, int &successCount)
+bool Adb::disablePackages(const QString& deviceSerial, const QStringList &packages, int &successCount)
 {
     std::pair<bool, QString> reply;
     successCount = 0;
-    if (!isConnected())
+    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
+    if (!shell->isConnect())
         return false;
-    std::unique_ptr<AdbShell> shell = runShell().second;
     for (const QString &package : packages)
     {
         reply = shell->commandQueueWait(QStringList() << "pm" << "disable-user" << "--user" << "0" << package);
@@ -239,13 +230,13 @@ bool Adb::disablePackages(const QStringList &packages, int &successCount)
     return true;
 }
 
-bool Adb::enablePackages(const QStringList &packages, int &successCount)
+bool Adb::enablePackages(const QString& deviceSerial, const QStringList &packages, int &successCount)
 {
     std::pair<bool, QString> reply;
     successCount = 0;
-    if (!isConnected())
+    std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
+    if (!shell->isConnect())
         return false;
-    std::unique_ptr<AdbShell> shell = runShell().second;
     for (const QString &package : packages)
     {
         reply = shell->commandQueueWait(QStringList() << "pm" << "enable" << "--user" << "0" << package);
@@ -315,4 +306,34 @@ void Adb::disconnect()
         delete deviceWatchTimer;
         deviceWatchTimer = nullptr;
     }
+}
+
+AdbDevice Adb::getDevice(const QString &deviceSerial)
+{
+    constexpr auto NoAllowString = "(No allow)";
+
+    AdbShell shell;
+    AdbDevice dev;
+    dev.devId = deviceSerial;
+    if(shell.connect(deviceSerial))
+    {
+        dev.model = shell.getprop(CmdGetProductModel);
+        dev.vendor = shell.getprop(CmdGetProductManufacturer);
+        dev.displayName = dev.vendor + " " + dev.model;
+    }
+    else
+    {
+        dev.model = NoAllowString;
+        dev.vendor = NoAllowString;
+        dev.displayName = NoAllowString;
+    }
+    return dev;
+}
+
+bool AdbDevice::isEmpty() const
+{
+    return  devId.isEmpty() &&
+           model.isEmpty() &&
+           displayName.isEmpty() &&
+           vendor.isEmpty();
 }

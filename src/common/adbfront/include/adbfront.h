@@ -37,6 +37,8 @@ struct AdbDevice
     QString model;
     QString displayName;
     QString vendor;
+
+    bool isEmpty() const;
 };
 
 
@@ -87,11 +89,12 @@ public:
     void connect(const QString& devId);
     std::pair<bool, std::unique_ptr<AdbShell>> runShell();
     void disconnect();
-    QList<PackageIO> getPackages();
-    void killPackages(const QList<PackageIO> &packages, int& successCount);
-    bool uninstallPackages(const QStringList& packages, int& successCount);
-    bool disablePackages(const QStringList& packages, int& successCount);
-    bool enablePackages(const QStringList& packages, int& successCount);
+    static AdbDevice getDevice(const QString& deviceSerial);
+    static QList<PackageIO> getPackages(const QString& deviceSerial);
+    static void killPackages(const QString &deviceSerial, const QList<PackageIO> &packages, int& successCount);
+    static bool uninstallPackages(const QString &deviceSerial, const QStringList& packages, int& successCount);
+    static bool disablePackages(const QString &deviceSerial, const QStringList& packages, int& successCount);
+    static bool enablePackages(const QString &deviceSerial, const QStringList& packages, int& successCount);
 
 signals:
     void onDeviceChanged(const AdbDevice& device, AdbConState state);

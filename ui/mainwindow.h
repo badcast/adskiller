@@ -30,6 +30,7 @@ enum PageIndex
     AuthPage,
     CabinetPage,
     MalwarePage,
+    DevicesPage,
     LoaderPage,
     LengthPages
 };
@@ -55,6 +56,7 @@ public:
     void delayTimer(int ms);
     void delayPushLoop(int ms, std::function<bool ()> call);
     void delayPush(int ms, std::function<void ()> call);
+    bool startDeviceConnect(DeviceConnectType targetType);
 
     Adb adb;
     Network network;
@@ -63,7 +65,7 @@ public:
     VersionInfo selfVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
-    std::unique_ptr<Task> currentTask;
+    Worker* currentWorker;
 
     static MainWindow * current;
 
@@ -82,8 +84,6 @@ private slots:
 
     void on_deviceChanged(const AdbDevice& device, AdbConState state);
 
-    void on_buttonDecayMalware_clicked();
-
     void replyAuthFinish(int status, bool ok);
 
     void replyAdsData(const QStringList& adsList, int status, bool ok);
@@ -94,6 +94,9 @@ public slots:
     void setThemeAction();
 
     void closeEvent(QCloseEvent * event) override;
+
+signals:
+    void AdbDeviceConnected(const AdbDevice& device);
 
 private:
     Ui::MainWindow *ui;
@@ -116,7 +119,7 @@ private:
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();
-    void doMalware();
+    void startMalwareProcess();
     void cirlceMalwareState(bool success);
     void cirlceMalwareStateReset();
 };
