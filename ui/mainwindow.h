@@ -2,13 +2,20 @@
 #define MAINWINDOW_H
 
 #include <functional>
+#include <memory>
 
+#include <QWidget>
 #include <QMainWindow>
 #include <QList>
 #include <QMap>
 #include <QComboBox>
 #include <QSettings>
 #include <QVersionNumber>
+#include <QSpacerItem>
+#include <QPropertyAnimation>
+#include <QListView>
+#include <QLabel>
+#include <QProgressBar>
 
 #include "ProgressCircle.h"
 
@@ -17,6 +24,7 @@
 #include "network.h"
 #include "SystemTray.h"
 #include "extension.h"
+#include "AntiMalware.h"
 
 enum ThemeScheme
 {
@@ -27,11 +35,12 @@ enum ThemeScheme
 
 enum PageIndex
 {
-    AuthPage,
-    CabinetPage,
+    AuthPage = 0,
+    LoaderPage = 1,
+    CabinetPage = 2,
     MalwarePage,
     DevicesPage,
-    LoaderPage,
+
     LengthPages
 };
 
@@ -41,58 +50,58 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
+struct ServiceItem
+{
+    bool active;
+    QString title;
+    QWidget * buttonWidget;
+    std::shared_ptr<Service> handler;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
+private:
+    friend class AdsKillerService;
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateAdbDevices();
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
     void delayTimer(int ms);
     void delayPushLoop(int ms, std::function<bool ()> call);
     void delayPush(int ms, std::function<void ()> call);
-    bool startDeviceConnect(DeviceConnectType targetType);
+    void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service);
 
-    Adb adb;
     Network network;
     QTimer *timerAuthAnim;
     QApplication *app;
     VersionInfo selfVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
-    Worker* currentWorker;
+
+    std::shared_ptr<ServiceItem> currentService;
+    QList<std::shared_ptr<ServiceItem>> services;
+
+    bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV);
 
     static MainWindow * current;
 
 private slots:
     void on_actionAboutUs_triggered();
-
-    void on_comboBoxDevices_currentIndexChanged(int index);
-
-    void on_pushButton_2_clicked();
-
     void on_action_WhatsApp_triggered();
-
     void on_action_Qt_triggered();
-
     void on_authButton_clicked();
-
-    void on_deviceChanged(const AdbDevice& device, AdbConState state);
-
     void replyAuthFinish(int status, bool ok);
-
     void replyAdsData(const QStringList& adsList, int status, bool ok);
-
     void replyFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
 
 public slots:
     void setThemeAction();
-
     void closeEvent(QCloseEvent * event) override;
 
 signals:
@@ -100,12 +109,13 @@ signals:
 
 private:
     Ui::MainWindow *ui;
-    QTimer * malwareUpdateTimer;
     QSettings* settings;
     ProgressCircle* malwareProgressCircle;
     ProgressCircle* loaderProgressCircle;
     QList<QWidget*> malwareStatusLayouts;
     QMap<PageIndex,QWidget*> pages;
+    QWidget * vPageSpacer;
+    QPropertyAnimation * vPageSpacerAnimator;
     PageIndex curPage;
     PageIndex startPage = PageIndex::AuthPage;
 
@@ -116,11 +126,8 @@ private:
     void pageShown(int page);
     void clearAuthInfoPage();
     void fillAuthInfoPage();
-    void softUpdateDevices();
+    void initModules();
     void checkVersion();
     void runUpdateManager();
-    void startMalwareProcess();
-    void cirlceMalwareState(bool success);
-    void cirlceMalwareStateReset();
 };
 #endif // MAINWINDOW_H

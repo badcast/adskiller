@@ -17,5 +17,6 @@
         <file alias="back-texture-dark">res/back_texture.png</file>
         <file alias="usb-port">res/usbport.png</file>
         <file alias="remove-ads">res/icon_remads.png</file>
+        <file alias="no-avatar">res/no-avatar.png</file>
     </qresource>
 </RCC>
