@@ -76,7 +76,7 @@
        <item row="0" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -393,7 +393,7 @@
                      <item>
                       <widget class="QFrame" name="frame_3">
                        <property name="styleSheet">
-                        <string notr="true">image: url(:/resources/icon-hello);</string>
+                        <string notr="true">image: url(:/resources/no-avatar);</string>
                        </property>
                        <property name="frameShape">
                         <enum>QFrame::Shape::NoFrame</enum>
@@ -788,9 +788,6 @@
                  </property>
                  <property name="showGrid">
                   <bool>true</bool>
-                 </property>
-                 <property name="gridStyle">
-                  <enum>Qt::PenStyle::DashDotDotLine</enum>
                  </property>
                 </widget>
                </item>
@@ -1304,6 +1301,128 @@ QPushButton:disabled
             </widget>
            </item>
           </layout>
+         </widget>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>back-button-page</string>
+          </attribute>
+          <widget class="QFrame" name="toplevel_backpage">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>20</y>
+             <width>781</width>
+             <height>50</height>
+            </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 red, stop:1 black);</string>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Shape::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Shadow::Raised</enum>
+           </property>
+           <layout class="QHBoxLayout" name="toplevel_layout_auth_3">
+            <property name="leftMargin">
+             <number>10</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>10</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="buttonBackTo">
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>90</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton
+{ 
+	background: #A52A2A;
+	color: white; 
+}
+
+QPushButton::hover 
+{
+		background: #8A3324;
+}
+
+QPushButton::pressed
+{
+		background: #3D2B1F;
+}</string>
+              </property>
+              <property name="text">
+               <string>Назад</string>
+              </property>
+              <property name="icon">
+               <iconset theme="QIcon::ThemeIcon::EditUndo"/>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="font">
+               <font>
+                <pointsize>14</pointsize>
+                <italic>true</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: white;
+background: transparent</string>
+              </property>
+              <property name="text">
+               <string>ДОБРО ПОЖАЛОВАТЬ В ADSKILLER! - &lt;a color=white href=&quot;https://imister.kz&quot;&gt;imister.kz&lt;/a&gt;</string>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
+              </property>
+              <property name="buddy">
+               <cstring>authpageUpdate</cstring>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </widget>
        </item>

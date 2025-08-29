@@ -27,11 +27,12 @@ enum ThemeScheme
 
 enum PageIndex
 {
-    AuthPage,
-    CabinetPage,
+    AuthPage = 0,
+    LoaderPage = 1,
+    CabinetPage = 2,
     MalwarePage,
     DevicesPage,
-    LoaderPage,
+
     LengthPages
 };
 
@@ -45,6 +46,15 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+private:
+    struct ServiceItem
+    {
+        QString title;
+        bool active;
+        std::shared_ptr<Worker> worker;
+        QWidget * buttonWidget;
+    };
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -56,7 +66,7 @@ public:
     void delayTimer(int ms);
     void delayPushLoop(int ms, std::function<bool ()> call);
     void delayPush(int ms, std::function<void ()> call);
-    bool startDeviceConnect(DeviceConnectType targetType);
+    void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service);
 
     Adb adb;
     Network network;
@@ -65,29 +75,21 @@ public:
     VersionInfo selfVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
-    Worker* currentWorker;
+
+    std::shared_ptr<ServiceItem> currentService;
+    QList<std::shared_ptr<ServiceItem>> services;
 
     static MainWindow * current;
 
 private slots:
     void on_actionAboutUs_triggered();
-
-    void on_comboBoxDevices_currentIndexChanged(int index);
-
     void on_pushButton_2_clicked();
-
     void on_action_WhatsApp_triggered();
-
     void on_action_Qt_triggered();
-
     void on_authButton_clicked();
-
     void on_deviceChanged(const AdbDevice& device, AdbConState state);
-
     void replyAuthFinish(int status, bool ok);
-
     void replyAdsData(const QStringList& adsList, int status, bool ok);
-
     void replyFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
 
 public slots:
@@ -116,6 +118,7 @@ private:
     void pageShown(int page);
     void clearAuthInfoPage();
     void fillAuthInfoPage();
+    void initModules();
     void softUpdateDevices();
     void checkVersion();
     void runUpdateManager();

@@ -48,7 +48,7 @@ constexpr struct {
     int price;
 } AvailableServices[] = {
     {"Удалить рекламу", "remove-ads", true, 0},
-    {"Мои устроства и гарантия", "icon-malware", false,0},
+    {"Мои устройства и гарантия", "icon-malware", false,0},
     {"Очистка Мусора", "icon-malware", false, 0},
     {"Samsung FRP", "icon-malware", false, 0},
     {"Перенос WhatsApp", "icon-malware", false,0},
@@ -70,7 +70,7 @@ inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    int x,y;
+    int x;
     QStringListModel *model;
     ui->setupUi(this);
 
@@ -99,6 +99,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         if(iter != std::end(_w))
             pages.insert(item.index, *iter);
     }
+
+    ui->contentLayout->layout()->addWidget(ui->toplevel_backpage);
 
     for (x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
@@ -144,6 +146,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, [this](){ ui->authButton->click(); showPageLoader((network.checkNet() ? CabinetPage : AuthPage), 1000, QString("Обновление странницы")); });
     QObject::connect(ui->buttonDecayMalware, &QPushButton::clicked, [this](){startMalwareProcess();});
+    QObject::connect(ui->buttonBackTo, &QPushButton::clicked, [this](){showPageLoader(CabinetPage);});
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -189,16 +192,6 @@ void MainWindow::on_actionAboutUs_triggered()
     msg.setText(text);
     msg.setStandardButtons(QMessageBox::Ok);
     msg.exec();
-}
-
-void MainWindow::on_comboBoxDevices_currentIndexChanged(int index)
-{
-    if (index == -1)
-        return;
-    if (index == 0)
-        adb.disconnect();
-    else if (!adb.cachedDevices.isEmpty())
-        adb.connect(adb.cachedDevices[index - 1].devId);
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -305,6 +298,10 @@ void MainWindow::showPage(PageIndex pageNum)
     curPage=pageNum;
     if(pages.contains(curPage))
         pages[curPage]->setVisible(true);
+
+
+    ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
+
     pageShown(curPage);
 }
 
@@ -331,12 +328,6 @@ void MainWindow::pageShown(int page)
         adb.disconnect();
         adb.blockSignals(false);
         updateAdbDevices();
-        break;
-    }
-    // Malware
-    case 3:
-    {
-        break;
         QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
         QStringList place{};
         ui->processBarStatus->setValue(0);
@@ -388,15 +379,18 @@ void MainWindow::clearAuthInfoPage()
     model->setItem(6, 1, new QStandardItem("-"));
 
     ui->authInfo->setModel(model);
-
     ui->authInfo->horizontalHeader()->setStretchLastSection(true);
     ui->authInfo->verticalHeader()->setVisible(false);
-
     ui->authInfo->resizeColumnToContents(0);
-
 
     for(x = 0, y = ui->serviceContents->layout()->count(); x < y; ++x)
         ui->serviceContents->layout()->takeAt(0)->widget()->deleteLater();
+
+    for(x = 0; x < services.count(); ++x)
+    {
+        services[x]->buttonWidget->deleteLater();
+    }
+    services.clear();
 }
 
 void MainWindow::fillAuthInfoPage()
@@ -425,13 +419,25 @@ void MainWindow::fillAuthInfoPage()
     value = network.authedId.blocked ? "Да" : "Нет";
     model->item(6, 1)->setText(value);
 
-    ui->labelLoginAuthed->setText(network.authedId.idName);
+    ui->labelLoginAuthed->setText(network.authedId.idName);   
+    ui->labelCredits->setText(QString("%1\n(%2)").arg(network.authedId.credits).arg(network.authedId.currencyType));
+    ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
 
-    // Fill services
+    initModules();
+}
+
+void MainWindow::initModules()
+{
+    int x,y;
+
+    if(!services.isEmpty())
+        return;
 
     for(x = 0, y = static_cast<int>(sizeof(AvailableServices) / sizeof(AvailableServices[0])); x < y; ++x)
     {
         QString info;
+        std::shared_ptr<ServiceItem> serviceItem = std::make_shared<ServiceItem>();
+
         info += AvailableServices[x].title;
         info += '\n';
         if(AvailableServices[x].active)
@@ -466,21 +472,28 @@ void MainWindow::fillAuthInfoPage()
         if(!AvailableServices[x].active)
             push->setStyleSheet( push->styleSheet() + "QPushButton { background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #232323); }" );
 
+        serviceItem->title = AvailableServices[x].title;
+        serviceItem->active = AvailableServices[x].active;
+        serviceItem->buttonWidget = push;
 
-        if( x == 0)
+        if(x == 0)
         {
-            QObject::connect(push, &QPushButton::clicked, [this](){showPageLoader(MalwarePage);});
+            QObject::connect(push, &QPushButton::clicked, [this,serviceItem](){
+                if(!serviceItem || !serviceItem->active)
+                    return;
+                std::shared_ptr<Worker> worker = Worker::CreateAdskillService();
+                serviceItem->worker = worker;
+                startDeviceConnect(worker->deviceType(), serviceItem);
+            });
         }
-
         push->setIconSize({50,50});
         push->setFixedSize(259,64);
         push->setEnabled(AvailableServices[x].active);
+        services << serviceItem;
+
+        // Adds a widget in the form of a grid
         static_cast<QGridLayout*>(ui->serviceContents->layout())->addWidget(push, x / 3, x % 3);
     }
-
-    ui->labelCredits->setText(QString("%1\n(%2)").arg(network.authedId.credits).arg(network.authedId.currencyType));
-    ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
-
 }
 
 void MainWindow::delayTimer(int ms)
@@ -549,9 +562,17 @@ void MainWindow::delayPush(int ms, std::function<void()> call)
     delayPushLoop(ms, [call]() -> bool { call(); return false;});
 }
 
-bool MainWindow::startDeviceConnect(DeviceConnectType targetType)
+void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service)
 {
-    showPage(DevicesPage);
+    (void)targetType;
+    // TODO: use next any type <Target Type>| now use ADB
+    if(currentService && currentService->worker && currentService->worker->isStarted())
+    {
+        // TODO: Show error is busy
+        return;
+    }
+    currentService = service;
+    showPageLoader(DevicesPage, 2000, QString("Запуск службы\n\"%1\"").arg(service->title));
 }
 
 void MainWindow::on_authButton_clicked()
@@ -804,7 +825,7 @@ void MainWindow::startMalwareProcess()
         [this]()
         {
             // START MALWARE
-            if(!currentWorker->start())
+            if(!currentService || !currentService->worker->start())
             {
                 return;
             }

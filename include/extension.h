@@ -5,6 +5,7 @@
 
 #include <QByteArray>
 #include <QString>
+#include <QVariant>
 
 #include "begin.h"
 #include "adbfront.h"
@@ -47,21 +48,24 @@ class Task
     friend class Worker;
 public:
     using Invoker = std::function<bool(void)>;
+    using InvokerA1 = std::function<bool(QVariant)>;
     using Checker = std::function<int(void)>;
 
     Task(Invoker invoker, Invoker deInvoker, Checker checker);
+    Task(InvokerA1 invokerWithParam, Invoker deInvoker, Checker checker);
     ~Task() = default;
 
     inline bool isNone();
     inline bool isRunning();
     inline bool isFinish();
-    bool run();
+    bool run(QVariant arg = 0);
     void kill();
 
-    static std::shared_ptr<Task> CreateTask(TaskType type, const QString& deviceSerial);
+    static std::shared_ptr<Task> CreateTask(TaskType type);
 
 private:
-    Invoker _invoker;
+    Invoker _invoker0;
+    InvokerA1 _invoker1;
     Invoker _deinvoker;
     Checker _checker;
 };
@@ -85,6 +89,11 @@ public:
     bool canStart();
     bool start();
     void stop();
+
+    DeviceConnectType deviceType() const
+    {
+        return mDeviceType;
+    }
 
     static std::shared_ptr<Worker> CreateAdskillService();
 };
