@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QSettings>
 #include <QVersionNumber>
+#include <QSpacerItem>
 
 #include "ProgressCircle.h"
 
@@ -108,6 +109,7 @@ private:
     ProgressCircle* loaderProgressCircle;
     QList<QWidget*> malwareStatusLayouts;
     QMap<PageIndex,QWidget*> pages;
+    QSpacerItem * vPageSpacer;
     PageIndex curPage;
     PageIndex startPage = PageIndex::AuthPage;
 

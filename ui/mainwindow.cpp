@@ -101,6 +101,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     ui->contentLayout->layout()->addWidget(ui->toplevel_backpage);
+    ui->contentLayout->layout()->addItem((vPageSpacer = new QSpacerItem(0,100)));
 
     for (x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
@@ -128,6 +129,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     loaderProgressCircle->setInfinilyMode(true);
     loaderProgressCircle->setVisibleText(false);
     loaderProgressCircle->setInnerRadius(0);
+    loaderProgressCircle->setColor(Qt::darkCyan);
+    loaderProgressCircle->setInnerRadius(.5);
     ui->loaderLayout->addWidget(loaderProgressCircle);
 
     QList<QAction *> menusTheme{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
@@ -293,15 +296,27 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
 
 void MainWindow::showPage(PageIndex pageNum)
 {
+    PageIndex oldPage = curPage;
+    if(pages.contains(oldPage))
+    {
+        pages[oldPage]->setEnabled(false);
+        pages[oldPage]->setVisible(false);
+    }
+    curPage = pageNum;
     if(pages.contains(curPage))
-        pages[curPage]->setVisible(false);
-    curPage=pageNum;
-    if(pages.contains(curPage))
+    {
         pages[curPage]->setVisible(true);
-
+        pages[curPage]->setEnabled(true);
+    }asdasd
+    vPageSpacer->changeSize(0, 200);
+    delayPushLoop(40, [this](){
+        int i = vPageSpacer->sizeHint().height();
+        vPageSpacer->changeSize(0, qMax(0, i-1));
+        vPageSpacer->invalidate();
+        return i > 0;
+    });
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
-
     pageShown(curPage);
 }
 
