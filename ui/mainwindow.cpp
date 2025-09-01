@@ -56,18 +56,6 @@ constexpr struct {
     {"Сброс к заводским", "icon-malware", false,0}
 };
 
-inline uint hash_from_AdbDevice(const QList<AdbDevice> &devs)
-{
-    QString _compare;
-    for (const AdbDevice &dev : devs)
-    {
-        _compare += dev.devId;
-        _compare += dev.model;
-        _compare += dev.vendor;
-    }
-    return qHash(_compare);
-}
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     int x;
@@ -99,9 +87,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         if(iter != std::end(_w))
             pages.insert(item.index, *iter);
     }
+    (ui->scrollAreaWidgetContents->layout())->addWidget((vPageSpacer = new QWidget(this)));
+    vPageSpacerAnimator = new QPropertyAnimation(vPageSpacer, "maximumHeight");
+    vPageSpacerAnimator->setDuration(900);
+    vPageSpacerAnimator->setStartValue(1000);
+    vPageSpacerAnimator->setEndValue(0);
 
+    // Top header back to main page.
     ui->contentLayout->layout()->addWidget(ui->toplevel_backpage);
-    ui->contentLayout->layout()->addItem((vPageSpacer = new QSpacerItem(0,100)));
 
     for (x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
@@ -146,9 +139,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Signals
     QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
     QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
-    QObject::connect(&adb, &Adb::onDeviceChanged, this, &MainWindow::on_deviceChanged);
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, [this](){ ui->authButton->click(); showPageLoader((network.checkNet() ? CabinetPage : AuthPage), 1000, QString("Обновление странницы")); });
-    QObject::connect(ui->buttonDecayMalware, &QPushButton::clicked, [this](){startMalwareProcess();});
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, [this](){showPageLoader(CabinetPage);});
 
     // Font init
@@ -197,11 +188,6 @@ void MainWindow::on_actionAboutUs_triggered()
     msg.exec();
 }
 
-void MainWindow::on_pushButton_2_clicked()
-{
-    updateAdbDevices();
-}
-
 void MainWindow::on_action_WhatsApp_triggered()
 {
     QString dec = acceptLinkWaMe;
@@ -212,33 +198,6 @@ void MainWindow::on_action_WhatsApp_triggered()
 void MainWindow::on_action_Qt_triggered()
 {
     QMessageBox::aboutQt(this);
-}
-
-void MainWindow::updateAdbDevices()
-{
-    QList<AdbDevice> devicesNew;
-    uint hOld, hNew;
-    devicesNew = adb.getDevices();
-    hOld = hash_from_AdbDevice(adb.cachedDevices);
-    hNew = hash_from_AdbDevice(devicesNew);
-    if (hOld == hNew)
-        return;
-    adb.cachedDevices = std::move(devicesNew);
-    softUpdateDevices();
-}
-
-void MainWindow::softUpdateDevices()
-{
-    QStringList qlist;
-    int i = 0, index = 0;
-    for (AdbDevice &dev : adb.cachedDevices)
-    {
-        if (index == 0 && dev.devId == adb.device.devId)
-            index = i + 1;
-        ++i;
-    }
-    std::transform(adb.cachedDevices.cbegin(), adb.cachedDevices.cend(), std::back_inserter(qlist), [](const AdbDevice &dev)
-                   { return dev.displayName + " (" + dev.devId + ")"; });
 }
 
 void MainWindow::checkVersion()
@@ -307,14 +266,9 @@ void MainWindow::showPage(PageIndex pageNum)
     {
         pages[curPage]->setVisible(true);
         pages[curPage]->setEnabled(true);
-    }asdasd
-    vPageSpacer->changeSize(0, 200);
-    delayPushLoop(40, [this](){
-        int i = vPageSpacer->sizeHint().height();
-        vPageSpacer->changeSize(0, qMax(0, i-1));
-        vPageSpacer->invalidate();
-        return i > 0;
-    });
+    }
+
+    vPageSpacerAnimator->start();
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
     pageShown(curPage);
@@ -334,24 +288,24 @@ void MainWindow::pageShown(int page)
     case CabinetPage:
     {
         fillAuthInfoPage();
+        if(currentService)
+        {
+            currentService->handler->reset();
+            currentService->handler->stop();
+            currentService.reset();
+        }
         break;
     }
     case MalwarePage:
     {
-        adb.blockSignals(true);
-        adb.cachedDevices.clear();
-        adb.disconnect();
-        adb.blockSignals(false);
-        updateAdbDevices();
         QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-        QStringList place{};
         ui->processBarStatus->setValue(0);
-        ui->buttonDecayMalware->setEnabled(true);
-        ui->malwareStatusText0->setText("Anti-Malware не запущен.");
+        ui->malwareStatusText0->setText("Удаление рекламы не запущена.");
         malwareProgressCircle->setValue(0);
         malwareProgressCircle->setMaximum(100);
         malwareProgressCircle->setInfinilyMode(false);
-        cirlceMalwareStateReset();
+        currentService->handler->reset();
+        QStringList place{};
         place << "<< Все готово для запуска >>";
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
         model->setStringList(place);
@@ -493,12 +447,11 @@ void MainWindow::initModules()
 
         if(x == 0)
         {
+            serviceItem->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<AdsKillerService>(this));
             QObject::connect(push, &QPushButton::clicked, [this,serviceItem](){
                 if(!serviceItem || !serviceItem->active)
                     return;
-                std::shared_ptr<Worker> worker = Worker::CreateAdskillService();
-                serviceItem->worker = worker;
-                startDeviceConnect(worker->deviceType(), serviceItem);
+                startDeviceConnect(serviceItem->handler->deviceType(), serviceItem);
             });
         }
         push->setIconSize({50,50});
@@ -521,35 +474,6 @@ void MainWindow::delayTimer(int ms)
 
     timer.start(ms);
     loop.exec();
-}
-
-void MainWindow::on_deviceChanged(const AdbDevice &device, AdbConState state)
-{
-    switch (curPage)
-    {
-    case 2:
-    {
-        softUpdateDevices();
-        QString text = "Устройство ";
-        text += device.displayName;
-        text += " успешно ";
-        if (state == Add)
-            text += "подключено.";
-        else
-            text += "отключено.";
-        break;
-    }
-    case 3:
-    {
-        if (state == Removed)
-        {
-            malwareKill();
-        }
-        break;
-    }
-    default:
-        break;
-    }
 }
 
 void MainWindow::delayPushLoop(int ms, std::function<bool()> call)
@@ -581,13 +505,25 @@ void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_pt
 {
     (void)targetType;
     // TODO: use next any type <Target Type>| now use ADB
-    if(currentService && currentService->worker && currentService->worker->isStarted())
+    if(currentService && currentService->handler && currentService->handler->isStarted())
     {
         // TODO: Show error is busy
+        QMessageBox::critical(this, "Fatal module", "Module is already started.");
         return;
     }
     currentService = service;
     showPageLoader(DevicesPage, 2000, QString("Запуск службы\n\"%1\"").arg(service->title));
+}
+
+bool MainWindow::accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *& processBarStatusV)
+{
+    if(!processLogStatusV || !malareStatusText0V || !deviceLabelNameV || !processBarStatusV)
+        return false;
+    processLogStatusV = ui->processLogStatus;
+    malareStatusText0V = ui->malwareStatusText0;
+    deviceLabelNameV = ui->deviceLabelName;
+    processBarStatusV = ui->processBarStatus;
+    return true;
 }
 
 void MainWindow::on_authButton_clicked()
@@ -819,130 +755,3 @@ void MainWindow::showMessageFromStatus(int statusCode)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoAccountBlocked);
 }
 
-void MainWindow::startMalwareProcess()
-{
-    QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-    QStringList place{};
-
-    place << "<< Запуск процесса удаления рекламы, пожалуйста подождите >>";
-    place << "<< Не отсоединяйте устройство от компьютера >>";
-
-    model->setStringList(place);
-    ui->processBarStatus->setValue(0);
-    cirlceMalwareStateReset();
-    malwareProgressCircle->setInfinilyMode(true);
-    malwareProgressCircle->setValue(0);
-
-    ui->deviceLabelName->setText(adb.device.displayName + " " + adb.device.devId);
-    ui->buttonDecayMalware->setEnabled(false);
-    delayPush(
-        500,
-        [this]()
-        {
-            // START MALWARE
-            if(!currentService || !currentService->worker->start())
-            {
-                return;
-            }
-            malwareUpdateTimer = new QTimer(this);
-            malwareUpdateTimer->start(100);
-            QObject::connect(
-                malwareUpdateTimer,
-                &QTimer::timeout,
-                this,
-                [this]()
-                {
-                    QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-                    MalwareStatus status = malwareStatus();
-                    QString header;
-                    QStringList from;
-                    std::pair<QStringList, int> reads;
-                    header = malwareReadHeader();
-                    reads = malwareReadLog();
-
-                    ui->malwareStatusText0->setText(header);
-                    ui->processBarStatus->setValue(reads.second);
-                    malwareProgressCircle->setValue(reads.second);
-                    if (!reads.first.isEmpty())
-                    {
-                        from = model->stringList();
-                        from.append(reads.first);
-                        model->setStringList(from);
-                        ui->processLogStatus->scrollToBottom();
-                    }
-                    if (status != MalwareStatus::Running)
-                    {
-                        ui->buttonDecayMalware->setEnabled(true);
-                        cirlceMalwareState(status != MalwareStatus::Error);
-                        malwareProgressCircle->setInfinilyMode(false);
-                        malwareUpdateTimer->stop();
-                        malwareUpdateTimer->deleteLater();
-                        malwareClean();
-                    }
-                    else if(malwareRequireUser())
-                    {
-                        QString buyText = "Подтвердите свою покупку удаление вредоносных программ из устройства %1 за %2 %3\nВаш баланс %4 %5\nПосле покупки станет %6 %7\nЖелаете продолжить?";
-                        int num0 = qMax<int>(0,static_cast<int>(network.authedId.credits) - static_cast<int>(network.authedId.basePrice));
-                        buyText = buyText.arg(adb.device.displayName)
-                                      .arg(network.authedId.basePrice)
-                                      .arg(network.authedId.currencyType)
-                                      .arg(network.authedId.credits)
-                                      .arg(network.authedId.currencyType)
-                                      .arg(num0)
-                                      .arg(network.authedId.currencyType);
-                        num0 = QMessageBox::question(this, QString("Подтверждение покупки"), buyText, QMessageBox::StandardButton::Yes, QMessageBox::StandardButton::No);
-                        malwareWriteVal(num0);
-                    }
-                });
-        });
-}
-
-void MainWindow::cirlceMalwareState(bool success)
-{
-    malwareProgressCircle->setInfinilyMode(false);
-
-    QPropertyAnimation *animation;
-    // animation = new QPropertyAnimation(malwareProgressCircle, "outerRadius", malwareProgressCircle);
-    // animation->setDuration(1500);
-    // animation->setEasingCurve(QEasingCurve::OutQuad);
-    // animation->setEndValue(0.5);
-    // animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    animation = new QPropertyAnimation(malwareProgressCircle, "innerRadius", malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(0.0);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    QColor color = success ? QColor(155, 219, 58) : QColor(255, 100, 100);
-
-    animation = new QPropertyAnimation(malwareProgressCircle, "color", malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(color);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void MainWindow::cirlceMalwareStateReset()
-{
-    QPropertyAnimation *animation;
-    // animation = new QPropertyAnimation(malwareProgressCircle, "outerRadius", malwareProgressCircle);
-    // animation->setDuration(1500);
-    // animation->setEasingCurve(QEasingCurve::OutQuad);
-    // animation->setEndValue(1.0);
-    // animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    animation = new QPropertyAnimation(malwareProgressCircle, "innerRadius", malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(0.6);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    QColor color{110, 190, 235};
-
-    animation = new QPropertyAnimation(malwareProgressCircle, "color", malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(color);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-}

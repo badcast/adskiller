@@ -22,15 +22,7 @@ enum MalwareStatus
     Error
 };
 
-enum TaskType
-{
-    Unknown,
-    AdsKiller
-};
-
-class Worker;
-class TaskManager;
-class Task;
+class Service;
 
 class CipherAlgoCrypto
 {
@@ -43,58 +35,26 @@ public:
     static QByteArray RandomKey();
 };
 
-class Task
-{
-    friend class Worker;
-public:
-    using Invoker = std::function<bool(void)>;
-    using InvokerA1 = std::function<bool(QVariant)>;
-    using Checker = std::function<int(void)>;
-
-    Task(Invoker invoker, Invoker deInvoker, Checker checker);
-    Task(InvokerA1 invokerWithParam, Invoker deInvoker, Checker checker);
-    ~Task() = default;
-
-    inline bool isNone();
-    inline bool isRunning();
-    inline bool isFinish();
-    bool run(QVariant arg = 0);
-    void kill();
-
-    static std::shared_ptr<Task> CreateTask(TaskType type);
-
-private:
-    Invoker _invoker0;
-    InvokerA1 _invoker1;
-    Invoker _deinvoker;
-    Checker _checker;
-};
-
-class Worker : public QObject
+class Service : public QObject
 {
     Q_OBJECT
 
-private:
+protected:
     DeviceConnectType mDeviceType;
     AdbDevice mAdbDevice;
-    std::shared_ptr<Task> mTask;
-
-private slots:
-    void onAdbDeviceConnect(const AdbDevice& adbDevice);
 
 public:
-    Worker(DeviceConnectType deviceType, std::shared_ptr<Task> task, QObject * parent = nullptr) : QObject(parent), mDeviceType(deviceType), mTask(task) {}
+    Service(DeviceConnectType deviceType, QObject * parent = nullptr) : QObject(parent), mDeviceType(deviceType){}
 
-    bool isStarted();
-    bool canStart();
-    bool start();
-    void stop();
+    virtual void setDevice(const AdbDevice& adbDevice);
 
-    DeviceConnectType deviceType() const
-    {
-        return mDeviceType;
-    }
+    virtual bool canStart();
+    virtual bool isStarted() = 0;
+    virtual bool isFinish()= 0;
+    virtual bool start()= 0;
+    virtual void stop()= 0;
+    virtual void reset() = 0;
 
-    static std::shared_ptr<Worker> CreateAdskillService();
+    DeviceConnectType deviceType() const;
 };
 

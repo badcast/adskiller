@@ -36,7 +36,6 @@ set(PROJECT_SOURCES
         src/widget/ProgressCircle.cpp
         src/SystemTray.cpp
         src/extension.cpp
-        src/task.cpp
         resources.qrc
 )
 
