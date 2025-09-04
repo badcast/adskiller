@@ -285,6 +285,34 @@ void MainWindow::pageShown(int page)
         ui->authButton->setEnabled(true);
         clearAuthInfoPage();
         break;
+    case DevicesPage:
+        if(nullptr == currentService || nullptr == currentService->handler || currentService->handler->deviceType() != ADB)
+        {
+            QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
+            showPage(AuthPage);
+            return;
+        }
+        delayPushLoop(96, [this]()->bool{
+            QList<AdbDevice> devices = Adb::getDevices();
+            devices << AdbDevice{};
+            devices.back().devId = "asdasdasd";
+            for(const AdbDevice& device : std::as_const(devices))
+            {
+                AdbConStatus status = Adb::deviceStatus(device.devId);
+                if(status == DEVICE || true)
+                {
+                    currentService->handler->setDevice(device);
+                    break;
+                }
+            }
+            if(currentService->handler->canStart())
+            {
+                showPageLoader(MalwarePage);
+            }
+            return curPage == DevicesPage;
+        });
+
+        break;
     case CabinetPage:
     {
         fillAuthInfoPage();
@@ -415,7 +443,7 @@ void MainWindow::initModules()
             else
                 info += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : AvailableServices[x].price).arg(network.authedId.currencyType);
         else
-            info += "(Недоступно)";
+            info += "(В разработке)";
         QPushButton * push = new QPushButton(QIcon(QString(":/resources/") + AvailableServices[x].iconName),
                                             info,
                                             ui->serviceContents);
