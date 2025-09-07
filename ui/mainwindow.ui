@@ -59,13 +59,7 @@
      <number>0</number>
     </property>
     <item row="1" column="0">
-     <widget class="QGroupBox" name="contentLayout">
-      <property name="flat">
-       <bool>false</bool>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
+     <widget class="QFrame" name="contentLayout">
       <layout class="QGridLayout" name="gridLayout_10">
        <property name="leftMargin">
         <number>0</number>
@@ -85,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>4</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -299,7 +293,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>880</width>
+                <width>886</width>
                 <height>1160</height>
                </rect>
               </property>
@@ -665,7 +659,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>880</width>
+                    <width>886</width>
                     <height>250</height>
                    </rect>
                   </property>
@@ -984,7 +978,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>557</width>
+                   <width>559</width>
                    <height>378</height>
                   </rect>
                  </property>
@@ -1322,7 +1316,7 @@
                <widget class="QFrame" name="frame333">
                 <property name="minimumSize">
                  <size>
-                  <width>400</width>
+                  <width>0</width>
                   <height>0</height>
                  </size>
                 </property>
@@ -1334,8 +1328,14 @@
                   <widget class="QFrame" name="frame33">
                    <property name="minimumSize">
                     <size>
-                     <width>300</width>
+                     <width>400</width>
                      <height>250</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>500</width>
+                     <height>350</height>
                     </size>
                    </property>
                    <layout class="QVBoxLayout" name="progressCircleLayout">
@@ -1367,7 +1367,7 @@
                    </property>
                    <property name="font">
                     <font>
-                     <pointsize>13</pointsize>
+                     <pointsize>10</pointsize>
                      <bold>true</bold>
                      <underline>false</underline>
                     </font>
@@ -1387,13 +1387,13 @@
                   <widget class="QPushButton" name="malwareReRun">
                    <property name="minimumSize">
                     <size>
-                     <width>200</width>
+                     <width>0</width>
                      <height>35</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>300</width>
+                     <width>16777215</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -1613,7 +1613,7 @@
                             background: transparent</string>
               </property>
               <property name="text">
-               <string>ДОБРО ПОЖАЛОВАТЬ В ADSKILLER! - &lt;a color=white href=&quot;https://imister.kz&quot;&gt;imister.kz&lt;/a&gt;</string>
+               <string>СЛУЖБА ВЫПОЛНЯЕТСЯ</string>
               </property>
               <property name="openExternalLinks">
                <bool>true</bool>

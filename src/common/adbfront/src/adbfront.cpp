@@ -27,18 +27,19 @@ std::pair<bool, QString> adb_send_cmd(int &exitCode, const QStringList &argument
     QProcess process;
     QString retval;
     process.start(AdbExecutableFilename(), arguments);
-    if (!process.waitForFinished())
+    if (!process.waitForFinished(10000))
     {
         qDebug() << "ADB Failed";
+        process.kill();
+        process.waitForFinished(1000);
         return {false, {}};
     }
     retval = process.readAllStandardOutput();
-    process.close();
     exitCode = process.exitCode();
 #ifdef WIN32
     retval.replace("\r\n", "\n");
 #endif
-    return {true, retval};
+    return {exitCode==0, retval};
 }
 
 std::pair<bool, QString> adb_send_cmd(const QStringList &arguments)
@@ -144,7 +145,7 @@ QList<PackageIO> Adb::getPackages(const QString &deviceSerial)
     std::pair<bool, QString> reply2dis;
     int pkgSeprIndx = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
-    if (shell->isConnect())
+    if (!shell->isConnect())
     {
         qDebug() << "Device is not connected";
         return {};
@@ -306,6 +307,16 @@ void Adb::disconnect()
         delete deviceWatchTimer;
         deviceWatchTimer = nullptr;
     }
+}
+
+void Adb::startServer()
+{
+    adb_send_cmd(QStringList() << "start-server");
+}
+
+void Adb::killServer()
+{
+    adb_send_cmd(QStringList() << "kill-server");
 }
 
 AdbDevice Adb::getDevice(const QString &deviceSerial)

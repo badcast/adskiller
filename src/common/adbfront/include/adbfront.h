@@ -6,6 +6,7 @@
 #include <functional>
 #include <map>
 #include <utility>
+#include <memory>
 
 #include <QList>
 #include <QProcess>
@@ -41,6 +42,7 @@ struct AdbDevice
     bool isEmpty() const;
 };
 
+struct AdbGlobal;
 
 class AdbShell
 {
@@ -57,19 +59,14 @@ public:
     std::pair<bool, QString> commandQueueWait(const QStringList &args);
     int commandQueueAsync(const QStringList &args);
     std::pair<bool, QString> commandResult(int requestId, bool waitResult = true);
-    bool hasReqID(int requestId);
     QString getprop(const QString &propname);
     bool reConnect();
     void exit();
 
 private:
-    QString deviceId;
-    std::unordered_map<int,QStringList> requests;
-    std::unordered_map<int,QString> responces;
-    std::thread *thread;
-    std::mutex mutex;
-    std::pair<std::uint32_t,std::uint32_t> dataRxTx;
-    int data;
+    bool hasReqID(int requestId);
+
+    std::shared_ptr<AdbGlobal> ref;
 };
 
 class Adb : public QObject
@@ -89,6 +86,8 @@ public:
     void connect(const QString& devId);
     std::pair<bool, std::unique_ptr<AdbShell>> runShell();
     void disconnect();
+    static void startServer();
+    static void killServer();
     static AdbDevice getDevice(const QString& deviceSerial);
     static QList<PackageIO> getPackages(const QString& deviceSerial);
     static void killPackages(const QString &deviceSerial, const QList<PackageIO> &packages, int& successCount);

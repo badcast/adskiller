@@ -191,6 +191,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     verChansesAvailable = -1;
 #endif
     checkVersion(true);
+    Adb::startServer();
 }
 
 MainWindow::~MainWindow()
@@ -200,6 +201,7 @@ MainWindow::~MainWindow()
         currentService->handler->stop();
     }
     delete ui;
+    Adb::killServer();
 }
 
 void MainWindow::on_actionAboutUs_triggered()
@@ -390,7 +392,10 @@ void MainWindow::pageShown(int page)
         // Unset
         tempStruct = {};
         deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
-        delayPushLoop(96, [this,&tempStruct]()->bool{
+
+        delayTimer(1000);
+
+        delayPushLoop(300, [this,&tempStruct]()->bool{
             if(!tempStruct.switched)
             {
                 QList<AdbDevice> devices = Adb::getDevices();
@@ -411,9 +416,12 @@ void MainWindow::pageShown(int page)
                 tempStruct.switched = true;
                 deviceLeftAnimator->start();
                 delayTimer(2000);
-                // deviceLeftAnimator->setDirection(QPropertyAnimation::Backward);
-                // deviceLeftAnimator->start();
                 showPageLoader(MalwarePage);
+            }
+            if(curPage != DevicesPage)
+            {
+                deviceLeftAnimator->stop();
+                ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
             }
             return curPage == DevicesPage;
         });
