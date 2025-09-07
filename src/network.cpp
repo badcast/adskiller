@@ -52,19 +52,20 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
     return retval;
 }
 
-Network::Network(QObject *parent) : QObject(parent)
+Network::Network(QObject *parent) : QObject(parent), _pending(0)
 {
     manager = new QNetworkAccessManager {this};
     manager->setTransferTimeout(NetworkTimeoutDefault);
 }
 
-void Network::authenticate(const QString &token)
+void Network::pushAuth(const QString &token)
 {
     QJsonObject json;
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
     authedId = {}; // Clean last info
+    _pending = 1;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", token.toUtf8());
     json["request"] = "TOKENVERIFY";
@@ -72,7 +73,7 @@ void Network::authenticate(const QString &token)
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
-void Network::getAdsData(const QString& mdKey)
+void Network::pullAdsData(const QString& mdKey)
 {
     QJsonObject json;
     QNetworkReply *reply;
@@ -80,6 +81,7 @@ void Network::getAdsData(const QString& mdKey)
     QNetworkRequest request(url);
     if(!isAuthed())
         return;
+    _pending = 1;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", authedId.token.toUtf8());
     json["request"] = "GETADS";
@@ -88,7 +90,7 @@ void Network::getAdsData(const QString& mdKey)
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
 }
 
-bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packages)
+bool Network::pushUserPackages(const AdbDevice &device, const QStringList &packages)
 {
     QJsonObject json;
     QJsonArray array;
@@ -97,6 +99,7 @@ bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packa
     QNetworkRequest request(url);
     if(device.devId.isEmpty() || packages.empty())
         return false;
+    _pending = 1;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Token", authedId.token.toUtf8());
     json["request"] = "UPLOADPKGS";
@@ -111,7 +114,7 @@ bool Network::sendUserPackages(const AdbDevice &device, const QStringList &packa
     return true;
 }
 
-void Network::fetchLabState(const QString &mdKey)
+void Network::pullLabState(const QString &mdKey)
 {
     QJsonObject json;
     QNetworkReply *reply;
@@ -137,12 +140,18 @@ bool Network::isAuthed()
     return !authedId.token.isEmpty();
 }
 
-void Network::fetchVersion(bool populate)
+bool Network::pending()
+{
+    return _pending > 0;
+}
+
+void Network::pullFetchVersion(bool populate)
 {
     QJsonObject json;
     QNetworkReply *reply;
     QUrl url(url_version());
     QNetworkRequest request(url);
+    _pending = 1;
     if(populate)
         json["currentClient"] = QString("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
@@ -195,6 +204,7 @@ void Network::onAuthFinished()
         emit loginFinish(status, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+    _pending = 0;
 }
 
 void Network::onAdsFinished()
@@ -233,6 +243,7 @@ void Network::onAdsFinished()
         emit labAdsFinish(status, adsData, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+    _pending = 0;
 }
 
 void Network::onUserPackagesUploadFinished()
@@ -266,6 +277,7 @@ void Network::onUserPackagesUploadFinished()
         emit uploadUserPackages(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+    _pending = 0;
 }
 
 void Network::onFetchingVersion()
@@ -295,6 +307,7 @@ void Network::onFetchingVersion()
         emit fetchingVersion(status, version, url, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+    _pending = 0;
 }
 
 void Network::onFetchingLabs()
@@ -319,6 +332,7 @@ void Network::onFetchingLabs()
         emit fetchingLabs(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
+    _pending = 0;
 }
 
 VersionInfo::VersionInfo(const QString &version, const QString &url, int status) : mDownloadUrl(url), mStatus(status)
