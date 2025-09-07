@@ -4,9 +4,11 @@
 #include <QMainWindow>
 #include <QTimer>
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
-class UpdateWindow;
+class update_window;
 }
+QT_END_NAMESPACE
 
 class update_window : public QMainWindow
 {
@@ -20,7 +22,7 @@ public:
     void setProgress(int v1, int v2);
     void delayPush(int ms, std::function<void()> call, bool loop = false);
 private:
-    Ui::UpdateWindow *ui;
+    Ui::update_window *ui;
 };
 
 #endif // UPDATE_WINDOW_H

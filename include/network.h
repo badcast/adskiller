@@ -81,19 +81,22 @@ private:
     QNetworkAccessManager* manager;
     QString _token;
     std::int64_t _lastBytes;
+    int _pending;
 
 public:
     UserData authedId;
 
     Network(QObject * parent = nullptr);
-    void authenticate(const QString &token);
     bool isAuthed();
-    void fetchVersion(bool populate);
-
-    void getAdsData(const QString &mdKey);
-    bool sendUserPackages(const AdbDevice& device, const QStringList& packages);
-    void fetchLabState(const QString &mdKey);
+    bool pending();
     bool checkNet();
+
+    void pullAdsData(const QString &mdKey);
+    void pullFetchVersion(bool populate);
+    void pullLabState(const QString &mdKey);
+
+    void pushAuth(const QString &token);
+    bool pushUserPackages(const AdbDevice& device, const QStringList& packages);
 
 signals:
     void loginFinish(int status, bool ok);

@@ -45,6 +45,7 @@ protected:
 
 public:
     Service(DeviceConnectType deviceType, QObject * parent = nullptr) : QObject(parent), mDeviceType(deviceType){}
+    virtual ~Service() = default;
 
     virtual void setDevice(const AdbDevice& adbDevice);
 

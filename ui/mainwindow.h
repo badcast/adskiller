@@ -26,6 +26,11 @@
 #include "extension.h"
 #include "AntiMalware.h"
 
+enum {
+    VersionCheckRate = 10000,
+    ChansesRunInvalid = 3
+};
+
 enum ThemeScheme
 {
     System,
@@ -65,6 +70,13 @@ class MainWindow : public QMainWindow
 private:
     friend class AdsKillerService;
 
+    struct
+    {
+        bool isAuthed;
+        AdbDevice adbDevice;
+        DeviceConnectType connectionType;
+    } connectPhone;
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -84,10 +96,14 @@ public:
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
 
-    std::shared_ptr<ServiceItem> currentService;
-    QList<std::shared_ptr<ServiceItem>> services;
+#ifdef NDEBUG
+    int verChansesAvailable = ChansesRunInvalid;
+#endif
 
-    bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV);
+    std::shared_ptr<ServiceItem> currentService {};
+    QList<std::shared_ptr<ServiceItem>> services {};
+
+    bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
 
     static MainWindow * current;
 
@@ -102,6 +118,8 @@ private slots:
 
 public slots:
     void setThemeAction();
+    void updateAuthInfoFromNet();
+    void logout();
     void closeEvent(QCloseEvent * event) override;
 
 signals:
@@ -116,8 +134,12 @@ private:
     QMap<PageIndex,QWidget*> pages;
     QWidget * vPageSpacer;
     QPropertyAnimation * vPageSpacerAnimator;
-    PageIndex curPage;
+    QPropertyAnimation * contentOpacityAnimator;
+    QPropertyAnimation * deviceLeftAnimator;
     PageIndex startPage = PageIndex::AuthPage;
+    PageIndex curPage = startPage;
+    PageIndex lastPage = PageIndex::AuthPage;
+    QTimer * checkerVer;
 
     template<typename Pred>
     void showPageLoader(PageIndex pageNum, int msWait, Pred&& pred);
@@ -127,7 +149,7 @@ private:
     void clearAuthInfoPage();
     void fillAuthInfoPage();
     void initModules();
-    void checkVersion();
-    void runUpdateManager();
+    void checkVersion(bool firstRun);
+    void willTerminate();
 };
 #endif // MAINWINDOW_H

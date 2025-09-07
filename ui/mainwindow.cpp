@@ -16,6 +16,7 @@
 #include <QFuture>
 #include <QEventLoop>
 #include <QCloseEvent>
+#include <QGraphicsOpacityEffect>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -48,6 +49,7 @@ constexpr struct {
     int price;
 } AvailableServices[] = {
     {"Удалить рекламу", "remove-ads", true, 0},
+    {"APK Менеджер", "icon-malware", false,0},
     {"Мои устройства и гарантия", "icon-malware", false,0},
     {"Очистка Мусора", "icon-malware", false, 0},
     {"Samsung FRP", "icon-malware", false, 0},
@@ -69,6 +71,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         QByteArray decData = CipherAlgoCrypto::UnpackDC(settings->value("encrypted_token").toString());
         network._token = QLatin1String(decData);
     }
+    if(settings->contains("autologin"))
+    {
+        ui->checkAutoLogin->setChecked(settings->value("autologin").toBool());
+    }
+    else
+    {
+        ui->checkAutoLogin->setChecked(true);
+    }
 
     if (!std::all_of(std::begin(network._token), std::end(network._token), [](auto &lhs)
                      { return std::isalnum(lhs.toLatin1()); }))
@@ -87,32 +97,34 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         if(iter != std::end(_w))
             pages.insert(item.index, *iter);
     }
-    (ui->scrollAreaWidgetContents->layout())->addWidget((vPageSpacer = new QWidget(this)));
+
+    vPageSpacer = ui->topcontent;
+    vPageSpacer->setMaximumHeight(400);
     vPageSpacerAnimator = new QPropertyAnimation(vPageSpacer, "maximumHeight");
-    vPageSpacerAnimator->setDuration(900);
-    vPageSpacerAnimator->setStartValue(1000);
+    vPageSpacerAnimator->setDuration(500);
+    vPageSpacerAnimator->setStartValue(400);
     vPageSpacerAnimator->setEndValue(0);
+
+    QGraphicsOpacityEffect * effect = new QGraphicsOpacityEffect(ui->contentLayout);
+    ui->contentLayout->setGraphicsEffect(effect);
+
+    contentOpacityAnimator = new QPropertyAnimation(effect, "opacity");
+    contentOpacityAnimator->setDuration(1000);
+    contentOpacityAnimator->setStartValue(0);
+    contentOpacityAnimator->setEndValue(1.0);
+
+    deviceLeftAnimator = new QPropertyAnimation(ui->device_left_group, "maximumWidth");
+    deviceLeftAnimator->setDuration(1000);
+    deviceLeftAnimator->setStartValue(1000);
+    deviceLeftAnimator->setEndValue(0);
 
     // Top header back to main page.
     ui->contentLayout->layout()->addWidget(ui->toplevel_backpage);
 
     for (x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
-    for (x = 0; x < ui->tabWidget_2->count(); ++x)
-        malwareStatusLayouts << ui->tabWidget_2->widget(x);
-    for (x = 0; x < malwareStatusLayouts.count(); ++x)
-        ui->malwareContentLayout->addWidget(malwareStatusLayouts[x]);
-    malwareStatusLayouts[0]->show();
-    QObject::connect(ui->malwareLayoutSwitchButton, &QPushButton::clicked, [this](bool checked)
-                     {
-                         (void)checked;
-                         for(auto & layout : malwareStatusLayouts)
-                         {
-                             layout->isHidden() ? layout->show() : layout->hide();
-                         } });
 
     ui->tabWidget->deleteLater();
-    ui->tabWidget_2->deleteLater();
 
     malwareProgressCircle = new ProgressCircle(this);
     malwareProgressCircle->setInfinilyMode(false);
@@ -122,8 +134,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     loaderProgressCircle->setInfinilyMode(true);
     loaderProgressCircle->setVisibleText(false);
     loaderProgressCircle->setInnerRadius(0);
-    loaderProgressCircle->setColor(Qt::darkCyan);
+    loaderProgressCircle->setColor(Qt::darkRed);
     loaderProgressCircle->setInnerRadius(.5);
+    loaderProgressCircle->setMinimumHeight(225);
     ui->loaderLayout->addWidget(loaderProgressCircle);
 
     QList<QAction *> menusTheme{ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
@@ -139,8 +152,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Signals
     QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
     QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
-    QObject::connect(ui->authpageUpdate, &QPushButton::clicked, [this](){ ui->authButton->click(); showPageLoader((network.checkNet() ? CabinetPage : AuthPage), 1000, QString("Обновление странницы")); });
-    QObject::connect(ui->buttonBackTo, &QPushButton::clicked, [this](){showPageLoader(CabinetPage);});
+    QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateAuthInfoFromNet);
+    QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateAuthInfoFromNet);
+    QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
+    QObject::connect(ui->malwareReRun, &QPushButton::clicked, [this](){if(currentService && currentService->handler && !currentService->handler->isStarted()) currentService->handler->start();});
+
+    checkerVer = new QTimer(this);
+    checkerVer->setSingleShot(true);
+    checkerVer->setInterval(VersionCheckRate);
+    QObject::connect(checkerVer, &QTimer::timeout, [this](){checkVersion(false);});
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -167,12 +187,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     selfVersion = { _version, {}, 0};
 
     // Run check version
-    checkVersion();
+#ifdef NDEBUG
+    verChansesAvailable = -1;
+#endif
+    checkVersion(true);
 }
 
 MainWindow::~MainWindow()
 {
-    malwareKill();
+    if(currentService && currentService->handler)
+    {
+        currentService->handler->stop();
+    }
     delete ui;
 }
 
@@ -200,30 +226,90 @@ void MainWindow::on_action_Qt_triggered()
     QMessageBox::aboutQt(this);
 }
 
-void MainWindow::checkVersion()
+void MainWindow::checkVersion(bool firstRun)
 {
 #ifdef NDEBUG
-    ui->loaderPageText->setText("Проверка обновления");
-    // Show First Page
-    showPageLoader(startPage, 1000, [this]()->bool {
-        if(actualVersion.empty())
-            return false;
-        if(actualVersion.mStatus != NetworkStatus::OK)
-        {
-            ui->loaderPageText->setText("Проблема с интернетом?");
-        }
-        else
-        {
-            ui->loaderPageText->setText("Ваша версия актуальная!");
-        }
-        delayTimer(2000);
-        return true;
-    });
 
-    network.fetchVersion(true);
+    network.pullFetchVersion(firstRun);
+
+    // Show First Page
+    if(firstRun)
+    {
+        ui->loaderPageText->setText("Проверка обновления");
+        showPageLoader(startPage, 100, [this]()->bool {
+            if(actualVersion.empty())
+                return false;
+            if(lastPage == AuthPage)
+            {
+                if(actualVersion.mStatus != NetworkStatus::OK)
+                {
+                    ui->loaderPageText->setText("Проблема с интернетом?");
+                    ui->loaderPageText->update();
+                    delayTimer(2000);
+                    lastPage = PageIndex(-1);
+                    willTerminate();
+                }
+                else
+                {
+                    verChansesAvailable = ChansesRunInvalid;
+                    ui->loaderPageText->setText("Ваша версия актуальная!");
+                    ui->loaderPageText->update();
+                    delayTimer(2000);
+                    checkerVer->start();
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+    else if(verChansesAvailable > -1)
+    {
+        delayPushLoop(70, [this](){
+
+            if(actualVersion.empty())
+                return true;
+            if(verChansesAvailable > 0 && !isHidden())
+            {
+                if(actualVersion.mStatus != NetworkStatus::OK)
+                {
+                    if(verChansesAvailable == 0)
+                    {
+                        // Will terminate
+                        verChansesAvailable = -1;
+                        willTerminate();
+                        checkerVer->stop();
+                        return false;
+                    }
+                    else
+                    {
+                        QString warnMessage = "У вас осталось попыток (%1), срочно восстановите связь, иначе приложение аварийно завершится.";
+                        warnMessage = warnMessage.arg(verChansesAvailable);
+                        verChansesAvailable = qMax<int>(verChansesAvailable-1,0);
+                        QMessageBox::warning(this, "Отсутствие соединение с интернетом.", warnMessage);
+                    }
+                }
+                else
+                {
+                    verChansesAvailable = ChansesRunInvalid;
+                }
+            }
+            checkerVer->start();
+            return false;
+        });
+    }
+
 #else
-    showPageLoader(AuthPage);
+    if(firstRun)
+        showPageLoader(AuthPage);
 #endif
+}
+
+void MainWindow::willTerminate()
+{
+    setEnabled(false);
+    showMessageFromStatus(NetworkError);
+    delayPush(5000, [this](){this->close();});
+    QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
 }
 
 template<typename Pred>
@@ -256,6 +342,8 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
 void MainWindow::showPage(PageIndex pageNum)
 {
     PageIndex oldPage = curPage;
+    if(oldPage != LoaderPage)
+        lastPage = oldPage;
     if(pages.contains(oldPage))
     {
         pages[oldPage]->setEnabled(false);
@@ -269,6 +357,7 @@ void MainWindow::showPage(PageIndex pageNum)
     }
 
     vPageSpacerAnimator->start();
+    contentOpacityAnimator->start();
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
     pageShown(curPage);
@@ -284,6 +373,8 @@ void MainWindow::pageShown(int page)
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->authButton->setEnabled(true);
         clearAuthInfoPage();
+        if(lastPage == AuthPage && settings->value("autologin", false).toBool() && ui->checkAutoLogin->isChecked())
+            ui->authButton->click();
         break;
     case DevicesPage:
         if(nullptr == currentService || nullptr == currentService->handler || currentService->handler->deviceType() != ADB)
@@ -292,21 +383,36 @@ void MainWindow::pageShown(int page)
             showPage(AuthPage);
             return;
         }
-        delayPushLoop(96, [this]()->bool{
-            QList<AdbDevice> devices = Adb::getDevices();
-            devices << AdbDevice{};
-            devices.back().devId = "asdasdasd";
-            for(const AdbDevice& device : std::as_const(devices))
+        static struct
+        {
+            bool switched;
+        } tempStruct;
+        // Unset
+        tempStruct = {};
+        deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
+        delayPushLoop(96, [this,&tempStruct]()->bool{
+            if(!tempStruct.switched)
             {
-                AdbConStatus status = Adb::deviceStatus(device.devId);
-                if(status == DEVICE || true)
+                QList<AdbDevice> devices = Adb::getDevices();
+                for(const AdbDevice& device : std::as_const(devices))
                 {
-                    currentService->handler->setDevice(device);
-                    break;
+                    AdbConStatus status = Adb::deviceStatus(device.devId);
+                    if(status == DEVICE)
+                    {
+                        connectPhone.isAuthed = status == DEVICE;
+                        connectPhone.adbDevice = device;
+                        currentService->handler->setDevice(device);
+                        break;
+                    }
                 }
             }
-            if(currentService->handler->canStart())
+            if(currentService->handler->canStart() && !tempStruct.switched)
             {
+                tempStruct.switched = true;
+                deviceLeftAnimator->start();
+                delayTimer(2000);
+                // deviceLeftAnimator->setDirection(QPropertyAnimation::Backward);
+                // deviceLeftAnimator->start();
                 showPageLoader(MalwarePage);
             }
             return curPage == DevicesPage;
@@ -334,8 +440,22 @@ void MainWindow::pageShown(int page)
         malwareProgressCircle->setInfinilyMode(false);
         currentService->handler->reset();
         QStringList place{};
-        place << "<< Все готово для запуска >>";
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
+
+        // TODO: set auto start mode flag.
+        // IF THERE AUTO_START = YES?
+
+        if(!currentService->handler->canStart())
+        {
+            place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад, чтобы повторить попытку.";
+        }
+        else
+        {
+            place << QString("<< Ожидаем >>").arg(currentService->title);
+
+            delayPush(500, [this](){currentService->handler->start();});
+        }
+
         model->setStringList(place);
         break;
     }
@@ -416,7 +536,7 @@ void MainWindow::fillAuthInfoPage()
     value = network.authedId.blocked ? "Да" : "Нет";
     model->item(6, 1)->setText(value);
 
-    ui->labelLoginAuthed->setText(network.authedId.idName);   
+    ui->labelLoginAuthed->setText(network.authedId.idName);
     ui->labelCredits->setText(QString("%1\n(%2)").arg(network.authedId.credits).arg(network.authedId.currencyType));
     ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
 
@@ -531,7 +651,6 @@ void MainWindow::delayPush(int ms, std::function<void()> call)
 
 void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service)
 {
-    (void)targetType;
     // TODO: use next any type <Target Type>| now use ADB
     if(currentService && currentService->handler && currentService->handler->isStarted())
     {
@@ -540,25 +659,29 @@ void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_pt
         return;
     }
     currentService = service;
-    showPageLoader(DevicesPage, 2000, QString("Запуск службы\n\"%1\"").arg(service->title));
+    connectPhone = {};
+    connectPhone.connectionType = targetType;
+    showPageLoader(DevicesPage, 2000, QString("Запуск службы\n\"%1\"").arg(currentService->title));
 }
 
-bool MainWindow::accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *& processBarStatusV)
+bool MainWindow::accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *& processBarStatusV, QPushButton *& pushButtonReRun)
 {
-    if(!processLogStatusV || !malareStatusText0V || !deviceLabelNameV || !processBarStatusV)
-        return false;
     processLogStatusV = ui->processLogStatus;
     malareStatusText0V = ui->malwareStatusText0;
     deviceLabelNameV = ui->deviceLabelName;
     processBarStatusV = ui->processBarStatus;
+    pushButtonReRun = ui->malwareReRun;
     return true;
 }
 
 void MainWindow::on_authButton_clicked()
 {
+    if(network.pending() || network.isAuthed())
+        return;
+
     constexpr int Dots = 3;
     QString tryToken = ui->lineEditToken->text();
-    network.authenticate(tryToken);
+    network.pushAuth(tryToken);
     ui->statusAuthText->setText("Подключение");
     timerAuthAnim = new QTimer(this);
     timerAuthAnim->start(350);
@@ -579,6 +702,17 @@ void MainWindow::on_authButton_clicked()
                 temp += '.';
             ui->statusAuthText->setText(temp);
         });
+
+    settings->setValue("autologin", ui->checkAutoLogin->isChecked());
+
+    delayPushLoop(100, [this](){
+        if(!network.pending() && network.isAuthed())
+        {
+            delayPush(2000, [this](){
+                showPageLoader(CabinetPage);});
+        }
+        return network.pending();
+    });
 }
 
 void MainWindow::setThemeAction()
@@ -644,16 +778,9 @@ void MainWindow::replyAuthFinish(int status, bool ok)
             }
 
             ui->statusAuthText->setText(resText);
-
-            if(status == NetworkStatus::OK)
-            {
-
-                showPageLoader(CabinetPage);
-
-            }
-
             ui->lineEditToken->setEnabled(true);
             ui->authButton->setEnabled(true);
+
         });
 }
 
@@ -662,9 +789,6 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
     VersionInfo actualVersion = {{}, {}, status};
     if(status == NetworkStatus::NetworkError)
     {
-        this->showMessageFromStatus(status);
-        delayPush(5000, [this](){this->close();});
-        QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
         this->actualVersion = actualVersion;
         return;
     }
@@ -781,5 +905,36 @@ void MainWindow::showMessageFromStatus(int statusCode)
 
     if(statusCode == NetworkStatus::AccountBlocked)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoAccountBlocked);
+}
+
+void MainWindow::updateAuthInfoFromNet()
+{
+    if(!network.isAuthed())
+    {
+        logout();
+        return;
+    }
+
+    QString tryToken = network.authedId.token;
+    network.pushAuth(tryToken);
+    showPageLoader(CabinetPage, 1000, [this]()->bool{
+        ui->loaderPageText->setText("Обновление странницы");
+        if(!network.pending() && !network.isAuthed())
+        {
+            delayPush(200, [this](){
+                showPage(AuthPage);
+            });
+        }
+        return !network.pending();
+    });
+}
+
+void MainWindow::logout()
+{
+    if(network.isAuthed())
+    {
+        network.authedId = {};
+    }
+    showPageLoader(AuthPage, 500, QString("Выход из системы"));
 }
 
