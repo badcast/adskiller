@@ -1,22 +1,4 @@
-#include <chrono>
-
-#include <QTimer>
-#include <QHash>
-#include <QDesktopServices>
-#include <QUrl>
-#include <QMessageBox>
-#include <QStringListModel>
-#include <QCryptographicHash>
-#include <QThread>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QEventLoop>
-
-#include "mainwindow.h"
-
-#include "network.h"
-#include "adbfront.h"
-#include "AntiMalware.h"
+#include "Services.h"
 
 #define FORCLYQUIT_CHECK if(malwareCmd == MalwareForclyKill) break
 #define WAIT(MS) QThread::msleep(MS)
@@ -259,6 +241,7 @@ bool malwareRequireUser(){
 void malwareWriteLog(QString msg, int progress = -1)
 {
     QMutexLocker locker(mutex);
+    (void)locker;
     _outputMalware << std::move(msg);
     if(progress > -1)
         mProgress = progress;
@@ -267,6 +250,7 @@ void malwareWriteLog(QString msg, int progress = -1)
 void malwareWriteHeader(QString msg, int progress = -1)
 {
     QMutexLocker locker(mutex);
+    (void)locker;
     _outputHeader = std::move(msg);
     _outputMalware << _outputHeader;
     if(progress > -1)
@@ -331,12 +315,14 @@ inline T1 compare_list(const T0& t0, const T1& t1, Pred&& pred)
 
 std::pair<QStringList, int> malwareReadLog(){
     QMutexLocker locker(mutex);
+    (void)locker;
     return {QStringList(std::move(_outputMalware)),mProgress};
 }
 
 QString malwareReadHeader()
 {
     QMutexLocker locker(mutex);
+    (void)locker;
     return _outputHeader;
 }
 

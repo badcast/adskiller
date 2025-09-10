@@ -24,7 +24,7 @@
 #include "network.h"
 #include "SystemTray.h"
 #include "extension.h"
-#include "AntiMalware.h"
+#include "Services.h"
 
 enum {
     VersionCheckRate = 10000,
@@ -41,8 +41,8 @@ enum ThemeScheme
 enum PageIndex
 {
     AuthPage = 0,
-    LoaderPage = 1,
-    CabinetPage = 2,
+    LoaderPage,
+    CabinetPage,
     MalwarePage,
     DevicesPage,
 

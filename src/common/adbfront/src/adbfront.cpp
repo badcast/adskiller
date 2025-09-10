@@ -15,7 +15,7 @@ QString AdbExecutableFilename()
     QString adbFile;
 #ifdef WIN32
     adbFile = QCoreApplication::applicationDirPath() + "/adb/";
-#else
+#elif __linux__
     adbFile = "/usr/bin/";
 #endif
     adbFile += AdbFilename;

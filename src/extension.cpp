@@ -5,7 +5,7 @@
 #include <QString>
 
 #include "extension.h"
-#include "AntiMalware.h"
+#include "Services.h"
 #include "mainwindow.h"
 
 QByteArray CipherAlgoCrypto::RandomKey()

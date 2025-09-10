@@ -22,7 +22,7 @@
 #include "ui_mainwindow.h"
 #include "SystemTray.h"
 #include "extension.h"
-#include "AntiMalware.h"
+#include "Services.h"
 #include "network.h"
 
 #include "icontextbutton.h"
