@@ -21,7 +21,92 @@ struct AdbGlobal
     int ref;
 };
 
-static QHash<QString, std::shared_ptr<AdbGlobal>> globals;
+QHash<QString, std::shared_ptr<AdbGlobal>> globals;
+
+void IOInterpret(AdbGlobal * global)
+{
+    QProcess process;
+    QStringList _args;
+    QString fullArgs;
+    QByteArray output;
+    QByteArray session;
+    std::unordered_map<int,QStringList>::iterator iter;
+    int lastIndex,len,reqId, retCode;
+    if(global == nullptr)
+        return;
+    process.start(AdbExecutableFilename(), QStringList() << "-s" << global->devId << "shell", QIODevice::ReadWrite);
+    if(process.waitForStarted())
+    {
+        global->data = 1;
+        while(!global->devId.isEmpty() && Adb::deviceStatus(global->devId) == AdbConStatus::DEVICE && global->data > 0 && process.state() == QProcess::ProcessState::Running)
+        {
+            global->mutex.lock();
+            iter = std::begin(global->requests);
+            if(iter != std::end(global->requests))
+            {
+                reqId = iter->first;
+                _args = iter->second;
+                global->mutex.unlock();
+
+                fullArgs = std::move(_args.join(' '));
+                fullArgs += "\necho \"|$?\"\n";
+
+#ifdef WIN32
+                fullArgs.replace('\n', "\r\n");
+#endif
+                session = std::move(fullArgs.toUtf8());
+                global->dataRxTx.second += static_cast<std::uint32_t>(session.size());
+                process.write(session);
+                process.waitForBytesWritten();
+
+                do
+                {
+                    process.waitForReadyRead(10000);
+                    session = std::move(process.readAllStandardOutput());
+                    output += session;
+                    global->dataRxTx.first += static_cast<std::uint32_t>(session.size());
+#ifdef WIN32
+                    output.replace("\r\n", "\n");
+#endif
+                    lastIndex = output.lastIndexOf('|');
+                }
+                while(lastIndex == -1 && process.state() == QProcess::ProcessState::Running);
+
+                if(lastIndex == -1 || process.state() != QProcess::ProcessState::Running)
+                {
+                    break;
+                }
+
+                if(!output.isEmpty())
+                {
+                    session = std::move(output.mid(lastIndex+1, (output.length()-lastIndex+1)));
+                    retCode = session.toInt();
+                    (void)retCode;
+
+                    if(lastIndex > 0)
+                        lastIndex--;
+                    len = 1 + output.length()-lastIndex;
+
+                    output.remove(lastIndex, len);
+                }
+
+                global->mutex.lock();
+                global->responces[reqId] = std::move(output);
+                output.clear();
+                // erase after use.
+                global->requests.erase(reqId);
+            }
+            global->mutex.unlock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        process.close();
+    }
+    else
+    {
+        qDebug() << "fail start adb shell";
+    }
+    global->data = 0;
+}
 
 std::shared_ptr<AdbGlobal> refGlobal(const QString& devId)
 {
@@ -29,88 +114,6 @@ std::shared_ptr<AdbGlobal> refGlobal(const QString& devId)
 
     if(!globals.contains(devId))
     {
-        std::function<void(AdbGlobal*)> __waitshell__ = [](AdbGlobal * global)
-        {
-            QProcess process;
-            QStringList _args;
-            QString fullArgs;
-            QByteArray output;
-            QByteArray session;
-            std::unordered_map<int,QStringList>::iterator iter;
-            int lastIndex,len,reqId, retCode;
-            process.start(AdbExecutableFilename(), QStringList() << "-s" << global->devId << "shell", QIODevice::ReadWrite);
-            if(process.waitForStarted())
-            {
-                global->data = 1;
-                while(!global->devId.isEmpty() && Adb::deviceStatus(global->devId) == AdbConStatus::DEVICE && global->data > 0 && process.state() == QProcess::ProcessState::Running)
-                {
-                    global->mutex.lock();
-                    iter = std::begin(global->requests);
-                    if(iter != std::end(global->requests))
-                    {
-                        reqId = iter->first;
-                        _args = iter->second;
-                        global->mutex.unlock();
-
-                        fullArgs = std::move(_args.join(' '));
-                        fullArgs += "\necho \"|$?\"\n";
-
-#ifdef WIN32
-                        fullArgs.replace('\n', "\r\n");
-#endif
-                        session = std::move(fullArgs.toUtf8());
-                        global->dataRxTx.second += static_cast<std::uint32_t>(session.size());
-                        process.write(session);
-                        process.waitForBytesWritten();
-
-                        do
-                        {
-                            process.waitForReadyRead(10000);
-                            session = std::move(process.readAllStandardOutput());
-                            output += session;
-                            global->dataRxTx.first += static_cast<std::uint32_t>(session.size());
-#ifdef WIN32
-                            output.replace("\r\n", "\n");
-#endif
-                            lastIndex = output.lastIndexOf('|');
-                        }
-                        while(lastIndex == -1 && process.state() == QProcess::ProcessState::Running);
-
-                        if(lastIndex == -1 || process.state() != QProcess::ProcessState::Running)
-                        {
-                            break;
-                        }
-
-                        if(!output.isEmpty())
-                        {
-                            len = 1;
-
-                            session = std::move(output.mid(lastIndex+1, (output.length()-lastIndex+1)));
-                            retCode = session.toInt();
-                            if(lastIndex > 0)
-                                lastIndex--;
-                            len += output.length()-lastIndex;
-
-                            output.remove(lastIndex, len);
-                        }
-
-                        global->mutex.lock();
-                        global->responces[reqId] = std::move(output);
-                        output.clear();
-                        // erase after use.
-                        global->requests.erase(reqId);
-                    }
-                    global->mutex.unlock();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                }
-                process.close();
-            }
-            else
-            {
-                qDebug() << "fail start adb shell";
-            }
-            global->data = 0;
-        };
         glob = std::make_shared<AdbGlobal>();
         globals.insert(devId, glob);
         glob->ref = 1;
@@ -119,7 +122,7 @@ std::shared_ptr<AdbGlobal> refGlobal(const QString& devId)
         glob->devId = devId;
         glob->requests.clear();
         glob->responces.clear();
-        glob->thread = new std::thread(__waitshell__, glob.get());
+        glob->thread = new std::thread(IOInterpret, glob.get());
         int counter = 5;
         while(glob->data == 0 && counter-- > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));

@@ -12,7 +12,7 @@ void StorageCacheCleanService::setDevice(const AdbDevice &adbDevice)
 
 bool StorageCacheCleanService::canStart()
 {
-    return false;
+    return Service::canStart();
 }
 
 bool StorageCacheCleanService::isStarted()

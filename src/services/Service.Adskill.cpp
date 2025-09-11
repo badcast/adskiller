@@ -41,7 +41,7 @@ bool malwareRequireUser();
 
 bool AdsKillerService::canStart()
 {
-    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus;
+    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus && pushButtonReRun;
 }
 
 bool AdsKillerService::isStarted()
