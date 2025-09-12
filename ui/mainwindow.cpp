@@ -17,6 +17,7 @@
 #include <QEventLoop>
 #include <QCloseEvent>
 #include <QGraphicsOpacityEffect>
+#include <QScrollBar>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -267,10 +268,9 @@ void MainWindow::checkVersion(bool firstRun)
     else if(verChansesAvailable > -1)
     {
         delayPushLoop(70, [this](){
-
             if(actualVersion.empty())
                 return true;
-            if(verChansesAvailable > 0 && !isHidden())
+            if(verChansesAvailable > -1 && !isHidden())
             {
                 if(actualVersion.mStatus != NetworkStatus::OK)
                 {
@@ -429,6 +429,8 @@ void MainWindow::pageShown(int page)
         break;
     case CabinetPage:
     {
+        ui->scrollArea->verticalScrollBar()->setValue(0);
+        ui->scrollArea_3->verticalScrollBar()->setValue(0);
         fillAuthInfoPage();
         if(currentService)
         {
