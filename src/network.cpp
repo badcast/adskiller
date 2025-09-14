@@ -153,7 +153,9 @@ void Network::pullFetchVersion(bool populate)
     QNetworkRequest request(url);
     _pending = 1;
     if(populate)
+    {
         json["currentClient"] = QString("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+    }
     reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
 }
