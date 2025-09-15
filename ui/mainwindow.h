@@ -127,7 +127,6 @@ signals:
 
 private:
     Ui::MainWindow *ui;
-    QSettings* settings;
     ProgressCircle* malwareProgressCircle;
     ProgressCircle* loaderProgressCircle;
     QList<QWidget*> malwareStatusLayouts;

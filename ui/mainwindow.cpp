@@ -66,15 +66,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
 
     // Load settings
-    settings = new QSettings("imister.kz-app.ads", "AdsKiller", this);
-    if (settings->contains("encrypted_token"))
+    AppSetting::load();
+
+    bool containsParam;
+    QVariant value;
+    value = AppSetting::encryptedToken(&containsParam);
+    if (containsParam)
     {
-        QByteArray decData = CipherAlgoCrypto::UnpackDC(settings->value("encrypted_token").toString());
+        QByteArray decData = CipherAlgoCrypto::UnpackDC(value.toString());
         network._token = QLatin1String(decData);
     }
-    if(settings->contains("autologin"))
+
+    value = AppSetting::autoLogin(&containsParam);
+    if(containsParam)
     {
-        ui->checkAutoLogin->setChecked(settings->value("autologin").toBool());
+        ui->checkAutoLogin->setChecked(value.toBool());
     }
     else
     {
@@ -173,7 +179,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     // Set Default Theme is Light (1)
-    setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(settings->value("theme", 1).toInt(), 0, 2))));
+    setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(AppSetting::themeIndex(), 0, 2))));
 
     // Init tray
     tray = new AdsAppSystemTray(this);
@@ -203,6 +209,7 @@ MainWindow::~MainWindow()
     }
     delete ui;
     Adb::killServer();
+    AppSetting::save();
 }
 
 void MainWindow::on_actionAboutUs_triggered()
@@ -375,7 +382,7 @@ void MainWindow::pageShown(int page)
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->authButton->setEnabled(true);
         clearAuthInfoPage();
-        if(lastPage == AuthPage && settings->value("autologin", false).toBool() && ui->checkAutoLogin->isChecked())
+        if(lastPage == AuthPage && AppSetting::autoLogin() && ui->checkAutoLogin->isChecked())
             ui->authButton->click();
         break;
     case DevicesPage:
@@ -716,7 +723,7 @@ void MainWindow::on_authButton_clicked()
             ui->statusAuthText->setText(temp);
         });
 
-    settings->setValue("autologin", ui->checkAutoLogin->isChecked());
+    AppSetting::autoLogin(nullptr, ui->checkAutoLogin->isChecked());
 
     delayPushLoop(100, [this](){
         if(!network.pending() && network.isAuthed())
@@ -776,7 +783,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
                 }
 
                 if(!network.authedId.token.isEmpty())
-                    settings->setValue("encrypted_token", CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
+                    AppSetting::encryptedToken(nullptr, CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
 
                 break;
             case 401:
@@ -898,13 +905,13 @@ void MainWindow::setTheme(ThemeScheme theme)
 
     // Set application Design
     app->setStyleSheet(styleSheet);
-    settings->setValue("theme", static_cast<int>(theme));
+    AppSetting::themeIndex(nullptr, static_cast<int>(theme));
 }
 
 ThemeScheme MainWindow::getTheme()
 {
     ThemeScheme scheme;
-    scheme = static_cast<ThemeScheme>(settings->value("theme", static_cast<int>(ThemeScheme::Light)).toInt());
+    scheme = static_cast<ThemeScheme>(AppSetting::themeIndex());
     return scheme;
 }
 
