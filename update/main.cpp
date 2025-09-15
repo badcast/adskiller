@@ -331,7 +331,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
         for(int x = 0; x < updates.size(); ++x)
         {
             skip = false;
-            for(QString & f : files)
+            for(const QString & f : files)
             {
                 if(updates[x].remoteLink == f)
                 {
@@ -510,8 +510,9 @@ QString UpdateManager::calcMD5(const QString &filePath) {
     }
 
     QCryptographicHash hash(QCryptographicHash::Md5);
+    QByteArray buffer;
     while (!file.atEnd()) {
-        QByteArray buffer = file.read(4096);
+        buffer = std::move(file.read(4096));
         hash.addData(buffer);
     }
 

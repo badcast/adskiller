@@ -429,7 +429,6 @@ void MainWindow::pageShown(int page)
         break;
     case CabinetPage:
     {
-        ui->scrollArea->verticalScrollBar()->setValue(0);
         ui->scrollArea_3->verticalScrollBar()->setValue(0);
         fillAuthInfoPage();
         if(currentService)
@@ -578,26 +577,30 @@ void MainWindow::initModules()
                                             info,
                                             ui->serviceContents);
         push->setStyleSheet("QPushButton {"
+                            "   border-radius: 0;"
                             "   text-align: left;"
                             "   padding: 10px;"
                             "   font-size: 14px;"
-                            "   border: 2px dashed black;"
-                            "   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #B71C1C);"
+                            "   border: 2px solid black;"
+                            "   border-left: 10px solid lime;"
+                            "   background:  #B71C1C;"
                             "   color: white;"
                             "}"
                             "QPushButton:hover {"
-                            "   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #B71C1C, stop: 1 #3d3d3d);"
+                            "   background: #3d3d3d;"
                             "   color: white;"
-                            "   border: 2px solid black;"
                             "}"
                             "QPushButton:pressed {"
-                            "   background: #B71C1C;"
+                            "   background: black;"
                             "   color: white;"
-                            "   border: 2px solid black;"
+                            "   padding: 5px;"
+                            "   font-size: 13px;"
                             "}");
 
         if(!AvailableServices[x].active)
-            push->setStyleSheet( push->styleSheet() + "QPushButton { background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3d3d3d, stop: 1 #232323); }" );
+            push->setStyleSheet( push->styleSheet() + "QPushButton { background: #232323; border-left: 10px solid gray;}" );
+        else
+            push->setStyleSheet(push->styleSheet() + "QPushButton {  border-left: 10px solid lime; }");
 
         serviceItem->title = AvailableServices[x].title;
         serviceItem->active = AvailableServices[x].active;
