@@ -34,6 +34,7 @@ set(PROJECT_SOURCES
         src/widget/ProgressCircle.cpp
         src/SystemTray.cpp
         src/extension.cpp
+        src/settings.cpp
         resources.qrc
 )
 
