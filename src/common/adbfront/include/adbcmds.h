@@ -9,3 +9,4 @@ constexpr const char AdbFilename[] = "adb.exe";
 constexpr const char CmdGetProductModel[] = "ro.product.model";
 constexpr const char CmdGetProductMarketname[] = "ro.product.marketname";
 constexpr const char CmdGetProductManufacturer[] = "ro.product.manufacturer";
+constexpr const char CmdGetAndroidVersino[] = "ro.build.version.release";

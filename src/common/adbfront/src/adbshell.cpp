@@ -23,7 +23,12 @@ struct AdbGlobal
 
 QHash<QString, std::shared_ptr<AdbGlobal>> globals;
 
-void IOInterpret(AdbGlobal * global)
+void IOInterpret_procby(AdbGlobal * global)
+{
+
+}
+
+void IOInterpret_tty(AdbGlobal * global)
 {
     QProcess process;
     QStringList _args;
@@ -34,7 +39,7 @@ void IOInterpret(AdbGlobal * global)
     int lastIndex,len,reqId, retCode;
     if(global == nullptr)
         return;
-    process.start(AdbExecutableFilename(), QStringList() << "-s" << global->devId << "shell", QIODevice::ReadWrite);
+    process.start(AdbExecutableFilename(), QStringList() << "-s" << global->devId << "-T" << "shell", QIODevice::ReadWrite);
     if(process.waitForStarted())
     {
         global->data = 1;
@@ -49,7 +54,7 @@ void IOInterpret(AdbGlobal * global)
                 global->mutex.unlock();
 
                 fullArgs = std::move(_args.join(' '));
-                fullArgs += "\necho \"|$?\"\n";
+                fullArgs += "; echo \"|$?\"\n";
 
 #ifdef WIN32
                 fullArgs.replace('\n', "\r\n");
@@ -63,6 +68,12 @@ void IOInterpret(AdbGlobal * global)
                 {
                     process.waitForReadyRead(10000);
                     session = std::move(process.readAllStandardOutput());
+                    if(session.startsWith("shell@"))
+                    {
+                        int i = session.indexOf('$', 7)+1;
+                        session = session.mid(i, session.length()-i).trimmed();
+                    }
+
                     output += session;
                     global->dataRxTx.first += static_cast<std::uint32_t>(session.size());
 #ifdef WIN32
@@ -122,7 +133,7 @@ std::shared_ptr<AdbGlobal> refGlobal(const QString& devId)
         glob->devId = devId;
         glob->requests.clear();
         glob->responces.clear();
-        glob->thread = new std::thread(IOInterpret, glob.get());
+        glob->thread = new std::thread(IOInterpret_tty, glob.get());
         int counter = 5;
         while(glob->data == 0 && counter-- > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
