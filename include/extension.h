@@ -13,7 +13,8 @@
 
 enum DeviceConnectType
 {
-    ADB
+    None = 0,
+    ADB = 1
 };
 
 enum MalwareStatus

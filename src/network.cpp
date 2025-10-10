@@ -130,6 +130,26 @@ void Network::pullLabState(const QString &mdKey)
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
 }
 
+void Network::pullDeviceList(const QDateTime * rangeStart, const QDateTime * rangeEnd, int showFlag)
+{
+    QJsonObject json;
+    QNetworkReply *reply;
+    QUrl url(url_fetch());
+    QNetworkRequest request(url);
+    if(!isAuthed())
+        return;
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Token", authedId.token.toUtf8());
+    json["request"] = "LISTDEVICES";
+    if(rangeStart)
+        json["rangeStart"] = rangeStart->toString(Qt::ISODate);
+    if(rangeEnd)
+        json["rangeEnd"] = rangeEnd->toString(Qt::ISODate);
+    json["showFlag"] = showFlag;
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullDeviceList);
+}
+
 bool Network::checkNet()
 {
     return _lastBytes <= 0;
@@ -332,6 +352,60 @@ void Network::onFetchingLabs()
             }
         }
         emit fetchingLabs(status, labs, status == NetworkStatus::OK);
+        reply->deleteLater();
+    }
+    _pending = 0;
+}
+
+void Network::onPullDeviceList()
+{
+    int status = NetworkStatus::NetworkError;
+    QList<DeviceItemInfo> actual,expired;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
+    if(reply)
+    {
+        if(reply->error() == QNetworkReply::NoError)
+        {
+            QByteArray resp = std::move(reply->readAll());
+            _lastBytes = resp.size();
+            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && jsonResp["result"].isObject())
+            {
+                std::function<DeviceItemInfo(const QJsonObject&)> convertToObj = [](const QJsonObject & obj) -> DeviceItemInfo{
+                    DeviceItemInfo dit;
+                    dit.mdkey = obj["mdkey"].toString();
+                    dit.logTime = QDateTime::fromSecsSinceEpoch(obj["logTime"].toVariant().toULongLong());
+                    dit.lastConnectTime = QDateTime::fromSecsSinceEpoch(obj["lastConnectTime"].toVariant().toULongLong());
+                    dit.expire = QDateTime::fromSecsSinceEpoch(obj["expire"].toVariant().toULongLong());
+                    dit.vendor = obj["vendor"].toString();
+                    dit.model = obj["model"].toString();
+                    dit.purchasedType = obj["purchased_type"].toInt();
+                    dit.purchasedValue = obj["purchased_value"].toInt();
+                    dit.connectionCount = obj["connectionCount"].toInt();
+                    dit.packages = obj["packages"].toInt();
+                    dit.deviceId = obj["devId"].toInt();
+                    return dit;
+                };
+
+                QJsonObject result = jsonResp["result"].toObject();
+                QJsonArray object = result["actual"].toArray();
+                for(auto iter = object.begin(); iter != object.end(); ++iter)
+                {
+                    actual << convertToObj(iter->toObject());
+                    actual.last().serverQuarantee = 1;
+                }
+
+                object = result["expired"].toArray();
+                for(auto iter = object.begin(); iter != object.end(); ++iter)
+                {
+                    expired << convertToObj(iter->toObject());
+                    expired.last().serverQuarantee = 0;
+                }
+                status = NetworkStatus::OK;
+            }
+        }
+        emit sPullDeviceList(actual, expired, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending = 0;

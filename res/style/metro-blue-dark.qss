@@ -208,12 +208,12 @@ QTableWidget, QTableView {
     color: #E0E0E0;
 }
 QHeaderView {
-    background-color: #8B0000;
-    color: #E0E0E0;
+    background-color: gray;
+    color: black;
     font-weight: bold;
 }
 QHeaderView::section {
-    padding: 1px;
+    padding: 0px;
 }
 QTableWidget::item, QTableView::item {
     padding: 10px;

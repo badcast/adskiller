@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <memory>
 
 #include <QTimer>
 #include <QHash>
@@ -17,12 +18,17 @@
 #include <QListView>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QTableView>
+#include <QList>
 
 #include "begin.h"
 #include "extension.h"
 #include "network.h"
 #include "adbfront.h"
 #include "mainwindow.h"
+
+#define IDServiceAdsString "0b9d1650-7a10-4fd5-a10e-53fc7f185b1b"
+#define IDServiceMyDeviceString "3db562cd-e448-4fc4-aeea-bc13f74ce5c9"
 
 class Service;
 class AdsKillerService;
@@ -82,6 +88,30 @@ public:
     StorageCacheCleanService(QObject *parent = nullptr);
 
     void setDevice(const AdbDevice& adbDevice) override;
+
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    void reset() override;
+};
+
+class MyDeviceService : public Service
+{
+    Q_OBJECT
+
+private:
+    int mInternalData;
+    QTableView * table;    
+    std::shared_ptr<QList<DeviceItemInfo>> actual;
+    std::shared_ptr<QList<DeviceItemInfo>> expired;
+
+public slots:
+    void slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok);
+
+public:
+    MyDeviceService( QObject * parent = nullptr);
 
     bool canStart() override;
     bool isStarted() override;

@@ -30,7 +30,7 @@
 
 #include "Strings.h"
 
-MainWindow * MainWindow::current;
+
 
 constexpr struct {
     PageIndex index;
@@ -40,24 +40,28 @@ constexpr struct {
     {CabinetPage, "page_cabinet"},
     {MalwarePage, "page_adsmalware"},
     {LoaderPage, "page_loader"},
-    {DevicesPage, "page_devices"}
+    {DevicesPage, "page_devices"},
+    {MyDevicesPage, "page_mydevices"}
 };
 
 constexpr struct {
     char title[64];
     char iconName[24];
+    char uuid[37];
     bool active;
     int price;
 } AvailableServices[] = {
-    {"Удалить рекламу", "remove-ads", true, 0},
-    {"APK Менеджер", "icon-malware", false,0},
-    {"Мои устройства и гарантия", "icon-malware", false,0},
-    {"Очистка Мусора", "icon-malware", false, 0},
-    {"Samsung FRP", "icon-malware", false, 0},
-    {"Перенос WhatsApp", "icon-malware", false,0},
-    {"Перенос на iOS", "icon-malware", false, 0},
-    {"Сброс к заводским", "icon-malware", false,0}
+    {"Удалить рекламу", "remove-ads", IDServiceAdsString, true, 0},
+    {"Мои устройства", "icon-authlogin", IDServiceMyDeviceString, true,0},
+    {"APK Менеджер", "icon-malware", "",false,0},
+    {"Очистка Мусора", "icon-malware", "",false, 0},
+    {"Samsung FRP", "icon-malware", "",false, 0},
+    {"Перенос WhatsApp", "icon-malware","", false,0},
+    {"Перенос на iOS", "icon-malware", "",false, 0},
+    {"Сброс к заводским", "icon-malware", "",false,0}
 };
+
+MainWindow * MainWindow::current;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -157,8 +161,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->processLogStatus->setModel(model);
 
     // Signals
-    QObject::connect(&network, &Network::loginFinish, this, &MainWindow::replyAuthFinish);
-    QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::replyFetchVersionFinish);
+    QObject::connect(&network, &Network::loginFinish, this, &MainWindow::slotAuthFinish);
+    QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::slotFetchVersionFinish);
+
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateAuthInfoFromNet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateAuthInfoFromNet);
     QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
@@ -168,6 +173,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     checkerVer->setSingleShot(true);
     checkerVer->setInterval(VersionCheckRate);
     QObject::connect(checkerVer, &QTimer::timeout, [this](){checkVersion(false);});
+
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -475,6 +481,11 @@ void MainWindow::pageShown(int page)
         model->setStringList(place);
         break;
     }
+    case MyDevicesPage:
+        reloadMyDevicesPage();
+        currentService->handler->reset();
+        currentService->handler->start();
+        break;
     default:
         break;
     }
@@ -559,6 +570,55 @@ void MainWindow::fillAuthInfoPage()
     initModules();
 }
 
+void MainWindow::reloadMyDevicesPage()
+{
+    clearMyDevicesPage();
+    network.pullDeviceList();
+}
+
+void MainWindow::clearMyDevicesPage()
+{
+    QStandardItemModel *model = new QStandardItemModel(ui->myDeviceActual);
+    model->setRowCount(1);
+    model->setColumnCount(7);
+
+    model->setHorizontalHeaderItem(0, new QStandardItem("id"));
+    model->setHorizontalHeaderItem(1, new QStandardItem("Производитель"));
+    model->setHorizontalHeaderItem(2, new QStandardItem("Модель"));
+    model->setHorizontalHeaderItem(3, new QStandardItem("Дата регистраций"));
+    model->setHorizontalHeaderItem(4, new QStandardItem("Послед. подключение"));
+    model->setHorizontalHeaderItem(5, new QStandardItem("Срок истечения"));
+    model->setHorizontalHeaderItem(6, new QStandardItem("Пакетов"));
+    model->setHorizontalHeaderItem(7, new QStandardItem("Подключений"));
+    model->setHorizontalHeaderItem(8, new QStandardItem("Оплачено"));
+    model->setHorizontalHeaderItem(9, new QStandardItem("Есть гарантия?"));
+
+    ui->myDeviceActual->setModel(model);
+
+}
+
+void MainWindow::fillMyDevicesPage(const QList<DeviceItemInfo> &items)
+{
+    QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->myDeviceActual->model());
+
+    int idx = 0;
+    for(const DeviceItemInfo & item : std::as_const(items))
+    {
+        model->setItem(idx, 0, new QStandardItem(QString::number(item.deviceId)));
+        model->setItem(idx, 1, new QStandardItem(item.vendor));
+        model->setItem(idx, 2, new QStandardItem(item.model));
+        model->setItem(idx, 3, new QStandardItem(item.logTime.toString(Qt::RFC2822Date)));
+        model->setItem(idx, 4, new QStandardItem(item.lastConnectTime.toString(Qt::RFC2822Date)));
+        model->setItem(idx, 5, new QStandardItem(item.expire.toString(Qt::RFC2822Date)));
+        model->setItem(idx, 6, new QStandardItem(QString::number(item.packages)));
+        model->setItem(idx, 7, new QStandardItem(QString::number(item.connectionCount)));
+        model->setItem(idx, 8, new QStandardItem(QString("%1").arg(item.purchasedType == 1 ? ("VIP") : ( item.purchasedType == 2 ? (QString::number(item.purchasedValue)) : ("отсутствует")))));
+        model->setItem(idx, 9, new QStandardItem(QString("%1").arg(item.serverQuarantee == 1 ? "Да" : "Нет")));
+        ++idx;
+    }
+    ui->myDeviceActual->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+}
+
 void MainWindow::initModules()
 {
     int x,y;
@@ -579,7 +639,7 @@ void MainWindow::initModules()
             else
                 info += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : AvailableServices[x].price).arg(network.authedId.currencyType);
         else
-            info += "(В разработке)";
+            info += "(Не доступен)";
         QPushButton * push = new QPushButton(QIcon(QString(":/resources/") + AvailableServices[x].iconName),
                                             info,
                                             ui->serviceContents);
@@ -588,8 +648,6 @@ void MainWindow::initModules()
                             "   text-align: left;"
                             "   padding: 10px;"
                             "   font-size: 14px;"
-                            "   border: 2px solid black;"
-                            "   border-left: 10px solid lime;"
                             "   background:  #B71C1C;"
                             "   color: white;"
                             "}"
@@ -600,8 +658,6 @@ void MainWindow::initModules()
                             "QPushButton:pressed {"
                             "   background: black;"
                             "   color: white;"
-                            "   padding: 5px;"
-                            "   font-size: 13px;"
                             "}");
 
         if(!AvailableServices[x].active)
@@ -613,13 +669,23 @@ void MainWindow::initModules()
         serviceItem->active = AvailableServices[x].active;
         serviceItem->buttonWidget = push;
 
-        if(x == 0)
+        if(!strcmp(AvailableServices[x].uuid, IDServiceAdsString))
         {
             serviceItem->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<AdsKillerService>(this));
             QObject::connect(push, &QPushButton::clicked, [this,serviceItem](){
                 if(!serviceItem || !serviceItem->active)
                     return;
                 startDeviceConnect(serviceItem->handler->deviceType(), serviceItem);
+            });
+        }
+        else if(!strcmp(AvailableServices[x].uuid, IDServiceMyDeviceString))
+        {
+            serviceItem->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<MyDeviceService>(this));
+            QObject::connect(push, &QPushButton::clicked, [this,serviceItem](){
+                if(!serviceItem || !serviceItem->active)
+                    return;
+                currentService = serviceItem;
+                showPageLoader(MyDevicesPage);
             });
         }
         push->setIconSize({50,50});
@@ -694,6 +760,12 @@ bool MainWindow::accessUi_adskiller(QListView *& processLogStatusV, QLabel *& ma
     return true;
 }
 
+bool MainWindow::accessUi_myDevices(QTableView *&tableActual)
+{
+    tableActual = ui->myDeviceActual;
+    return true;
+}
+
 void MainWindow::on_authButton_clicked()
 {
     if(network.pending() || network.isAuthed())
@@ -751,7 +823,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-void MainWindow::replyAuthFinish(int status, bool ok)
+void MainWindow::slotAuthFinish(int status, bool ok)
 {
     delayPush(
         1000,
@@ -804,7 +876,7 @@ void MainWindow::replyAuthFinish(int status, bool ok)
         });
 }
 
-void MainWindow::replyFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
+void MainWindow::slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
 {
     VersionInfo actualVersion = {{}, {}, status};
     if(status == NetworkStatus::NetworkError)
@@ -864,7 +936,7 @@ void MainWindow::replyFetchVersionFinish(int status, const QString &version, con
 
 }
 
-void MainWindow::replyAdsData(const QStringList &adsList, int status, bool ok)
+void MainWindow::slotAdsData(const QStringList &adsList, int status, bool ok)
 {
     showMessageFromStatus(status);
 }

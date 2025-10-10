@@ -16,6 +16,7 @@
 #include <QListView>
 #include <QLabel>
 #include <QProgressBar>
+#include <QTableView>
 
 #include "ProgressCircle.h"
 
@@ -45,6 +46,7 @@ enum PageIndex
     CabinetPage,
     MalwarePage,
     DevicesPage,
+    MyDevicesPage,
 
     LengthPages
 };
@@ -104,6 +106,11 @@ public:
     QList<std::shared_ptr<ServiceItem>> services {};
 
     bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
+    bool accessUi_myDevices(QTableView *& tableActual);
+
+    void reloadMyDevicesPage();
+    void clearMyDevicesPage();
+    void fillMyDevicesPage(const QList<DeviceItemInfo> & items);
 
     static MainWindow * current;
 
@@ -112,18 +119,15 @@ private slots:
     void on_action_WhatsApp_triggered();
     void on_action_Qt_triggered();
     void on_authButton_clicked();
-    void replyAuthFinish(int status, bool ok);
-    void replyAdsData(const QStringList& adsList, int status, bool ok);
-    void replyFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
+    void slotAuthFinish(int status, bool ok);
+    void slotAdsData(const QStringList& adsList, int status, bool ok);
+    void slotFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
+    void closeEvent(QCloseEvent * event) override;
 
 public slots:
     void setThemeAction();
     void updateAuthInfoFromNet();
     void logout();
-    void closeEvent(QCloseEvent * event) override;
-
-signals:
-    void AdbDeviceConnected(const AdbDevice& device);
 
 private:
     Ui::MainWindow *ui;
@@ -145,8 +149,10 @@ private:
     void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
     void showPage(PageIndex pageNum);
     void pageShown(int page);
+
     void clearAuthInfoPage();
     void fillAuthInfoPage();
+
     void initModules();
     void checkVersion(bool firstRun);
     void willTerminate();

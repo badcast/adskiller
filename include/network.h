@@ -47,6 +47,29 @@ struct VersionInfo
     bool empty() const;
 };
 
+struct DeviceItemInfo
+{
+    QString mdkey;
+    int deviceId;
+    int packages;
+    int connectionCount;
+    QDateTime logTime;
+    QDateTime lastConnectTime;
+    QDateTime expire;
+    int serverQuarantee;
+
+    int purchasedType;
+    int purchasedValue;
+
+    QString vendor;
+    QString model;
+
+    bool operator <(const DeviceItemInfo& other) const
+    {
+        return logTime < other.logTime;
+    }
+};
+
 struct LabStatusInfo
 {
     QString mdKey;
@@ -94,6 +117,7 @@ public:
     void pullAdsData(const QString &mdKey);
     void pullFetchVersion(bool populate);
     void pullLabState(const QString &mdKey);
+    void pullDeviceList(const QDateTime *rangeStart = nullptr, const QDateTime *rangeEnd= nullptr, int showFlag = (1|2));
 
     void pushAuth(const QString &token);
     bool pushUserPackages(const AdbDevice& device, const QStringList& packages);
@@ -104,6 +128,7 @@ signals:
     void uploadUserPackages(int status, const LabStatusInfo& labs, bool ok);
     void fetchingVersion(int status, const QString& version, const QString& url, bool ok);
     void fetchingLabs(int status, const LabStatusInfo& labs, bool ok);
+    void sPullDeviceList(const QList<DeviceItemInfo>& actual, const QList<DeviceItemInfo>& expired, bool ok);
 
 private slots:
     void onAuthFinished();
@@ -111,6 +136,7 @@ private slots:
     void onUserPackagesUploadFinished();
     void onFetchingVersion();
     void onFetchingLabs();
+    void onPullDeviceList();
 };
 
 #endif // NETWORK_H
