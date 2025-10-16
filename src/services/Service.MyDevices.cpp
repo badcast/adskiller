@@ -1,4 +1,10 @@
 #include "Services.h"
+#include "mainwindow.h"
+
+void MyDeviceService::refresh()
+{
+
+}
 
 void MyDeviceService::slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok)
 {
@@ -16,6 +22,9 @@ MyDeviceService::MyDeviceService(QObject *parent) : Service(None, parent), mInte
 {
     QObject::connect(&MainWindow::current->network, &Network::sPullDeviceList, this, &MyDeviceService::slotPullMyDeviceList);
 }
+
+MyDeviceService::~MyDeviceService()
+{}
 
 bool MyDeviceService::canStart()
 {
@@ -50,5 +59,7 @@ void MyDeviceService::stop()
 
 void MyDeviceService::reset()
 {
+    actual.reset();
+    expired.reset();
     stop();
 }

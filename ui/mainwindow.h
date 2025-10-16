@@ -94,7 +94,7 @@ public:
     Network network;
     QTimer *timerAuthAnim;
     QApplication *app;
-    VersionInfo selfVersion;
+    VersionInfo runtimeVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
 
@@ -120,10 +120,10 @@ private slots:
     void on_action_Qt_triggered();
     void on_authButton_clicked();
     void slotAuthFinish(int status, bool ok);
+    void slotPullServiceList(const QList<ServiceItemInfo>& services, bool ok);
     void slotAdsData(const QStringList& adsList, int status, bool ok);
     void slotFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
     void closeEvent(QCloseEvent * event) override;
-
 public slots:
     void setThemeAction();
     void updateAuthInfoFromNet();
@@ -153,7 +153,7 @@ private:
     void clearAuthInfoPage();
     void fillAuthInfoPage();
 
-    void initModules();
+    void initServiceModules();
     void checkVersion(bool firstRun);
     void willTerminate();
 };

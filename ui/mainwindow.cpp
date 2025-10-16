@@ -25,12 +25,7 @@
 #include "extension.h"
 #include "Services.h"
 #include "network.h"
-
-#include "icontextbutton.h"
-
 #include "Strings.h"
-
-
 
 constexpr struct {
     PageIndex index;
@@ -53,8 +48,8 @@ constexpr struct {
 } AvailableServices[] = {
     {"Удалить рекламу", "remove-ads", IDServiceAdsString, true, 0},
     {"Мои устройства", "icon-authlogin", IDServiceMyDeviceString, true,0},
-    {"APK Менеджер", "icon-malware", "",false,0},
-    {"Очистка Мусора", "icon-malware", "",false, 0},
+    {"APK Менеджер", "icon-malware", IDServiceAPKManagerString,false,0},
+    {"Очистка Мусора", "icon-malware", IDServiceStorageCleanString,false, 0},
     {"Samsung FRP", "icon-malware", "",false, 0},
     {"Перенос WhatsApp", "icon-malware","", false,0},
     {"Перенос на iOS", "icon-malware", "",false, 0},
@@ -161,8 +156,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->processLogStatus->setModel(model);
 
     // Signals
-    QObject::connect(&network, &Network::loginFinish, this, &MainWindow::slotAuthFinish);
-    QObject::connect(&network, &Network::fetchingVersion, this, &MainWindow::slotFetchVersionFinish);
+    QObject::connect(&network, &Network::sLoginFinish, this, &MainWindow::slotAuthFinish);
+    QObject::connect(&network, &Network::sFetchingVersion, this, &MainWindow::slotFetchVersionFinish);
 
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateAuthInfoFromNet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateAuthInfoFromNet);
@@ -197,7 +192,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     _version += ".";
     _version += QString::number(AppVerPatch);
 
-    selfVersion = { _version, {}, 0};
+    runtimeVersion = { _version, {}, 0};
 
     // Run check version
 #ifdef NDEBUG
@@ -567,7 +562,7 @@ void MainWindow::fillAuthInfoPage()
     ui->labelCredits->setText(QString("%1\n(%2)").arg(network.authedId.credits).arg(network.authedId.currencyType));
     ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
 
-    initModules();
+    initServiceModules();
 }
 
 void MainWindow::reloadMyDevicesPage()
@@ -594,7 +589,6 @@ void MainWindow::clearMyDevicesPage()
     model->setHorizontalHeaderItem(9, new QStandardItem("Есть гарантия?"));
 
     ui->myDeviceActual->setModel(model);
-
 }
 
 void MainWindow::fillMyDevicesPage(const QList<DeviceItemInfo> &items)
@@ -619,7 +613,7 @@ void MainWindow::fillMyDevicesPage(const QList<DeviceItemInfo> &items)
     ui->myDeviceActual->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
-void MainWindow::initModules()
+void MainWindow::initServiceModules()
 {
     int x,y;
 
@@ -876,6 +870,11 @@ void MainWindow::slotAuthFinish(int status, bool ok)
         });
 }
 
+void MainWindow::slotPullServiceList(const QList<ServiceItemInfo>& services, bool ok)
+{
+
+}
+
 void MainWindow::slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
 {
     VersionInfo actualVersion = {{}, {}, status};
@@ -887,7 +886,7 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 
     actualVersion = {version, url, status};
     this->actualVersion = actualVersion;
-    if(selfVersion.mVersion >= actualVersion.mVersion)
+    if(runtimeVersion.mVersion >= actualVersion.mVersion)
     {
         // TODO: Text update is latest
         return;
@@ -903,7 +902,7 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 #endif
     text += "\nС уважением ваша команда imister.kz.";
     text += "\n\nВаша версия: v";
-    text +=  selfVersion.mVersion.toString();
+    text +=  runtimeVersion.mVersion.toString();
     text += "\nВерсия на сервере: v";
     text += actualVersion.mVersion.toString();
     // TURNED OFF INFO ABOUT UPDATE

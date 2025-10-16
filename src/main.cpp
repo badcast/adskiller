@@ -6,7 +6,6 @@
 #include <QBuffer>
 #include <QDataStream>
 
-#include "begin.h"
 #include "mainwindow.h"
 #include "network.h"
 

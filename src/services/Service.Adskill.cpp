@@ -127,7 +127,7 @@ bool AdsKillerService::start()
                     }
                     else if(malwareRequireUser())
                     {
-                        UserData data = MainWindow::current->network.authedId;
+                        UserDataInfo data = MainWindow::current->network.authedId;
                         QString buyText = "<!>\nПодтвердите свою покупку удаление вредоносных программ из устройства %1 за %2 %3\nВаш баланс %4 %5\nПосле покупки станет %6 %7\nЖелаете продолжить?\n<!>";
                         int num0 = qMax<int>(0,static_cast<int>(data.credits) - static_cast<int>(data.basePrice));
                         buyText = buyText.arg(deviceName)
@@ -461,7 +461,7 @@ void malwaring()
             LabStatusInfo labs;
             QString mdKey;
             std::transform(localPackages.begin(), localPackages.end(), std::back_inserter(localPackageNames), [](const PackageIO& package){ return package.packageName; });
-            QObject::connect(network, &Network::uploadUserPackages, [&lastResult,&labs,&loop](int status, const LabStatusInfo& labsResult, bool ok)
+            QObject::connect(network, &Network::sUploadUserPackages, [&lastResult,&labs,&loop](int status, const LabStatusInfo& labsResult, bool ok)
                              {
                                  if(ok)
                                  {
@@ -493,7 +493,7 @@ void malwaring()
             }
 
             // Test MDKey
-            QObject::connect(network, &Network::fetchingLabs, [&labs,&lastResult,&loop](int status, const LabStatusInfo& labsResult, bool ok)
+            QObject::connect(network, &Network::sFetchingLabs, [&labs,&lastResult,&loop](int status, const LabStatusInfo& labsResult, bool ok)
                              {
                                  if(ok)
                                  {
@@ -586,7 +586,7 @@ void malwaring()
 
             resultList.clear();
             disableList.clear();
-            QObject::connect(network, &Network::labAdsFinish, [&](int status, const AdsInfo& adsData, bool ok)
+            QObject::connect(network, &Network::sLabAdsFinish, [&](int status, const AdsInfo& adsData, bool ok)
                              {
                                  (void)lastResult;
                                  (void)loop;

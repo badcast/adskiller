@@ -150,6 +150,21 @@ void Network::pullDeviceList(const QDateTime * rangeStart, const QDateTime * ran
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullDeviceList);
 }
 
+void Network::pullServiceList()
+{
+    QJsonObject json;
+    QNetworkReply *reply;
+    QUrl url(url_fetch());
+    QNetworkRequest request(url);
+    if(!isAuthed())
+        return;
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Token", authedId.token.toUtf8());
+    json["request"] = "LISTSERVICES";
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceList);
+}
+
 bool Network::checkNet()
 {
     return _lastBytes <= 0;
@@ -223,7 +238,7 @@ void Network::onAuthFinished()
             }
             break;
         }
-        emit loginFinish(status, status == NetworkStatus::OK);
+        emit sLoginFinish(status, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending = 0;
@@ -262,7 +277,7 @@ void Network::onAdsFinished()
             }
             break;
         }
-        emit labAdsFinish(status, adsData, status == NetworkStatus::OK);
+        emit sLabAdsFinish(status, adsData, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending = 0;
@@ -296,7 +311,7 @@ void Network::onUserPackagesUploadFinished()
             }
             break;
         }
-        emit uploadUserPackages(status, labs, status == NetworkStatus::OK);
+        emit sUploadUserPackages(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending = 0;
@@ -326,7 +341,7 @@ void Network::onFetchingVersion()
             }
             break;
         }
-        emit fetchingVersion(status, version, url, status == NetworkStatus::OK);
+        emit sFetchingVersion(status, version, url, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending = 0;
@@ -351,7 +366,7 @@ void Network::onFetchingLabs()
                 status = NetworkStatus::OK;
             }
         }
-        emit fetchingLabs(status, labs, status == NetworkStatus::OK);
+        emit sFetchingLabs(status, labs, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending = 0;
@@ -411,6 +426,44 @@ void Network::onPullDeviceList()
     _pending = 0;
 }
 
+void Network::onPullServiceList()
+{
+    int status = NetworkStatus::NetworkError;
+    QList<ServiceItemInfo> services;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
+    if(reply)
+    {
+        if(reply->error() == QNetworkReply::NoError)
+        {
+            QByteArray resp = std::move(reply->readAll());
+            _lastBytes = resp.size();
+            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && jsonResp["result"].isObject())
+            {
+                std::function<ServiceItemInfo(const QJsonObject&)> convertToObj = [](const QJsonObject & obj) -> ServiceItemInfo{
+                    ServiceItemInfo sii;
+                    sii.active = obj["active"].toBool();
+                    sii.uuid = obj["uuid"].toString();
+                    sii.name = obj["name"].toString();
+                    sii.description = obj["description"].toString();
+                    return sii;
+                };
+
+                QJsonArray result = jsonResp["result"].toArray();
+                for(auto iter = result.begin(); iter != result.end(); ++iter)
+                {
+                    services << convertToObj(iter->toObject());
+                }
+                status = NetworkStatus::OK;
+            }
+        }
+        emit sPullServiceList(services, status == NetworkStatus::OK);
+        reply->deleteLater();
+    }
+    _pending = 0;
+}
+
 VersionInfo::VersionInfo(const QString &version, const QString &url, int status) : mDownloadUrl(url), mStatus(status)
 {
     QVector<int> ints;
@@ -425,4 +478,9 @@ VersionInfo::VersionInfo(const QString &version, const QString &url, int status)
 bool VersionInfo::empty() const
 {
     return mStatus == -1 && mDownloadUrl.isEmpty() && mVersion.isNull();
+}
+
+bool DeviceItemInfo::operator <(const DeviceItemInfo &other) const
+{
+    return logTime < other.logTime;
 }

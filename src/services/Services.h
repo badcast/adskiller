@@ -1,6 +1,5 @@
 #pragma once
 
-#include <chrono>
 #include <memory>
 
 #include <QTimer>
@@ -21,7 +20,6 @@
 #include <QTableView>
 #include <QList>
 
-#include "begin.h"
 #include "extension.h"
 #include "network.h"
 #include "adbfront.h"
@@ -29,6 +27,8 @@
 
 #define IDServiceAdsString "0b9d1650-7a10-4fd5-a10e-53fc7f185b1b"
 #define IDServiceMyDeviceString "3db562cd-e448-4fc4-aeea-bc13f74ce5c9"
+#define IDServiceAPKManagerString "7193decc-f630-4d46-84cf-49059d9f4df5"
+#define IDServiceStorageCleanString "2ab13aa9-5051-4167-a024-3fbdcde11792"
 
 class Service;
 class AdsKillerService;
@@ -107,11 +107,14 @@ private:
     std::shared_ptr<QList<DeviceItemInfo>> actual;
     std::shared_ptr<QList<DeviceItemInfo>> expired;
 
+    void refresh();
+
 public slots:
     void slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok);
 
 public:
     MyDeviceService( QObject * parent = nullptr);
+    ~MyDeviceService();
 
     bool canStart() override;
     bool isStarted() override;
