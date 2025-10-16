@@ -39,6 +39,12 @@ void malwaring();
 void malwareWriteVal(int userValue);
 bool malwareRequireUser();
 
+
+QString AdsKillerService::uuid() const
+{
+    return IDServiceAdsString;
+}
+
 bool AdsKillerService::canStart()
 {
     return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus && pushButtonReRun;
@@ -127,7 +133,7 @@ bool AdsKillerService::start()
                     }
                     else if(malwareRequireUser())
                     {
-                        UserData data = MainWindow::current->network.authedId;
+                        UserDataInfo data = MainWindow::current->network.authedId;
                         QString buyText = "<!>\nПодтвердите свою покупку удаление вредоносных программ из устройства %1 за %2 %3\nВаш баланс %4 %5\nПосле покупки станет %6 %7\nЖелаете продолжить?\n<!>";
                         int num0 = qMax<int>(0,static_cast<int>(data.credits) - static_cast<int>(data.basePrice));
                         buyText = buyText.arg(deviceName)
@@ -369,7 +375,7 @@ void malwaring()
     using namespace std::chrono;
 
     int isFinish = 0;
-    int lastResult,num0,num1,totalMalware;
+    int lastResult,num0,num1,totalMalwareDetected;
     QList<PackageIO> localPackages;
     QEventLoop loop;
 
@@ -403,7 +409,7 @@ void malwaring()
         {
             malwareWriteHeader("Запуск процедуры удаление рекламы (Malware)...", 1);
             malwareUserValue = -1;
-            totalMalware = 0;
+            totalMalwareDetected = 0;
             malwareCmd++;
             WAITMODE;
             break;
@@ -461,7 +467,7 @@ void malwaring()
             LabStatusInfo labs;
             QString mdKey;
             std::transform(localPackages.begin(), localPackages.end(), std::back_inserter(localPackageNames), [](const PackageIO& package){ return package.packageName; });
-            QObject::connect(network, &Network::uploadUserPackages, [&lastResult,&labs,&loop](int status, const LabStatusInfo& labsResult, bool ok)
+            QObject::connect(network, &Network::sUploadUserPackages, [&lastResult,&labs,&loop](int status, const LabStatusInfo& labsResult, bool ok)
                              {
                                  if(ok)
                                  {
@@ -493,7 +499,7 @@ void malwaring()
             }
 
             // Test MDKey
-            QObject::connect(network, &Network::fetchingLabs, [&labs,&lastResult,&loop](int status, const LabStatusInfo& labsResult, bool ok)
+            QObject::connect(network, &Network::sFetchingLabs, [&labs,&lastResult,&loop](int status, const LabStatusInfo& labsResult, bool ok)
                              {
                                  if(ok)
                                  {
@@ -586,7 +592,7 @@ void malwaring()
 
             resultList.clear();
             disableList.clear();
-            QObject::connect(network, &Network::labAdsFinish, [&](int status, const AdsInfo& adsData, bool ok)
+            QObject::connect(network, &Network::sLabAdsFinish, [&](int status, const AdsInfo& adsData, bool ok)
                              {
                                  (void)lastResult;
                                  (void)loop;
@@ -630,7 +636,7 @@ void malwaring()
             // resultList = existencePackages(localPackageNames,resultList);
             disableList = compare_list(localPackages, disableList, [](const auto& lhs, const auto& rhs) -> bool { return !lhs.disabled && lhs.packageName == rhs; } );
             //disableList = existencePackageDisables(localPackages,disableList);
-            totalMalware = static_cast<int>(resultList.size() + disableList.size());
+            totalMalwareDetected = static_cast<int>(resultList.size() + disableList.size());
             WAITMODE;
 
             num0 = mProgress;
@@ -697,10 +703,10 @@ void malwaring()
             {
                 QString text = "Процедура завершена.";
                 auto durationProcedure = duration_cast<seconds>(steady_clock::now() - procedureStartAt);
-                if(totalMalware)
+                if(totalMalwareDetected)
                 {
                     text += " Рекламных вирусов удалено %1.";
-                    text = text.arg(totalMalware);
+                    text = text.arg(totalMalwareDetected);
                 }
                 text += QString(" Затрачено времени %1 с").arg(durationProcedure.count());
 
@@ -713,3 +719,8 @@ void malwaring()
 }
 
 #undef WAITMODE
+#undef FORCLYQUIT_CHECK
+#undef WAIT
+#undef WAITMODE
+#undef WAITMODE2
+#undef PRINT_LINE

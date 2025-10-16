@@ -1,6 +1,5 @@
 #pragma once
 
-#include <chrono>
 #include <memory>
 
 #include <QTimer>
@@ -21,7 +20,6 @@
 #include <QTableView>
 #include <QList>
 
-#include "begin.h"
 #include "extension.h"
 #include "network.h"
 #include "adbfront.h"
@@ -29,10 +27,14 @@
 
 #define IDServiceAdsString "0b9d1650-7a10-4fd5-a10e-53fc7f185b1b"
 #define IDServiceMyDeviceString "3db562cd-e448-4fc4-aeea-bc13f74ce5c9"
+#define IDServiceAPKManagerString "7193decc-f630-4d46-84cf-49059d9f4df5"
+#define IDServiceStorageCleanString "2ab13aa9-5051-4167-a024-3fbdcde11792"
+#define IDServiceBoostRamString "be1f68f6-0f91-4472-947a-07dbe313ab73"
 
 class Service;
 class AdsKillerService;
 class StorageCacheCleanService;
+class ApkManagerService;
 
 class Service : public QObject
 {
@@ -47,6 +49,7 @@ public:
 
     virtual void setDevice(const AdbDevice& adbDevice);
 
+    virtual QString uuid() const = 0;
     virtual bool canStart();
     virtual bool isStarted() = 0;
     virtual bool isFinish()= 0;
@@ -74,6 +77,7 @@ public:
 
     void setDevice(const AdbDevice& adbDevice) override;
 
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -89,6 +93,7 @@ public:
 
     void setDevice(const AdbDevice& adbDevice) override;
 
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -103,16 +108,46 @@ class MyDeviceService : public Service
 
 private:
     int mInternalData;
-    QTableView * table;    
+    QTableView * table;
+    QDateEdit * dateEditBegin;
+    QDateEdit * dateEditEnd;
+    QPushButton * refreshButton;
+    QCheckBox * quaranteeFilter;
     std::shared_ptr<QList<DeviceItemInfo>> actual;
     std::shared_ptr<QList<DeviceItemInfo>> expired;
 
+    void clearMyDevicesPage(QString text);
+    void fillMyDevicesPage();
+
+private slots:
+    void slotRefresh();
+
 public slots:
     void slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok);
+    void slotQuaranteeUpdate();
 
 public:
-    MyDeviceService( QObject * parent = nullptr);
+    MyDeviceService(QObject * parent = nullptr);
+    ~MyDeviceService();
 
+    QString uuid() const override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    void reset() override;
+};
+
+class BoostRamService : public Service
+{
+    Q_OBJECT
+
+public:
+    BoostRamService(QObject * parent = nullptr);
+    ~BoostRamService();
+
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

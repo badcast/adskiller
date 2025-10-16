@@ -27,11 +27,11 @@ std::pair<bool, QString> adb_send_cmd(int &exitCode, const QStringList &argument
     QProcess process;
     QString retval;
     process.start(AdbExecutableFilename(), arguments);
-    if (!process.waitForFinished(10000))
+    if (!process.waitForFinished(ExecWaitTime))
     {
         qDebug() << "ADB Failed";
         process.kill();
-        process.waitForFinished(1000);
+        process.waitForFinished(ExecWaitTime);
         return {false, {}};
     }
     retval = process.readAllStandardOutput();

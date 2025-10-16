@@ -78,10 +78,9 @@ public:
     int finishSuccess;
 
 private:
-    QStringList GetFilesEx(const QString& path, int flags = GetFiles, QString _special = QString(""));
-
-    QString calcMD5(const QString &filePath);
-    bool moveContents(const QString &sourcePath, const QString &destinationPath);
+    QStringList getFilesEx(const QString& path, int flags = GetFiles, QString _special = QString(""));
+    QString calculateMd5Hash(const QString &filePath);
+    bool moveFilesTo(const QString &sourcePath, const QString &destinationPath);
 
 private:
     QNetworkAccessManager * m_manager;
@@ -313,7 +312,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
         }
         bool skip;
         QCryptographicHash hash(QCryptographicHash::Md5);
-        files = GetFilesEx(existsDir, GetFiles);
+        files = getFilesEx(existsDir, GetFiles);
 #ifdef WIN32
         for(QString & s : files)
         {
@@ -325,7 +324,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
         for(QString & f : files)
         {
             QString file = existsDir + QDir::separator() + f;
-            hashes[file] = calcMD5(file);
+            hashes[file] = calculateMd5Hash(file);
         }
 
         for(int x = 0; x < updates.size(); ++x)
@@ -455,7 +454,7 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
         if(m_lastStatus == 0 && !m_forclyExit)
         {
             m_statusDownload.currentStatus = "Apply update";
-            moveContents(tempDir.path(), existsDir);
+            moveFilesTo(tempDir.path(), existsDir);
             finishSuccess = 1;
         }
         else
@@ -487,7 +486,7 @@ QString UpdateManager::getLastError(int *lastStatus)
     return m_lastError;
 }
 
-QStringList UpdateManager::GetFilesEx(const QString &path, int flags, QString _special)
+QStringList UpdateManager::getFilesEx(const QString &path, int flags, QString _special)
 {
     QDir dir(path);
     QStringList result;
@@ -496,23 +495,24 @@ QStringList UpdateManager::GetFilesEx(const QString &path, int flags, QString _s
         QString fullPath = dir.filePath(item);
         QFileInfo file(fullPath);
         if (file.isDir())
-            result += GetFilesEx(fullPath, flags, _special + item + QDir::separator());
+            result += getFilesEx(fullPath, flags, _special + item + QDir::separator());
         if((flags & GetFiles) && file.isFile() || (flags & GetDirs) && file.isDir())
             result.append(((flags & WriteFullpath) ? fullPath : (_special + item)));
     }
     return result;
 }
 
-QString UpdateManager::calcMD5(const QString &filePath) {
+QString UpdateManager::calculateMd5Hash(const QString &filePath) {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
         return QString();
     }
 
+    std::byte _buffer[4096];
     QCryptographicHash hash(QCryptographicHash::Md5);
-    QByteArray buffer;
+    QSpan<std::byte> spanbuffer = _buffer;
     while (!file.atEnd()) {
-        buffer = std::move(file.read(4096));
+        QByteArrayView buffer = file.readLineInto(spanbuffer);
         hash.addData(buffer);
     }
 
@@ -520,7 +520,7 @@ QString UpdateManager::calcMD5(const QString &filePath) {
     return hash.result().toHex();
 }
 
-bool UpdateManager::moveContents(const QString &sourcePath, const QString &destinationPath) {
+bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destinationPath) {
     QDir sourceDir(sourcePath);
     if (!sourceDir.exists()) {
         return false;
@@ -531,14 +531,14 @@ bool UpdateManager::moveContents(const QString &sourcePath, const QString &desti
             return false;
         }
     }
-    QStringList entries = GetFilesEx(sourcePath, GetDirs);
+    QStringList entries = getFilesEx(sourcePath, GetDirs);
     QTemporaryDir _lostTemps;
     for(const QString &entry : std::as_const(entries))
     {
         destinationDir.mkdir(destinationDir.filePath(entry));
         destinationDir.mkdir(_lostTemps.filePath(entry));
     }
-    entries = GetFilesEx(sourcePath, GetFiles);
+    entries = getFilesEx(sourcePath, GetFiles);
     for(const QString &entry : std::as_const(entries)) {
         QString sourceFilePath = sourceDir.filePath(entry);
         QString destinationFilePath = destinationDir.filePath(entry);

@@ -1,16 +1,16 @@
 #include "network.h"
 
-bool UserData::isNotValidBalance() const
+bool UserDataInfo::isNotValidBalance() const
 {
     return credits == 0 && vipDays == 0;
 }
 
-bool UserData::hasBalance() const
+bool UserDataInfo::hasBalance() const
 {
     return credits > 0;
 }
 
-bool UserData::hasVipAccount() const
+bool UserDataInfo::hasVipAccount() const
 {
     return vipDays > 0;
 }

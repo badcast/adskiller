@@ -15,7 +15,7 @@ class MainWindow;
 
 struct AdbDevice;
 
-struct UserData
+struct UserDataInfo
 {
     QString token;
     QString idName;
@@ -50,24 +50,30 @@ struct VersionInfo
 struct DeviceItemInfo
 {
     QString mdkey;
-    int deviceId;
-    int packages;
-    int connectionCount;
     QDateTime logTime;
     QDateTime lastConnectTime;
     QDateTime expire;
-    int serverQuarantee;
 
+    int deviceId;
+    int packages;
+    int connectionCount;
+    int serverQuarantee;
     int purchasedType;
     int purchasedValue;
 
     QString vendor;
     QString model;
 
-    bool operator <(const DeviceItemInfo& other) const
-    {
-        return logTime < other.logTime;
-    }
+    bool operator <(const DeviceItemInfo& other) const;
+};
+
+struct ServiceItemInfo
+{
+    bool active;
+    int price;
+    QString uuid;
+    QString name;
+    QString description;
 };
 
 struct LabStatusInfo
@@ -107,7 +113,7 @@ private:
     int _pending;
 
 public:
-    UserData authedId;
+    UserDataInfo authedId;
 
     Network(QObject * parent = nullptr);
     bool isAuthed();
@@ -118,17 +124,19 @@ public:
     void pullFetchVersion(bool populate);
     void pullLabState(const QString &mdKey);
     void pullDeviceList(const QDateTime *rangeStart = nullptr, const QDateTime *rangeEnd= nullptr, int showFlag = (1|2));
+    void pullServiceList();
 
     void pushAuth(const QString &token);
     bool pushUserPackages(const AdbDevice& device, const QStringList& packages);
 
 signals:
-    void loginFinish(int status, bool ok);
-    void labAdsFinish(int status, const AdsInfo& adsData, bool ok);
-    void uploadUserPackages(int status, const LabStatusInfo& labs, bool ok);
-    void fetchingVersion(int status, const QString& version, const QString& url, bool ok);
-    void fetchingLabs(int status, const LabStatusInfo& labs, bool ok);
+    void sLoginFinish(int status, bool ok);
+    void sLabAdsFinish(int status, const AdsInfo& adsData, bool ok);
+    void sUploadUserPackages(int status, const LabStatusInfo& labs, bool ok);
+    void sFetchingVersion(int status, const QString& version, const QString& url, bool ok);
+    void sFetchingLabs(int status, const LabStatusInfo& labs, bool ok);
     void sPullDeviceList(const QList<DeviceItemInfo>& actual, const QList<DeviceItemInfo>& expired, bool ok);
+    void sPullServiceList(const QList<ServiceItemInfo> & services, bool ok);
 
 private slots:
     void onAuthFinished();
@@ -137,6 +145,7 @@ private slots:
     void onFetchingVersion();
     void onFetchingLabs();
     void onPullDeviceList();
+    void onPullServiceList();
 };
 
 #endif // NETWORK_H

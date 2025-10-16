@@ -6,6 +6,8 @@ constexpr const char AdbFilename[] = "adb";
 constexpr const char AdbFilename[] = "adb.exe";
 #endif
 
+constexpr auto ExecWaitTime = 10000;
+
 constexpr const char CmdGetProductModel[] = "ro.product.model";
 constexpr const char CmdGetProductMarketname[] = "ro.product.marketname";
 constexpr const char CmdGetProductManufacturer[] = "ro.product.manufacturer";

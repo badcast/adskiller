@@ -7,6 +7,7 @@
 #include <QCoreApplication>
 #include <QRandomGenerator>
 
+#include "adbcmds.h"
 #include "adbfront.h"
 
 struct AdbGlobal
@@ -100,11 +101,11 @@ void IOInterpret_tty(AdbGlobal * global)
                 session = std::move(fullArgs.toUtf8());
                 global->dataRxTx.second += static_cast<std::uint32_t>(session.size());
                 process.write(session);
-                process.waitForBytesWritten();
+                process.waitForBytesWritten(ExecWaitTime);
 
                 do
                 {
-                    process.waitForReadyRead(10000);
+                    process.waitForReadyRead(ExecWaitTime);
                     session = std::move(process.readAllStandardOutput());
                     if(session.startsWith("shell@"))
                     {
@@ -113,6 +114,7 @@ void IOInterpret_tty(AdbGlobal * global)
                         // End of bug.
                         // BUG: old version android (4 and less) has bug IO/TTY;
                         lastIndex = -1;
+                        process.close();
                         break;
                     }
 

@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QProgressBar>
 #include <QTableView>
+#include <QDateEdit>
 
 #include "ProgressCircle.h"
 
@@ -94,7 +95,7 @@ public:
     Network network;
     QTimer *timerAuthAnim;
     QApplication *app;
-    VersionInfo selfVersion;
+    VersionInfo runtimeVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray * tray;
 
@@ -104,13 +105,10 @@ public:
 
     std::shared_ptr<ServiceItem> currentService {};
     QList<std::shared_ptr<ServiceItem>> services {};
+    std::shared_ptr<QList<ServiceItemInfo>> availableServices {};
 
     bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
-    bool accessUi_myDevices(QTableView *& tableActual);
-
-    void reloadMyDevicesPage();
-    void clearMyDevicesPage();
-    void fillMyDevicesPage(const QList<DeviceItemInfo> & items);
+    bool accessUi_myDevices(QTableView *& tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *& quaranteeFilter);
 
     static MainWindow * current;
 
@@ -120,13 +118,13 @@ private slots:
     void on_action_Qt_triggered();
     void on_authButton_clicked();
     void slotAuthFinish(int status, bool ok);
-    void slotAdsData(const QStringList& adsList, int status, bool ok);
+    void slotPullServiceList(const QList<ServiceItemInfo>& services, bool ok);
     void slotFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
     void closeEvent(QCloseEvent * event) override;
 
 public slots:
     void setThemeAction();
-    void updateAuthInfoFromNet();
+    void updateCabinet(bool newAuthenticate = true);
     void logout();
 
 private:
@@ -153,7 +151,7 @@ private:
     void clearAuthInfoPage();
     void fillAuthInfoPage();
 
-    void initModules();
+    void initServiceModules();
     void checkVersion(bool firstRun);
     void willTerminate();
 };
