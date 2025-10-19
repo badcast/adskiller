@@ -1,5 +1,10 @@
 #include "Services.h"
 
+QString StorageCacheCleanService::uuid() const
+{
+    return IDServiceStorageCleanString;
+}
+
 StorageCacheCleanService::StorageCacheCleanService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
 {
 

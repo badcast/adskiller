@@ -33,6 +33,7 @@
 class Service;
 class AdsKillerService;
 class StorageCacheCleanService;
+class ApkManagerService;
 
 class Service : public QObject
 {
@@ -47,6 +48,7 @@ public:
 
     virtual void setDevice(const AdbDevice& adbDevice);
 
+    virtual QString uuid() const = 0;
     virtual bool canStart();
     virtual bool isStarted() = 0;
     virtual bool isFinish()= 0;
@@ -74,6 +76,7 @@ public:
 
     void setDevice(const AdbDevice& adbDevice) override;
 
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -89,6 +92,7 @@ public:
 
     void setDevice(const AdbDevice& adbDevice) override;
 
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -123,6 +127,7 @@ public:
     MyDeviceService( QObject * parent = nullptr);
     ~MyDeviceService();
 
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

@@ -39,6 +39,12 @@ void malwaring();
 void malwareWriteVal(int userValue);
 bool malwareRequireUser();
 
+
+QString AdsKillerService::uuid() const
+{
+    return IDServiceAdsString;
+}
+
 bool AdsKillerService::canStart()
 {
     return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus && pushButtonReRun;

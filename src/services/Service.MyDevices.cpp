@@ -4,12 +4,18 @@
 #include "Services.h"
 #include "mainwindow.h"
 
+QString MyDeviceService::uuid() const
+{
+    return IDServiceMyDeviceString;
+}
+
 void MyDeviceService::sRefresh()
 {
+    clearMyDevicesPage("Запрос...");
     if(mInternalData & 0x2)
         return;
     mInternalData |= 0x2;
-    clearMyDevicesPage("Запрос...");
+    MainWindow::current->delayTimer(2000);
     QDateTime dtStart = dateEditBegin->dateTime();
     QDateTime dtEnd = dateEditEnd->dateTime();
     MainWindow::current->network.pullDeviceList(&dtStart, &dtEnd);
