@@ -47,7 +47,7 @@ if(WIN32)
 endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(adskiller
+    qt_add_executable(application
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
@@ -55,18 +55,18 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET adskiller APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET application APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(adskiller SHARED
+        add_library(application SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(adskiller
+        add_executable(application
             ${PROJECT_SOURCES}
         )
         add_executable(update)
@@ -80,26 +80,26 @@ add_subdirectory(src/services)
 
 target_sources(update PRIVATE ${UPDATE_SOURCES})
 
-target_include_directories(adskiller PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
+target_include_directories(application PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
 target_link_libraries(services PRIVATE adbfront)
-target_link_libraries(adskiller PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services)
+target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 if(WIN32)
-  set_property(TARGET adskiller PROPERTY WIN32_EXECUTABLE true)
+  set_property(TARGET application PROPERTY WIN32_EXECUTABLE true)
   set_property(TARGET update PROPERTY WIN32_EXECUTABLE true)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS adskiller
+install(TARGETS application
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(adskiller)
+    qt_finalize_executable(application)
     qt_finalize_executable(update)
 endif()

@@ -477,7 +477,6 @@ void MainWindow::pageShown(int page)
         break;
     }
     case MyDevicesPage:
-        reloadMyDevicesPage();
         currentService->handler->reset();
         currentService->handler->start();
         break;
@@ -563,54 +562,6 @@ void MainWindow::fillAuthInfoPage()
     ui->labelVipDays->setText(QString("%1\n(VIP дней)").arg(network.authedId.vipDays));
 
     initServiceModules();
-}
-
-void MainWindow::reloadMyDevicesPage()
-{
-    clearMyDevicesPage();
-    network.pullDeviceList();
-}
-
-void MainWindow::clearMyDevicesPage()
-{
-    QStandardItemModel *model = new QStandardItemModel(ui->myDeviceActual);
-    model->setRowCount(1);
-    model->setColumnCount(7);
-
-    model->setHorizontalHeaderItem(0, new QStandardItem("id"));
-    model->setHorizontalHeaderItem(1, new QStandardItem("Производитель"));
-    model->setHorizontalHeaderItem(2, new QStandardItem("Модель"));
-    model->setHorizontalHeaderItem(3, new QStandardItem("Дата регистраций"));
-    model->setHorizontalHeaderItem(4, new QStandardItem("Послед. подключение"));
-    model->setHorizontalHeaderItem(5, new QStandardItem("Срок истечения"));
-    model->setHorizontalHeaderItem(6, new QStandardItem("Пакетов"));
-    model->setHorizontalHeaderItem(7, new QStandardItem("Подключений"));
-    model->setHorizontalHeaderItem(8, new QStandardItem("Оплачено"));
-    model->setHorizontalHeaderItem(9, new QStandardItem("Есть гарантия?"));
-
-    ui->myDeviceActual->setModel(model);
-}
-
-void MainWindow::fillMyDevicesPage(const QList<DeviceItemInfo> &items)
-{
-    QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->myDeviceActual->model());
-
-    int idx = 0;
-    for(const DeviceItemInfo & item : std::as_const(items))
-    {
-        model->setItem(idx, 0, new QStandardItem(QString::number(item.deviceId)));
-        model->setItem(idx, 1, new QStandardItem(item.vendor));
-        model->setItem(idx, 2, new QStandardItem(item.model));
-        model->setItem(idx, 3, new QStandardItem(item.logTime.toString(Qt::RFC2822Date)));
-        model->setItem(idx, 4, new QStandardItem(item.lastConnectTime.toString(Qt::RFC2822Date)));
-        model->setItem(idx, 5, new QStandardItem(item.expire.toString(Qt::RFC2822Date)));
-        model->setItem(idx, 6, new QStandardItem(QString::number(item.packages)));
-        model->setItem(idx, 7, new QStandardItem(QString::number(item.connectionCount)));
-        model->setItem(idx, 8, new QStandardItem(QString("%1").arg(item.purchasedType == 1 ? ("VIP") : ( item.purchasedType == 2 ? (QString::number(item.purchasedValue)) : ("отсутствует")))));
-        model->setItem(idx, 9, new QStandardItem(QString("%1").arg(item.serverQuarantee == 1 ? "Да" : "Нет")));
-        ++idx;
-    }
-    ui->myDeviceActual->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
 void MainWindow::initServiceModules()
@@ -754,9 +705,12 @@ bool MainWindow::accessUi_adskiller(QListView *& processLogStatusV, QLabel *& ma
     return true;
 }
 
-bool MainWindow::accessUi_myDevices(QTableView *&tableActual)
+bool MainWindow::accessUi_myDevices(QTableView *&tableActual, QDateEdit *& dateEditStart, QDateEdit *& dateEditEnd, QPushButton *& refreshButton)
 {
     tableActual = ui->myDeviceActual;
+    dateEditStart = ui->myDeviceFilterDateStart;
+    dateEditEnd = ui->myDeviceFilterDateEnd;
+    refreshButton = ui->myDeviceSend;
     return true;
 }
 

@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QProgressBar>
 #include <QTableView>
+#include <QDateEdit>
 
 #include "ProgressCircle.h"
 
@@ -106,11 +107,7 @@ public:
     QList<std::shared_ptr<ServiceItem>> services {};
 
     bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
-    bool accessUi_myDevices(QTableView *& tableActual);
-
-    void reloadMyDevicesPage();
-    void clearMyDevicesPage();
-    void fillMyDevicesPage(const QList<DeviceItemInfo> & items);
+    bool accessUi_myDevices(QTableView *& tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton);
 
     static MainWindow * current;
 

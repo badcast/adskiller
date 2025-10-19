@@ -103,11 +103,18 @@ class MyDeviceService : public Service
 
 private:
     int mInternalData;
-    QTableView * table;    
+    QTableView * table;
+    QDateEdit * dateEditBegin;
+    QDateEdit * dateEditEnd;
+    QPushButton * refreshButton;
     std::shared_ptr<QList<DeviceItemInfo>> actual;
     std::shared_ptr<QList<DeviceItemInfo>> expired;
 
-    void refresh();
+    void clearMyDevicesPage(QString text);
+    void fillMyDevicesPage();
+
+private slots:
+    void sRefresh();
 
 public slots:
     void slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok);

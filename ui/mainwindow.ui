@@ -1630,9 +1630,30 @@
            <item>
             <layout class="QHBoxLayout" name="verticalLayout_2">
              <item>
-              <widget class="QPushButton" name="myDeviceFilter">
+              <widget class="QLabel" name="label_9">
                <property name="text">
-                <string>Фильтр дата и время</string>
+                <string>Показать с</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDateEdit" name="myDeviceFilterDateStart">
+               <property name="calendarPopup">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>По</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDateEdit" name="myDeviceFilterDateEnd">
+               <property name="calendarPopup">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

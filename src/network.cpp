@@ -54,7 +54,7 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
 
 Network::Network(QObject *parent) : QObject(parent), _pending(0)
 {
-    manager = new QNetworkAccessManager {this};
+    manager = new QNetworkAccessManager(this);
     manager->setTransferTimeout(NetworkTimeoutDefault);
 }
 
