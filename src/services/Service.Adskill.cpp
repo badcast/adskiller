@@ -1,4 +1,5 @@
 #include "Services.h"
+#include "mainwindow.h"
 
 #define FORCLYQUIT_CHECK if(malwareCmd == MalwareForclyKill) break
 #define WAIT(MS) QThread::msleep(MS)
@@ -43,6 +44,11 @@ bool malwareRequireUser();
 QString AdsKillerService::uuid() const
 {
     return IDServiceAdsString;
+}
+
+PageIndex AdsKillerService::targetPage()
+{
+    return LongInfoPage;
 }
 
 bool AdsKillerService::canStart()

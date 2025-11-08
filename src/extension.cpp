@@ -62,19 +62,3 @@ QByteArray CipherAlgoCrypto::UnpackDC(const QString &packed)
     }
     return data;
 }
-
-
-void Service::setDevice(const AdbDevice& adbDevice){
-    mAdbDevice = adbDevice;
-}
-
-
-bool Service::canStart()
-{
-    return mDeviceType == DeviceConnectType::ADB && !mAdbDevice.isEmpty();
-}
-
-DeviceConnectType Service::deviceType() const
-{
-    return mDeviceType;
-}

@@ -29,34 +29,15 @@
 
 constexpr struct {
     PageIndex index;
-    char widgetName[16];
+    const char * widgetName;
 } PageConstNames[LengthPages] = {
     {AuthPage, "page_auth"},
     {CabinetPage, "page_cabinet"},
-    {MalwarePage, "page_adsmalware"},
+    {LongInfoPage, "page_adsmalware"},
     {LoaderPage, "page_loader"},
     {DevicesPage, "page_devices"},
     {MyDevicesPage, "page_mydevices"}
 };
-
-constexpr struct {
-    char title[64];
-    char iconName[24];
-    char uuid[37];
-    bool active;
-    int price;
-} AppServices[] = {
-    {"Удалить рекламу", "remove-ads", IDServiceAdsString, true, 0},
-    {"Мои устройства", "icon-authlogin", IDServiceMyDeviceString, true,0},
-    {"APK Менеджер", "icon-malware", IDServiceAPKManagerString,false,0},
-    {"Очистка Мусора", "icon-malware", IDServiceStorageCleanString,false, 0},
-    {"Samsung FRP", "icon-malware", "",false, 0},
-    {"Перенос WhatsApp", "icon-malware","", false,0},
-    {"Перенос на iOS", "icon-malware", "",false, 0},
-    {"Сброс к заводским", "icon-malware", "",false,0}
-};
-
-constexpr auto DefaultIconWidget = "icon-malware";
 
 MainWindow * MainWindow::current;
 
@@ -353,13 +334,12 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
 
 void MainWindow::showPage(PageIndex pageNum)
 {
-    PageIndex oldPage = curPage;
-    if(oldPage != LoaderPage)
-        lastPage = oldPage;
-    if(pages.contains(oldPage))
+    if(curPage != LoaderPage)
+        lastPage = curPage;
+    if(pages.contains(curPage))
     {
-        pages[oldPage]->setEnabled(false);
-        pages[oldPage]->setVisible(false);
+        pages[curPage]->setEnabled(false);
+        pages[curPage]->setVisible(false);
     }
     curPage = pageNum;
     if(pages.contains(curPage))
@@ -395,18 +375,15 @@ void MainWindow::pageShown(int page)
             showPage(AuthPage);
             return;
         }
-        static struct
-        {
-            bool switched;
-        } tempStruct;
+
         // Unset
-        tempStruct = {};
+        deviceSelectSwitched = false;
         deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
 
         delayTimer(1000);
 
-        delayPushLoop(300, [this,&tempStruct]()->bool{
-            if(!tempStruct.switched)
+        delayPushLoop(300, [this]()->bool{
+            if(!deviceSelectSwitched)
             {
                 QList<AdbDevice> devices = Adb::getDevices();
                 for(const AdbDevice& device : std::as_const(devices))
@@ -421,12 +398,12 @@ void MainWindow::pageShown(int page)
                     }
                 }
             }
-            if(currentService->handler->canStart() && !tempStruct.switched)
+            if(currentService->handler->canStart() && !deviceSelectSwitched)
             {
-                tempStruct.switched = true;
+                deviceSelectSwitched = true;
                 deviceLeftAnimator->start();
                 delayTimer(2000);
-                showPageLoader(MalwarePage);
+                showPageLoader(currentService->handler->targetPage());
             }
             if(curPage != DevicesPage)
             {
@@ -449,16 +426,17 @@ void MainWindow::pageShown(int page)
         }
         break;
     }
-    case MalwarePage:
+    case LongInfoPage:
     {
+        QStringList place{};
         QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
         ui->processBarStatus->setValue(0);
-        ui->malwareStatusText0->setText("Удаление рекламы не запущена.");
+        ui->malwareStatusText0->setText("Ожидание запуска сервиса.");
         malwareProgressCircle->setValue(0);
         malwareProgressCircle->setMaximum(100);
         malwareProgressCircle->setInfinilyMode(false);
         currentService->handler->reset();
-        QStringList place{};
+
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
 
         // TODO: set auto start mode flag.
@@ -466,7 +444,7 @@ void MainWindow::pageShown(int page)
 
         if(!currentService->handler->canStart())
         {
-            place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад, чтобы повторить попытку.";
+            place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад и повторите попытку.";
         }
         else
         {
@@ -646,6 +624,15 @@ void MainWindow::initServiceModules()
                 showPageLoader(MyDevicesPage);
             });
         }
+        else if(availableServices->at(x).uuid == IDServiceBoostRamString)
+        {
+            _service->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<BoostRamService>(this));
+            QObject::connect(button, &QPushButton::clicked, [this,_service](){
+                if(!_service || !_service->active)
+                    return;
+                startDeviceConnect(_service->handler->deviceType(), _service);
+            });
+        }
         button->setIconSize({50,50});
         button->setFixedSize(259,64);
         button->setEnabled(availableServices->at(x).active);
@@ -697,6 +684,12 @@ void MainWindow::delayPush(int ms, std::function<void()> call)
 void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service)
 {
     // TODO: use next any type <Target Type>| now use ADB
+    if(targetType == DeviceConnectType::None)
+    {
+        QMessageBox::critical(this, "Fatal module", "Module is invalid type.");
+        return;
+    }
+
     if(currentService && currentService->handler && currentService->handler->isStarted())
     {
         // TODO: Show error is busy

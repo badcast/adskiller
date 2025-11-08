@@ -15,7 +15,7 @@ QString BoostRamService::uuid() const
 
 bool BoostRamService::canStart()
 {
-    
+    return Service::canStart();
 }
 
 bool BoostRamService::isStarted()

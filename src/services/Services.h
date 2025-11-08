@@ -19,17 +19,48 @@
 #include <QPushButton>
 #include <QTableView>
 #include <QList>
+#include <QLineEdit>
+#include <QDateEdit>
 
 #include "extension.h"
 #include "network.h"
 #include "adbfront.h"
-#include "mainwindow.h"
 
-#define IDServiceAdsString "0b9d1650-7a10-4fd5-a10e-53fc7f185b1b"
-#define IDServiceMyDeviceString "3db562cd-e448-4fc4-aeea-bc13f74ce5c9"
-#define IDServiceAPKManagerString "7193decc-f630-4d46-84cf-49059d9f4df5"
-#define IDServiceStorageCleanString "2ab13aa9-5051-4167-a024-3fbdcde11792"
-#define IDServiceBoostRamString "be1f68f6-0f91-4472-947a-07dbe313ab73"
+constexpr auto DefaultIconWidget = "icon-malware";
+
+constexpr auto IDServiceAdsString          = "0b9d1650-7a10-4fd5-a10e-53fc7f185b1b";
+constexpr auto IDServiceMyDeviceString     = "3db562cd-e448-4fc4-aeea-bc13f74ce5c9";
+constexpr auto IDServiceAPKManagerString   = "7193decc-f630-4d46-84cf-49059d9f4df5";
+constexpr auto IDServiceStorageCleanString = "2ab13aa9-5051-4167-a024-3fbdcde11792";
+constexpr auto IDServiceBoostRamString     = "be1f68f6-0f91-4472-947a-07dbe313ab73";
+
+inline constexpr struct {
+    char title[64];
+    char iconName[24];
+    const char * uuid;
+    bool active;
+} AppServices[] = {
+    {"Удалить рекламу", "remove-ads", IDServiceAdsString, true},
+    {"Мои устройства", "icon-authlogin", IDServiceMyDeviceString, true},
+    {"APK Менеджер", "icon-malware", IDServiceAPKManagerString,false},
+    {"Очистка Мусора", "icon-malware", IDServiceStorageCleanString,false},
+    {"Samsung FRP", "icon-malware", nullptr,false},
+    {"Перенос WhatsApp", "icon-malware", nullptr, false},
+    {"Перенос на iOS", "icon-malware", nullptr,false},
+    {"Сброс к заводским", "icon-malware", nullptr,false}
+};
+
+enum PageIndex
+{
+    AuthPage = 0,
+    LoaderPage,
+    CabinetPage,
+    LongInfoPage,
+    DevicesPage,
+    MyDevicesPage,
+
+    LengthPages
+};
 
 class Service;
 class AdsKillerService;
@@ -50,6 +81,7 @@ public:
     virtual void setDevice(const AdbDevice& adbDevice);
 
     virtual QString uuid() const = 0;
+    virtual PageIndex targetPage();
     virtual bool canStart();
     virtual bool isStarted() = 0;
     virtual bool isFinish()= 0;
@@ -78,6 +110,7 @@ public:
     void setDevice(const AdbDevice& adbDevice) override;
 
     QString uuid() const override;
+    PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

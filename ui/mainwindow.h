@@ -40,18 +40,6 @@ enum ThemeScheme
     Dark
 };
 
-enum PageIndex
-{
-    AuthPage = 0,
-    LoaderPage,
-    CabinetPage,
-    MalwarePage,
-    DevicesPage,
-    MyDevicesPage,
-
-    LengthPages
-};
-
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -141,6 +129,7 @@ private:
     PageIndex curPage = startPage;
     PageIndex lastPage = PageIndex::AuthPage;
     QTimer * checkerVer;
+    bool deviceSelectSwitched;
 
     template<typename Pred>
     void showPageLoader(PageIndex pageNum, int msWait, Pred&& pred);
