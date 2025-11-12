@@ -94,6 +94,8 @@ public:
 
 class AdsKillerService : public Service
 {
+    Q_OBJECT
+
 private:
     QListView * processLogStatus;
     QLabel * malwareStatusText0;
@@ -121,6 +123,8 @@ public:
 
 class StorageCacheCleanService : public Service
 {
+    Q_OBJECT
+
 public:
     StorageCacheCleanService(QObject *parent = nullptr);
 
