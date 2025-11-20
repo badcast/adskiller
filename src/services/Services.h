@@ -33,6 +33,7 @@ constexpr auto IDServiceMyDeviceString     = "3db562cd-e448-4fc4-aeea-bc13f74ce5
 constexpr auto IDServiceAPKManagerString   = "7193decc-f630-4d46-84cf-49059d9f4df5";
 constexpr auto IDServiceStorageCleanString = "2ab13aa9-5051-4167-a024-3fbdcde11792";
 constexpr auto IDServiceBoostRamString     = "be1f68f6-0f91-4472-947a-07dbe313ab73";
+constexpr auto IDServiceWhatsAppMoveString = "95bdb8a2-06f9-4d00-9625-a2da334001e6";
 
 inline constexpr struct {
     char title[64];
@@ -45,7 +46,7 @@ inline constexpr struct {
     {"APK Менеджер", "icon-malware", IDServiceAPKManagerString,false},
     {"Очистка Мусора", "icon-malware", IDServiceStorageCleanString,false},
     {"Samsung FRP", "icon-malware", nullptr,false},
-    {"Перенос WhatsApp", "icon-malware", nullptr, false},
+    {"Перенос WhatsApp", "icon-malware", IDServiceWhatsAppMoveString, false},
     {"Перенос на iOS", "icon-malware", nullptr,false},
     {"Сброс к заводским", "icon-malware", nullptr,false}
 };

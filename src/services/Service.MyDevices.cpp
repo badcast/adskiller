@@ -47,6 +47,7 @@ void MyDeviceService::clearMyDevicesPage(QString text)
     model->setHorizontalHeaderItem(7, new QStandardItem("Подключений"));
     model->setHorizontalHeaderItem(8, new QStandardItem("Оплачено"));
     model->setHorizontalHeaderItem(9, new QStandardItem("Есть гарантия?"));
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     if(text.isEmpty())
         return;
     model->setItem(0, 0, new QStandardItem(text));
@@ -113,7 +114,7 @@ void MyDeviceService::slotQuaranteeUpdate()
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(table->model());
     if(model == nullptr || mInternalData & 2)
         return;
-    model->clear();
+    clearMyDevicesPage({});
     fillMyDevicesPage();
 }
 
