@@ -11,6 +11,8 @@
 #include <QList>
 #include <QVersionNumber>
 
+constexpr auto NetworkTimeoutDefault = 15000;
+
 class MainWindow;
 
 struct AdbDevice;
@@ -120,6 +122,7 @@ public:
     bool pending();
     bool checkNet();
 
+    void setTimeout(int value);
     void pullAdsData(const QString &mdKey);
     void pullFetchVersion(bool populate);
     void pullLabState(const QString &mdKey);

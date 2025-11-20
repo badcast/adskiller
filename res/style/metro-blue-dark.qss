@@ -281,3 +281,22 @@ QScrollBar::sub-line:horizontal {
 QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
     background: none;
 }
+QCalendarWidget {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    selection-color: #007bff;
+    selected-color: #ffffff;
+}
+QCalendarWidget QAbstractItemView {
+    background-color: #ffffff;
+    selection-background-color: #007bff;
+    selection-color: #ffffff;
+}
+QCalendarWidget QAbstractItemView::item {
+    padding: 2px;
+    border: 1px solid #ccc;
+}
+QCalendarWidget QAbstractItemView::item:selected {
+    background-color: #007bff;
+    color: #ffffff;
+}

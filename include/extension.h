@@ -53,4 +53,5 @@ public:
     static QString encryptedToken(bool * contains = nullptr, const QVariant &set = {});
     static bool autoLogin(bool * contains = nullptr, const QVariant &set = {});
     static int themeIndex(bool * contains = nullptr, const QVariant &set = {});
+    static int networkTimeout(bool * contains = nullptr, const QVariant &set = {});
 };

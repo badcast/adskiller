@@ -69,6 +69,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->checkAutoLogin->setChecked(true);
     }
 
+    value = AppSetting::networkTimeout(&containsParam);
+    if(containsParam)
+    {
+        value = value.toInt() < 1000 ? 1000 : value.toInt() > 30000 ? 30000 : value;
+    }
+    else
+    {
+        value = NetworkTimeoutDefault;
+    }
+    AppSetting::networkTimeout(nullptr, value);
+    network.setTimeout(value.toInt());
+
     if (!std::all_of(std::begin(network._token), std::end(network._token), [](auto &lhs)
                      { return std::isalnum(lhs.toLatin1()); }))
     {
@@ -239,7 +251,7 @@ void MainWindow::checkVersion(bool firstRun)
                 {
                     ui->loaderPageText->setText("Проблема с интернетом?");
                     ui->loaderPageText->update();
-                    delayTimer(2000);
+                    DelayUISync(2000);
                     lastPage = PageIndex(-1);
                     willTerminate();
                 }
@@ -248,7 +260,7 @@ void MainWindow::checkVersion(bool firstRun)
                     verChansesAvailable = ChansesRunInvalid;
                     ui->loaderPageText->setText("Ваша версия актуальная!");
                     ui->loaderPageText->update();
-                    delayTimer(2000);
+                    DelayUISync(2000);
                     checkerVer->start();
                     return true;
                 }

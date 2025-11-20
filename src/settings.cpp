@@ -5,6 +5,7 @@ std::shared_ptr<QSettings> AppSetting::settings;
 constexpr auto ParamEncryptedToken = "encrypted_token";
 constexpr auto ParamAutoLogin = "autologin";
 constexpr auto ParamThemeIndex = "theme";
+constexpr auto ParamNetworkTimeout = "networkTimeout";
 
 
 inline QVariant GenericValue(const QString &key, bool* contains, const QVariant& set)
@@ -70,5 +71,12 @@ int AppSetting::themeIndex(bool *contains, const QVariant &set)
 {
     QVariant retval;
     retval = GenericValue(ParamThemeIndex, contains, set);
+    return retval.toInt();
+}
+
+int AppSetting::networkTimeout(bool *contains, const QVariant &set)
+{
+    QVariant retval;
+    retval = GenericValue(ParamNetworkTimeout, contains, set);
     return retval.toInt();
 }

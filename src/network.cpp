@@ -8,7 +8,6 @@
 #include "adbfront.h"
 #include "network.h"
 
-constexpr auto NetworkTimeoutDefault = 5000;
 constexpr auto Protocol = "https";
 constexpr auto URL_Remote = "adskill.imister.kz";
 constexpr auto URL_CDN = "cdn";
@@ -197,6 +196,11 @@ void Network::pullFetchVersion(bool populate)
 bool Network::checkNet()
 {
     return _lastBytes <= 0;
+}
+
+void Network::setTimeout(int value)
+{
+    manager->setTransferTimeout(value);
 }
 
 bool Network::isAuthed()
