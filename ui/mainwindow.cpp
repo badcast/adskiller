@@ -380,7 +380,7 @@ void MainWindow::pageShown(int page)
         deviceSelectSwitched = false;
         deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
 
-        delayTimer(1000);
+        DelayUISync(1000);
 
         delayPushLoop(300, [this]()->bool{
             if(!deviceSelectSwitched)
@@ -402,7 +402,7 @@ void MainWindow::pageShown(int page)
             {
                 deviceSelectSwitched = true;
                 deviceLeftAnimator->start();
-                delayTimer(2000);
+                DelayUISync(2000);
                 showPageLoader(currentService->handler->targetPage());
             }
             if(curPage != DevicesPage)
@@ -644,7 +644,7 @@ void MainWindow::initServiceModules()
     }
 }
 
-void MainWindow::delayTimer(int ms)
+void MainWindow::DelayUISync(int ms)
 {
     QEventLoop loop;
     QTimer timer;

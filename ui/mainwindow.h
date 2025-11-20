@@ -75,7 +75,7 @@ public:
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
-    void delayTimer(int ms);
+    void DelayUISync(int ms);
     void delayPushLoop(int ms, std::function<bool ()> call);
     void delayPush(int ms, std::function<void ()> call);
     void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service);

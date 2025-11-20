@@ -9,10 +9,14 @@ PageIndex Service::targetPage()
     return LongInfoPage;
 }
 
-
 bool Service::canStart()
 {
     return mDeviceType == DeviceConnectType::ADB && !mAdbDevice.isEmpty() || mDeviceType == DeviceConnectType::None;
+}
+
+QString Service::widgetIconName()
+{
+    return DefaultIconWidget;
 }
 
 DeviceConnectType Service::deviceType() const

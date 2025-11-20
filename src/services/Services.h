@@ -88,6 +88,7 @@ public:
     virtual bool start()= 0;
     virtual void stop()= 0;
     virtual void reset() = 0;
+    virtual QString widgetIconName();
 
     DeviceConnectType deviceType() const;
 };
@@ -119,6 +120,7 @@ public:
     bool start() override;
     void stop() override;
     void reset() override;
+    QString widgetIconName() override;
 };
 
 class StorageCacheCleanService : public Service

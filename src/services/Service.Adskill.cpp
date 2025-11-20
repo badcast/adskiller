@@ -74,6 +74,11 @@ void AdsKillerService::reset()
         pushButtonReRun->setEnabled(true);
 }
 
+QString AdsKillerService::widgetIconName()
+{
+    return "remove-ads";
+}
+
 bool AdsKillerService::start()
 {
     if(!canStart())

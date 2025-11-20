@@ -24,7 +24,7 @@ void MyDeviceService::slotRefresh()
         expired->clear();
     quaranteeFilter->setEnabled(false);
     refreshButton->setEnabled(false);
-    MainWindow::current->delayTimer(2000);
+    MainWindow::current->DelayUISync(2000);
     MainWindow::current->network.pullDeviceList(&dtStart, &dtEnd);
 }
 
