@@ -19,6 +19,13 @@ enum
     MalwareNoNetwork = 1000
 };
 
+enum MalwareStatus
+{
+    Idle = 0,
+    Running,
+    Error
+};
+
 QStringList _outputMalware;
 QString _outputHeader;
 QString adbDeviceSerial;

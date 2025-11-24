@@ -18,5 +18,7 @@
         <file alias="usb-port">res/usbport.png</file>
         <file alias="remove-ads">res/icon_remads.png</file>
         <file alias="no-avatar">res/no-avatar.png</file>
+        <file alias="snowflake-image">res/snowflake-image.png</file>
+        <file alias="kz-flag">res/kz-flag.png</file>
     </qresource>
 </RCC>

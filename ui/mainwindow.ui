@@ -42,7 +42,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QGridLayout" name="gridLayout_9">
+   <layout class="QGridLayout" name="centralwidget_Layout">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -79,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -872,6 +872,30 @@
                 </property>
                 <property name="text">
                  <string>ДОБРО ПОЖАЛОВАТЬ В ADSKILLER! - &lt;a color=white href=&quot;https://imister.kz&quot;&gt;imister.kz&lt;/a&gt;</string>
+                </property>
+                <property name="openExternalLinks">
+                 <bool>true</bool>
+                </property>
+                <property name="buddy">
+                 <cstring>authpageUpdate</cstring>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_11">
+                <property name="font">
+                 <font>
+                  <pointsize>14</pointsize>
+                  <italic>true</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: white;
+                                background: transparent</string>
+                </property>
+                <property name="text">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/resources/kz-flag&quot;/&gt;&lt;span style=&quot; font-size:24pt;&quot;/&gt;&lt;span style=&quot; font-size:24pt; font-weight:700; vertical-align:super;&quot;&gt;      СДЕЛАНО В КАЗАХСТАНЕ&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="openExternalLinks">
                  <bool>true</bool>

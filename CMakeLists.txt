@@ -28,10 +28,12 @@ set(PROJECT_SOURCES
         include/ProgressCircle.h
         include/SystemTray.h
         include/Strings.h
+        include/Snowflake.h
         src/main.cpp
         src/network.cpp
         src/user_identity.cpp
         src/widget/ProgressCircle.cpp
+        src/widget/Snowflake.cpp
         src/SystemTray.cpp
         src/extension.cpp
         src/settings.cpp

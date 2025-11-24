@@ -18,7 +18,9 @@
 #include <QCloseEvent>
 #include <QGraphicsOpacityEffect>
 #include <QScrollBar>
+#include <QVBoxLayout>
 
+#include "Snowflake.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "SystemTray.h"
@@ -195,6 +197,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     verChansesAvailable = -1;
 #endif
     checkVersion(true);
+
+    // ADD Snowflakes
+    Snowflake * snows = new Snowflake(this, 50);
+
+    // QVBoxLayout * vboxLayout = new QVBoxLayout(snows);
+    // vboxLayout->setContentsMargins(0,0,0,0);
+    // vboxLayout->setSpacing(0);
+    // vboxLayout->addWidget(snows);
+    ui->centralwidget_Layout->addWidget(snows, 0, 0, 0, 0);
+    snows->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    snows->setSnowPixmap(QPixmap(":/resources/snowflake-image"));
+    delayPush(100, [snows](){snows->start();});
 }
 
 MainWindow::~MainWindow()

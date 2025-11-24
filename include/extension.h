@@ -17,16 +17,6 @@ enum DeviceConnectType
     ADB = 1
 };
 
-enum MalwareStatus
-{
-    Idle = 0,
-    Running,
-    Error
-};
-
-class Service;
-class AppSetting;
-
 class CipherAlgoCrypto
 {
 private:
