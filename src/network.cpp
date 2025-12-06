@@ -462,10 +462,13 @@ void Network::onPullServiceList()
             {
                 std::function<ServiceItemInfo(const QJsonObject&)> convertToObj = [](const QJsonObject & obj) -> ServiceItemInfo{
                     ServiceItemInfo sii;
-                    sii.active = obj["active"].toBool();
                     sii.uuid = obj["uuid"].toString();
+                    sii.active = obj["active"].toBool();
                     sii.name = obj["name"].toString();
                     sii.description = obj["description"].toString();
+                    sii.price = obj["price"].toVariant().toUInt();
+                    sii.needVIP = obj["useVIP"].toBool();
+                    sii.hide = obj["hide"].toBool();
                     return sii;
                 };
 

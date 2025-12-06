@@ -1,5 +1,5 @@
-QWidget {
-    background-color: #232323;
+QMainWindow {
+    background: #3d3d3d;
     color: #E0E0E0;
     font-family: "Segoe UI", sans-serif;
 }

@@ -1,24 +1,27 @@
 <RCC>
     <qresource prefix="/resources">
-        <file alias="shield">res/shield.png</file>
         <file alias="update-list">res/update-list.png</file>
         <file alias="app-style-light">res/style/metro-blue.qss</file>
-        <file alias="shield-hover">res/shield-hover.png</file>
-        <file alias="shield-close">res/shield-close.png</file>
         <file alias="app-icon">res/icon.png</file>
         <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
         <file alias="icon-hello">res/icon-hello.png</file>
-        <file alias="icon-malware">res/icon-malware.png</file>
         <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
         <file alias="icon-authlogin">res/icon-authlogin.png</file>
         <file alias="icon-arrow-right">res/icon-arrow-right.png</file>
         <file alias="font-DigitalNumbers">res/fonts/font-DigitalNumbers/DigitalNumbers-Regular.ttf</file>
         <file alias="android-mobile-source">res/mobile-phone.png</file>
-        <file alias="back-texture-dark">res/back_texture.png</file>
         <file alias="usb-port">res/usbport.png</file>
-        <file alias="remove-ads">res/icon_remads.png</file>
         <file alias="no-avatar">res/no-avatar.png</file>
         <file alias="snowflake-image">res/snowflake-image.png</file>
         <file alias="kz-flag">res/kz-flag.png</file>
+    </qresource>
+    <qresource prefix="/service-icons">
+        <file alias="dark-ads-remove">res/icons/dark-ads-remove.png</file>
+        <file alias="dark-apk-manager">res/icons/dark-apk-manager.png</file>
+        <file alias="dark-mi-remove">res/icons/dark-mi-remove.png</file>
+        <file alias="white-ads-remove">res/icons/white-ads-remove.png</file>
+        <file alias="white-apk-manager">res/icons/white-apk-manager.png</file>
+        <file alias="white-mi-remove">res/icons/white-mi-remove.png</file>
+        <file alias="unavailable">res/icons/unvailable.png</file>
     </qresource>
 </RCC>

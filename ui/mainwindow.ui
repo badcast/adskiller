@@ -489,6 +489,9 @@
                          <underline>true</underline>
                         </font>
                        </property>
+                       <property name="autoFillBackground">
+                        <bool>false</bool>
+                       </property>
                        <property name="lineWidth">
                         <number>0</number>
                        </property>

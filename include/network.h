@@ -72,7 +72,9 @@ struct DeviceItemInfo
 struct ServiceItemInfo
 {
     bool active;
-    int price;
+    bool needVIP;
+    bool hide;
+    std::uint32_t price;
     QString uuid;
     QString name;
     QString description;

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cctype>
+#include <list>
 
 #include <QTimer>
 #include <QHash>
@@ -160,7 +161,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
-    QObject::connect(ui->malwareReRun, &QPushButton::clicked, [this](){if(currentService && currentService->handler && !currentService->handler->isStarted()) currentService->handler->start();});
+    QObject::connect(ui->malwareReRun, &QPushButton::clicked, [this](){if(currentService && !currentService->isStarted()) currentService->start();});
 
     checkerVer = new QTimer(this);
     checkerVer->setSingleShot(true);
@@ -213,9 +214,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
-    if(currentService && currentService->handler)
+    if(currentService)
     {
-        currentService->handler->stop();
+        currentService->stop();
     }
     delete ui;
     Adb::killServer();
@@ -395,10 +396,10 @@ void MainWindow::pageShown(int page)
             ui->authButton->click();
         break;
     case DevicesPage:
-        if(nullptr == currentService || nullptr == currentService->handler || currentService->handler->deviceType() != ADB)
+        if(nullptr == currentService || currentService->deviceConnectType() != ADB)
         {
             QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
-            showPage(AuthPage);
+            logout();
             return;
         }
 
@@ -419,17 +420,17 @@ void MainWindow::pageShown(int page)
                     {
                         connectPhone.isAuthed = status == DEVICE;
                         connectPhone.adbDevice = device;
-                        currentService->handler->setDevice(device);
+                        currentService->setDevice(device);
                         break;
                     }
                 }
             }
-            if(currentService->handler->canStart() && !deviceSelectSwitched)
+            if(currentService->canStart() && !deviceSelectSwitched)
             {
                 deviceSelectSwitched = true;
                 deviceLeftAnimator->start();
                 DelayUISync(2000);
-                showPageLoader(currentService->handler->targetPage());
+                showPageLoader(currentService->targetPage());
             }
             if(curPage != DevicesPage)
             {
@@ -446,8 +447,8 @@ void MainWindow::pageShown(int page)
         fillAuthInfoPage();
         if(currentService)
         {
-            currentService->handler->reset();
-            currentService->handler->stop();
+            currentService->reset();
+            currentService->stop();
             currentService.reset();
         }
         break;
@@ -461,14 +462,14 @@ void MainWindow::pageShown(int page)
         malwareProgressCircle->setValue(0);
         malwareProgressCircle->setMaximum(100);
         malwareProgressCircle->setInfinilyMode(false);
-        currentService->handler->reset();
+        currentService->reset();
 
         place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
 
         // TODO: set auto start mode flag.
         // IF THERE AUTO_START = YES?
 
-        if(!currentService->handler->canStart())
+        if(!currentService->canStart())
         {
             place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад и повторите попытку.";
         }
@@ -476,15 +477,15 @@ void MainWindow::pageShown(int page)
         {
             place << QString("<< Ожидаем >>").arg(currentService->title);
 
-            delayPush(500, [this](){currentService->handler->start();});
+            delayPush(500, [this](){currentService->start();});
         }
 
         model->setStringList(place);
         break;
     }
     case MyDevicesPage:
-        currentService->handler->reset();
-        currentService->handler->start();
+        currentService->reset();
+        currentService->start();
         break;
     default:
         break;
@@ -531,9 +532,9 @@ void MainWindow::clearAuthInfoPage()
         ui->serviceContents->layout()->takeAt(0)->widget()->deleteLater();
 
     for(x = 0; x < services.count(); ++x)
-        services[x]->buttonWidget->deleteLater();
+        services[x]->ownerWidget->deleteLater();
 
-    availableServices.reset();
+    serverServices.reset();
     services.clear();
 }
 
@@ -572,102 +573,126 @@ void MainWindow::fillAuthInfoPage()
 
 void MainWindow::initServiceModules()
 {
+    QString tmp0;
     int x,y;
 
-    if(!services.isEmpty() || !availableServices)
+    if(!services.isEmpty() || !serverServices)
         return;
 
-    std::sort(std::begin(*availableServices), std::end(*availableServices), [](const ServiceItemInfo& lhs, const ServiceItemInfo& rhs){return static_cast<int>(lhs.active) > static_cast<int>(rhs.active);});
+    std::shared_ptr<Service> instance = nullptr;
+    std::list<std::shared_ptr<Service>> buildServices = Service::EnumAppServices(this);
 
-    for(x = 0, y = availableServices->size(); x < y; ++x)
+    for(x = 0, y = serverServices->size(); x < y; ++x)
     {
-        QString info;
-        const char * iconName = DefaultIconWidget;
-        std::shared_ptr<ServiceItem> _service = std::make_shared<ServiceItem>();
-        info = availableServices->at(x).name + '\n';
-        if(availableServices->at(x).active)
+        const ServiceItemInfo * serverServ = &(serverServices->at(x));
+        if(serverServ->hide)
+            continue;
+
+        // Find build uuid service.
+        for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
         {
-            if(network.authedId.hasVipAccount())
-                info += "(безлимит)";
-            else if(availableServices->at(x).price == 0)
-                info += QString("бесплатно");
+            if(serverServ->uuid == (*iter)->uuid())
+            {
+                instance = std::move(*iter);
+                buildServices.erase(iter);
+                break;
+            }
+        }
+
+        if(!instance)
+            instance = std::make_shared<UnavailableService>(this);
+
+        instance->active = serverServ->active && instance->isAvailable();
+
+        tmp0 = serverServ->name + '\n';
+        if(instance->active)
+        {
+            if(network.authedId.hasVipAccount() && serverServ->needVIP)
+                tmp0 += "(безлимит)";
+            else if(serverServ->price == 0)
+                tmp0 += "(бесплатно)";
             else
-                info += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : availableServices->at(x).price).arg(network.authedId.currencyType);
+                tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : serverServ->price).arg(network.authedId.currencyType);
         }
         else
         {
-            info += "(Не доступен)";
+            if(!instance->isAvailable())
+                tmp0 += "(Не реализован)";
+            else if(!serverServ->active)
+                tmp0 += "(Не доступен)";
         }
-        // Find icon from internal uuid service.
-        for(int z = 0, l = sizeof(AppServices) / sizeof(AppServices[0]); z < l; z++)
-            if(availableServices->at(x).uuid == AppServices[z].uuid)
-                iconName = AppServices[z].iconName;
-        QPushButton * button = new QPushButton(QIcon(QString(":/resources/") + iconName),
-                                              info,
+
+        QPushButton * button = new QPushButton(QIcon(":/service-icons/"+instance->widgetIconName()),
+                                              tmp0,
                                               ui->serviceContents);
         button->setStyleSheet("QPushButton {"
-                              "   border-radius: 0;"
                               "   text-align: left;"
                               "   padding: 10px;"
                               "   font-size: 14px;"
                               "   background:  #B71C1C;"
                               "   color: white;"
+                              "   border-radius: 16px;"
+                              "   border: none;"
                               "}"
                               "QPushButton:hover {"
-                              "   background: #3d3d3d;"
+                              "   background: gray;"
                               "   color: white;"
+                              "   border-color: #363636; "
                               "}"
                               "QPushButton:pressed {"
-                              "   background: black;"
+                              "   background: gray;"
+                              "   padding-top: 10px;"
+                              "   padding-bottom: 7px;"
                               "   color: white;"
                               "}");
 
-        if(!availableServices->at(x).active)
-            button->setStyleSheet( button->styleSheet() + "QPushButton { background: #232323; border-left: 10px solid gray;}" );
-        else
-            button->setStyleSheet(button->styleSheet() + "QPushButton {  border-left: 10px solid lime; }");
+        if(!instance->active)
+            button->setStyleSheet(button->styleSheet() + "QPushButton { background: #4D4D4D;}");
 
-        _service->title = availableServices->at(x).name;
-        _service->active = availableServices->at(x).active;
-        _service->buttonWidget = button;
-
-        if(availableServices->at(x).uuid == IDServiceAdsString)
+        if(serverServ->uuid == IDServiceAdsString)
         {
-            _service->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<AdsKillerService>(this));
-            QObject::connect(button, &QPushButton::clicked, [this,_service](){
-                if(!_service || !_service->active)
+            QObject::connect(button, &QPushButton::clicked, [this,instance](){
+                if(!instance || !instance->active)
                     return;
-                startDeviceConnect(_service->handler->deviceType(), _service);
+                startDeviceConnect(instance->deviceConnectType(), instance);
             });
         }
-        else if(availableServices->at(x).uuid == IDServiceMyDeviceString)
+        else if(serverServ->uuid == IDServiceMyDeviceString)
         {
-            _service->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<MyDeviceService>(this));
-            QObject::connect(button, &QPushButton::clicked, [this,_service](){
-                if(!_service || !_service->active)
+            QObject::connect(button, &QPushButton::clicked, [this,instance](){
+                if(!instance || !instance->active)
                     return;
-                currentService = _service;
+                currentService = instance;
                 showPageLoader(MyDevicesPage);
             });
         }
-        else if(availableServices->at(x).uuid == IDServiceBoostRamString)
+        else if(serverServ->uuid == IDServiceBoostRamString)
         {
-            _service->handler = static_cast<std::shared_ptr<Service>>(std::make_shared<BoostRamService>(this));
-            QObject::connect(button, &QPushButton::clicked, [this,_service](){
-                if(!_service || !_service->active)
+            QObject::connect(button, &QPushButton::clicked, [this,instance](){
+                if(!instance || !instance->active)
                     return;
-                startDeviceConnect(_service->handler->deviceType(), _service);
+                startDeviceConnect(instance->deviceConnectType(), instance);
             });
         }
-        button->setIconSize({50,50});
-        button->setFixedSize(259,64);
-        button->setEnabled(availableServices->at(x).active);
 
-        // Adds a widget in the form of a grid
-        static_cast<QGridLayout*>(ui->serviceContents->layout())->addWidget(button, x / 3, x % 3);
+        instance->title =  serverServ->name;
 
-        services << _service;
+        instance->ownerWidget = button;
+
+        button->setIconSize({70,70});
+        button->setFixedSize(270,80);
+        button->setEnabled(instance->active);
+        services << std::move(instance);
     }
+    std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service>& lhs, const std::shared_ptr<Service>& rhs){return static_cast<int>(lhs->active) > static_cast<int>(rhs->active);});
+    x = 0;
+    for(const std::shared_ptr<Service> & item : std::as_const(services))
+    {
+        // Adds widget to a grid
+        static_cast<QGridLayout*>(ui->serviceContents->layout())->addWidget(item->ownerWidget, x / 3, x % 3);
+        ++x;
+    }
+    serverServices.reset();
 }
 
 void MainWindow::DelayUISync(int ms)
@@ -707,7 +732,7 @@ void MainWindow::delayPush(int ms, std::function<void()> call)
     delayPushLoop(ms, [call]() -> bool { call(); return false;});
 }
 
-void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service)
+void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<Service> service)
 {
     // TODO: use next any type <Target Type>| now use ADB
     if(targetType == DeviceConnectType::None)
@@ -716,7 +741,7 @@ void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_pt
         return;
     }
 
-    if(currentService && currentService->handler && currentService->handler->isStarted())
+    if(currentService && currentService->isStarted())
     {
         // TODO: Show error is busy
         QMessageBox::critical(this, "Fatal module", "Module is already started.");
@@ -861,7 +886,7 @@ void MainWindow::slotPullServiceList(const QList<ServiceItemInfo>& services, boo
 {
     if(ok)
     {
-        availableServices = std::move(std::make_shared<QList<ServiceItemInfo>>(services));
+        serverServices = std::move(std::make_shared<QList<ServiceItemInfo>>(services));
     }
 }
 
@@ -1001,18 +1026,18 @@ void MainWindow::updateCabinet(bool newAuthenticate)
     if(newAuthenticate)
         network.pushAuth(tryToken);
 
-    availableServices.reset();
+    serverServices.reset();
     network.pullServiceList();
 
     showPageLoader(CabinetPage, 1000, [this]()->bool{
         bool status = !network.pending();
         const char * str = "Обновление странницы";
-        if(!availableServices)
+        if(!serverServices)
         {
             str = "Еще чуть-чуть";
         }
         ui->loaderPageText->setText(str);
-        if(status && (!availableServices || !network.isAuthed()))
+        if(status && (!serverServices || !network.isAuthed()))
         {
             delayPush(1, [this](){
                 logout();
@@ -1028,5 +1053,10 @@ void MainWindow::logout()
         network.authedId = {};
     clearAuthInfoPage();
     showPageLoader(AuthPage, 500, QString("Выход из системы"));
+}
+
+void MainWindow::runService(std::shared_ptr<Service> service)
+{
+
 }
 

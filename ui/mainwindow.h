@@ -46,14 +46,6 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
-struct ServiceItem
-{
-    bool active;
-    QString title;
-    QWidget * buttonWidget;
-    std::shared_ptr<Service> handler;
-};
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -78,7 +70,7 @@ public:
     void DelayUISync(int ms);
     void delayPushLoop(int ms, std::function<bool ()> call);
     void delayPush(int ms, std::function<void ()> call);
-    void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<ServiceItem> service);
+    void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<Service> service);
 
     Network network;
     QTimer *timerAuthAnim;
@@ -91,9 +83,9 @@ public:
     int verChansesAvailable = ChansesRunInvalid;
 #endif
 
-    std::shared_ptr<ServiceItem> currentService {};
-    QList<std::shared_ptr<ServiceItem>> services {};
-    std::shared_ptr<QList<ServiceItemInfo>> availableServices {};
+    std::shared_ptr<Service> currentService {};
+    QList<std::shared_ptr<Service>> services {};
+    std::shared_ptr<QList<ServiceItemInfo>> serverServices {};
 
     bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
     bool accessUi_myDevices(QTableView *& tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *& quaranteeFilter);
@@ -114,6 +106,7 @@ public slots:
     void setThemeAction();
     void updateCabinet(bool newAuthenticate = true);
     void logout();
+    void runService(std::shared_ptr<Service> service);
 
 private:
     Ui::MainWindow *ui;

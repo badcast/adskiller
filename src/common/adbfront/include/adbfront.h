@@ -32,8 +32,9 @@ struct PackageIO
     bool disabled;
 };
 
-struct AdbDevice
+class AdbDevice
 {
+public:
     QString devId;
     QString model;
     QString displayName;

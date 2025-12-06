@@ -83,7 +83,7 @@ void AdsKillerService::reset()
 
 QString AdsKillerService::widgetIconName()
 {
-    return "remove-ads";
+    return "white-ads-remove";
 }
 
 bool AdsKillerService::start()

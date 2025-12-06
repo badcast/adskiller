@@ -26,7 +26,7 @@
 #include "network.h"
 #include "adbfront.h"
 
-constexpr auto DefaultIconWidget = "icon-malware";
+constexpr auto DefaultIconWidget = "unavailable";
 
 constexpr auto IDServiceAdsString          = "0b9d1650-7a10-4fd5-a10e-53fc7f185b1b";
 constexpr auto IDServiceMyDeviceString     = "3db562cd-e448-4fc4-aeea-bc13f74ce5c9";
@@ -34,22 +34,6 @@ constexpr auto IDServiceAPKManagerString   = "7193decc-f630-4d46-84cf-49059d9f4d
 constexpr auto IDServiceStorageCleanString = "2ab13aa9-5051-4167-a024-3fbdcde11792";
 constexpr auto IDServiceBoostRamString     = "be1f68f6-0f91-4472-947a-07dbe313ab73";
 constexpr auto IDServiceWhatsAppMoveString = "95bdb8a2-06f9-4d00-9625-a2da334001e6";
-
-inline constexpr struct {
-    char title[64];
-    char iconName[24];
-    const char * uuid;
-    bool active;
-} AppServices[] = {
-    {"Удалить рекламу", "remove-ads", IDServiceAdsString, true},
-    {"Мои устройства", "icon-authlogin", IDServiceMyDeviceString, true},
-    {"APK Менеджер", "icon-malware", IDServiceAPKManagerString,false},
-    {"Очистка Мусора", "icon-malware", IDServiceStorageCleanString,false},
-    {"Samsung FRP", "icon-malware", nullptr,false},
-    {"Перенос WhatsApp", "icon-malware", IDServiceWhatsAppMoveString, false},
-    {"Перенос на iOS", "icon-malware", nullptr,false},
-    {"Сброс к заводским", "icon-malware", nullptr,false}
-};
 
 enum PageIndex
 {
@@ -64,6 +48,7 @@ enum PageIndex
 };
 
 class Service;
+class UnavailableService;
 class AdsKillerService;
 class StorageCacheCleanService;
 class ApkManagerService;
@@ -73,15 +58,25 @@ class Service : public QObject
     Q_OBJECT
 
 protected:
-    DeviceConnectType mDeviceType;
+    DeviceConnectType mDeviceConnectType;
     AdbDevice mAdbDevice;
 
 public:
-    inline Service(DeviceConnectType deviceType, QObject * parent = nullptr) : QObject(parent), mDeviceType(deviceType){}
+    QString title;
+    QWidget * ownerWidget;
+    bool active;
+
+    inline Service(DeviceConnectType deviceConnectType, QObject * parent = nullptr) : QObject(parent),
+        ownerWidget(nullptr),
+        title(),
+        active(false),
+        mDeviceConnectType(deviceConnectType)
+    {}
 
     virtual void setDevice(const AdbDevice& adbDevice);
 
     virtual QString uuid() const = 0;
+    virtual bool isAvailable() const = 0;
     virtual PageIndex targetPage();
     virtual bool canStart();
     virtual bool isStarted() = 0;
@@ -91,7 +86,30 @@ public:
     virtual void reset() = 0;
     virtual QString widgetIconName();
 
-    DeviceConnectType deviceType() const;
+    DeviceConnectType deviceConnectType() const;
+
+    static std::list<std::shared_ptr<Service>> EnumAppServices(QObject *parent = nullptr);
+};
+
+class UnavailableService : public Service
+{
+    Q_OBJECT
+
+public:
+    UnavailableService(QObject *parent = nullptr);
+
+    QString uuid() const override;
+    inline bool isAvailable() const override
+    {
+        return false;
+    }
+    PageIndex targetPage() override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    void reset() override;
 };
 
 class AdsKillerService : public Service
@@ -114,6 +132,10 @@ public:
     void setDevice(const AdbDevice& adbDevice) override;
 
     QString uuid() const override;
+    inline bool isAvailable() const override
+    {
+        return true;
+    }
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -134,6 +156,10 @@ public:
     void setDevice(const AdbDevice& adbDevice) override;
 
     QString uuid() const override;
+    inline bool isAvailable() const override
+    {
+        return true;
+    }
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -171,6 +197,10 @@ public:
     ~MyDeviceService();
 
     QString uuid() const override;
+    inline bool isAvailable() const override
+    {
+        return true;
+    }
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -188,6 +218,10 @@ public:
     ~BoostRamService();
 
     QString uuid() const override;
+    inline bool isAvailable() const override
+    {
+        return true;
+    }
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

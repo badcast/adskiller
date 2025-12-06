@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+ cmake_minimum_required(VERSION 3.20)
 
 # READ VERSION
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" APPVERSION)
@@ -25,15 +25,11 @@ set(PROJECT_SOURCES
         include/begin.h
         include/extension.h
         include/network.h
-        include/ProgressCircle.h
         include/SystemTray.h
         include/Strings.h
-        include/Snowflake.h
         src/main.cpp
         src/network.cpp
-        src/user_identity.cpp
-        src/widget/ProgressCircle.cpp
-        src/widget/Snowflake.cpp
+        src/Identity.cpp
         src/SystemTray.cpp
         src/extension.cpp
         src/settings.cpp
@@ -77,6 +73,7 @@ endif()
 
 add_compile_definitions(APPVERSION="${APPVERSION}" ADS_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR} ADS_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR} ADS_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
 
+add_subdirectory(src/widgets)
 add_subdirectory(src/common/adbfront)
 add_subdirectory(src/services)
 
@@ -85,8 +82,8 @@ target_sources(update PRIVATE ${UPDATE_SOURCES})
 target_include_directories(application PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
-target_link_libraries(services PRIVATE adbfront)
-target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services)
+target_link_libraries(services PRIVATE adbfront widgets)
+target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services widgets)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 if(WIN32)
