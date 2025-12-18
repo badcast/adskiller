@@ -4,6 +4,10 @@ void Service::setDevice(const AdbDevice& adbDevice){
     mAdbDevice = adbDevice;
 }
 
+bool Service::isAvailable() const {
+    return dynamic_cast<const UnavailableService* const>(this) == nullptr;
+}
+
 PageIndex Service::targetPage()
 {
     return LongInfoPage;

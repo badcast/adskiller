@@ -24,7 +24,7 @@
 #include "begin.h"
 #include "adbfront.h"
 #include "network.h"
-#include "SystemTray.h"
+#include "AppSystemTray.h"
 #include "extension.h"
 #include "Services.h"
 

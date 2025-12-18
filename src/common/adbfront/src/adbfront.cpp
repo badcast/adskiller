@@ -348,3 +348,8 @@ bool AdbDevice::isEmpty() const
            displayName.isEmpty() &&
            vendor.isEmpty();
 }
+
+AdbFileIO::AdbFileIO(const QString &deviceId) : AdbShell(deviceId)
+{
+
+}

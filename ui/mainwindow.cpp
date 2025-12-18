@@ -24,7 +24,7 @@
 #include "Snowflake.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "SystemTray.h"
+#include "AppSystemTray.h"
 #include "extension.h"
 #include "Services.h"
 #include "network.h"

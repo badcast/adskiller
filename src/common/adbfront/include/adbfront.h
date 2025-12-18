@@ -44,13 +44,15 @@ public:
 };
 
 struct AdbGlobal;
+class AdbShell;
+class AdbFileIO;
 
 class AdbShell
 {
 public:
     AdbShell(const QString &deviceId = {});
     AdbShell(const AdbShell &) = delete;
-    ~AdbShell();
+    virtual ~AdbShell();
 
     bool connect(const QString &deviceId);
     bool isConnect();
@@ -63,11 +65,25 @@ public:
     QString getprop(const QString &propname);
     bool reConnect();
     void exit();
+    AdbFileIO getFileIO();
 
 private:
     bool hasReqID(int requestId);
 
     std::shared_ptr<AdbGlobal> ref;
+};
+
+class AdbFileIO : public AdbShell
+{
+public:
+    AdbFileIO(const QString& deviceId = {});
+    AdbFileIO(const AdbFileIO&) = delete;
+
+    bool exists(const QString& filePath);
+    bool write(const QString& filePath, const QByteArray & buffer);
+    QByteArray read(const QString& filePath);
+    bool deleteFile(const QString& filePath);
+    QStringList getFiles(const QString& dirPath, bool includeDirs = true);
 };
 
 class Adb : public QObject

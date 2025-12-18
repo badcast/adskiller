@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QMessageBox>
 
-#include "SystemTray.h"
+#include "AppSystemTray.h"
 #include "mainwindow.h"
 
 AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)

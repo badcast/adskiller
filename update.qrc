@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/update_res">
+        <file alias="logo">res/icon_update.png</file>
+    </qresource>
+</RCC>

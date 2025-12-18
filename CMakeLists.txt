@@ -25,12 +25,12 @@ set(PROJECT_SOURCES
         include/begin.h
         include/extension.h
         include/network.h
-        include/SystemTray.h
+        include/AppSystemTray.h
         include/Strings.h
         src/main.cpp
         src/network.cpp
         src/Identity.cpp
-        src/SystemTray.cpp
+        src/AppSystemTray.cpp
         src/extension.cpp
         src/settings.cpp
         resources.qrc
@@ -51,6 +51,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     )
     qt_add_executable(update
         MANUAL_FINALIZATION
+        update.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET application APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -77,6 +78,8 @@ add_subdirectory(src/widgets)
 add_subdirectory(src/common/adbfront)
 add_subdirectory(src/services)
 
+set_target_properties(application PROPERTIES OUTPUT_NAME adskiller)
+
 target_sources(update PRIVATE ${UPDATE_SOURCES})
 
 target_include_directories(application PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
@@ -98,7 +101,5 @@ install(TARGETS application
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(application)
-    qt_finalize_executable(update)
-endif()
+qt_finalize_executable(application)
+qt_finalize_executable(update)

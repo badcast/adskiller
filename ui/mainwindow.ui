@@ -586,7 +586,7 @@
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 red, stop:1 black);</string>
+                  <string notr="true">background-color: red;</string>
                  </property>
                  <property name="frameShape">
                   <enum>QFrame::Shape::NoFrame</enum>
@@ -800,7 +800,7 @@
            <item row="0" column="0">
             <widget class="QFrame" name="toplevel_up">
              <property name="styleSheet">
-              <string notr="true">background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 red, stop:1 black);</string>
+              <string notr="true">background-color: red;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1553,7 +1553,7 @@
             </size>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 red, stop:1 black);</string>
+            <string notr="true">background-color: red;</string>
            </property>
            <property name="frameShape">
             <enum>QFrame::Shape::NoFrame</enum>
@@ -1619,6 +1619,29 @@
               </property>
               <property name="flat">
                <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="serviceIconObj">
+              <property name="maximumSize">
+               <size>
+                <width>48</width>
+                <height>48</height>
+               </size>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: transparent;
+</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Shape::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Shadow::Raised</enum>
               </property>
              </widget>
             </item>

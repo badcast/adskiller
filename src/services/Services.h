@@ -76,7 +76,7 @@ public:
     virtual void setDevice(const AdbDevice& adbDevice);
 
     virtual QString uuid() const = 0;
-    virtual bool isAvailable() const = 0;
+    virtual bool isAvailable() const;
     virtual PageIndex targetPage();
     virtual bool canStart();
     virtual bool isStarted() = 0;
@@ -99,10 +99,6 @@ public:
     UnavailableService(QObject *parent = nullptr);
 
     QString uuid() const override;
-    inline bool isAvailable() const override
-    {
-        return false;
-    }
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -132,10 +128,6 @@ public:
     void setDevice(const AdbDevice& adbDevice) override;
 
     QString uuid() const override;
-    inline bool isAvailable() const override
-    {
-        return true;
-    }
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -156,10 +148,6 @@ public:
     void setDevice(const AdbDevice& adbDevice) override;
 
     QString uuid() const override;
-    inline bool isAvailable() const override
-    {
-        return true;
-    }
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -197,10 +185,6 @@ public:
     ~MyDeviceService();
 
     QString uuid() const override;
-    inline bool isAvailable() const override
-    {
-        return true;
-    }
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -218,10 +202,6 @@ public:
     ~BoostRamService();
 
     QString uuid() const override;
-    inline bool isAvailable() const override
-    {
-        return true;
-    }
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

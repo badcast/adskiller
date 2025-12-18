@@ -7,7 +7,12 @@ constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/dGV4dD3QryU
 constexpr auto acceptLinkMail = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQK";
 
 constexpr auto infoMessage = "Программа для удаления реклам (назоиливых и не приятных) на телефонах/смартфонах Android.\n\n"
-                             "Программа предоставлена из imister.kz.";
+                             "Программа предоставлена из imister.kz.\n\n"
+                             "----------------------------------------\n\n"
+                             "Программист: badcast <anon>\n"
+                             "Дизайн иконок: LeoJames <anon>\n\n"
+                             "* Код клиента доступен по ссылке:\n"
+                             "https://adskill.imister.kz";
 
 constexpr auto infoNoBalance = "Попытка войти в аккаунт была безуспешной, так как у вас закончился баланс. "
                                "Если вы хотите пополнить баланс, пожалуйста, свяжитесь с нашей службой поддержки. "

@@ -10,13 +10,13 @@ class update_window;
 }
 QT_END_NAMESPACE
 
-class update_window : public QMainWindow
+class UpdateWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit update_window(QWidget *parent = nullptr);
-    ~update_window();
+    explicit UpdateWindow(QWidget *parent = nullptr);
+    ~UpdateWindow();
 
     void setText(const QString &value);
     void setProgress(int v1, int v2);

@@ -6,6 +6,7 @@
 #include <QBuffer>
 #include <QDataStream>
 
+#include "begin.h"
 #include "mainwindow.h"
 #include "network.h"
 
@@ -14,7 +15,7 @@ constexpr auto HideCommandPipe = "adskiller_window_hide";
 
 bool checkout();
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     int exitCode;
     QApplication app(argc, argv);

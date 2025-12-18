@@ -9,19 +9,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>402</width>
+    <width>490</width>
     <height>97</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>402</width>
+    <width>490</width>
     <height>97</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>402</width>
+    <width>490</width>
     <height>97</height>
    </size>
   </property>
@@ -31,11 +31,15 @@
   <property name="windowTitle">
    <string>AdsKiller update manager</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../update.qrc">
+    <normaloff>:/update_res/logo</normaloff>:/update_res/logo</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>100</x>
       <y>7</y>
       <width>381</width>
       <height>31</height>
@@ -48,7 +52,7 @@
    <widget class="QProgressBar" name="progressBarCurrent">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>100</x>
       <y>45</y>
       <width>381</width>
       <height>21</height>
@@ -61,7 +65,7 @@
    <widget class="QProgressBar" name="progressBarTotal">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>100</x>
       <y>70</y>
       <width>381</width>
       <height>21</height>
@@ -71,8 +75,29 @@
      <number>24</number>
     </property>
    </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>81</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">image: url(:/update_res/logo);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Raised</enum>
+    </property>
+   </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../update.qrc"/>
+ </resources>
  <connections/>
 </ui>
