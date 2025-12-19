@@ -191,6 +191,7 @@ public:
     bool start() override;
     void stop() override;
     void reset() override;
+    QString widgetIconName() override;
 };
 
 class BoostRamService : public Service

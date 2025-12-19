@@ -23,5 +23,19 @@
         <file alias="white-apk-manager">res/icons/white-apk-manager.png</file>
         <file alias="white-mi-remove">res/icons/white-mi-remove.png</file>
         <file alias="unavailable">res/icons/unvailable.png</file>
+        <file>res/icons/dark-boost-phone.png</file>
+        <file>res/icons/dark-clean-garbage.png</file>
+        <file alias="dark-devices-list">res/icons/dark-devices-list.png</file>
+        <file>res/icons/dark-media-transfer.png</file>
+        <file>res/icons/dark-transfer.png</file>
+        <file>res/icons/dark-unlock.png</file>
+        <file>res/icons/dark-vibration.png</file>
+        <file>res/icons/white-boost-phone.png</file>
+        <file>res/icons/white-clean-garbage.png</file>
+        <file alias="white-devices-list">res/icons/white-devices-list.png</file>
+        <file>res/icons/white-media-transfer.png</file>
+        <file>res/icons/white-transfer.png</file>
+        <file>res/icons/white-unlock.png</file>
+        <file>res/icons/white-vibration.png</file>
     </qresource>
 </RCC>

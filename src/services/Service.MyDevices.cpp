@@ -171,3 +171,8 @@ void MyDeviceService::reset()
     expired.reset();
     stop();
 }
+
+QString MyDeviceService::widgetIconName()
+{
+    return "white-devices-list";
+}
