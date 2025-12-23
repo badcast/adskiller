@@ -21,7 +21,6 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 
-#include "Snowflake.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "AppSystemTray.h"
@@ -200,7 +199,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     checkVersion(true);
 
     // ADD Snowflakes
-    Snowflake * snows = new Snowflake(this, 50);
+    snows = new Snowflake(this, 50);
 
     // QVBoxLayout * vboxLayout = new QVBoxLayout(snows);
     // vboxLayout->setContentsMargins(0,0,0,0);
@@ -209,7 +208,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->centralwidget_Layout->addWidget(snows, 0, 0, 0, 0);
     snows->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     snows->setSnowPixmap(QPixmap(":/resources/snowflake-image"));
-    delayPush(100, [snows](){snows->start();});
 }
 
 MainWindow::~MainWindow()
@@ -392,7 +390,7 @@ void MainWindow::pageShown(int page)
         ui->statusAuthText->setText("Выполните аутентификацию");
         ui->authButton->setEnabled(true);
         clearAuthInfoPage();
-        if(lastPage == AuthPage && AppSetting::autoLogin() && ui->checkAutoLogin->isChecked())
+        if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->lineEditToken->text().isEmpty() && ui->checkAutoLogin->isChecked())
             ui->authButton->click();
         break;
     case DevicesPage:
@@ -947,6 +945,12 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 #endif
     QDesktopServices::openUrl(QUrl(url));
 
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    delayPush(50, [this](){snows->start();});
+    event->accept();
 }
 
 void MainWindow::setTheme(ThemeScheme theme)

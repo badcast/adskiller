@@ -7,7 +7,7 @@
 
 AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
 {
-    QMenu * menu = new QMenu();
+    QMenu * menu = new QMenu(parent);
     MainWindow * mainWindow = qobject_cast<MainWindow*>(parent);
     if(mainWindow == nullptr)
     {

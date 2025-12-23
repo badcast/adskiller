@@ -14,6 +14,7 @@
         <file alias="no-avatar">res/no-avatar.png</file>
         <file alias="snowflake-image">res/snowflake-image.png</file>
         <file alias="kz-flag">res/kz-flag.png</file>
+        <file alias="banner">res/banner-low.png</file>
     </qresource>
     <qresource prefix="/service-icons">
         <file alias="dark-ads-remove">res/icons/dark-ads-remove.png</file>

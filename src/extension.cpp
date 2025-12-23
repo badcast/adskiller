@@ -1,5 +1,3 @@
-#include <memory>
-
 #include <QRandomGenerator>
 #include <QCryptographicHash>
 #include <QString>

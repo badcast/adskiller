@@ -27,6 +27,7 @@
 #include "AppSystemTray.h"
 #include "extension.h"
 #include "Services.h"
+#include "Snowflake.h"
 
 enum {
     VersionCheckRate = 10000,
@@ -100,6 +101,7 @@ private slots:
     void slotAuthFinish(int status, bool ok);
     void slotPullServiceList(const QList<ServiceItemInfo>& services, bool ok);
     void slotFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
+    void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent * event) override;
 
 public slots:
@@ -122,6 +124,7 @@ private:
     PageIndex curPage = startPage;
     PageIndex lastPage = PageIndex::AuthPage;
     QTimer * checkerVer;
+    Snowflake * snows;
     bool deviceSelectSwitched;
 
     template<typename Pred>
