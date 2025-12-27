@@ -328,8 +328,8 @@ AdbDevice Adb::getDevice(const QString &deviceSerial)
     dev.devId = deviceSerial;
     if(shell.connect(deviceSerial))
     {
-        dev.model = shell.getprop(CmdGetProductModel);
-        dev.vendor = shell.getprop(CmdGetProductManufacturer);
+        dev.model = shell.getprop(PropProductModel);
+        dev.vendor = shell.getprop(PropProductManufacturer);
         dev.displayName = dev.vendor + " " + dev.model;
     }
     else

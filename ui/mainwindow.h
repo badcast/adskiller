@@ -123,7 +123,7 @@ private:
     PageIndex startPage = PageIndex::AuthPage;
     PageIndex curPage = startPage;
     PageIndex lastPage = PageIndex::AuthPage;
-    QTimer * checkerVer;
+    QTimer * versionChecker;
     Snowflake * snows;
     bool deviceSelectSwitched;
 

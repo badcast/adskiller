@@ -7,7 +7,6 @@ constexpr auto ParamAutoLogin = "autologin";
 constexpr auto ParamThemeIndex = "theme";
 constexpr auto ParamNetworkTimeout = "networkTimeout";
 
-
 inline QVariant GenericValue(const QString &key, bool* contains, const QVariant& set)
 {
     QVariant retval;

@@ -40,12 +40,15 @@ public:
     QString displayName;
     QString vendor;
 
+    AdbDevice() : devId(), model(), displayName(), vendor() {}
+
     bool isEmpty() const;
 };
 
 struct AdbGlobal;
 class AdbShell;
 class AdbFileIO;
+class AdbSysInfo;
 
 class AdbShell
 {
@@ -60,17 +63,59 @@ public:
         exit();
     }
     std::pair<bool, QString> commandQueueWait(const QStringList &args);
+    template<typename... Args>
+    inline std::pair<bool, QString> commandQueueWaits(Args&&... args) {
+        return commandQueueWait((QStringList() << ... << std::forward<Args>(args)));
+    }
     int commandQueueAsync(const QStringList &args);
+    template<typename... Args>
+    inline int commandQueueAsyncs(Args&&... args) {
+        return commandQueueAsync((QStringList() << ... << std::forward<Args>(args)));
+    }
     std::pair<bool, QString> commandResult(int requestId, bool waitResult = true);
     QString getprop(const QString &propname);
     bool reConnect();
     void exit();
+    std::shared_ptr<AdbSysInfo> getInfo();
     AdbFileIO getFileIO();
 
 private:
     bool hasReqID(int requestId);
 
     std::shared_ptr<AdbGlobal> ref;
+};
+
+class AdbSysInfo
+{
+public:
+    QString systemName;
+    QString kernelReleaseVersion;
+    QString kernelVersion;
+    QString machine;
+    std::uint32_t osVersion;
+    std::int64_t diskTotal;
+    std::int64_t diskUsed;
+    std::int64_t ramTotal;
+    std::int64_t ramUsed;
+    std::int64_t swapTotal;
+    std::int64_t swapUsed;
+    bool swapEnabled;
+    bool isAndroid;
+
+    AdbSysInfo() :
+        diskTotal(-1),
+        diskUsed(-1),
+        ramTotal(-1),
+        ramUsed(-1),
+        swapTotal(-1),
+        swapUsed(-1),
+        osVersion(0),
+        swapEnabled(false)    {}
+
+    QString OSVersionString() const;
+    //TODO: make design capacity
+    QString StorageDesignString() const;
+    QString RAMDesignString() const;
 };
 
 class AdbFileIO : public AdbShell

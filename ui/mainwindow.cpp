@@ -162,10 +162,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
     QObject::connect(ui->malwareReRun, &QPushButton::clicked, [this](){if(currentService && !currentService->isStarted()) currentService->start();});
 
-    checkerVer = new QTimer(this);
-    checkerVer->setSingleShot(true);
-    checkerVer->setInterval(VersionCheckRate);
-    QObject::connect(checkerVer, &QTimer::timeout, [this](){checkVersion(false);});
+    versionChecker = new QTimer(this);
+    versionChecker->setSingleShot(true);
+    versionChecker->setInterval(VersionCheckRate);
+    QObject::connect(versionChecker, &QTimer::timeout, [this](){checkVersion(false);});
 
 
     // Font init
