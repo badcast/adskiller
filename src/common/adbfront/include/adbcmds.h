@@ -13,4 +13,5 @@ constexpr const char NA[] = "N/A";
 constexpr const char PropProductModel[] = "ro.product.model";
 constexpr const char PropProductMarketname[] = "ro.product.marketname";
 constexpr const char PropProductManufacturer[] = "ro.product.manufacturer";
+constexpr const char PropProductMarketingName[] = "ro.config.marketing_name";
 constexpr const char PropAndroidVersion[] = "ro.build.version.release";

@@ -39,6 +39,7 @@ public:
     QString model;
     QString displayName;
     QString vendor;
+    QString marketingName;
 
     AdbDevice() : devId(), model(), displayName(), vendor() {}
 

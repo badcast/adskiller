@@ -290,7 +290,7 @@ bool AdbShell::hasReqID(int requestId)
 
 QString AdbShell::getprop(const QString &propname)
 {
-    return commandQueueWait(QStringList() << "getprop" << propname).second;
+    return commandQueueWaits("getprop", propname).second;
 }
 
 bool AdbShell::reConnect()

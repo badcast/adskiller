@@ -330,12 +330,14 @@ AdbDevice Adb::getDevice(const QString &deviceSerial)
     {
         dev.model = shell.getprop(PropProductModel);
         dev.vendor = shell.getprop(PropProductManufacturer);
-        dev.displayName = dev.vendor + " " + dev.model;
+        dev.marketingName = shell.getprop(PropProductMarketingName);
+        dev.displayName = dev.marketingName.isEmpty() ? dev.vendor + " " + dev.model : dev.marketingName;
     }
     else
     {
         dev.model = NoAllowString;
         dev.vendor = NoAllowString;
+        dev.marketingName = NoAllowString;
         dev.displayName = NoAllowString;
     }
     return dev;

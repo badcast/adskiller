@@ -274,7 +274,7 @@ void MainWindow::checkVersion(bool firstRun)
                     ui->loaderPageText->setText("Ваша версия актуальная!");
                     ui->loaderPageText->update();
                     DelayUISync(2000);
-                    checkerVer->start();
+                    versionChecker->start();
                     return true;
                 }
             }
@@ -295,7 +295,7 @@ void MainWindow::checkVersion(bool firstRun)
                         // Will terminate
                         verChansesAvailable = -1;
                         willTerminate();
-                        checkerVer->stop();
+                        versionChecker->stop();
                         return false;
                     }
                     else
@@ -311,7 +311,7 @@ void MainWindow::checkVersion(bool firstRun)
                     verChansesAvailable = ChansesRunInvalid;
                 }
             }
-            checkerVer->start();
+            versionChecker->start();
             return false;
         });
     }

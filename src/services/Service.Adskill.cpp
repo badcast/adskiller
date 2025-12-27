@@ -1,7 +1,7 @@
 #include "Services.h"
 #include "mainwindow.h"
 
-#define FORCLYQUIT_CHECK if(malwareCmd == MalwareForclyKill) break
+#define FORCLYQUIT_CHECK if(mCmd == MalwareForclyKill) break
 #define WAIT(MS) QThread::msleep(MS)
 #define WAITMODE FORCLYQUIT_CHECK; WAIT(400)
 #define WAITMODE2 FORCLYQUIT_CHECK; WAIT(50)
@@ -11,12 +11,6 @@ enum
 {
     MalwareExecFail = -1,
     MalwareForclyKill = -2
-};
-
-enum
-{
-    MalwareNoError = 0,
-    MalwareNoNetwork = 1000
 };
 
 enum MalwareStatus
@@ -34,19 +28,65 @@ QMutex *mutex;
 MalwareStatus status;
 Network * network;
 int mProgress;
-int malwareCmd;
-int malwareUserValue;
+int mCmd;
+int mUserValue;
 
-std::pair<QStringList, int> malwareReadLog();
-QString malwareReadHeader();
-MalwareStatus malwareStatus();
 void malwareStart(const QString &deviceSerial);
 void malwareKill();
 bool malwareClean();
 void malwaring();
 void malwareWriteVal(int userValue);
-bool malwareRequireUser();
 
+inline void malwareWriteVal(int userValue){
+    QMutexLocker locker(mutex);
+    (void)locker;
+    mUserValue = userValue;
+}
+inline std::pair<QStringList, int> malwareReadLog(){
+    QMutexLocker locker(mutex);
+    (void)locker;
+    return {QStringList(std::move(_outputMalware)),mProgress};
+}
+
+inline QString malwareReadHeader()
+{
+    QMutexLocker locker(mutex);
+    (void)locker;
+    return _outputHeader;
+}
+
+void malwareWriteLog(QString msg, int progress = -1)
+{
+    QMutexLocker locker(mutex);
+    (void)locker;
+    _outputMalware << std::move(msg);
+    if(progress > -1)
+        mProgress = progress;
+}
+
+void malwareWriteHeader(QString msg, int progress = -1)
+{
+    QMutexLocker locker(mutex);
+    (void)locker;
+    _outputHeader = std::move(msg);
+    _outputMalware << _outputHeader;
+    if(progress > -1)
+        mProgress = progress;
+}
+
+AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr),
+    malwareStatusText0(nullptr),
+    deviceLabelName(nullptr),
+    processBarStatus(nullptr),
+    pushButtonReRun(nullptr){
+
+}
+
+void AdsKillerService::setDevice(const AdbDevice &adbDevice)
+{
+    Service::setDevice(adbDevice);
+    MainWindow::current->accessUi_adskiller(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
+}
 
 QString AdsKillerService::uuid() const
 {
@@ -65,12 +105,12 @@ bool AdsKillerService::canStart()
 
 bool AdsKillerService::isStarted()
 {
-    return malwareStatus() == MalwareStatus::Running;
+    return status == MalwareStatus::Running;
 }
 
 bool AdsKillerService::isFinish()
 {
-    return malwareStatus() != MalwareStatus::Running;
+    return status != MalwareStatus::Running;
 }
 
 void AdsKillerService::reset()
@@ -126,7 +166,6 @@ bool AdsKillerService::start()
                     QString header;
                     QStringList from;
                     std::pair<QStringList, int> reads;
-                    MalwareStatus status = malwareStatus();
                     header = malwareReadHeader();
                     reads = malwareReadLog();
 
@@ -149,7 +188,7 @@ bool AdsKillerService::start()
                         pushButtonReRun->setEnabled(true);
                         malwareClean();
                     }
-                    else if(malwareRequireUser())
+                    else if(mUserValue == 1000)
                     {
                         UserDataInfo data = MainWindow::current->network.authedId;
                         QString buyText = "<!>\nПодтвердите свою покупку удаление вредоносных программ из устройства %1 за %2 %3\nВаш баланс %4 %5\nПосле покупки станет %6 %7\nЖелаете продолжить?\n<!>";
@@ -227,21 +266,6 @@ void AdsKillerService::cirlceMalwareStateReset()
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-
-AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr),
-    malwareStatusText0(nullptr),
-    deviceLabelName(nullptr),
-    processBarStatus(nullptr),
-    pushButtonReRun(nullptr){
-
-}
-
-void AdsKillerService::setDevice(const AdbDevice &adbDevice)
-{
-    Service::setDevice(adbDevice);
-    MainWindow::current->accessUi_adskiller(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
-}
-
 template <typename InT, typename OutT>
 constexpr inline OutT Map(const InT x, const InT in_min, const InT in_max, const OutT out_min, const OutT out_max)
 {
@@ -250,35 +274,6 @@ constexpr inline OutT Map(const InT x, const InT in_min, const InT in_max, const
     }
     OutT mapped_value = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     return qMin(qMax(mapped_value, out_min), out_max);
-}
-
-void malwareWriteVal(int userValue){
-    QMutexLocker locker(mutex);
-    (void)locker;
-    malwareUserValue = userValue;
-}
-
-bool malwareRequireUser(){
-    return malwareUserValue == 1000;
-}
-
-void malwareWriteLog(QString msg, int progress = -1)
-{
-    QMutexLocker locker(mutex);
-    (void)locker;
-    _outputMalware << std::move(msg);
-    if(progress > -1)
-        mProgress = progress;
-}
-
-void malwareWriteHeader(QString msg, int progress = -1)
-{
-    QMutexLocker locker(mutex);
-    (void)locker;
-    _outputHeader = std::move(msg);
-    _outputMalware << _outputHeader;
-    if(progress > -1)
-        mProgress = progress;
 }
 
 template<typename T0, typename T1, typename Pred>
@@ -300,60 +295,6 @@ inline T1 compare_list(const T0& t0, const T1& t1, Pred&& pred)
     return result;
 }
 
-// QStringList existencePackages(const QStringList& devPackages, const QStringList & external)
-// {
-//     QStringList list;
-//     int x=0,y;
-
-//     for(;x < devPackages.count(); ++x)
-//     {
-//         for(y=0;y < external.count(); ++y)
-//         {
-//             if(devPackages[x] == external[y])
-//             {
-//                 list << external[y];
-//                 break;
-//             }
-//         }
-//     }
-//     return list;
-// }
-
-// QStringList existencePackageDisables(const QList<PackageIO> & devPackages, const QStringList & external)
-// {
-//     QStringList list;
-//     int x,y;
-//     for(x = 0;x < devPackages.count(); ++x)
-//     {
-//         for(y = 0;y < external.count(); ++y)
-//         {
-//             if(!devPackages[x].disabled && devPackages[x].packageName == external[y])
-//             {
-//                 list << external[y];
-//                 break;
-//             }
-//         }
-//     }
-//     return list;
-// }
-
-std::pair<QStringList, int> malwareReadLog(){
-    QMutexLocker locker(mutex);
-    (void)locker;
-    return {QStringList(std::move(_outputMalware)),mProgress};
-}
-
-QString malwareReadHeader()
-{
-    QMutexLocker locker(mutex);
-    (void)locker;
-    return _outputHeader;
-}
-
-MalwareStatus malwareStatus(){
-    return status;
-}
-
 void malwareStart(const QString& deviceSerial){
     if(malwareThread != nullptr)
     {
@@ -366,7 +307,7 @@ void malwareStart(const QString& deviceSerial){
     QObject::connect(malwareThread, &QThread::started, &malwaring);
     network = new Network(MainWindow::current);
     network->authedId = MainWindow::current->network.authedId;
-    malwareCmd = 0;
+    mCmd = 0;
     mProgress = 0;
     status = MalwareStatus::Running;
     malwareThread->start();
@@ -385,7 +326,7 @@ bool malwareClean()
 void malwareKill(){
     if(malwareThread == nullptr)
         return;
-    malwareCmd = MalwareForclyKill;
+    mCmd = MalwareForclyKill;
 }
 
 void malwaring()
@@ -396,12 +337,33 @@ void malwaring()
     int lastResult,num0,num1,totalMalwareDetected;
     QList<PackageIO> localPackages;
     QEventLoop loop;
+    std::shared_ptr<AdbSysInfo> sysInfo;
 
     auto procedureStartAt = steady_clock::now();
 
     AdbDevice device = Adb::getDevice(adbDeviceSerial);
 
-    std::function<QString(int)> generate_error_report = [](int status) -> QString
+    const std::function<QString(void)> print_device_info = [&sysInfo,&device]() -> QString
+    {
+        return QString("------------------------------------\n"
+                       "       Модель: %1\n"
+                       "       Производитель: %2\n"
+                       "       ОС: %3\n"
+                       "       Хранилище: %4\n"
+                       "       ОЗУ: %5\n"
+                       "       Ядро: %6\n"
+                       "       Архитектура: %7\n"
+                       "------------------------------------")
+            .arg(device.model)
+            .arg(device.vendor)
+            .arg(sysInfo->OSVersionString())
+            .arg(sysInfo->StorageDesignString())
+            .arg(sysInfo->RAMDesignString())
+            .arg(sysInfo->systemName)
+            .arg(sysInfo->machine);
+    };
+
+    const std::function<QString(int)> generate_error_report = [](int status) -> QString
     {
         QString error;
         if(status == NetworkStatus::ServerError)
@@ -413,50 +375,53 @@ void malwaring()
         return error;
     };
 
-    std::function<bool(void)> checkDeviceConnect = []() -> bool
+    const std::function<bool(void)> check_device_connect = []() -> bool
     {
         return Adb::deviceStatus(adbDeviceSerial) == DEVICE;
     };
 
     while(!isFinish)
     {
-        switch(malwareCmd)
+        switch(mCmd)
         {
             // INIT
         case 0:
         {
             malwareWriteHeader("Запуск процедуры удаление рекламы (Malware)...", 1);
-            malwareUserValue = -1;
+            mUserValue = -1;
             totalMalwareDetected = 0;
-            malwareCmd++;
+            mCmd++;
             WAITMODE;
             break;
         }
         // GET PACKAGES & UPLOAD
         case 1:
         {
-            if(!checkDeviceConnect())
+            if(!check_device_connect())
             {
                 malwareWriteHeader("Устройство внезапно отключилась.");
                 malwareWriteLog("Пожалуйста, убедитесь что устройство подключено корректно и кабель не поврежден.");
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
             malwareWriteHeader(QString("Получение данных с устройства ") + device.displayName + "(" + device.devId + ")", 2);
+            sysInfo = AdbShell(device.devId).getInfo();
+            malwareWriteLog(print_device_info());
+
             localPackages = Adb::getPackages(adbDeviceSerial);
-            if(checkDeviceConnect())
+            if(check_device_connect())
             {
                 if(localPackages.isEmpty())
                 {
                     malwareWriteHeader("Получили пустой результат.");
-                    malwareCmd = MalwareExecFail;
+                    mCmd = MalwareExecFail;
                     break;
                 }
             }
             else
             {
                 malwareWriteHeader("Устройство внезапно отключилась.");
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
             malwareWriteLog("Распаковка");
@@ -499,7 +464,7 @@ void malwaring()
                 malwareWriteHeader("Ошибка при отправке");
                 malwareWriteLog(generate_error_report(lastResult));
                 WAITMODE;
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
             malwareWriteLog("Отправка образцов на сервер imister.kz и получение md-ключа", 49);
@@ -512,7 +477,7 @@ void malwaring()
                 malwareWriteHeader("Ошибка во время загрузки");
                 malwareWriteLog(generate_error_report(lastResult));
                 WAITMODE;
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
 
@@ -532,7 +497,7 @@ void malwaring()
                 malwareWriteHeader("Ошибка проверки ключа");
                 malwareWriteLog(generate_error_report(lastResult));
                 WAITMODE;
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
 
@@ -545,10 +510,10 @@ void malwaring()
             mProgress = 49;
             while(labs.exists() && !labs.ready() && chances > 0)
             {
-                if(!checkDeviceConnect())
+                if(!check_device_connect())
                 {
                     malwareWriteHeader("Устройство внезапно отключилась.");
-                    malwareCmd = MalwareExecFail;
+                    mCmd = MalwareExecFail;
                     break;
                 }
 
@@ -576,24 +541,24 @@ void malwaring()
                 malwareWriteHeader("Возникла ошибка.");
                 malwareWriteLog(generate_error_report(lastResult));
                 WAITMODE;
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
 
             if(!network->authedId.hasVipAccount() && !labs.purchased)
             {
-                malwareUserValue = 1000;
-                while(malwareUserValue == 1000)
+                mUserValue = 1000;
+                while(mUserValue == 1000)
                 {
                     WAIT(100);
                 }
 
-                if(malwareUserValue != QMessageBox::StandardButton::Yes)
+                if(mUserValue != QMessageBox::StandardButton::Yes)
                 {
                     malwareWriteHeader("Запрос отклонен пользователем");
                     malwareWriteLog("вы отказались от оплаты");
                     WAIT(1000);
-                    malwareCmd = MalwareExecFail;
+                    mCmd = MalwareExecFail;
                     break;
                 }
             }
@@ -631,7 +596,7 @@ void malwaring()
                 malwareWriteHeader("Ошибка во время получения.");
                 malwareWriteLog(generate_error_report(lastResult));
                 WAITMODE;
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
             malwareWriteHeader("Результаты из лаборатории получены.",55);
@@ -644,7 +609,7 @@ void malwaring()
                 malwareWriteLog("К сожалению, автоматический режим не обнаружил вредоносного ПО.");
                 malwareWriteLog("Если считаете что на устройстве все еще есть рекламные вирусы, пожалуйста свяжитесь с нами.");
                 malwareWriteLog("Администратор проверит ваше устройство на наличие рекламных вирусов.", 100);
-                malwareCmd++;
+                mCmd++;
                 WAITMODE;
                 break;
             }
@@ -679,7 +644,7 @@ void malwaring()
                 malwareWriteLog("Что-то пошло не так. Возможно устройство было отключено.");
                 malwareWriteLog("Пожалуйста начните процедуру заново.");
                 WAITMODE;
-                malwareCmd = MalwareExecFail;
+                mCmd = MalwareExecFail;
                 break;
             }
             num0 = lastResult;
@@ -692,7 +657,7 @@ void malwaring()
                     malwareWriteLog("Что-то пошло не так. Возможно устройство было отключено.");
                     malwareWriteLog("Пожалуйста начните процедуру заново.");
                     WAITMODE;
-                    malwareCmd = MalwareExecFail;
+                    mCmd = MalwareExecFail;
                     break;
                 }
                 num0 += lastResult;
@@ -703,7 +668,7 @@ void malwaring()
                 malwareWriteLog("Предупреждение: Процесс частично успешен. Повторите.");
             else
                 mProgress = 99;
-            malwareCmd++;
+            mCmd++;
             break;
         }
         default:
@@ -712,7 +677,7 @@ void malwaring()
             WAIT(2000);
 
             isFinish = 1;
-            if(malwareCmd < 0)
+            if(mCmd < 0)
             {
                 malwareWriteHeader("Процедура завершилась ошибкой. Повторите.");
                 status = MalwareStatus::Error;

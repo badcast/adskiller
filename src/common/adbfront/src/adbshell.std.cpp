@@ -1,7 +1,26 @@
+#include <array>
+
 #include <QTextStream>
 
 #include "adbcmds.h"
 #include "adbfront.h"
+
+const std::array <const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
+
+std::pair<int,QString> algoDesignView(std::uint64_t bytes)
+{
+    int x = 1,power  = 0;
+    while (bytes >= 1000 && power < ConstDataSizes.size())
+    {
+        bytes /= 1000;
+        ++power;
+    }
+    while(x < bytes)
+    {
+        x *= 2;
+    }
+    return {x,ConstDataSizes[power]};
+}
 
 std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
     if(!isConnect())
@@ -17,8 +36,8 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
         if(at.startsWith("Filesystem",Qt::CaseInsensitive))
             continue;
         tmp0 = std::move(at.split(' ', Qt::SkipEmptyParts));
-        sysi->diskTotal = tmp0[1].toULongLong();
-        sysi->diskUsed = tmp0[2].toULongLong();
+        sysi->diskTotal = tmp0[1].toULongLong() * 1024;
+        sysi->diskUsed = tmp0[2].toULongLong() * 1024;
         break;
     }
 
@@ -28,7 +47,7 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
         QString at = txt.readLine();
 
         tmp0 = std::move(at.split(' ', Qt::SkipEmptyParts));
-        if(at.startsWith("Mem",Qt::CaseInsensitive))
+        if(at.startsWith("mem",Qt::CaseInsensitive))
         {
             sysi->ramTotal = tmp0[1].toULongLong();
             sysi->ramUsed = tmp0[2].toULongLong();
@@ -56,5 +75,17 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
 
 QString AdbSysInfo::OSVersionString() const
 {
-    return QString("%1 %2").arg((isAndroid ? "Android" : "Unknown")).arg( (osVersion == 0) ? NA : QString("%1").arg(osVersion));
+    return QString("%1 %2").arg((isAndroid ? "Android" : "Unknown")).arg( ((osVersion == 0) ? NA : QString("%1").arg(osVersion)) );
+}
+
+QString AdbSysInfo::StorageDesignString() const
+{
+    auto ret = algoDesignView(diskTotal);
+    return QString("%1%2").arg(ret.first).arg(ret.second);
+}
+
+QString AdbSysInfo::RAMDesignString() const
+{
+    auto ret = algoDesignView(ramTotal);
+    return QString("%1%2").arg(ret.first).arg(ret.second);
 }
