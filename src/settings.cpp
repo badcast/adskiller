@@ -7,7 +7,7 @@ constexpr auto ParamAutoLogin = "autologin";
 constexpr auto ParamThemeIndex = "theme";
 constexpr auto ParamNetworkTimeout = "networkTimeout";
 
-inline QVariant GenericValue(const QString &key, bool* contains, const QVariant& set)
+inline QVariant GenericValue(const QString &key, bool *contains, const QVariant &set)
 {
     QVariant retval;
     bool ret;
@@ -39,7 +39,7 @@ void AppSetting::load()
     settings = std::make_shared<QSettings>(QString("imister.kz-app.ads"), QString("AdsKiller"));
 }
 
-bool AppSetting::readValue(const QString& key, QVariant *value)
+bool AppSetting::readValue(const QString &key, QVariant *value)
 {
     bool retval = settings->contains(key);
     if(retval && value != nullptr)
@@ -52,14 +52,14 @@ void AppSetting::writeValue(const QString &key, const QVariant &value)
     settings->setValue(key, value);
 }
 
-QString AppSetting::encryptedToken(bool * contains, const QVariant& set)
+QString AppSetting::encryptedToken(bool *contains, const QVariant &set)
 {
     QVariant retval;
     retval = GenericValue(ParamEncryptedToken, contains, set);
     return retval.toString();
 }
 
-bool AppSetting::autoLogin(bool *contains, const QVariant& set)
+bool AppSetting::autoLogin(bool *contains, const QVariant &set)
 {
     QVariant retval;
     retval = GenericValue(ParamAutoLogin, contains, set);

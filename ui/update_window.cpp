@@ -1,9 +1,7 @@
-#include "ui_update_window.h"
 #include "update_window.h"
+#include "ui_update_window.h"
 
-UpdateWindow::UpdateWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::update_window)
+UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::update_window)
 {
     ui->setupUi(this);
 }

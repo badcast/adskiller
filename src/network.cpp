@@ -1,11 +1,11 @@
 #include <utility>
 
-#include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QVersionNumber>
 
-#include "begin.h"
 #include "adbfront.h"
+#include "begin.h"
 #include "network.h"
 
 constexpr auto Protocol = "https";
@@ -50,7 +50,7 @@ inline QString url_version()
     return url;
 }
 
-inline LabStatusInfo fromJsonLabs(const QJsonValue& jroot)
+inline LabStatusInfo fromJsonLabs(const QJsonValue &jroot)
 {
     LabStatusInfo retval {};
     if(jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
@@ -83,7 +83,7 @@ void Network::pushAuth(const QString &token)
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
-void Network::pullAdsData(const QString& mdKey)
+void Network::pullAdsData(const QString &mdKey)
 {
     QJsonObject json;
     QNetworkReply *reply;
@@ -141,7 +141,7 @@ void Network::pullLabState(const QString &mdKey)
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
 }
 
-void Network::pullDeviceList(const QDateTime * rangeStart, const QDateTime * rangeEnd, int showFlag)
+void Network::pullDeviceList(const QDateTime *rangeStart, const QDateTime *rangeEnd, int showFlag)
 {
     QJsonObject json;
     QNetworkReply *reply;
@@ -233,7 +233,7 @@ void Network::onAuthFinished()
                     status = ServerError;
                     break;
                 }
-                if(!jsonResp["status"].isDouble() || (status=jsonResp["status"].toInt()) != NetworkStatus::OK)
+                if(!jsonResp["status"].isDouble() || (status = jsonResp["status"].toInt()) != NetworkStatus::OK)
                 {
                     break;
                 }
@@ -286,11 +286,11 @@ void Network::onAdsFinished()
                 {
                     adsData.labs = fromJsonLabs(jsonResp["labs"]);
                     QJsonArray jarray = jsonResp["result"].toArray();
-                    for(const QJsonValue & val : std::as_const(jarray))
+                    for(const QJsonValue &val : std::as_const(jarray))
                         adsData.blacklist << val.toString();
                     jarray = jsonResp["autodisable"].toArray();
                     if(!jsonResp["autodisable"].isNull())
-                        for(const QJsonValue & val : std::as_const(jarray))
+                        for(const QJsonValue &val : std::as_const(jarray))
                             adsData.disabling << val.toString();
                 }
             }
@@ -394,7 +394,7 @@ void Network::onFetchingLabs()
 void Network::onPullDeviceList()
 {
     int status = NetworkStatus::NetworkError;
-    QList<DeviceItemInfo> actual,expired;
+    QList<DeviceItemInfo> actual, expired;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     _lastBytes = 0;
     if(reply)
@@ -406,7 +406,8 @@ void Network::onPullDeviceList()
             QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
             if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && jsonResp["result"].isObject())
             {
-                std::function<DeviceItemInfo(const QJsonObject&)> convertToObj = [](const QJsonObject & obj) -> DeviceItemInfo{
+                std::function<DeviceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj) -> DeviceItemInfo
+                {
                     DeviceItemInfo dit;
                     dit.mdkey = obj["mdkey"].toString();
                     dit.logTime = QDateTime::fromSecsSinceEpoch(obj["logTime"].toVariant().toULongLong());
@@ -460,7 +461,8 @@ void Network::onPullServiceList()
             QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
             if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && jsonResp["result"].isArray())
             {
-                std::function<ServiceItemInfo(const QJsonObject&)> convertToObj = [](const QJsonObject & obj) -> ServiceItemInfo{
+                std::function<ServiceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj) -> ServiceItemInfo
+                {
                     ServiceItemInfo sii;
                     sii.uuid = obj["uuid"].toString();
                     sii.active = obj["active"].toBool();
@@ -490,11 +492,8 @@ VersionInfo::VersionInfo(const QString &version, const QString &url, int status)
 {
     QVector<int> ints;
     QStringList list = std::move(version.split('.', Qt::SkipEmptyParts));
-    std::transform(std::begin(list), std::end(list), std::back_inserter(ints), [](const QString& str) -> int
-                   {
-                       return str.toInt();
-                   });
-    mVersion = QVersionNumber{ints};
+    std::transform(std::begin(list), std::end(list), std::back_inserter(ints), [](const QString &str) -> int { return str.toInt(); });
+    mVersion = QVersionNumber {ints};
 }
 
 bool VersionInfo::empty() const
@@ -502,7 +501,7 @@ bool VersionInfo::empty() const
     return mStatus == -1 && mDownloadUrl.isEmpty() && mVersion.isNull();
 }
 
-bool DeviceItemInfo::operator <(const DeviceItemInfo &other) const
+bool DeviceItemInfo::operator<(const DeviceItemInfo &other) const
 {
     return logTime < other.logTime;
 }

@@ -17,52 +17,57 @@ UpdateManager::UpdateManager(QObject *parent) : QObject(parent)
 std::pair<QList<FetchResult>, int> UpdateManager::fetch()
 {
     QEventLoop loop;
-    QNetworkReply * reply;
+    QNetworkReply *reply;
     QList<FetchResult> contents;
     m_manager->setTransferTimeout(MaxTimeout);
     reply = m_manager->get(QNetworkRequest(QUrl(URLFetch)));
-    QObject::connect(reply, &QNetworkReply::finished, this, [&]()
-                     {
-                         QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-                         if(reply){
-                             while(reply->error() == QNetworkReply::NoError)
-                             {
-                                 QByteArray responce = reply->readAll();
-                                 QJsonDocument jres = QJsonDocument::fromJson(responce);
-                                 QJsonArray array;
-                                 if(jres.isNull())
-                                 {
-                                     break;
-                                 }
-                                 m_rootUrl = jres["root"].toString();
-                                 m_version = jres["version"].toString();
-                                 m_totalBytes = jres["totalBytes"].toVariant().toULongLong();
-                                 array = jres["files"].toArray();
-                                 FetchResult fr;
-                                 for(int x = 0; x < array.size(); ++x)
-                                 {
-                                     QJsonObject obj = array[x].toObject();
-                                     // TODO: check "hashType" for multiple hash support
-                                     fr.md5hash = obj["hash"].toString();
-                                     fr.remoteLink = obj["url"].toString();
-                                     fr.bytes = obj["bytes"].toVariant().toULongLong();
-                                     contents.append(fr);
-                                 }
-                                 m_lastStatus = 0;
-                                 break;
-                             }
-                             if(reply->error() != QNetworkReply::NoError)
-                             {
-                                 m_lastStatus = -1;
-                             }
-                             reply->deleteLater();
-                         }
-                         loop.quit();
-                     });
+    QObject::connect(
+        reply,
+        &QNetworkReply::finished,
+        this,
+        [&]()
+        {
+            QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+            if(reply)
+            {
+                while(reply->error() == QNetworkReply::NoError)
+                {
+                    QByteArray responce = reply->readAll();
+                    QJsonDocument jres = QJsonDocument::fromJson(responce);
+                    QJsonArray array;
+                    if(jres.isNull())
+                    {
+                        break;
+                    }
+                    m_rootUrl = jres["root"].toString();
+                    m_version = jres["version"].toString();
+                    m_totalBytes = jres["totalBytes"].toVariant().toULongLong();
+                    array = jres["files"].toArray();
+                    FetchResult fr;
+                    for(int x = 0; x < array.size(); ++x)
+                    {
+                        QJsonObject obj = array[x].toObject();
+                        // TODO: check "hashType" for multiple hash support
+                        fr.md5hash = obj["hash"].toString();
+                        fr.remoteLink = obj["url"].toString();
+                        fr.bytes = obj["bytes"].toVariant().toULongLong();
+                        contents.append(fr);
+                    }
+                    m_lastStatus = 0;
+                    break;
+                }
+                if(reply->error() != QNetworkReply::NoError)
+                {
+                    m_lastStatus = -1;
+                }
+                reply->deleteLater();
+            }
+            loop.quit();
+        });
     loop.exec();
     if(m_lastStatus < 0)
         m_lastError = "No Internet connection.";
-    return {std::move(contents),m_lastStatus};
+    return {std::move(contents), m_lastStatus};
 }
 
 std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &existsDir, const QList<FetchResult> &updates)
@@ -82,14 +87,14 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
         QCryptographicHash hash(QCryptographicHash::Md5);
         files = getFilesEx(existsDir, GetFiles);
 #ifdef WIN32
-        for(QString & s : files)
+        for(QString &s : files)
         {
             s.replace("\\", "/");
         }
 #endif
 
-        QHash<QString,QString> hashes;
-        for(QString & f : files)
+        QHash<QString, QString> hashes;
+        for(QString &f : files)
         {
             QString file = existsDir + QDir::separator() + f;
             hashes[file] = getFileMD5Hash(file);
@@ -98,7 +103,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
         for(int x = 0; x < updates.size(); ++x)
         {
             skip = false;
-            for(const QString & f : files)
+            for(const QString &f : files)
             {
                 if(updates[x].remoteLink == f)
                 {
@@ -116,7 +121,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
 
         break;
     }
-    return {result,m_lastStatus};
+    return {result, m_lastStatus};
 }
 
 int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult> &contents)
@@ -138,86 +143,90 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
         }
         dir.setPath(tempDir.path());
         m_statusDownload.maxDownloads = contents.size();
-        m_statusDownload.totalDownloadBytes = std::accumulate(std::begin(contents), std::end(contents), 0,
-                                                              [](quint64 val, const FetchResult & t){
-                                                                  return val + t.bytes;
-                                                              });
+        m_statusDownload.totalDownloadBytes = std::accumulate(std::begin(contents), std::end(contents), 0, [](quint64 val, const FetchResult &t) { return val + t.bytes; });
 
         int downloadAtempts = MaxDownloadAtemp;
         quint64 lastBytes;
         for(int x = 0; x < contents.size() && !m_forclyExit; ++x)
         {
-            const FetchResult* fetch = &contents[x];
+            const FetchResult *fetch = &contents[x];
             QNetworkRequest request(QUrl(m_rootUrl + "/" + fetch->remoteLink));
             request.setTransferTimeout(MaxTimeout);
-            QNetworkReply * reply = m_manager->get(request);
+            QNetworkReply *reply = m_manager->get(request);
             QEventLoop loop;
             QFile file(tempDir.path() + QDir::separator() + fetch->remoteLink);
 
             // Make Sub dirs
             QStringList subDirs = fetch->remoteLink.split("/");
-            for(int y = 0; y < subDirs.size()-1; ++y)
+            for(int y = 0; y < subDirs.size() - 1; ++y)
             {
                 dir.mkdir(tempDir.path() + QDir::separator() + subDirs[y]);
             }
 
             mutex.lock();
-            m_statusDownload.downloadStep = x+1;
+            m_statusDownload.downloadStep = x + 1;
             m_statusDownload.currentStatus = fetch->remoteLink.split("/", Qt::SkipEmptyParts).back();
             mutex.unlock();
 
             lastBytes = 0;
-            QObject::connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived, qint64 bytesTotal)
-                             {
-                                 QMutexLocker locker(&mutex);
-                                 m_statusDownload.currentDownloadBytes = bytesReceived;
-                                 m_statusDownload.currentMaxDownloadBytes = bytesTotal;
-                                 m_statusDownload.totalDownloadedBytes += bytesReceived - lastBytes;
-                                 lastBytes = bytesReceived;
-
-                                 if(m_forclyExit)
-                                 {
-                                     reply->close();
-                                     loop.quit();
-                                 }
-                             });
-
-            QObject::connect(reply, &QNetworkReply::finished, [&](){
-                if(reply)
+            QObject::connect(
+                reply,
+                &QNetworkReply::downloadProgress,
+                [&](qint64 bytesReceived, qint64 bytesTotal)
                 {
-                    if(!m_forclyExit)
+                    QMutexLocker locker(&mutex);
+                    m_statusDownload.currentDownloadBytes = bytesReceived;
+                    m_statusDownload.currentMaxDownloadBytes = bytesTotal;
+                    m_statusDownload.totalDownloadedBytes += bytesReceived - lastBytes;
+                    lastBytes = bytesReceived;
+
+                    if(m_forclyExit)
                     {
-                        if(reply->error() == QNetworkReply::NoError)
+                        reply->close();
+                        loop.quit();
+                    }
+                });
+
+            QObject::connect(
+                reply,
+                &QNetworkReply::finished,
+                [&]()
+                {
+                    if(reply)
+                    {
+                        if(!m_forclyExit)
                         {
-                            if(file.open(QFile::WriteOnly))
+                            if(reply->error() == QNetworkReply::NoError)
                             {
-                                file.write(reply->readAll());
-                                // Restore atemps
-                                downloadAtempts = MaxDownloadAtemp;
+                                if(file.open(QFile::WriteOnly))
+                                {
+                                    file.write(reply->readAll());
+                                    // Restore atemps
+                                    downloadAtempts = MaxDownloadAtemp;
+                                }
+                                else
+                                    // File write fails
+                                    stop();
                             }
                             else
-                                // File write fails
-                                stop();
-                        }
-                        else
-                        {
-                            if(--downloadAtempts == 0)
                             {
-                                m_lastStatus = -1;
-                                m_lastError = "Network failed.";
-                                stop();
-                            }
-                            else // Retry download
-                            {
-                                --x;
-                                QThread::msleep(500);
+                                if(--downloadAtempts == 0)
+                                {
+                                    m_lastStatus = -1;
+                                    m_lastError = "Network failed.";
+                                    stop();
+                                }
+                                else // Retry download
+                                {
+                                    --x;
+                                    QThread::msleep(500);
+                                }
                             }
                         }
+                        reply->deleteLater();
                     }
-                    reply->deleteLater();
-                }
-                loop.quit();
-            });
+                    loop.quit();
+                });
             loop.exec();
         }
 
@@ -261,10 +270,11 @@ QStringList UpdateManager::getFilesEx(const QString &path, int flags, QString _s
     QDir dir(path);
     QStringList result;
     QStringList items = dir.entryList(QDir::Filter(flags & AllOF) | QDir::Dirs | QDir::NoDotAndDotDot);
-    for (const QString &item : std::as_const(items)) {
+    for(const QString &item : std::as_const(items))
+    {
         QString fullPath = dir.filePath(item);
         QFileInfo file(fullPath);
-        if (file.isDir())
+        if(file.isDir())
             result += getFilesEx(fullPath, flags, _special + item + QDir::separator());
         if((flags & GetFiles) && file.isFile() || (flags & GetDirs) && file.isDir())
             result.append(((flags & WriteFullpath) ? fullPath : (_special + item)));
@@ -272,16 +282,19 @@ QStringList UpdateManager::getFilesEx(const QString &path, int flags, QString _s
     return result;
 }
 
-QString UpdateManager::getFileMD5Hash(const QString &filePath) {
+QString UpdateManager::getFileMD5Hash(const QString &filePath)
+{
     QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
+    if(!file.open(QIODevice::ReadOnly))
+    {
         return QString();
     }
 
     std::byte _buffer[4096];
     QCryptographicHash hash(QCryptographicHash::Md5);
     QSpan<std::byte> spanbuffer = _buffer;
-    while (!file.atEnd()) {
+    while(!file.atEnd())
+    {
         QByteArrayView buffer = file.readLineInto(spanbuffer);
         hash.addData(buffer);
     }
@@ -290,15 +303,19 @@ QString UpdateManager::getFileMD5Hash(const QString &filePath) {
     return hash.result().toHex();
 }
 
-bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destinationPath) {
+bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destinationPath)
+{
     QDir sourceDir(sourcePath);
-    if (!sourceDir.exists()) {
+    if(!sourceDir.exists())
+    {
         return false;
     }
 
     QDir destinationDir(destinationPath);
-    if (!destinationDir.exists()) {
-        if (!destinationDir.mkpath(destinationPath)) {
+    if(!destinationDir.exists())
+    {
+        if(!destinationDir.mkpath(destinationPath))
+        {
             return false;
         }
     }
@@ -312,12 +329,13 @@ bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destin
     }
 
     entries = getFilesEx(sourcePath, GetFiles);
-    for(const QString &entry : std::as_const(entries)) {
+    for(const QString &entry : std::as_const(entries))
+    {
         QString sourceFilePath = sourceDir.filePath(entry);
         QString destinationFilePath = destinationDir.filePath(entry);
         QString destBackupFile = entry + "_old";
         QString destBackFilePath = destinationDir.filePath(destBackupFile);
-        if(destinationDir.exists(destBackFilePath) && !QFile::remove(destBackFilePath) )
+        if(destinationDir.exists(destBackFilePath) && !QFile::remove(destBackFilePath))
         {
             QFile::rename(destBackFilePath, _lostTemps.filePath(destBackupFile));
         }
@@ -328,7 +346,6 @@ bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destin
         {
             QThread::msleep(100);
         }
-
     }
     return true;
 }

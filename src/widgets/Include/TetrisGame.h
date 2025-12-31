@@ -1,9 +1,9 @@
 #pragma once
 
 #include <QList>
-#include <QWidget>
-#include <QTimer>
 #include <QPixmap>
+#include <QTimer>
+#include <QWidget>
 
 class Tetris : public QWidget
 {

@@ -1,22 +1,22 @@
 #include <limits>
 
-#include <QStringList>
-#include <QSet>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
-#include <QCoreApplication>
 #include <QRandomGenerator>
+#include <QSet>
+#include <QStringList>
 
 #include "adbcmds.h"
 #include "adbfront.h"
 
 struct AdbGlobal
 {
-    std::unordered_map<int,QStringList> requests;
-    std::unordered_map<int,QString> responces;
+    std::unordered_map<int, QStringList> requests;
+    std::unordered_map<int, QString> responces;
     std::thread *thread;
     std::mutex mutex;
-    std::pair<std::uint32_t,std::uint32_t> dataRxTx;
+    std::pair<std::uint32_t, std::uint32_t> dataRxTx;
     QString devId;
     int data;
     int ref;
@@ -31,7 +31,8 @@ void IOInterpret_procby(AdbGlobal * global)
 {
     std::unordered_map<int,QStringList>::iterator iter;
     global->data = 1;
-    while(global->data > 0 && global->devId.isEmpty() && Adb::deviceStatus(global->devId) == AdbConStatus::DEVICE)
+    while(global->data > 0 && global->devId.isEmpty() &&
+Adb::deviceStatus(global->devId) == AdbConStatus::DEVICE)
     {
         global->mutex.lock();
         iter = std::begin(global->requests);
@@ -67,15 +68,15 @@ void IOInterpret_procby(AdbGlobal * global)
 }
 */
 
-void IOInterpret_tty(AdbGlobal * global)
+void IOInterpret_tty(AdbGlobal *global)
 {
     QProcess process;
     QStringList _args;
     QString fullArgs;
     QByteArray output;
     QByteArray session;
-    std::unordered_map<int,QStringList>::iterator iter;
-    int lastIndex,len,reqId, retCode;
+    std::unordered_map<int, QStringList>::iterator iter;
+    int lastIndex, len, reqId, retCode;
     if(global == nullptr)
         return;
     process.start(AdbExecutableFilename(), QStringList() << "-s" << global->devId << "shell", QIODevice::ReadWrite);
@@ -109,8 +110,8 @@ void IOInterpret_tty(AdbGlobal * global)
                     session = std::move(process.readAllStandardOutput());
                     if(session.startsWith("shell@"))
                     {
-                        int i = session.indexOf('$', 7)+1;
-                        session = session.mid(i, session.length()-i).trimmed();
+                        int i = session.indexOf('$', 7) + 1;
+                        session = session.mid(i, session.length() - i).trimmed();
                         // End of bug.
                         // BUG: old version android (4 and less) has bug IO/TTY;
                         lastIndex = -1;
@@ -124,8 +125,7 @@ void IOInterpret_tty(AdbGlobal * global)
                     output.replace("\r\n", "\n");
 #endif
                     lastIndex = output.lastIndexOf('|');
-                }
-                while(lastIndex == -1 && process.state() == QProcess::ProcessState::Running);
+                } while(lastIndex == -1 && process.state() == QProcess::ProcessState::Running);
 
                 if(lastIndex == -1 || process.state() != QProcess::ProcessState::Running)
                 {
@@ -134,13 +134,13 @@ void IOInterpret_tty(AdbGlobal * global)
 
                 if(!output.isEmpty())
                 {
-                    session = std::move(output.mid(lastIndex+1, (output.length()-lastIndex+1)));
+                    session = std::move(output.mid(lastIndex + 1, (output.length() - lastIndex + 1)));
                     retCode = session.toInt();
-                    (void)retCode;
+                    (void) retCode;
 
                     if(lastIndex > 0)
                         lastIndex--;
-                    len = 1 + output.length()-lastIndex;
+                    len = 1 + output.length() - lastIndex;
 
                     output.remove(lastIndex, len);
                 }
@@ -163,7 +163,7 @@ void IOInterpret_tty(AdbGlobal * global)
     global->data = 0;
 }
 
-std::shared_ptr<AdbGlobal> refGlobal(const QString& devId)
+std::shared_ptr<AdbGlobal> refGlobal(const QString &devId)
 {
     std::shared_ptr<AdbGlobal> glob;
 
@@ -203,8 +203,8 @@ void unrefGlobal(std::shared_ptr<AdbGlobal> global)
     global->thread->join();
     delete global->thread;
     global->thread = nullptr;
-    for(const std::pair<int, QStringList> & q : std::as_const(global->requests))
-        global->responces[q.first] = QString{};
+    for(const std::pair<int, QStringList> &q : std::as_const(global->requests))
+        global->responces[q.first] = QString {};
     globals.remove(devId);
 }
 
@@ -213,11 +213,14 @@ AdbShell::AdbShell(const QString &deviceId) : ref(nullptr)
     connect(deviceId);
 }
 
-AdbShell::~AdbShell() { exit(); }
+AdbShell::~AdbShell()
+{
+    exit();
+}
 
 bool AdbShell::connect(const QString &deviceId)
 {
-    if (deviceId.isEmpty() || isConnect() || Adb::deviceStatus(deviceId) != AdbConStatus::DEVICE)
+    if(deviceId.isEmpty() || isConnect() || Adb::deviceStatus(deviceId) != AdbConStatus::DEVICE)
         return false;
     return (ref = refGlobal(deviceId)) != nullptr;
 }
@@ -227,10 +230,11 @@ bool AdbShell::isConnect()
     return ref && !ref->devId.isEmpty() && Adb::deviceStatus(ref->devId) == AdbConStatus::DEVICE && ref->data > 0;
 }
 
-std::pair<bool, QString> AdbShell::commandQueueWait(const QStringList &args) {
+std::pair<bool, QString> AdbShell::commandQueueWait(const QStringList &args)
+{
 
     int reqId = commandQueueAsync(args);
-    std::pair<bool,QString> result;
+    std::pair<bool, QString> result;
     if(reqId != -1)
         result = commandResult(reqId, true);
     return result;
@@ -245,8 +249,7 @@ int AdbShell::commandQueueAsync(const QStringList &args)
     do
     {
         reqId = QRandomGenerator::global()->bounded(0, std::numeric_limits<int>::max());
-    }
-    while (ref->requests.find(reqId) != std::end(ref->requests));
+    } while(ref->requests.find(reqId) != std::end(ref->requests));
     ref->requests[reqId] = args;
     ref->mutex.unlock();
     return reqId;
@@ -256,7 +259,7 @@ std::pair<bool, QString> AdbShell::commandResult(int requestId, bool waitResult)
 {
     bool found;
     QString output {};
-    std::unordered_map<int,QString>::iterator iter;
+    std::unordered_map<int, QString>::iterator iter;
     if((found = isConnect() && hasReqID(requestId)))
     {
         do
@@ -266,15 +269,14 @@ std::pair<bool, QString> AdbShell::commandResult(int requestId, bool waitResult)
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
             ref->mutex.lock();
-            if((found=((iter=ref->responces.find(requestId)) != std::end(ref->responces))))
+            if((found = ((iter = ref->responces.find(requestId)) != std::end(ref->responces))))
             {
                 output = iter->second;
                 // erase after use.
                 ref->responces.erase(iter);
             }
             ref->mutex.unlock();
-        }
-        while(isConnect() && waitResult && !found);
+        } while(isConnect() && waitResult && !found);
     }
     return {found, output};
 }

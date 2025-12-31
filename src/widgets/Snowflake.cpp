@@ -1,5 +1,5 @@
-#include <QRandomGenerator>
 #include <QPainter>
+#include <QRandomGenerator>
 #include <cmath>
 
 #include "Snowflake.h"
@@ -18,9 +18,9 @@ Snowflake::Snowflake(QWidget *parent, std::uint32_t createCount) : QWidget(paren
 
 void Snowflake::createSnowflake(std::uint32_t num)
 {
-    for (std::uint32_t i = 0; i < num; ++i)
+    for(std::uint32_t i = 0; i < num; ++i)
     {
-        mSnowflakes.push_back(SnowflakeObject{});
+        mSnowflakes.push_back(SnowflakeObject {});
     }
 }
 
@@ -31,19 +31,19 @@ void Snowflake::setSnowPixmap(const QPixmap &pixmap)
 
 void Snowflake::start()
 {
-    for (SnowflakeObject &unit : mSnowflakes)
+    for(SnowflakeObject &unit : mSnowflakes)
     {
         unit.point.setX(QRandomGenerator::global()->bounded(width()));
-        unit.speed = QRandomGenerator::global()->bounded(3.0-1.0) + 1.0;
+        unit.speed = QRandomGenerator::global()->bounded(3.0 - 1.0) + 1.0;
         unit.radius = QRandomGenerator::global()->bounded(20, 30);
-        unit.point.setY(-unit.radius*10);
+        unit.point.setY(-unit.radius * 10);
     }
     mMoveSnows.start();
 }
 
 void Snowflake::updateAnimation()
 {
-    for (SnowflakeObject &unit : mSnowflakes)
+    for(SnowflakeObject &unit : mSnowflakes)
     {
         // Wind effect
         unit.point.setX(unit.point.x() + qSin(unit.point.y() / 60.0) * 0.5);
@@ -63,10 +63,10 @@ void Snowflake::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     if(!mMoveSnows.isActive())
         return;
-    for (const SnowflakeObject &unit : std::as_const(mSnowflakes))
+    for(const SnowflakeObject &unit : std::as_const(mSnowflakes))
     {
-        float p = unit.point.y() / std::max(1,height());
-        painter.setOpacity(1-p);
+        float p = unit.point.y() / std::max(1, height());
+        painter.setOpacity(1 - p);
         painter.drawPixmap(std::round(unit.point.x()), std::round(unit.point.y()), unit.radius, unit.radius, mSnowflakeImage);
     }
 }

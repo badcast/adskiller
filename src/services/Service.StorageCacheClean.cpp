@@ -7,12 +7,11 @@ QString StorageCacheCleanService::uuid() const
 
 StorageCacheCleanService::StorageCacheCleanService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
 {
-
 }
 
-void StorageCacheCleanService::setDevice(const AdbDevice &adbDevice)
+void StorageCacheCleanService::setArgs(const AdbDevice &adbDevice)
 {
-    Service::setDevice(adbDevice);
+    Service::setArgs(adbDevice);
 }
 
 bool StorageCacheCleanService::canStart()

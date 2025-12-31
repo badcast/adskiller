@@ -8,5 +8,9 @@ target_include_directories(services PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_
 target_include_directories(services PUBLIC $<BUILD_INTERFACE:${INCL_DIR}>
                                            $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(services PRIVATE Qt6::Core Qt6::Widgets Qt6::Network)
+add_subdirectory(3rdParty/VCard)
+add_subdirectory(3rdParty/ClassfieldPhoneNumber)
 
+target_link_libraries(services PRIVATE VCard classfieldnum Qt6::Core Qt6::Widgets Qt6::Network)
+
+message(asdasd)

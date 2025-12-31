@@ -2,22 +2,24 @@
 
 #include "icontextbutton.h"
 
-IconTextButton::IconTextButton(const QIcon &icon, const QString &text, QWidget *parent)
-    : QPushButton(parent), _icon(icon), _text(text) {
+IconTextButton::IconTextButton(const QIcon &icon, const QString &text, QWidget *parent) : QPushButton(parent), _icon(icon), _text(text)
+{
     setFixedSize(400, 100);
 }
 
-QSize IconTextButton::sizeHint() const {
+QSize IconTextButton::sizeHint() const
+{
     return QSize(400, 100);
 }
 
-void IconTextButton::paintEvent(QPaintEvent *event) {
+void IconTextButton::paintEvent(QPaintEvent *event)
+{
     QWidget::paintEvent(event);
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QSize iconSize(height()*.8, height()*.8);
+    QSize iconSize(height() * .8, height() * .8);
     QRect iconRect(10, (height() - iconSize.height()) / 2, iconSize.width(), iconSize.height());
     _icon.paint(&painter, iconRect);
 

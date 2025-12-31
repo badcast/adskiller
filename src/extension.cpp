@@ -1,9 +1,9 @@
-#include <QRandomGenerator>
 #include <QCryptographicHash>
+#include <QRandomGenerator>
 #include <QString>
 
-#include "extension.h"
 #include "Services.h"
+#include "extension.h"
 #include "mainwindow.h"
 
 QByteArray CipherAlgoCrypto::RandomKey()
@@ -11,7 +11,7 @@ QByteArray CipherAlgoCrypto::RandomKey()
     int x;
     QByteArray key;
     key.resize(8);
-    for (x = 0; x < key.length(); ++x)
+    for(x = 0; x < key.length(); ++x)
     {
         key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
     }
@@ -23,14 +23,14 @@ QByteArray CipherAlgoCrypto::ConvBytes(const QByteArray &bytes, const QByteArray
     int x;
     QByteArray retval;
     retval.resize(bytes.length());
-    for (x = 0; x < bytes.length() && !key.isEmpty(); ++x)
+    for(x = 0; x < bytes.length() && !key.isEmpty(); ++x)
         retval[x] = bytes[x] ^ key[x % key.length()];
     return retval;
 }
 
 QString CipherAlgoCrypto::PackDC(const QByteArray &dataInit, const QByteArray &key)
 {
-    QByteArray retval{};
+    QByteArray retval {};
     QByteArray data = ConvBytes(dataInit, key);
     int keylen = key.toHex().length();
     int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
@@ -44,11 +44,11 @@ QString CipherAlgoCrypto::PackDC(const QByteArray &dataInit, const QByteArray &k
 
 QByteArray CipherAlgoCrypto::UnpackDC(const QString &packed)
 {
-    QByteArray key{}, data{};
+    QByteArray key {}, data {};
     int keylen;
     int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
     data = QByteArray::fromBase64(packed.toLatin1());
-    if (!data.isEmpty() && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
+    if(!data.isEmpty() && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
     {
         keylen = data[hashlen];
         key = QByteArray::fromHex(data.mid(hashlen + 1, keylen));

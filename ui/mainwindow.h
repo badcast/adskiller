@@ -4,32 +4,33 @@
 #include <functional>
 #include <memory>
 
-#include <QWidget>
-#include <QMainWindow>
-#include <QList>
-#include <QMap>
 #include <QComboBox>
-#include <QSettings>
-#include <QVersionNumber>
-#include <QSpacerItem>
-#include <QPropertyAnimation>
-#include <QListView>
-#include <QLabel>
-#include <QProgressBar>
-#include <QTableView>
 #include <QDateEdit>
+#include <QLabel>
+#include <QList>
+#include <QListView>
+#include <QMainWindow>
+#include <QMap>
+#include <QProgressBar>
+#include <QPropertyAnimation>
+#include <QSettings>
+#include <QSpacerItem>
+#include <QTableView>
+#include <QVersionNumber>
+#include <QWidget>
 
 #include "ProgressCircle.h"
 
-#include "begin.h"
-#include "adbfront.h"
-#include "network.h"
 #include "AppSystemTray.h"
-#include "extension.h"
 #include "Services.h"
 #include "Snowflake.h"
+#include "adbfront.h"
+#include "begin.h"
+#include "extension.h"
+#include "network.h"
 
-enum {
+enum
+{
     VersionCheckRate = 10000,
     ChansesRunInvalid = 3
 };
@@ -42,8 +43,9 @@ enum ThemeScheme
 };
 
 QT_BEGIN_NAMESPACE
-namespace Ui {
-class MainWindow;
+namespace Ui
+{
+    class MainWindow;
 }
 QT_END_NAMESPACE
 
@@ -69,8 +71,8 @@ public:
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
     void DelayUISync(int ms);
-    void delayPushLoop(int ms, std::function<bool ()> call);
-    void delayPush(int ms, std::function<void ()> call);
+    void delayPushLoop(int ms, std::function<bool()> call);
+    void delayPush(int ms, std::function<void()> call);
     void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<Service> service);
 
     Network network;
@@ -78,7 +80,7 @@ public:
     QApplication *app;
     VersionInfo runtimeVersion;
     VersionInfo actualVersion;
-    AdsAppSystemTray * tray;
+    AdsAppSystemTray *tray;
 
 #ifdef NDEBUG
     int verChansesAvailable = ChansesRunInvalid;
@@ -88,10 +90,10 @@ public:
     QList<std::shared_ptr<Service>> services {};
     std::shared_ptr<QList<ServiceItemInfo>> serverServices {};
 
-    bool accessUi_adskiller(QListView *& processLogStatusV, QLabel *& malareStatusText0V, QLabel *& deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
-    bool accessUi_myDevices(QTableView *& tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *& quaranteeFilter);
+    bool accessUi_adskiller(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
+    bool accessUi_myDevices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter);
 
-    static MainWindow * current;
+    static MainWindow *current;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -99,10 +101,10 @@ private slots:
     void on_action_Qt_triggered();
     void on_authButton_clicked();
     void slotAuthFinish(int status, bool ok);
-    void slotPullServiceList(const QList<ServiceItemInfo>& services, bool ok);
-    void slotFetchVersionFinish(int status, const QString& version, const QString& url, bool ok);
+    void slotPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
+    void slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok);
     void showEvent(QShowEvent *event) override;
-    void closeEvent(QCloseEvent * event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 public slots:
     void setThemeAction();
@@ -112,23 +114,23 @@ public slots:
 
 private:
     Ui::MainWindow *ui;
-    ProgressCircle* malwareProgressCircle;
-    ProgressCircle* loaderProgressCircle;
-    QList<QWidget*> malwareStatusLayouts;
-    QMap<PageIndex,QWidget*> pages;
-    QWidget * vPageSpacer;
-    QPropertyAnimation * vPageSpacerAnimator;
-    QPropertyAnimation * contentOpacityAnimator;
-    QPropertyAnimation * deviceLeftAnimator;
+    ProgressCircle *malwareProgressCircle;
+    ProgressCircle *loaderProgressCircle;
+    QList<QWidget *> malwareStatusLayouts;
+    QMap<PageIndex, QWidget *> pages;
+    QWidget *vPageSpacer;
+    QPropertyAnimation *vPageSpacerAnimator;
+    QPropertyAnimation *contentOpacityAnimator;
+    QPropertyAnimation *deviceLeftAnimator;
     PageIndex startPage = PageIndex::AuthPage;
     PageIndex curPage = startPage;
     PageIndex lastPage = PageIndex::AuthPage;
-    QTimer * versionChecker;
-    Snowflake * snows;
+    QTimer *versionChecker;
+    Snowflake *snows;
     bool deviceSelectSwitched;
 
-    template<typename Pred>
-    void showPageLoader(PageIndex pageNum, int msWait, Pred&& pred);
+    template <typename Pred>
+    void showPageLoader(PageIndex pageNum, int msWait, Pred &&pred);
     void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
     void showPage(PageIndex pageNum);
     void pageShown(int page);

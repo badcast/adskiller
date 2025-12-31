@@ -1,9 +1,9 @@
 #pragma once
 
 #include <QList>
-#include <QWidget>
-#include <QTimer>
 #include <QPixmap>
+#include <QTimer>
+#include <QWidget>
 
 struct SnowflakeObject
 {
@@ -18,7 +18,7 @@ public:
     explicit Snowflake(QWidget *parent = nullptr, std::uint32_t createCount = 10);
 
     void createSnowflake(std::uint32_t num);
-    void setSnowPixmap(const QPixmap& pixmap);
+    void setSnowPixmap(const QPixmap &pixmap);
     void start();
 
 private slots:

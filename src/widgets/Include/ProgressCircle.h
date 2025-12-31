@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <QWidget>
 #include <QPropertyAnimation>
+#include <QWidget>
 
 class ProgressCircle : public QWidget
 {
@@ -22,7 +22,7 @@ class ProgressCircle : public QWidget
     Q_PROPERTY(bool infinilyMode READ infinilyMode WRITE setInfinilyMode)
     Q_PROPERTY(bool visibleText READ getVisibleText WRITE setVisibleText)
 
-    //private
+    // private
     Q_PROPERTY(qreal infiniteAnimationValue READ infiniteAnimationValue WRITE setInfiniteAnimationValue)
     Q_PROPERTY(int visibleValue READ visibleValue WRITE setVisibleValue)
 
@@ -55,7 +55,7 @@ public:
     qreal outerRadius() const;
 
     QColor color() const;
-    
+
 public slots:
     void setValue(int value);
     void setMaximum(int maximum);
@@ -84,9 +84,9 @@ private:
     QPixmap generatePixmap() const;
     qreal infiniteAnimationValue() const;
     int visibleValue() const;
-    
+
 private:
-    //actual current value
+    // actual current value
     int mValue;
     int mMaximum;
     bool mVisibleText;
@@ -95,7 +95,7 @@ private:
     qreal mOuterRadius;
     QColor mColor;
 
-    //value visible to user
+    // value visible to user
     int mVisibleValue;
     QPropertyAnimation mValueAnimation;
 

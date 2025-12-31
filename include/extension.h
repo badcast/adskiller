@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include <QByteArray>
+#include <QSettings>
 #include <QString>
 #include <QVariant>
-#include <QSettings>
 
-#include "begin.h"
 #include "adbfront.h"
+#include "begin.h"
 
 enum DeviceConnectType
 {
@@ -37,11 +37,11 @@ public:
     static void save();
     static void load();
 
-    static bool readValue(const QString &key, QVariant * value);
-    static void writeValue(const QString &key, const QVariant& value);
+    static bool readValue(const QString &key, QVariant *value);
+    static void writeValue(const QString &key, const QVariant &value);
 
-    static QString encryptedToken(bool * contains = nullptr, const QVariant &set = {});
-    static bool autoLogin(bool * contains = nullptr, const QVariant &set = {});
-    static int themeIndex(bool * contains = nullptr, const QVariant &set = {});
-    static int networkTimeout(bool * contains = nullptr, const QVariant &set = {});
+    static QString encryptedToken(bool *contains = nullptr, const QVariant &set = {});
+    static bool autoLogin(bool *contains = nullptr, const QVariant &set = {});
+    static int themeIndex(bool *contains = nullptr, const QVariant &set = {});
+    static int networkTimeout(bool *contains = nullptr, const QVariant &set = {});
 };

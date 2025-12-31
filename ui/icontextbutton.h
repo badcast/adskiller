@@ -1,9 +1,10 @@
 #pragma once
 
-#include <QWidget>
 #include <QPushButton>
+#include <QWidget>
 
-class IconTextButton : public QPushButton {
+class IconTextButton : public QPushButton
+{
     Q_OBJECT
 
 public:

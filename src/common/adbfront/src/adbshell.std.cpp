@@ -5,12 +5,12 @@
 #include "adbcmds.h"
 #include "adbfront.h"
 
-const std::array <const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
+const std::array<const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
 
-std::pair<int,QString> algoDesignView(std::uint64_t bytes)
+std::pair<int, QString> algoDesignView(std::uint64_t bytes)
 {
-    int x = 1,power  = 0;
-    while (bytes >= 1000 && power < ConstDataSizes.size())
+    int x = 1, power = 0;
+    while(bytes >= 1000 && power < ConstDataSizes.size())
     {
         bytes /= 1000;
         ++power;
@@ -19,10 +19,11 @@ std::pair<int,QString> algoDesignView(std::uint64_t bytes)
     {
         x *= 2;
     }
-    return {x,ConstDataSizes[power]};
+    return {x, ConstDataSizes[power]};
 }
 
-std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
+std::shared_ptr<AdbSysInfo> AdbShell::getInfo()
+{
     if(!isConnect())
         return nullptr;
     std::shared_ptr<AdbSysInfo> sysi = std::make_shared<AdbSysInfo>();
@@ -33,7 +34,7 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
     while(!txt.atEnd())
     {
         QString at = txt.readLine();
-        if(at.startsWith("Filesystem",Qt::CaseInsensitive))
+        if(at.startsWith("Filesystem", Qt::CaseInsensitive))
             continue;
         tmp0 = std::move(at.split(' ', Qt::SkipEmptyParts));
         sysi->diskTotal = tmp0[1].toULongLong() * 1024;
@@ -47,7 +48,7 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
         QString at = txt.readLine();
 
         tmp0 = std::move(at.split(' ', Qt::SkipEmptyParts));
-        if(at.startsWith("mem",Qt::CaseInsensitive))
+        if(at.startsWith("mem", Qt::CaseInsensitive))
         {
             sysi->ramTotal = tmp0[1].toULongLong();
             sysi->ramUsed = tmp0[2].toULongLong();
@@ -75,7 +76,7 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo() {
 
 QString AdbSysInfo::OSVersionString() const
 {
-    return QString("%1 %2").arg((isAndroid ? "Android" : "Unknown")).arg( ((osVersion == 0) ? NA : QString("%1").arg(osVersion)) );
+    return QString("%1 %2").arg((isAndroid ? "Android" : "Unknown"), ((osVersion == 0) ? NA : QString::number(osVersion)));
 }
 
 QString AdbSysInfo::StorageDesignString() const

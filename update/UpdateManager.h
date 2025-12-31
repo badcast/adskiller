@@ -1,25 +1,25 @@
-#include <QList>
-#include <QCoreApplication>
 #include <QCommandLineParser>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+#include <QCoreApplication>
+#include <QCryptographicHash>
+#include <QDir>
 #include <QEventLoop>
-#include <QUrl>
 #include <QFile>
-#include <QJsonDocument>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
-#include <QSharedMemory>
-#include <QProcess>
-#include <QThread>
+#include <QList>
+#include <QLockFile>
 #include <QMutex>
 #include <QMutexLocker>
-#include <QTimer>
-#include <QDir>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QProcess>
+#include <QSharedMemory>
 #include <QStandardPaths>
 #include <QTemporaryDir>
-#include <QCryptographicHash>
-#include <QLockFile>
+#include <QThread>
+#include <QTimer>
+#include <QUrl>
 
 struct FetchResult
 {
@@ -43,7 +43,8 @@ class UpdateManager : public QObject
 {
     Q_OBJECT
 
-    enum {
+    enum
+    {
         GetDirs = QDir::Dirs,
         GetFiles = QDir::Files,
         AllOF = GetDirs | GetFiles,
@@ -53,9 +54,9 @@ class UpdateManager : public QObject
 public:
     UpdateManager(QObject *parent = nullptr);
 
-    std::pair<QList<FetchResult>,int> fetch();
+    std::pair<QList<FetchResult>, int> fetch();
 
-    std::pair<QList<FetchResult>,int> filter_by(const QString &existsDir, const QList<FetchResult> & updates);
+    std::pair<QList<FetchResult>, int> filter_by(const QString &existsDir, const QList<FetchResult> &updates);
 
     int downloadAll(const QString &existsDir, const QList<FetchResult> &contents);
 
@@ -63,17 +64,17 @@ public:
 
     DownloadStatus downloadStatus();
 
-    QString getLastError(int * lastStatus = nullptr);
+    QString getLastError(int *lastStatus = nullptr);
 
     int finishSuccess;
 
 private:
-    QStringList getFilesEx(const QString& path, int flags = GetFiles, QString _special = QString(""));
+    QStringList getFilesEx(const QString &path, int flags = GetFiles, QString _special = QString(""));
     QString getFileMD5Hash(const QString &filePath);
     bool moveFilesTo(const QString &sourcePath, const QString &destinationPath);
 
 private:
-    QNetworkAccessManager * m_manager;
+    QNetworkAccessManager *m_manager;
     QString m_rootUrl;
     QString m_version;
     quint64 m_totalBytes;

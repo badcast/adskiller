@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QWidget>
 #include <QMenu>
 #include <QSystemTrayIcon>
+#include <QWidget>
 
 class AdsAppSystemTray : public QSystemTrayIcon
 {
     Q_OBJECT
 
 public:
-    AdsAppSystemTray(QWidget* parent = nullptr);
+    AdsAppSystemTray(QWidget *parent = nullptr);
 };

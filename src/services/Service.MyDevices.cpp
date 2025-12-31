@@ -1,6 +1,6 @@
-#include <QStandardItemModel>
-#include <QHeaderView>
 #include <QCheckBox>
+#include <QHeaderView>
+#include <QStandardItemModel>
 
 #include "Services.h"
 #include "mainwindow.h"
@@ -27,7 +27,6 @@ void MyDeviceService::slotRefresh()
     MainWindow::current->DelayUISync(2000);
     MainWindow::current->network.pullDeviceList(&dtStart, &dtEnd);
 }
-
 
 void MyDeviceService::clearMyDevicesPage(QString text)
 {
@@ -71,7 +70,7 @@ void MyDeviceService::fillMyDevicesPage()
     items << *expired;
 
     int idx = 0;
-    for(const DeviceItemInfo & item : std::as_const(items))
+    for(const DeviceItemInfo &item : std::as_const(items))
     {
         if(quaranteeFilter->isChecked() && !item.serverQuarantee)
             continue;
@@ -83,13 +82,12 @@ void MyDeviceService::fillMyDevicesPage()
         model->setItem(idx, 5, new QStandardItem(item.expire.toString(Qt::RFC2822Date)));
         model->setItem(idx, 6, new QStandardItem(QString::number(item.packages)));
         model->setItem(idx, 7, new QStandardItem(QString::number(item.connectionCount)));
-        model->setItem(idx, 8, new QStandardItem(QString("%1").arg(item.purchasedType == 1 ? ("VIP") : ( item.purchasedType == 2 ? (QString::number(item.purchasedValue)) : ("отсутствует")))));
+        model->setItem(idx, 8, new QStandardItem(QString("%1").arg(item.purchasedType == 1 ? ("VIP") : (item.purchasedType == 2 ? (QString::number(item.purchasedValue)) : ("отсутствует")))));
         model->setItem(idx, 9, new QStandardItem(QString("%1").arg(item.serverQuarantee == 1 ? "Да" : "Нет")));
         ++idx;
     }
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
-
 
 void MyDeviceService::slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok)
 {
@@ -124,7 +122,8 @@ MyDeviceService::MyDeviceService(QObject *parent) : Service(None, parent), mInte
 }
 
 MyDeviceService::~MyDeviceService()
-{}
+{
+}
 
 bool MyDeviceService::canStart()
 {
@@ -143,13 +142,12 @@ bool MyDeviceService::isFinish()
 
 bool MyDeviceService::start()
 {
-    if(!canStart() || isStarted() || !MainWindow::current->accessUi_myDevices(table, dateEditBegin, dateEditEnd, refreshButton, quaranteeFilter) ||
-        !(table && dateEditBegin && dateEditEnd && refreshButton && quaranteeFilter))
+    if(!canStart() || isStarted() || !MainWindow::current->accessUi_myDevices(table, dateEditBegin, dateEditEnd, refreshButton, quaranteeFilter) || !(table && dateEditBegin && dateEditEnd && refreshButton && quaranteeFilter))
         return false;
 
     mInternalData |= 1;
     // Set minimum as default.
-    dateEditBegin->setDate(QDate(2024,1,1));
+    dateEditBegin->setDate(QDate(2024, 1, 1));
     // Set maximum as default current date.
     dateEditEnd->setDate(QDate::currentDate());
     QObject::disconnect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);

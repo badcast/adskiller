@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
-#include <thread>
-#include <mutex>
 #include <functional>
 #include <map>
-#include <utility>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <utility>
 
 #include <QList>
 #include <QProcess>
@@ -41,7 +41,9 @@ public:
     QString vendor;
     QString marketingName;
 
-    AdbDevice() : devId(), model(), displayName(), vendor() {}
+    AdbDevice() : devId(), model(), displayName(), vendor()
+    {
+    }
 
     bool isEmpty() const;
 };
@@ -60,17 +62,20 @@ public:
 
     bool connect(const QString &deviceId);
     bool isConnect();
-    inline void disconnect(){
+    inline void disconnect()
+    {
         exit();
     }
     std::pair<bool, QString> commandQueueWait(const QStringList &args);
-    template<typename... Args>
-    inline std::pair<bool, QString> commandQueueWaits(Args&&... args) {
+    template <typename... Args>
+    inline std::pair<bool, QString> commandQueueWaits(Args &&...args)
+    {
         return commandQueueWait((QStringList() << ... << std::forward<Args>(args)));
     }
     int commandQueueAsync(const QStringList &args);
-    template<typename... Args>
-    inline int commandQueueAsyncs(Args&&... args) {
+    template <typename... Args>
+    inline int commandQueueAsyncs(Args &&...args)
+    {
         return commandQueueAsync((QStringList() << ... << std::forward<Args>(args)));
     }
     std::pair<bool, QString> commandResult(int requestId, bool waitResult = true);
@@ -103,18 +108,12 @@ public:
     bool swapEnabled;
     bool isAndroid;
 
-    AdbSysInfo() :
-        diskTotal(-1),
-        diskUsed(-1),
-        ramTotal(-1),
-        ramUsed(-1),
-        swapTotal(-1),
-        swapUsed(-1),
-        osVersion(0),
-        swapEnabled(false)    {}
+    AdbSysInfo() : diskTotal(-1), diskUsed(-1), ramTotal(-1), ramUsed(-1), swapTotal(-1), swapUsed(-1), osVersion(0), swapEnabled(false)
+    {
+    }
 
     QString OSVersionString() const;
-    //TODO: make design capacity
+    // TODO: make design capacity
     QString StorageDesignString() const;
     QString RAMDesignString() const;
 };
@@ -122,14 +121,14 @@ public:
 class AdbFileIO : public AdbShell
 {
 public:
-    AdbFileIO(const QString& deviceId = {});
-    AdbFileIO(const AdbFileIO&) = delete;
+    AdbFileIO(const QString &deviceId = {});
+    AdbFileIO(const AdbFileIO &) = delete;
 
-    bool exists(const QString& filePath);
-    bool write(const QString& filePath, const QByteArray & buffer);
-    QByteArray read(const QString& filePath);
-    bool deleteFile(const QString& filePath);
-    QStringList getFiles(const QString& dirPath, bool includeDirs = true);
+    bool exists(const QString &filePath);
+    bool write(const QString &filePath, const QByteArray &buffer);
+    QByteArray read(const QString &filePath);
+    bool deleteFile(const QString &filePath);
+    QStringList getFiles(const QString &dirPath, bool includeDirs = true);
 };
 
 class Adb : public QObject
@@ -140,40 +139,40 @@ public:
     AdbDevice device;
     QList<AdbDevice> cachedDevices;
 
-    Adb(QObject * parent = nullptr);
+    Adb(QObject *parent = nullptr);
     virtual ~Adb();
 
     AdbConStatus status() const;
     bool isConnected();
     void connectFirst();
-    void connect(const QString& devId);
+    void connect(const QString &devId);
     std::pair<bool, std::unique_ptr<AdbShell>> runShell();
     void disconnect();
     static void startServer();
     static void killServer();
-    static AdbDevice getDevice(const QString& deviceSerial);
-    static QList<PackageIO> getPackages(const QString& deviceSerial);
-    static void killPackages(const QString &deviceSerial, const QList<PackageIO> &packages, int& successCount);
-    static bool uninstallPackages(const QString &deviceSerial, const QStringList& packages, int& successCount);
-    static bool disablePackages(const QString &deviceSerial, const QStringList& packages, int& successCount);
-    static bool enablePackages(const QString &deviceSerial, const QStringList& packages, int& successCount);
+    static AdbDevice getDevice(const QString &deviceSerial);
+    static QList<PackageIO> getPackages(const QString &deviceSerial);
+    static void killPackages(const QString &deviceSerial, const QList<PackageIO> &packages, int &successCount);
+    static bool uninstallPackages(const QString &deviceSerial, const QStringList &packages, int &successCount);
+    static bool disablePackages(const QString &deviceSerial, const QStringList &packages, int &successCount);
+    static bool enablePackages(const QString &deviceSerial, const QStringList &packages, int &successCount);
 
 signals:
-    void onDeviceChanged(const AdbDevice& device, AdbConState state);
+    void onDeviceChanged(const AdbDevice &device, AdbConState state);
 
 private slots:
     void onDeviceWatch();
 
 public:
-    static AdbConStatus deviceStatus(const QString& deviceId);
+    static AdbConStatus deviceStatus(const QString &deviceId);
     static AdbConStatus deviceStatus(const AdbDevice &device);
     static QList<AdbDevice> getDevices();
-    static uint deviceHash(const AdbDevice& device);
+    static uint deviceHash(const AdbDevice &device);
 
 private:
     QTimer *deviceWatchTimer;
 };
 
-bool operator ==(const AdbDevice& lhs, const AdbDevice& rhs);
+bool operator==(const AdbDevice &lhs, const AdbDevice &rhs);
 
 QString AdbExecutableFilename();
