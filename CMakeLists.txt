@@ -33,7 +33,8 @@ set(PROJECT_SOURCES
         src/AppSystemTray.cpp
         src/extension.cpp
         src/settings.cpp
-        resources.qrc
+        Resources/AdskillerResouces.qrc
+        Resources/PixelBlastGameRes.qrc
 )
 
 file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT_SOURCE_DIR}/ui/update_*")
@@ -51,7 +52,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     )
     qt_add_executable(update
         MANUAL_FINALIZATION
-        update.qrc
+        Resources/update.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET application APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

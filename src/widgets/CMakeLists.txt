@@ -1,5 +1,5 @@
 set(INCL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Include)
-file(GLOB SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${INCL_DIR}/*.h)
+file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${INCL_DIR}/*.h)
 
 add_library(widgets STATIC ${SRC_FILES})
 target_include_directories(widgets PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)

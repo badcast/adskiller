@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/pixelblastgame">
+        <file alias="test">res/PixelBlastGame/Blocks/Blocks018.png</file>
+        <file alias="grid-cell">res/PixelBlastGame/grid-cell.png</file>
+        <file>res/PixelBlastGame/grid_metal.png</file>
+        <file>res/PixelBlastGame/grid.png</file>
+    </qresource>
+</RCC>
