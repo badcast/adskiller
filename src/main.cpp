@@ -13,6 +13,7 @@
 #include "begin.h"
 #include "mainwindow.h"
 #include "network.h"
+#include "PixelBlastGame.h"
 
 constexpr auto ShowCommandPipe = "adskiller_window_show";
 constexpr auto HideCommandPipe = "adskiller_window_hide";
@@ -23,8 +24,12 @@ QWidget *createBanner();
 
 int main(int argc, char **argv)
 {
+
     int exitCode;
     QApplication app(argc, argv);
+    PixelBlast t;
+    t.show();
+    return app.exec();
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
     if(sharedMemUpdate.attach() || !checkout())
     {
