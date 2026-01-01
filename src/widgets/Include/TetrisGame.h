@@ -7,12 +7,20 @@
 
 class Tetris : public QWidget
 {
-private:
-    QList<int> matrix;
-
 public:
     Tetris(QWidget *parent = nullptr);
 
     void startGame();
     void stopGame();
+
+private slots:
+    void updateScene();
+
+private:
+    void paintEvent(QPaintEvent *event) override;
+
+    QSizeF cellSize;
+    QSize blockSize;
+    QTimer updateTimer;
+    QList<int> matrix;
 };
