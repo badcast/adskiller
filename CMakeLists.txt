@@ -34,7 +34,7 @@ set(PROJECT_SOURCES
         src/extension.cpp
         src/settings.cpp
         Resources/AdskillerResouces.qrc
-        Resources/PixelBlastGameRes.qrc
+        Resources/PixelBlastGame/PixelBlastGameRes.qrc
 )
 
 file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT_SOURCE_DIR}/ui/update_*")

@@ -36,11 +36,13 @@ private:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void updateData();
-    void assignBlocks(QList<int> blocks);
+    void assignBlocks(const QList<int> &blocks);
     QList<int> createBlocks(int blocks);
 
     int cellSquare;
     int mouseBtn;
+    int scores;
+    int frames;
     QPoint mousePoint;
     QSizeF cellScale;
     QSizeF cellSize;
@@ -48,7 +50,7 @@ private:
     QRectF boardRegion;
     QTimer updateTimer;
     QList<std::uint8_t> matrix;
-    QPixmap test;
+    QList<int> currentBlocks;
 
     BlockOrigin plants;
 };
