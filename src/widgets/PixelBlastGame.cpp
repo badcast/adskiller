@@ -19,13 +19,12 @@ constexpr int MaxCellWidth = 8;
 struct BlockResource
 {
     QString name;
-    int N;
     QList<QPixmap> resources;
 };
 
 std::shared_ptr<QList<BlockResource>> globalResources {};
 
-PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), cellScale(1.0F, 1.0F), boardRegion(0, 0, 500, 500), scores(0), frames(0)
+PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), cellScale(1.0F, 1.0F), boardRegion(0, 0, 500, 500), scores(0), frames(0), frameIndex(0)
 {
     resize(boardRegion.size().scaled(boardRegion.width() + 100, boardRegion.height() + 100, Qt::AspectRatioMode::IgnoreAspectRatio).toSize());
 
@@ -46,6 +45,7 @@ PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), ce
     constexpr auto _formatResourceName = ":/pixelblastgame/Blocks/%s";
     constexpr auto _formatBlocks = "%s %d %s";
     constexpr auto MaxBufLen = 128;
+    int n;
     char buff[MaxBufLen];
     char buff0[64];
     char buff1[64];
@@ -64,13 +64,13 @@ PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), ce
     QTextStream stream(&file);
     while(stream.readLineInto(&content))
     {
-        if(sscanf((content).toLocal8Bit().data(), _formatBlocks, buff, &bRes.N, buff0) != 3)
+        if(sscanf((content).toLocal8Bit().data(), _formatBlocks, buff, &n, buff0) != 3)
         {
             globalResources.reset();
             return;
         }
         bRes.name = buff;
-        for(int i = 0; i < bRes.N; ++i)
+        for(int i = 0; i < n; ++i)
         {
             snprintf(buff, MaxBufLen, _formatResourceName, buff0);
             content = buff;
@@ -270,18 +270,21 @@ void PixelBlast::updateScene()
     }
 
     update();
-
     frames++;
+    frameIndex += frames % 15 == 0;
 }
 
 void PixelBlast::paintEvent(QPaintEvent *event)
 {
     int x, y, z, w;
-
     QRectF dest;
     QBrush background(QColor(0x454976));
     QSizeF _scaleFactor = scaleFactor;
     QPainter p(this);
+    QPixmap *pixmap;
+
+    BlockResource *t = &(globalResources->operator[](1));
+    pixmap = &t->resources[frameIndex % t->resources.size()];
 
     p.setBackground(background);
     p.fillRect(rect(), background);
@@ -297,7 +300,7 @@ void PixelBlast::paintEvent(QPaintEvent *event)
             dest.moveTop(boardRegion.y() + y * _scaleFactor.height());
             if(matrix[z] == 1)
             {
-                p.drawPixmap(dest, (*globalResources)[matrix[z]].resources[frames % (*globalResources)[plants.shadowBlockPoints[x].idx].N], {});
+                p.drawPixmap(dest, *pixmap, {});
             }
             else if(matrix[z] == 2)
             {
@@ -318,11 +321,6 @@ void PixelBlast::paintEvent(QPaintEvent *event)
         // TODO: padding add for blocks with new scaleFactor (preview content)
         dest.moveLeft(plants.shadowBlockPoints[x].x);
         dest.moveTop(plants.shadowBlockPoints[x].y);
-        z = plants.shadowBlockPoints[x].idx;
-        if(z > -1)
-        {
-            BlockResource *t = &(globalResources->operator[](matrix[z]));
-            p.drawPixmap(dest, t->resources[frames % t->N], QRectF());
-        }
+        p.drawPixmap(dest, *pixmap, QRectF());
     }
 }

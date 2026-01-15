@@ -43,6 +43,7 @@ private:
     int mouseBtn;
     int scores;
     int frames;
+    int frameIndex;
     QPoint mousePoint;
     QSizeF cellScale;
     QSizeF cellSize;
