@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 
 #include <QList>
 #include <QPixmap>
@@ -15,10 +16,11 @@ class PixelBlast : public QWidget
     };
     struct BlockOrigin
     {
+        int shapeColor;
         int rows;
         int columns;
         QList<QPoint> blockPoints;
-        QList<BlockObject> shadowBlockPoints;
+        QList<BlockObject> blocks;
     };
 
 public:
@@ -36,6 +38,8 @@ private:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void updateData();
+    int getBlockColor(int idx);
+    void setBlockColor(int idx, int val);
     void assignBlocks(const QList<int> &blocks);
     QList<int> createBlocks(int blocks);
 
@@ -44,6 +48,7 @@ private:
     int scores;
     int frames;
     int frameIndex;
+
     QPoint mousePoint;
     QSizeF cellScale;
     QSizeF cellSize;
@@ -53,5 +58,5 @@ private:
     QList<std::uint8_t> matrix;
     QList<int> currentBlocks;
 
-    BlockOrigin plants;
+    BlockOrigin shape;
 };

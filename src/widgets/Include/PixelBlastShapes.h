@@ -135,10 +135,28 @@ enum StaticShapes : int
         # # # . .
         # # # . .
     */
-    Shape19 = 0x70707
+    Shape19 = 0x70707,
+    /*
+        # . . . .
+        . . . . .
+        . . . . .
+    */
+    Shape20 = 0x1,
+    /*
+        # # . . .
+        . . . . .
+        . . . . .
+    */
+    Shape21 = 0x3,
+    /*
+        # . . . .
+        # . . . .
+        . . . . .
+    */
+    Shape22 = 0x101
 };
 
-constexpr int MaxShapes = 20;
+constexpr int MaxShapes = 23;
 
 constexpr inline int getShape(int idx)
 {
@@ -185,6 +203,12 @@ constexpr inline int getShape(int idx)
             return StaticShapes::Shape18;
         case 19:
             return StaticShapes::Shape19;
+        case 20:
+            return StaticShapes::Shape20;
+        case 21:
+            return StaticShapes::Shape21;
+        case 22:
+            return StaticShapes::Shape22;
         default:
             return StaticShapes::Shape0;
     }

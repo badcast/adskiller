@@ -33,5 +33,6 @@
         <file>Blocks/block_yellow_2.png</file>
         <file>Blocks/block_yellow_3.png</file>
         <file>Blocks/block_yellow_4.png</file>
+        <file alias="grid-cell">grid-cell.png</file>
     </qresource>
 </RCC>
