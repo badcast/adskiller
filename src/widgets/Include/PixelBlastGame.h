@@ -55,7 +55,7 @@ private:
     QSizeF scaleFactor;
     QRectF boardRegion;
     QTimer updateTimer;
-    QList<std::uint8_t> matrix;
+    QList<std::uint8_t> grid;
     QList<int> currentBlocks;
 
     BlockOrigin shape;

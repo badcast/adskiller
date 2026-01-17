@@ -23,7 +23,26 @@ struct BlockResource
 };
 
 std::shared_ptr<QPixmap> gridCell {};
+std::shared_ptr<QPixmap> gridCellBright {};
 std::shared_ptr<QList<BlockResource>> gr {};
+
+QPixmap addjustBright(const QPixmap& pixmap, int brightness){
+    QImage img = pixmap.toImage();
+    QColor color;
+    int x,y;
+    for(x=0;x<img.width();++x)
+    {
+        for(y=0;y<img.height();++y)
+        {
+            color = std::move(img.pixelColor(x,y));
+            color.setRed(qBound(0, color.red() + brightness, 255));
+            color.setGreen(qBound(0, color.green() + brightness, 255));
+            color.setBlue(qBound(0, color.blue() + brightness, 255));
+            img.setPixelColor(x,y,color);
+        }
+    }
+    return QPixmap::fromImage(img);
+}
 
 void init()
 {
@@ -69,7 +88,8 @@ void init()
         }
         gr->append(std::move(bRes));
     }
-    gridCell = std::make_shared<QPixmap>(":/pixelblastgame/grid-cell");
+    gridCell = std::make_shared<QPixmap>(std::move(addjustBright(QPixmap(":/pixelblastgame/grid-cell"), 40)));
+    gridCellBright = std::make_shared<QPixmap>(std::move(addjustBright(*gridCell, 50)));
 }
 
 PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), cellScale(1.0F, 1.0F), boardRegion(0, 0, 500, 500), scores(0), frames(0), frameIndex(0)
@@ -79,7 +99,7 @@ PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), ce
     resize(boardRegion.size().scaled(boardRegion.width() + 100, boardRegion.height() + 100, Qt::AspectRatioMode::IgnoreAspectRatio).toSize());
 
     cellSquare = MaxCellWidth;
-    matrix.assign(MaxCellWidth * MaxCellWidth, 0);
+    grid.assign(MaxCellWidth * MaxCellWidth, 0);
     assignBlocks(createBlocks(0x020302));
 
     setMouseTracking(true);
@@ -160,7 +180,7 @@ void PixelBlast::assignBlocks(const QList<int> &blocks)
             x = z % cellSquare;
             y = z / cellSquare;
 
-            // calcluate counts
+                   // calcluate counts
             shape.columns = qMax(1, qMax(shape.columns, x + 1));
             shape.rows = qMax(1, qMax(shape.rows, y + 1));
             // append block
@@ -179,7 +199,7 @@ void PixelBlast::resizeEvent(QResizeEvent *event)
 
 void PixelBlast::updateData()
 {
-    cellSquare = qRound(sqrt(matrix.size()));
+    cellSquare = qRound(sqrt(grid.size()));
     cellSize = {float(boardRegion.width()) / cellSquare, float(boardRegion.height()) / cellSquare};
     scaleFactor = {cellScale.width() * cellSize.width(), cellScale.height() * cellSize.height()};
     boardRegion.moveTopLeft({(width() - boardRegion.width()) / 2, (height() - boardRegion.height()) / 2});
@@ -187,12 +207,12 @@ void PixelBlast::updateData()
 
 int PixelBlast::getBlockColor(int idx)
 {
-    return matrix[idx] >> 2;
+    return grid[idx] >> 2;
 }
 
 void PixelBlast::setBlockColor(int idx, int val)
 {
-    matrix[idx] = (matrix[idx] & 0x3) | (val << 2);
+    grid[idx] = (grid[idx] & 0x3) | (val << 2);
 }
 
 void PixelBlast::updateScene()
@@ -206,7 +226,7 @@ void PixelBlast::updateScene()
         y = shape.blocks[x].idx;
         if(y == -1)
             break;
-        matrix[y] = 0;
+        grid[y] = 0;
     }
 
     if(!currentBlocks.empty())
@@ -225,7 +245,7 @@ void PixelBlast::updateScene()
             shape.blocks[x].idx = -1;
         }
 
-        if(boardRegion.width() > 0 && boardRegion.height() > 0 /* && boardRegion.contains(test)*/)
+        if(boardRegion.width() > 0 && boardRegion.height() > 0)
         {
             d = 0;
             for(w = 0; w < shape.blocks.size(); ++w)
@@ -233,7 +253,7 @@ void PixelBlast::updateScene()
                 x = qBound<int>(0, cellSquare * (shape.blocks[w].x - boardRegion.x() + scaleFactor.width() / 2) / (boardRegion.width()), cellSquare - 1);
                 y = qBound<int>(0, cellSquare * (shape.blocks[w].y - boardRegion.y() + scaleFactor.height() / 2) / (boardRegion.height()), cellSquare - 1);
                 z = y * cellSquare + x;
-                if((matrix[z] & 0x3) != 0 || ((d >> z) & 0x1) == 1)
+                if((grid[z] & 0x3) != 0 || ((d >> z) & 0x1) == 1)
                     break;
                 // d |= 1 << w;
                 d |= 1 << z;
@@ -246,7 +266,7 @@ void PixelBlast::updateScene()
                 for(x = 0; x < w; ++x)
                 {
                     y = shape.blocks[x].idx;
-                    matrix[y] = d | shape.shapeColor << 2;
+                    grid[y] = d | shape.shapeColor << 2;
                 }
 
                 if(d == 1)
@@ -260,10 +280,10 @@ void PixelBlast::updateScene()
                         z = shape.blocks[d].idx / cellSquare;
                         for(i = 0; i < cellSquare; ++i)
                         {
-                            if((matrix[z * cellSquare + i] & 0x3) == 1)
+                            if((grid[z * cellSquare + i] & 0x3) == 1)
                                 x++;
 
-                            if((matrix[i * cellSquare + w] & 0x3) == 1)
+                            if((grid[i * cellSquare + w] & 0x3) == 1)
                                 y++;
                         }
                         if(x == cellSquare)
@@ -271,7 +291,7 @@ void PixelBlast::updateScene()
                             scores += cellSquare;
                             for(x = 0; x < cellSquare; ++x)
                             {
-                                matrix[z * cellSquare + x] = 0x0;
+                                grid[z * cellSquare + x] = 0x0;
                             }
                         }
                         if(y == cellSquare)
@@ -279,7 +299,7 @@ void PixelBlast::updateScene()
                             scores += cellSquare;
                             for(y = 0; y < cellSquare; ++y)
                             {
-                                matrix[y * cellSquare + w] = 0x0;
+                                grid[y * cellSquare + w] = 0x0;
                             }
                         }
                     }
@@ -301,41 +321,43 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     int x, y, z, w;
     QRectF dest;
     QBrush background(QColor(0x6a2e76));
-    QSizeF _scaleFactor = scaleFactor;
     QPainter p(this);
     BlockResource *br;
     QPixmap *pixmap;
 
     p.setBackground(background);
     p.fillRect(rect(), background);
-    dest.setSize(_scaleFactor);
+    dest.setSize(scaleFactor);
 
     for(x = 0; x < cellSquare; ++x)
     {
         for(y = 0; y < cellSquare; ++y)
         {
             z = y * cellSquare + x;
-            dest.moveLeft(boardRegion.x() + x * _scaleFactor.width());
-            dest.moveTop(boardRegion.y() + y * _scaleFactor.height());
-            p.drawPixmap(dest, *gridCell, {});
+            dest.moveLeft(boardRegion.x() + x * scaleFactor.width());
+            dest.moveTop(boardRegion.y() + y * scaleFactor.height());
 
-            w = matrix[z] & 0x3;
+            w = grid[z] & 0x3;
+            if(w == 2)
+            {
+                p.drawPixmap(dest, *gridCellBright, {});
+            }
+            else
+            {
+                p.drawPixmap(dest, *gridCell, {});
+            }
+
             if(w == 1)
             {
                 br = &(*gr)[getBlockColor(z)];
                 pixmap = &(br->resources[frameIndex % br->resources.size()]);
                 p.drawPixmap(dest, *pixmap, {});
             }
-            else if(w == 2)
-            {
-                p.fillRect(dest, QGradient::BigMango);
-            }
         }
     }
 
-    p.setOpacity(0.5f);
-    _scaleFactor * 0.9F;
-    dest.setSize(_scaleFactor);
+           // p.setOpacity(0.5f);
+    dest.setSize(scaleFactor* 0.9F);
     for(x = 0; x < shape.blockPoints.size(); ++x)
     {
         // TODO: padding add for blocks with new scaleFactor (preview content)
