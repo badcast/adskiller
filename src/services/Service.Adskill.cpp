@@ -138,8 +138,7 @@ bool AdsKillerService::start()
 
     QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
     QStringList place = model->stringList();
-    QString deviceName = "Выбранное устройство (%1)";
-    deviceName = deviceName.arg(mAdbDevice.displayName);
+    QString deviceName = QString("Выбранное устройство (%1)").arg(mAdbDevice.displayName);
 
     cirlceMalwareStateReset();
 
