@@ -24,7 +24,7 @@ struct BlockResource
 
 std::shared_ptr<QPixmap> gridCell {};
 std::shared_ptr<QPixmap> gridCellBright {};
-std::shared_ptr<QList<BlockResource>> gr {};
+std::shared_ptr<QList<BlockResource>> BlockRes {};
 
 QPixmap addjustBright(const QPixmap& pixmap, int brightness){
     QImage img = pixmap.toImage();
@@ -47,7 +47,7 @@ QPixmap addjustBright(const QPixmap& pixmap, int brightness){
 void init()
 {
     // Load and initialize globalResources
-    if(gr != nullptr)
+    if(BlockRes != nullptr)
         return;
 
     constexpr auto _formatResourceName = ":/pixelblastgame/Blocks/%s";
@@ -58,7 +58,7 @@ void init()
     char buff0[64];
     char buff1[64];
 
-    BlockResource bRes;
+    BlockResource tmp;
     QString content, bfName;
     std::snprintf(buff, MaxBufLen, _formatResourceName, "blocks.cfg");
     QFile file(buff);
@@ -68,31 +68,32 @@ void init()
         return;
     }
 
-    gr = std::make_shared<QList<BlockResource>>();
+    BlockRes = std::make_shared<QList<BlockResource>>();
     QTextStream stream(&file);
     while(stream.readLineInto(&content))
     {
         if(sscanf((content).toLocal8Bit().data(), _formatBlocks, buff, &n, buff0) != 3)
         {
-            gr.reset();
+            BlockRes.reset();
             return;
         }
-        bRes.name = buff;
+        tmp.name = buff;
         for(int i = 0; i < n; ++i)
         {
             snprintf(buff, MaxBufLen, _formatResourceName, buff0);
             content = buff;
             content.replace(QChar('#'), QString::number(i + 1));
             QPixmap qp(content);
-            bRes.resources.append(std::move(qp));
+            tmp.resources.append(std::move(qp));
         }
-        gr->append(std::move(bRes));
+        BlockRes->append(std::move(tmp));
     }
     gridCell = std::make_shared<QPixmap>(std::move(addjustBright(QPixmap(":/pixelblastgame/grid-cell"), 40)));
-    gridCellBright = std::make_shared<QPixmap>(std::move(addjustBright(*gridCell, 50)));
+    gridCellBright = std::make_shared<QPixmap>(std::move(addjustBright(*gridCell, 90)));
 }
 
-PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), cellScale(1.0F, 1.0F), boardRegion(0, 0, 500, 500), scores(0), frames(0), frameIndex(0)
+PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), cellScale(1.0F, 1.0F),
+                                          boardRegion(0, 0, 500, 500), scores(0), frames(0), frameIndex(0), destroyScaler(0)
 {
     init();
 
@@ -127,10 +128,10 @@ void PixelBlast::mouseReleaseEvent(QMouseEvent *event)
     mouseBtn = 0;
 }
 
-QList<int> PixelBlast::createBlocks(int blocks)
+QList<std::uint8_t> PixelBlast::createBlocks(int blocks)
 {
     int x;
-    QList<int> blockArr {};
+    QList<std::uint8_t> blockArr {};
     blockArr.resize(sizeof(blocks) * 8);
     for(x = blockArr.size() - 1; x >= 0; --x)
     {
@@ -159,14 +160,13 @@ QList<int> PixelBlast::createBlocks(int blocks)
 //     return rotated;
 // }
 
-void PixelBlast::assignBlocks(const QList<int> &blocks)
+void PixelBlast::assignBlocks(const QList<std::uint8_t> &blocks)
 {
     int x, y, z;
 
     shape.rows = 0;
     shape.columns = 0;
     shape.shapeColor = 0;
-    shape.blockPoints.clear();
     shape.blocks.clear();
     if(blocks.empty())
     {
@@ -183,13 +183,17 @@ void PixelBlast::assignBlocks(const QList<int> &blocks)
                    // calcluate counts
             shape.columns = qMax(1, qMax(shape.columns, x + 1));
             shape.rows = qMax(1, qMax(shape.rows, y + 1));
-            // append block
-            shape.blockPoints.emplaceBack(x, y);
+            shape.blocks.emplaceBack(x,y);
         }
     }
-    x = gr == nullptr ? 0 : gr->size();
+    x = (BlockRes == nullptr) ? 0 : BlockRes->size();
     shape.shapeColor = QRandomGenerator::global()->bounded(0, x);
-    shape.blocks.resize(shape.blockPoints.size(), {});
+}
+
+QPixmap *PixelBlast::getColoredPixmap(int color)
+{
+    BlockResource * br = &(*BlockRes)[color];
+    return &(br->resources[frameIndex % br->resources.size()]);
 }
 
 void PixelBlast::resizeEvent(QResizeEvent *event)
@@ -205,21 +209,17 @@ void PixelBlast::updateData()
     boardRegion.moveTopLeft({(width() - boardRegion.width()) / 2, (height() - boardRegion.height()) / 2});
 }
 
-int PixelBlast::getBlockColor(int idx)
-{
-    return grid[idx] >> 2;
-}
-
-void PixelBlast::setBlockColor(int idx, int val)
-{
-    grid[idx] = (grid[idx] & 0x3) | (val << 2);
-}
-
 void PixelBlast::updateScene()
 {
     int x, y, z, w, d, i;
+    QPointF tmp;
 
     mousePoint = mapFromGlobal(QCursor::pos());
+
+    if(destroyScaler == 0.0F)
+    {
+        destroyBlocks.clear();
+    }
 
     for(x = 0; x < shape.blocks.size(); ++x)
     {
@@ -235,13 +235,13 @@ void PixelBlast::updateScene()
         currentBlocks.clear();
     }
 
-    if(!shape.blockPoints.empty())
+    if(!shape.blocks.empty())
     {
         // Calculate template points
         for(x = 0; x < shape.blocks.size(); ++x)
         {
-            shape.blocks[x].x = (mousePoint.x() - static_cast<float>(shape.columns * scaleFactor.width()) / 2 + shape.blockPoints[x].x() * scaleFactor.width());
-            shape.blocks[x].y = (mousePoint.y() - static_cast<float>(shape.rows * scaleFactor.height()) / 2 + shape.blockPoints[x].y() * scaleFactor.height());
+            // shape.blocks[x].x = (mousePoint.x() - static_cast<float>(shape.columns * scaleFactor.width()) / 2 + shape.blockPoints[x].x() * scaleFactor.width());
+            // shape.blocks[x].y = (mousePoint.y() - static_cast<float>(shape.rows * scaleFactor.height()) / 2 + shape.blockPoints[x].y() * scaleFactor.height());
             shape.blocks[x].idx = -1;
         }
 
@@ -250,8 +250,11 @@ void PixelBlast::updateScene()
             d = 0;
             for(w = 0; w < shape.blocks.size(); ++w)
             {
-                x = qBound<int>(0, cellSquare * (shape.blocks[w].x - boardRegion.x() + scaleFactor.width() / 2) / (boardRegion.width()), cellSquare - 1);
-                y = qBound<int>(0, cellSquare * (shape.blocks[w].y - boardRegion.y() + scaleFactor.height() / 2) / (boardRegion.height()), cellSquare - 1);
+                tmp.setX(mousePoint.x() - static_cast<float>(shape.columns * scaleFactor.width()) / 2);
+                tmp.setY(mousePoint.y() - static_cast<float>(shape.rows * scaleFactor.height()) / 2 );
+                tmp = std::move(shape.blocks[w].adjustPoint(tmp,scaleFactor));
+                x = qBound<int>(0, cellSquare * (tmp.x() - boardRegion.x() + scaleFactor.width() / 2) / (boardRegion.width()), cellSquare - 1);
+                y = qBound<int>(0, cellSquare * (tmp.y() - boardRegion.y() + scaleFactor.height() / 2) / (boardRegion.height()), cellSquare - 1);
                 z = y * cellSquare + x;
                 if((grid[z] & 0x3) != 0 || ((d >> z) & 0x1) == 1)
                     break;
@@ -291,16 +294,22 @@ void PixelBlast::updateScene()
                             scores += cellSquare;
                             for(x = 0; x < cellSquare; ++x)
                             {
-                                grid[z * cellSquare + x] = 0x0;
+                                i = z * cellSquare + x;
+                                destroyBlocks.append(std::make_pair(std::move(BlockObject(x,z,i)), grid[i]>>2));
+                                grid[i] = 0x0;
                             }
+                            destroyScaler = 1.0F;
                         }
                         if(y == cellSquare)
                         {
                             scores += cellSquare;
                             for(y = 0; y < cellSquare; ++y)
                             {
-                                grid[y * cellSquare + w] = 0x0;
+                                i = y * cellSquare + w;
+                                destroyBlocks.append(std::make_pair(std::move(BlockObject(w,y,i)), grid[i]>>2));
+                                grid[i] = 0x0;
                             }
+                            destroyScaler = 1.0F;
                         }
                     }
                     shape.blocks[0].idx = -1;
@@ -314,6 +323,7 @@ void PixelBlast::updateScene()
     update();
     frames++;
     frameIndex += frames % 8 == 0;
+    destroyScaler = qBound(0.0F, destroyScaler - 0.06F ,1.0F);
 }
 
 void PixelBlast::paintEvent(QPaintEvent *event)
@@ -322,50 +332,64 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     QRectF dest;
     QBrush background(QColor(0x6a2e76));
     QPainter p(this);
-    BlockResource *br;
     QPixmap *pixmap;
+    QPointF adjust;
 
     p.setBackground(background);
     p.fillRect(rect(), background);
     dest.setSize(scaleFactor);
 
-    for(x = 0; x < cellSquare; ++x)
+    for(z = 0; z < grid.size(); ++z)
     {
-        for(y = 0; y < cellSquare; ++y)
+        x = z % cellSquare;
+        y = z / cellSquare;
+        dest.moveLeft(boardRegion.x() + x * scaleFactor.width());
+        dest.moveTop(boardRegion.y() + y * scaleFactor.height());
+
+        w = grid[z] & 0x3;
+        if(w == 2)
         {
-            z = y * cellSquare + x;
-            dest.moveLeft(boardRegion.x() + x * scaleFactor.width());
-            dest.moveTop(boardRegion.y() + y * scaleFactor.height());
+            p.drawPixmap(dest, *gridCellBright, {});
+        }
+        else
+        {
+            p.drawPixmap(dest, *gridCell, {});
+        }
 
-            w = grid[z] & 0x3;
-            if(w == 2)
-            {
-                p.drawPixmap(dest, *gridCellBright, {});
-            }
-            else
-            {
-                p.drawPixmap(dest, *gridCell, {});
-            }
-
-            if(w == 1)
-            {
-                br = &(*gr)[getBlockColor(z)];
-                pixmap = &(br->resources[frameIndex % br->resources.size()]);
-                p.drawPixmap(dest, *pixmap, {});
-            }
+        if(w == 1)
+        {
+            pixmap = getColoredPixmap(grid[z] >> 2);
+            p.drawPixmap(dest, *pixmap, {});
         }
     }
 
-           // p.setOpacity(0.5f);
-    dest.setSize(scaleFactor* 0.9F);
-    for(x = 0; x < shape.blockPoints.size(); ++x)
+    dest.setSize(scaleFactor * destroyScaler);
+    adjust = {static_cast<float>(shape.columns * dest.width()) / 2,
+              static_cast<float>(shape.rows * dest.height()) / 2 };
+    for(x = 0; x < destroyBlocks.size(); ++x)
     {
-        // TODO: padding add for blocks with new scaleFactor (preview content)
-        dest.moveLeft(shape.blocks[x].x);
-        dest.moveTop(shape.blocks[x].y);
-
-        br = &(*gr)[shape.shapeColor];
-        pixmap = &(br->resources[frameIndex % br->resources.size()]);
+        const auto & db = destroyBlocks[x];
+        dest.moveTopLeft(db.first.adjustPoint(adjust, dest.size()));
+        pixmap = getColoredPixmap(db.second);
         p.drawPixmap(dest, *pixmap, {});
     }
+
+    p.setOpacity(0.7f);
+    dest.setSize(scaleFactor* 0.7F);
+    adjust = {mousePoint.x() - static_cast<float>(shape.columns * dest.width()) / 2,
+              mousePoint.y() - static_cast<float>(shape.rows * dest.height()) / 2 };
+    for(x = 0; x < shape.blocks.size(); ++x)
+    {
+        dest.moveTopLeft(shape.blocks[x].adjustPoint(adjust, dest.size()));
+        pixmap = getColoredPixmap(shape.shapeColor);
+        p.drawPixmap(dest, *pixmap, {});
+    }
+}
+
+QPointF PixelBlast::BlockObject::adjustPoint(const QPointF &adjust, const QSizeF &scale) const
+{
+    QPointF out;
+    out.setX((adjust.x() + x * scale.width()));
+    out.setY( (adjust.y() + y * scale.height()));
+    return out;
 }

@@ -13,13 +13,16 @@ class PixelBlast : public QWidget
         int x;
         int y;
         int idx;
+
+        BlockObject(int x, int y, int idx = -1) : x(x), y(y), idx(idx) {}
+
+        inline QPointF adjustPoint(const QPointF &adjust, const QSizeF&scale) const;
     };
     struct BlockOrigin
     {
         int shapeColor;
         int rows;
         int columns;
-        QList<QPoint> blockPoints;
         QList<BlockObject> blocks;
     };
 
@@ -37,11 +40,11 @@ private:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+
     void updateData();
-    int getBlockColor(int idx);
-    void setBlockColor(int idx, int val);
-    void assignBlocks(const QList<int> &blocks);
-    QList<int> createBlocks(int blocks);
+    void assignBlocks(const QList<std::uint8_t> &blocks);
+    QPixmap* getColoredPixmap(int color);
+    QList<std::uint8_t> createBlocks(int blocks);
 
     int cellSquare;
     int mouseBtn;
@@ -56,7 +59,10 @@ private:
     QRectF boardRegion;
     QTimer updateTimer;
     QList<std::uint8_t> grid;
-    QList<int> currentBlocks;
+    QList<std::uint8_t> currentBlocks;
+
+    float destroyScaler;
+    QList<std::pair<BlockObject,int>> destroyBlocks;
 
     BlockOrigin shape;
 };
