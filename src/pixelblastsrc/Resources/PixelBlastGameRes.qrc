@@ -1,0 +1,44 @@
+<RCC>
+    <qresource prefix="/pixelblastgame">
+        <file>resourcepacks/blocks/blocks.cfg</file>
+        <file>resourcepacks/blocks/block_blueviolet_1.png</file>
+        <file>resourcepacks/blocks/block_blueviolet_2.png</file>
+        <file>resourcepacks/blocks/block_blueviolet_3.png</file>
+        <file>resourcepacks/blocks/block_blueviolet_4.png</file>
+        <file>resourcepacks/blocks/block_chocolate_1.png</file>
+        <file>resourcepacks/blocks/block_chocolate_2.png</file>
+        <file>resourcepacks/blocks/block_chocolate_3.png</file>
+        <file>resourcepacks/blocks/block_chocolate_4.png</file>
+        <file>resourcepacks/blocks/block_lightseagreen_1.png</file>
+        <file>resourcepacks/blocks/block_lightseagreen_2.png</file>
+        <file>resourcepacks/blocks/block_lightseagreen_3.png</file>
+        <file>resourcepacks/blocks/block_lightseagreen_4.png</file>
+        <file>resourcepacks/blocks/block_lime_1.png</file>
+        <file>resourcepacks/blocks/block_lime_2.png</file>
+        <file>resourcepacks/blocks/block_lime_3.png</file>
+        <file>resourcepacks/blocks/block_lime_4.png</file>
+        <file>resourcepacks/blocks/block_palevioletred_1.png</file>
+        <file>resourcepacks/blocks/block_palevioletred_2.png</file>
+        <file>resourcepacks/blocks/block_palevioletred_3.png</file>
+        <file>resourcepacks/blocks/block_palevioletred_4.png</file>
+        <file>resourcepacks/blocks/block_red_1.png</file>
+        <file>resourcepacks/blocks/block_red_2.png</file>
+        <file>resourcepacks/blocks/block_red_3.png</file>
+        <file>resourcepacks/blocks/block_red_4.png</file>
+        <file>resourcepacks/blocks/block_white_1.png</file>
+        <file>resourcepacks/blocks/block_white_2.png</file>
+        <file>resourcepacks/blocks/block_white_3.png</file>
+        <file>resourcepacks/blocks/block_white_4.png</file>
+        <file>resourcepacks/blocks/block_yellow_1.png</file>
+        <file>resourcepacks/blocks/block_yellow_2.png</file>
+        <file>resourcepacks/blocks/block_yellow_3.png</file>
+        <file>resourcepacks/blocks/block_yellow_4.png</file>
+        <file alias="game-logo">pixelblastgame-logo.png</file>
+        <file alias="background">resourcepacks/background.png</file>
+        <file alias="arrow">resourcepacks/cursors/arrow.png</file>
+        <file alias="grid-cell">resourcepacks/grid/grid-cell.png</file>
+        <file alias="grid-background">resourcepacks/grid/grid-background.png</file>
+        <file alias="grid-background-bg">resourcepacks/grid/grid-background-bg.png</file>
+        <file alias="grid-border">resourcepacks/grid/grid_border.png</file>
+    </qresource>
+</RCC>

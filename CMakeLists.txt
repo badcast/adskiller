@@ -34,7 +34,6 @@ set(PROJECT_SOURCES
         src/extension.cpp
         src/settings.cpp
         Resources/AdskillerResouces.qrc
-        Resources/PixelBlastGame/PixelBlastGameRes.qrc
 )
 
 file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT_SOURCE_DIR}/ui/update_*")
@@ -78,6 +77,7 @@ add_compile_definitions(APPVERSION="${APPVERSION}" ADS_VER_MAJOR=${CMAKE_PROJECT
 add_subdirectory(src/widgets)
 add_subdirectory(src/common/adbfront)
 add_subdirectory(src/services)
+add_subdirectory(src/pixelblastsrc)
 
 set_target_properties(application PROPERTIES OUTPUT_NAME adskiller)
 
@@ -87,7 +87,7 @@ target_include_directories(application PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMA
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
 target_link_libraries(services PRIVATE adbfront widgets)
-target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services widgets)
+target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services widgets pixelblast)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 if(WIN32)

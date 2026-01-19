@@ -12,5 +12,3 @@ add_subdirectory(3rdParty/VCard)
 add_subdirectory(3rdParty/ClassfieldPhoneNumber)
 
 target_link_libraries(services PRIVATE VCard classfieldnum Qt6::Core Qt6::Widgets Qt6::Network)
-
-message(asdasd)

@@ -24,10 +24,11 @@ QWidget *createBanner();
 
 int main(int argc, char **argv)
 {
-
     int exitCode;
     QApplication app(argc, argv);
     PixelBlast t;
+    t.resize(1024,768);
+    t.startGame();
     t.show();
     return app.exec();
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
