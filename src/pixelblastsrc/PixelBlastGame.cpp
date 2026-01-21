@@ -320,12 +320,6 @@ void PixelBlast::generateCandidates(bool randomOnly)
                         break;
                     }
                 }
-                if(z == MaxShapes)
-                {
-                    w = 1;
-                    --x;
-                    continue;
-                }
                 break;
             }
                 // RANDOM
