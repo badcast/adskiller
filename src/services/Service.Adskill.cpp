@@ -267,7 +267,7 @@ void AdsKillerService::cirlceMalwareStateReset()
 }
 
 template <typename InT, typename OutT>
-constexpr inline OutT Map(const InT x, const InT in_min, const InT in_max, const OutT out_min, const OutT out_max)
+constexpr inline OutT map(const InT x, const InT in_min, const InT in_max, const OutT out_min, const OutT out_max)
 {
     if(in_max == in_min)
     {
@@ -435,7 +435,7 @@ void malwaring()
                 num1 = 0;
                 for(const PackageIO &pkg : std::as_const(localPackages))
                 {
-                    int curValue = Map<int, int>(num1, 0, localPackages.size(), num0, 48);
+                    int curValue = map<int, int>(num1, 0, localPackages.size(), num0, 48);
                     malwareWriteLog(QString(" >> md5 hash %1").arg(QString(QCryptographicHash::hash(pkg.packageName.toLatin1(), QCryptographicHash::Md5).toHex())), curValue);
                     ++num1;
                     WAITMODE2;
@@ -650,7 +650,7 @@ void malwaring()
                 {
                     ++num1;
                     // HAVE
-                    int curValue = Map<int, int>(num1, 0, resultList.size(), num0, 80);
+                    int curValue = map<int, int>(num1, 0, resultList.size(), num0, 80);
                     malwareWriteLog(QString(" >> md5 hash %1").arg(QString(QCryptographicHash::hash(pkg.toLatin1(), QCryptographicHash::Md5).toHex())), curValue);
                     WAITMODE2;
                 }
@@ -685,7 +685,7 @@ void malwaring()
                     num0 += lastResult;
                 }
 
-                mProgress = Map<int, int>(num0, 1, num1, mProgress, 99);
+                mProgress = map<int, int>(num0, 1, num1, mProgress, 99);
                 if(num0 != num1)
                     malwareWriteLog("Предупреждение: Процесс частично успешен. Повторите.");
                 else

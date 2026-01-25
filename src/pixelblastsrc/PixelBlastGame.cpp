@@ -9,6 +9,7 @@
 #include <QRandomGenerator>
 #include <QPainter>
 #include <QBrush>
+#include <QPalette>
 #include <QMouseEvent>
 #include <QTextStream>
 #include <QMessageBox>
@@ -33,6 +34,7 @@ std::shared_ptr<QPixmap> cursorPix {};
 std::shared_ptr<QPixmap> gridBackgroundBorder {};
 std::shared_ptr<QPixmap> gridBackground {};
 std::shared_ptr<QPixmap> gridBackgroundBg {};
+std::shared_ptr<QPixmap> uiTopHeader {};
 std::shared_ptr<QList<BlockResource>> BlockRes {};
 
 QPixmap adjustBright(const QPixmap &pixmap, int brightness)
@@ -52,6 +54,17 @@ QPixmap adjustBright(const QPixmap &pixmap, int brightness)
         }
     }
     return QPixmap::fromImage(img);
+}
+
+template <typename InT, typename OutT>
+constexpr inline OutT map(const InT x, const InT in_min, const InT in_max, const OutT out_min, const OutT out_max)
+{
+    if(in_max == in_min)
+    {
+        return out_min;
+    }
+    OutT mapped_value = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    return qMin(qMax(mapped_value, out_min), out_max);
 }
 
 inline QPixmap *getColoredPixmap(int color, int frameIndex)
@@ -119,6 +132,7 @@ void prepareResources()
         BlockRes->append(std::move(tmp));
     }
     gameLogo = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/game-logo")));
+    uiTopHeader = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/ui-top")));
     backgroundPix = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/background")));
     cursorPix = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/arrow")));
     gridBackgroundBorder = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/grid-border")));
@@ -140,6 +154,12 @@ PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), bo
     setMouseTracking(true);
     updateTimer.setSingleShot(false);
     updateTimer.setInterval(1000.F / 60); // 60  FPS per sec
+
+    QBrush background(*backgroundPix);
+    QPalette pal = palette();
+    pal.setBrush(QPalette::Window, background);
+    setPalette(pal);
+    setAutoFillBackground(true);
 
     QCursor cur(*cursorPix, 0, 0);
     setCursor(cur);
@@ -493,16 +513,18 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     int x, y, z, w;
     QRectF dest;
     QPointF destPoint;
-    QBrush background(*backgroundPix);
     QPainter p(this);
     QPixmap *pixmap; //, tmpPixmap;
 
-    p.setBackground(background);
-    p.fillRect(rect(), background);
+    QWidget::paintEvent(event);
 
     // Draw game logo
     dest.setSize(gameLogo->size().toSizeF());
-    dest.moveTopLeft(boardRegion.topLeft() - QPointF(0, dest.height()));
+    dest.moveTopLeft(boardRegion.topLeft() - QPointF(0, dest.height() - 100));
+
+
+    dest.setWidth(map<float, float>(dest.width(), 0, gameLogo->size().width(), 0, boardRegion.width()));
+    //dest.setHeight(map<float, float>(dest.height(), 0, gameLogo->size().height(), 0, 100));
     p.drawPixmap(dest, *gameLogo, {});
 
     // Draw grid & cells (central)
@@ -583,10 +605,12 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     if(currentShape)
     {
         p.setOpacity(0.8D);
-        dest.setSize(scaleFactor * 0.7F);
+        dest.setSize(scaleFactor * 0.9F);
         destPoint = {mousePoint.x() - static_cast<float>(currentShape->columns * dest.width()) / 2, mousePoint.y() - static_cast<float>(currentShape->rows * dest.height()) / 2};
         drawShapeAt(*currentShape, destPoint, dest.size(), frameIndex, p);
     }
+
+    p.drawText(QPoint{10,200}, QString("Score: ") +  QString::number(scores));
 }
 
 QPointF BlockObject::adjustPoint(const QPointF &adjust, const QSizeF &scale) const

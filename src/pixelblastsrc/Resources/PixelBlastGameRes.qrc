@@ -40,5 +40,6 @@
         <file alias="grid-background">resourcepacks/grid/grid-background.png</file>
         <file alias="grid-background-bg">resourcepacks/grid/grid-background-bg.png</file>
         <file alias="grid-border">resourcepacks/grid/grid_border.png</file>
+        <file alias="ui-top">resourcepacks/ui-interface/ui_top_header.png</file>
     </qresource>
 </RCC>
