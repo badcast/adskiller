@@ -6,15 +6,15 @@ string(STRIP "${APPVERSION}" APPVERSION)
 
 project(adskiller VERSION ${APPVERSION} LANGUAGES CXX)
 
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
 
 set(PROJECT_SOURCES
         ui/mainwindow.h

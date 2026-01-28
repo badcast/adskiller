@@ -17,6 +17,7 @@
 
 #include "PixelBlastGame.h"
 #include "PixelBlastShapes.h"
+#include "PixelSoundManager.h"
 
 constexpr int MaxCellWidth = 8;
 
@@ -36,6 +37,7 @@ std::shared_ptr<QPixmap> gridBackground {};
 std::shared_ptr<QPixmap> gridBackgroundBg {};
 std::shared_ptr<QPixmap> uiTopHeader {};
 std::shared_ptr<QList<BlockResource>> BlockRes {};
+std::shared_ptr<SoundManager> soundManager {};
 
 QPixmap adjustBright(const QPixmap &pixmap, int brightness)
 {
@@ -139,10 +141,14 @@ void prepareResources()
     gridBackground = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/grid-background")));
     gridBackgroundBg = std::make_shared<QPixmap>(std::move(QPixmap(":/pixelblastgame/grid-background-bg")));
     gridCell = std::make_shared<QPixmap>(std::move(adjustBright(QPixmap(":/pixelblastgame/grid-cell"), 40)));
-    gridCellBright = std::make_shared<QPixmap>(std::move(adjustBright(*gridCell, 90)));
+    gridCellBright = std::make_shared<QPixmap>(std::move(adjustBright(*gridCell, 70)));
+
+    soundManager = std::make_shared<SoundManager>(nullptr);
+    soundManager->setPoolSize(24);
+    soundManager->registerSound("block-hits", QUrl::fromLocalFile(":/pixelblastgame/block-hits"));
 }
 
-PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 400, 400), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true)
+PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 400, 400), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true), lastSelectedBlock(-1)
 {
     prepareResources();
 
@@ -363,7 +369,7 @@ void PixelBlast::generateCandidates(bool randomOnly)
 void PixelBlast::updateScene()
 {
     int x, y, z, w, d, i;
-    QPointF tmp;
+    QPointF tmp, tmp0;
     QRectF dest;
 
     mousePoint = mapFromGlobal(QCursor::pos());
@@ -405,13 +411,13 @@ void PixelBlast::updateScene()
     if(currentShape)
     {
         d = 0;
+        tmp.setX(mousePoint.x() - static_cast<float>(currentShape->columns * scaleFactor.width()) / 2);
+        tmp.setY(mousePoint.y() - static_cast<float>(currentShape->rows * scaleFactor.height()) / 2);
         for(w = 0; w < currentShape->blocks.size(); ++w)
         {
-            tmp.setX(mousePoint.x() - static_cast<float>(currentShape->columns * scaleFactor.width()) / 2);
-            tmp.setY(mousePoint.y() - static_cast<float>(currentShape->rows * scaleFactor.height()) / 2);
-            tmp = std::move(currentShape->blocks[w].adjustPoint(tmp, scaleFactor));
-            x = cellSquare * (tmp.x() - boardRegion.x() + scaleFactor.width() / 2) / (boardRegion.width());
-            y = cellSquare * (tmp.y() - boardRegion.y() + scaleFactor.height() / 2) / (boardRegion.height());
+            tmp0 = std::move(currentShape->blocks[w].adjustPoint(tmp, scaleFactor));
+            x = cellSquare * (tmp0.x() - boardRegion.x() + scaleFactor.width() / 2) / (boardRegion.width());
+            y = cellSquare * (tmp0.y() - boardRegion.y() + scaleFactor.height() / 2) / (boardRegion.height());
             z = y * cellSquare + x;
             if(x < 0 || y < 0 || x >= cellSquare || y >= cellSquare || (grid[z] & 0x3) != 0 || ((d >> z) & 0x1) == 1)
                 break;
@@ -549,14 +555,16 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     p.drawPixmap(dest, *gridBackgroundBg, {});
     p.drawPixmap(dest, *gridBackground, {});
 
-    dest += QMarginsF(5, 5, 5, 5);
-    dest.setSize(scaleFactor);
+    destPoint.setX(qFloor(cellSquare * (mousePoint.x() - boardRegion.x()) / (boardRegion.width())));
+    destPoint.setY(qFloor(cellSquare * (mousePoint.y() - boardRegion.y()) / (boardRegion.height())));
+
     for(z = 0; z < grid.size(); ++z)
     {
         x = z % cellSquare;
         y = z / cellSquare;
         dest.moveLeft(boardRegion.x() + x * scaleFactor.width());
         dest.moveTop(boardRegion.y() + y * scaleFactor.height());
+        dest.setSize(scaleFactor);
 
         w = grid[z] & 0x3;
         if(w == 2)
@@ -566,7 +574,7 @@ void PixelBlast::paintEvent(QPaintEvent *event)
         }
         else
         {
-            p.setOpacity(0.4D);
+            p.setOpacity(0.3D);
             pixmap = &(*gridCell);
         }
         p.drawPixmap(dest, *pixmap, {});
@@ -574,7 +582,18 @@ void PixelBlast::paintEvent(QPaintEvent *event)
         if(w == 1)
         {
             p.setOpacity(1.0D);
-            pixmap = getColoredPixmap(grid[z] >> 2, 0);
+            if(currentShape == nullptr && (x == destPoint.x()) && (y == destPoint.y()))
+            {
+                dest += QMarginsF(3, 3, 3, 3);
+                pixmap = getColoredPixmap(grid[z] >> 2, frameIndex);
+                if(lastSelectedBlock != z)
+                {
+                    soundManager->playSound("block-hits", 0.5);
+                    lastSelectedBlock = z;
+                }
+            }
+            else
+                pixmap = getColoredPixmap(grid[z] >> 2, 0);
             p.drawPixmap(dest, *pixmap, {});
         }
     }

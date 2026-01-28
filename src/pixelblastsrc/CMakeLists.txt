@@ -9,4 +9,4 @@ target_include_directories(pixelblast PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAK
 target_include_directories(pixelblast PUBLIC $<BUILD_INTERFACE:${INCL_DIR}>
                                            $<INSTALL_INTERFACE:include>)
 target_compile_definitions(pixelblast PRIVATE PB_SHARED)
-target_link_libraries(pixelblast PRIVATE Qt6::Core Qt6::Widgets Qt6::Network)
+target_link_libraries(pixelblast PRIVATE Qt6::Core Qt6::Widgets Qt6::Multimedia)

@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QWidget>
 
+
 #ifdef PB_SHARED
 #define PB_EXPORT Q_DECL_EXPORT
 #else
@@ -67,6 +68,7 @@ private:
     int frames;
     int frameIndex;
     int round;
+    int lastSelectedBlock;
 
     bool mouseDownMode;
     bool mouseDownUpped;
