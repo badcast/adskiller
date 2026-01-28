@@ -68,6 +68,9 @@ private:
     int frameIndex;
     int round;
 
+    bool mouseDownMode;
+    bool mouseDownUpped;
+
     QPoint mousePoint;
     QSizeF cellScale;
     QSizeF cellSize;

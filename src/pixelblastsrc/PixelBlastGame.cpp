@@ -142,7 +142,7 @@ void prepareResources()
     gridCellBright = std::make_shared<QPixmap>(std::move(adjustBright(*gridCell, 90)));
 }
 
-PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 400, 400), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0)
+PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 400, 400), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true)
 {
     prepareResources();
 
@@ -189,6 +189,8 @@ void PixelBlast::mousePressEvent(QMouseEvent *event)
 
 void PixelBlast::mouseReleaseEvent(QMouseEvent *event)
 {
+    if(mouseDownMode)
+        mouseDownUpped = (event->button() & 0x1) > 0;
     mouseBtn = 0;
 }
 
@@ -380,15 +382,20 @@ void PixelBlast::updateScene()
     if(currentShape)
     {
         // Reset old mask
+        d = 0;
         for(x = 0; x < currentShape->blocks.size(); ++x)
         {
             y = currentShape->blocks[x].idx;
             if(y != -1)
+            {
                 grid[y] = grid[y] & 0x1;
+                ++d;
+            }
             currentShape->blocks[x].idx = -1;
         }
 
-        if(shapeCandidateIdx != -1 && mouseBtn == Qt::RightButton)
+        // Return selected shape after right click
+        if(shapeCandidateIdx != -1 && (mouseDownMode && mouseDownUpped && d == 0 || mouseBtn == Qt::RightButton))
         {
             shapeCandidates[shapeCandidateIdx] = std::move(currentShape);
             shapeCandidateIdx = -1;
@@ -408,14 +415,18 @@ void PixelBlast::updateScene()
             z = y * cellSquare + x;
             if(x < 0 || y < 0 || x >= cellSquare || y >= cellSquare || (grid[z] & 0x3) != 0 || ((d >> z) & 0x1) == 1)
                 break;
-            // d |= 1 << w;
             d |= 1 << z;
             currentShape->blocks[w].idx = z;
         }
         // verification
         if(w == currentShape->blocks.size())
         {
-            d = (mouseBtn == Qt::LeftButton) ? 1 : 2;
+            d = 2;
+            if(mouseDownMode)
+                d = (mouseDownUpped) ? 1 : d;
+            else
+                d = (mouseBtn == Qt::LeftButton) ? 1 : d;
+
             for(x = 0; x < w; ++x)
             {
                 y = currentShape->blocks[x].idx;
@@ -447,6 +458,7 @@ void PixelBlast::updateScene()
                         {
                             i = z * cellSquare + x;
                             destroyBlocks.append(std::make_pair(std::move(BlockObject(x, z, i)), grid[i] >> 2));
+                            // reset cell
                             grid[i] = 0x0;
                         }
                         destroyScaler = 1.0F;
@@ -458,6 +470,7 @@ void PixelBlast::updateScene()
                         {
                             i = y * cellSquare + w;
                             destroyBlocks.append(std::make_pair(std::move(BlockObject(w, y, i)), grid[i] >> 2));
+                            // reset cell
                             grid[i] = 0x0;
                         }
                         destroyScaler = 1.0F;
@@ -467,9 +480,9 @@ void PixelBlast::updateScene()
 
                 for(x = 0, y = 0, z = 0; x < shapeCandidates.size(); ++x)
                 {
-                    shapeCandidates[x] && ++z && !canTrigger(shapeCandidates[x]->rawBlocks, grid, false) && ++y;
+                    shapeCandidates[x] && ++y && !canTrigger(shapeCandidates[x]->rawBlocks, grid, false) && ++z;
                 }
-                if(z == y && y > 0)
+                if(y == z && z > 0)
                 {
                     // GAME OVER
                     QMessageBox::warning(this, "Game Lost", "Game over!");
@@ -480,6 +493,7 @@ void PixelBlast::updateScene()
     }
     else if(!shapeCandidates.empty())
     {
+        // Select candidate block by Mouse Click!
         tmp.setX(0);
         tmp.setY(boardRegion.height() + heightOffsetCandidates);
         tmp = mousePoint - (boardRegion.topLeft() + tmp);
@@ -489,12 +503,12 @@ void PixelBlast::updateScene()
         else
             x = static_cast<int>(tmp.x() / qMax(1.0F, dest.width()));
 
-        x = qBound<int>(-1, x, shapeCandidates.size());
         shapeCandidateIdx = -1;
+        x = qBound<int>(-1, x, shapeCandidates.size());
         if(!(x < 0 || x == shapeCandidates.size()))
         {
             shapeCandidateIdx = x;
-            if(mouseBtn == Qt::LeftButton && shapeCandidates[x])
+            if(shapeCandidates[x] && (mouseDownMode && mouseDownUpped || mouseBtn == Qt::LeftButton))
             {
                 currentShape = std::move(shapeCandidates[x]);
             }
@@ -505,6 +519,9 @@ void PixelBlast::updateScene()
     frames++;
     frameIndex += frames % 5 == 0;
     destroyScaler = qBound(0.0F, destroyScaler - 0.06F, 1.0F);
+
+    if(mouseDownUpped)
+        mouseDownUpped = false;
     mouseBtn = 0x0;
 }
 
@@ -522,9 +539,8 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     dest.setSize(gameLogo->size().toSizeF());
     dest.moveTopLeft(boardRegion.topLeft() - QPointF(0, dest.height() - 100));
 
-
     dest.setWidth(map<float, float>(dest.width(), 0, gameLogo->size().width(), 0, boardRegion.width()));
-    //dest.setHeight(map<float, float>(dest.height(), 0, gameLogo->size().height(), 0, 100));
+    // dest.setHeight(map<float, float>(dest.height(), 0, gameLogo->size().height(), 0, 100));
     p.drawPixmap(dest, *gameLogo, {});
 
     // Draw grid & cells (central)
@@ -610,7 +626,7 @@ void PixelBlast::paintEvent(QPaintEvent *event)
         drawShapeAt(*currentShape, destPoint, dest.size(), frameIndex, p);
     }
 
-    p.drawText(QPoint{10,200}, QString("Score: ") +  QString::number(scores));
+    p.drawText(QPoint {10, 200}, QString("Score: ") + QString::number(scores));
 }
 
 QPointF BlockObject::adjustPoint(const QPointF &adjust, const QSizeF &scale) const
