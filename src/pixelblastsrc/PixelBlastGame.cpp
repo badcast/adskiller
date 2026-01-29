@@ -98,10 +98,9 @@ void prepareResources()
     constexpr auto _formatResourceName = ":/pixelblastgame/resourcepacks/blocks/%s";
     constexpr auto _formatBlocks = "%s %d %s";
     constexpr auto MaxBufLen = 128;
+
     int n;
-    char buff[MaxBufLen];
-    char buff0[64];
-    char buff1[64];
+    char buff[MaxBufLen], buff0[64], buff1[64];
 
     BlockResource tmp;
     QString content, bfName;
@@ -113,8 +112,8 @@ void prepareResources()
         return;
     }
 
-    BlockRes = std::make_shared<QList<BlockResource>>();
     QTextStream stream(&file);
+    BlockRes = std::make_shared<QList<BlockResource>>();
     while(stream.readLineInto(&content))
     {
         if(sscanf((content).toLocal8Bit().data(), _formatBlocks, buff, &n, buff0) != 3)
@@ -143,9 +142,26 @@ void prepareResources()
     gridCell = std::make_shared<QPixmap>(std::move(adjustBright(QPixmap(":/pixelblastgame/grid-cell"), 40)));
     gridCellBright = std::make_shared<QPixmap>(std::move(adjustBright(*gridCell, 70)));
 
+    // Sounds
     soundManager = std::make_shared<SoundManager>(nullptr);
     soundManager->setPoolSize(24);
-    soundManager->registerSound("block-hits", QUrl::fromLocalFile(":/pixelblastgame/block-hits"));
+    soundManager->registerSound("block-hits", QUrl::fromLocalFile(":/pixelblastgame/block-hits"), false);
+
+    soundManager->registerSound("block-click0", QUrl::fromLocalFile(":/pixelblastgame/block-click0"));
+    soundManager->registerSound("block-click1", QUrl::fromLocalFile(":/pixelblastgame/block-click1"));
+    soundManager->registerSound("block-click2", QUrl::fromLocalFile(":/pixelblastgame/block-click2"));
+
+    soundManager->registerSound("block-place0", QUrl::fromLocalFile(":/pixelblastgame/block-place0"));
+    soundManager->registerSound("block-place1", QUrl::fromLocalFile(":/pixelblastgame/block-place1"));
+    soundManager->registerSound("block-place2", QUrl::fromLocalFile(":/pixelblastgame/block-place2"));
+
+    soundManager->registerSound("voice0", QUrl::fromLocalFile(":/pixelblastgame/voice0"));
+    soundManager->registerSound("voice1", QUrl::fromLocalFile(":/pixelblastgame/voice1"));
+    soundManager->registerSound("voice2", QUrl::fromLocalFile(":/pixelblastgame/voice2"));
+    soundManager->registerSound("voice3", QUrl::fromLocalFile(":/pixelblastgame/voice3"));
+    soundManager->registerSound("voice-gameover", QUrl::fromLocalFile(":/pixelblastgame/voice-gameover"));
+
+    soundManager->registerSound("block-destroy", QUrl::fromLocalFile(":/pixelblastgame/block-destroy"));
 }
 
 PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 400, 400), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true), lastSelectedBlock(-1)
@@ -442,6 +458,8 @@ void PixelBlast::updateScene()
             // Place complete.
             if(d == 1)
             {
+                soundManager->playSound(QString("block-place%1").arg(QRandomGenerator::global()->bounded(2)), 0.5);
+
                 // Test destroy block-points, and optimization
                 for(d = 0; d < currentShape->blocks.size(); ++d)
                 {
@@ -482,6 +500,7 @@ void PixelBlast::updateScene()
                         destroyScaler = 1.0F;
                     }
                 }
+
                 currentShape = nullptr;
 
                 for(x = 0, y = 0, z = 0; x < shapeCandidates.size(); ++x)
@@ -491,8 +510,14 @@ void PixelBlast::updateScene()
                 if(y == z && z > 0)
                 {
                     // GAME OVER
+                    soundManager->playSound("voice-gameover", 0.5);
                     QMessageBox::warning(this, "Game Lost", "Game over!");
                     stopGame();
+                }
+                else if(destroyScaler == 1.0F)
+                {
+                    soundManager->playSound("block-destroy", 0.5);
+                    soundManager->playSound(QString("voice%1").arg(QRandomGenerator::global()->bounded(3)), 0.5);
                 }
             }
         }
@@ -517,6 +542,7 @@ void PixelBlast::updateScene()
             if(shapeCandidates[x] && (mouseDownMode && mouseDownUpped || mouseBtn == Qt::LeftButton))
             {
                 currentShape = std::move(shapeCandidates[x]);
+                soundManager->playSound(QString("block-click%1").arg(QRandomGenerator::global()->bounded(2)), 0.8);
             }
         }
     }
@@ -581,19 +607,21 @@ void PixelBlast::paintEvent(QPaintEvent *event)
 
         if(w == 1)
         {
-            p.setOpacity(1.0D);
             if(currentShape == nullptr && (x == destPoint.x()) && (y == destPoint.y()))
             {
                 dest += QMarginsF(3, 3, 3, 3);
                 pixmap = getColoredPixmap(grid[z] >> 2, frameIndex);
                 if(lastSelectedBlock != z)
                 {
-                    soundManager->playSound("block-hits", 0.5);
+                    soundManager->playSound("block-hits", 0.3);
                     lastSelectedBlock = z;
                 }
             }
             else
+            {
                 pixmap = getColoredPixmap(grid[z] >> 2, 0);
+            }
+            p.setOpacity(1.0D);
             p.drawPixmap(dest, *pixmap, {});
         }
     }
@@ -601,17 +629,16 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     p.setOpacity(1.0D);
 
     // Draw blocks
-    if(currentShape)
+    dest.moveTopLeft(boardRegion.topLeft());
+    dest.setSize(scaleFactor);
+    destPoint = dest.topLeft();
+    y = dest.size().width()/2;
+    for(x = 0; x < destroyBlocks.size(); ++x)
     {
-        dest.setSize(scaleFactor * destroyScaler);
-        destPoint = {static_cast<float>(currentShape->columns * dest.width()) / 2, static_cast<float>(currentShape->rows * dest.height()) / 2};
-        for(x = 0; x < destroyBlocks.size(); ++x)
-        {
-            const auto &db = destroyBlocks[x];
-            dest.moveTopLeft(db.first.adjustPoint(destPoint, dest.size()));
-            pixmap = getColoredPixmap(db.second, frameIndex);
-            p.drawPixmap(dest, *pixmap, {});
-        }
+        const auto &db = destroyBlocks[x];
+        dest.moveTopLeft(db.first.adjustPoint(destPoint, dest.size()));
+        pixmap = getColoredPixmap(db.second, 0);
+        p.drawPixmap(dest.marginsRemoved(QMarginsF(y*(1-destroyScaler), y*(1-destroyScaler), y*(1-destroyScaler),y*(1-destroyScaler))), *pixmap, {});
     }
 
     // Draw bottom INVENTORY
@@ -646,6 +673,17 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     }
 
     p.drawText(QPoint {10, 200}, QString("Score: ") + QString::number(scores));
+
+    // DRAW TEXT
+    if(destroyScaler > 0)
+    {
+        auto font = p.font();
+        font.setPixelSize(128 * destroyScaler);
+        p.setFont(font);
+        destPoint.setX(boardRegion.x() - 400 * (1-destroyScaler));
+        destPoint.setY(boardRegion.y() + (boardRegion.height() + font.pixelSize()) / 2);
+        p.drawText(destPoint, "МОЛОДЕЦ!");
+    }
 }
 
 QPointF BlockObject::adjustPoint(const QPointF &adjust, const QSizeF &scale) const
