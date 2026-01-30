@@ -164,7 +164,7 @@ void prepareResources()
     soundManager->registerSound("block-destroy", QUrl::fromLocalFile(":/pixelblastgame/block-destroy"));
 }
 
-PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 400, 400), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true), lastSelectedBlock(-1)
+PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 328, 328), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true), lastSelectedBlock(-1)
 {
     prepareResources();
 
@@ -287,14 +287,6 @@ void PixelBlast::resizeEvent(QResizeEvent *event)
     updateData();
 }
 
-void PixelBlast::updateData()
-{
-    cellSquare = qRound(sqrt(grid.size()));
-    cellSize = boardRegion.size() / static_cast<float>(cellSquare);
-    scaleFactor = {cellScale.width() * cellSize.width(), cellScale.height() * cellSize.height()};
-    boardRegion.moveTopLeft({(width() - boardRegion.width()) / 2, (height() - boardRegion.height()) / 2});
-}
-
 bool PixelBlast::canTrigger(const QList<std::uint8_t> &blocks, QList<std::uint8_t> &grids, bool placeTo)
 {
     int x, y, z, w, d;
@@ -352,7 +344,7 @@ void PixelBlast::generateCandidates(bool randomOnly)
     {
         switch(w)
         {
-                // SELECTIVE
+          // SELECTIVE
             case 0:
             {
                 std::shuffle(std::begin(_shapes), std::end(_shapes), *QRandomGenerator::global());
@@ -366,7 +358,7 @@ void PixelBlast::generateCandidates(bool randomOnly)
                 }
                 break;
             }
-                // RANDOM
+              // RANDOM
             case 1:
             {
                 do
@@ -380,6 +372,14 @@ void PixelBlast::generateCandidates(bool randomOnly)
         shapeCandidates[x] = std::make_shared<ShapeBlock>();
         assignBlocks(createBlocks(y), *shapeCandidates[x]);
     }
+}
+
+void PixelBlast::updateData()
+{
+    cellSquare = qRound(sqrt(grid.size()));
+    cellSize = boardRegion.size() / static_cast<float>(cellSquare);
+    scaleFactor = {cellScale.width() * cellSize.width(), cellScale.height() * cellSize.height()};
+    boardRegion.moveTopLeft({(width() - boardRegion.width()) / 2, (height() - boardRegion.height()) / 2 + 50});
 }
 
 void PixelBlast::updateScene()
@@ -550,7 +550,7 @@ void PixelBlast::updateScene()
     update();
     frames++;
     frameIndex += frames % 5 == 0;
-    destroyScaler = qBound(0.0F, destroyScaler - 0.06F, 1.0F);
+    destroyScaler = qBound(0.0F, destroyScaler - 0.03F, 1.0F);
 
     if(mouseDownUpped)
         mouseDownUpped = false;
@@ -563,21 +563,20 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     QRectF dest;
     QPointF destPoint;
     QPainter p(this);
-    QPixmap *pixmap; //, tmpPixmap;
+    QPixmap *pixmap;
 
     QWidget::paintEvent(event);
 
     // Draw game logo
     dest.setSize(gameLogo->size().toSizeF());
-    dest.moveTopLeft(boardRegion.topLeft() - QPointF(0, dest.height() - 100));
-
-    dest.setWidth(map<float, float>(dest.width(), 0, gameLogo->size().width(), 0, boardRegion.width()));
-    // dest.setHeight(map<float, float>(dest.height(), 0, gameLogo->size().height(), 0, 100));
+    dest.setHeight(boardRegion.width()*1.4F / (dest.width() / dest.height()));
+    dest.setWidth(boardRegion.width()*1.4F);
+    dest.moveTopLeft(boardRegion.topLeft() + QPointF((boardRegion.width() - dest.width()) / 2, -dest.height()/1.2F));
     p.drawPixmap(dest, *gameLogo, {});
 
     // Draw grid & cells (central)
     dest = boardRegion;
-    p.drawPixmap(dest + QMarginsF(100, 100, 100, 100), *gridBackgroundBorder, {});
+    p.drawPixmap(dest + QMarginsF(84, 84, 84, 84), *gridBackgroundBorder, {});
     p.drawPixmap(dest, *gridBackgroundBg, {});
     p.drawPixmap(dest, *gridBackground, {});
 
@@ -632,13 +631,13 @@ void PixelBlast::paintEvent(QPaintEvent *event)
     dest.moveTopLeft(boardRegion.topLeft());
     dest.setSize(scaleFactor);
     destPoint = dest.topLeft();
-    y = dest.size().width()/2;
+    y = dest.size().width() / 2;
     for(x = 0; x < destroyBlocks.size(); ++x)
     {
         const auto &db = destroyBlocks[x];
         dest.moveTopLeft(db.first.adjustPoint(destPoint, dest.size()));
         pixmap = getColoredPixmap(db.second, 0);
-        p.drawPixmap(dest.marginsRemoved(QMarginsF(y*(1-destroyScaler), y*(1-destroyScaler), y*(1-destroyScaler),y*(1-destroyScaler))), *pixmap, {});
+        p.drawPixmap(dest.marginsRemoved(QMarginsF(y * (1 - destroyScaler), y * (1 - destroyScaler), y * (1 - destroyScaler), y * (1 - destroyScaler))), *pixmap, {});
     }
 
     // Draw bottom INVENTORY
@@ -680,7 +679,7 @@ void PixelBlast::paintEvent(QPaintEvent *event)
         auto font = p.font();
         font.setPixelSize(128 * destroyScaler);
         p.setFont(font);
-        destPoint.setX(boardRegion.x() - 400 * (1-destroyScaler));
+        destPoint.setX(boardRegion.x() - 400 * (1 - destroyScaler));
         destPoint.setY(boardRegion.y() + (boardRegion.height() + font.pixelSize()) / 2);
         p.drawText(destPoint, "МОЛОДЕЦ!");
     }

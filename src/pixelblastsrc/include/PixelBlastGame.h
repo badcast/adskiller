@@ -60,7 +60,7 @@ private:
     void assignBlocks(const QList<std::uint8_t> &blocks, ShapeBlock &assignTo);
     QList<std::uint8_t> createBlocks(int blocks);
 
-    float heightOffsetCandidates = 20;
+    float heightOffsetCandidates = 30;
 
     int cellSquare;
     int mouseBtn;
