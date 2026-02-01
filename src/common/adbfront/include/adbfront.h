@@ -113,7 +113,6 @@ public:
     }
 
     QString OSVersionString() const;
-    // TODO: make design capacity
     QString StorageDesignString() const;
     QString RAMDesignString() const;
 };

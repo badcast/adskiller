@@ -29,7 +29,7 @@
    <string>Ads Mobile Killer</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../resources.qrc">
+   <iconset>
     <normaloff>:/resources/app-icon</normaloff>:/resources/app-icon</iconset>
   </property>
   <property name="styleSheet">
@@ -79,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -203,7 +203,7 @@
                <string>Войти</string>
               </property>
              </widget>
-             <widget class="QFrame" name="frame">
+             <widget class="QFrame" name="mainapplogo">
               <property name="geometry">
                <rect>
                 <x>200</x>
@@ -213,7 +213,7 @@
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">image: url(:/resources/app-icon);</string>
+               <string notr="true">image: url(:/resources/app-logo);</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::Shape::NoFrame</enum>
@@ -1914,9 +1914,7 @@
   <tabstop>checkAutoLogin</tabstop>
   <tabstop>authpageUpdate</tabstop>
  </tabstops>
- <resources>
-  <include location="../resources.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>actionClose</sender>

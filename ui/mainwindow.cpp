@@ -179,9 +179,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Set Default Theme is Light (1)
     setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(AppSetting::themeIndex(), 0, 2))));
 
-    // Init tray
-    tray = new AdsAppSystemTray(this);
-
     QString _version;
     _version += QString::number(AppVerMajor);
     _version += ".";
@@ -197,16 +194,30 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 #endif
     checkVersion(true);
 
-    // ADD Snowflakes
-    snows = new Snowflake(this, 50);
+    QDate d = QDate::currentDate();
+    if(d >= QDate(d.year(), 12, 20) || d <= QDate(d.year(), 1, 20))
+    {
+        // ADD Snowflakes
+        snows = new Snowflake(this, 50);
 
-    // QVBoxLayout * vboxLayout = new QVBoxLayout(snows);
-    // vboxLayout->setContentsMargins(0,0,0,0);
-    // vboxLayout->setSpacing(0);
-    // vboxLayout->addWidget(snows);
-    ui->centralwidget_Layout->addWidget(snows, 0, 0, 0, 0);
-    snows->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    snows->setSnowPixmap(QPixmap(":/resources/snowflake-image"));
+        // QVBoxLayout * vboxLayout = new QVBoxLayout(snows);
+        // vboxLayout->setContentsMargins(0,0,0,0);
+        // vboxLayout->setSpacing(0);
+        // vboxLayout->addWidget(snows);
+        ui->centralwidget_Layout->addWidget(snows, 0, 0, 0, 0);
+        snows->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        snows->setSnowPixmap(QPixmap(":/resources/snowflake-image"));
+        ui->mainapplogo->setStyleSheet("image: url(:/resources/app-logo-merry);");
+        this->setWindowIcon(QIcon(":/resources/app-logo-merry"));
+    }
+    else
+    {
+        ui->mainapplogo->setStyleSheet("image: url(:/resources/app-logo);");
+        this->setWindowIcon(QIcon(":/resources/app-logo"));
+    }
+
+    // Init tray
+    tray = new AdsAppSystemTray(this);
 }
 
 MainWindow::~MainWindow()
@@ -985,7 +996,8 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 
 void MainWindow::showEvent(QShowEvent *event)
 {
-    delayPush(50, [this]() { snows->start(); });
+    if(snows)
+        delayPush(50, [this]() { snows->start(); });
     event->accept();
 }
 

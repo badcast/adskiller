@@ -2,7 +2,7 @@
     <qresource prefix="/resources">
         <file alias="update-list">res/update-list.png</file>
         <file alias="app-style-light">res/style/metro-blue.qss</file>
-        <file alias="app-icon">res/icon.png</file>
+        <file alias="app-logo-merry">res/icon.png</file>
         <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
         <file alias="icon-hello">res/icon-hello.png</file>
         <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
@@ -15,6 +15,7 @@
         <file alias="snowflake-image">res/snowflake-image.png</file>
         <file alias="kz-flag">res/kz-flag.png</file>
         <file alias="banner">res/banner-low.png</file>
+        <file alias="app-logo">res/icon_std.png</file>
     </qresource>
     <qresource prefix="/service-icons">
         <file alias="dark-ads-remove">res/icons/dark-ads-remove.png</file>

@@ -7,7 +7,7 @@
 
 const std::array<const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
 
-std::pair<int, QString> algoDesignView(std::uint64_t bytes)
+std::pair<int, QString> dataSizeToDesignView(std::uint64_t bytes)
 {
     int x = 1, power = 0;
     while(bytes >= 1000 && power < ConstDataSizes.size())
@@ -81,12 +81,12 @@ QString AdbSysInfo::OSVersionString() const
 
 QString AdbSysInfo::StorageDesignString() const
 {
-    auto ret = algoDesignView(diskTotal);
+    auto ret = dataSizeToDesignView(diskTotal);
     return QString("%1%2").arg(ret.first).arg(ret.second);
 }
 
 QString AdbSysInfo::RAMDesignString() const
 {
-    auto ret = algoDesignView(ramTotal);
+    auto ret = dataSizeToDesignView(ramTotal);
     return QString("%1%2").arg(ret.first).arg(ret.second);
 }
