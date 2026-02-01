@@ -194,6 +194,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 #endif
     checkVersion(true);
 
+    snows = nullptr;
+
     QDate d = QDate::currentDate();
     if(d >= QDate(d.year(), 12, 20) || d <= QDate(d.year(), 1, 20))
     {
