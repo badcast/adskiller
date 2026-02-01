@@ -225,6 +225,11 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
                         }
                         reply->deleteLater();
                     }
+                    else
+                    {
+                        // Ignored ?: BUG
+                        stop();
+                    }
                     loop.quit();
                 });
             loop.exec();
