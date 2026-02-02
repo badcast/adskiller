@@ -5,11 +5,11 @@
 
 #include "Services.h"
 
-struct InternalData
+struct CFSInternalData
 {
 };
 
-ContactFixerService::ContactFixerService(QObject *parent) : Service(DeviceConnectType::None, parent), mInternal(new InternalData)
+ContactFixerService::ContactFixerService(QObject *parent) : Service(DeviceConnectType::None, parent), mInternal(new CFSInternalData)
 {
 }
 

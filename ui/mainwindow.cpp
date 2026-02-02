@@ -608,14 +608,14 @@ void MainWindow::initServiceModules()
 
     for(x = 0, y = serverServices->size(); x < y; ++x)
     {
-        const ServiceItemInfo *serverServ = &(serverServices->at(x));
-        if(serverServ->hide)
+        const ServiceItemInfo *remoteService = &(serverServices->at(x));
+        if(remoteService->hide)
             continue;
 
         // Find build uuid service.
         for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
         {
-            if(serverServ->uuid == (*iter)->uuid())
+            if(remoteService->uuid == (*iter)->uuid())
             {
                 instance = std::move(*iter);
                 buildServices.erase(iter);
@@ -626,23 +626,27 @@ void MainWindow::initServiceModules()
         if(!instance)
             instance = std::make_shared<UnavailableService>(this);
 
-        instance->active = serverServ->active && instance->isAvailable();
+#if SHOW_SERVICE_BY_DEBUG
+        instance->active = instance->isAvailable(); // EVERYTHING TRUE
+#else
+        instance->active = remoteService->active && instance->isAvailable();
+#endif
 
-        tmp0 = serverServ->name + '\n';
+        tmp0 = remoteService->name + '\n';
         if(instance->active)
         {
-            if(network.authedId.hasVipAccount() && serverServ->needVIP)
+            if(network.authedId.hasVipAccount() && remoteService->needVIP)
                 tmp0 += "(безлимит)";
-            else if(serverServ->price == 0)
+            else if(remoteService->price == 0)
                 tmp0 += "(бесплатно)";
             else
-                tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : serverServ->price).arg(network.authedId.currencyType);
+                tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : remoteService->price).arg(network.authedId.currencyType);
         }
         else
         {
             if(!instance->isAvailable())
                 tmp0 += "(Не реализован)";
-            else if(!serverServ->active)
+            else if(!remoteService->active)
                 tmp0 += "(Не доступен)";
         }
 
@@ -672,7 +676,7 @@ void MainWindow::initServiceModules()
         if(!instance->active)
             button->setStyleSheet(button->styleSheet() + "QPushButton { background: #4D4D4D;}");
 
-        if(serverServ->uuid == IDServiceAdsString)
+        if(remoteService->uuid == IDServiceAdsString)
         {
             QObject::connect(
                 button,
@@ -684,7 +688,7 @@ void MainWindow::initServiceModules()
                     startDeviceConnect(instance->deviceConnectType(), instance);
                 });
         }
-        else if(serverServ->uuid == IDServiceMyDeviceString)
+        else if(remoteService->uuid == IDServiceMyDeviceString)
         {
             QObject::connect(
                 button,
@@ -697,7 +701,7 @@ void MainWindow::initServiceModules()
                     showPageLoader(MyDevicesPage);
                 });
         }
-        else if(serverServ->uuid == IDServiceBoostRamString)
+        else if(remoteService->uuid == IDServiceBoostRamString)
         {
             QObject::connect(
                 button,
@@ -710,7 +714,7 @@ void MainWindow::initServiceModules()
                 });
         }
 
-        instance->title = serverServ->name;
+        instance->title = remoteService->name;
 
         instance->ownerWidget = button;
 
