@@ -59,7 +59,7 @@ int main(int argc, char **argv)
             w = new MainWindow;
             w->current = w;
             w->app = &app;
-            w->delayPushLoop(
+            w->delayUICallLoop(
                 100,
                 [&sharedMem, &w]() -> bool
                 {

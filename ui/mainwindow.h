@@ -53,15 +53,8 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-private:
     friend class AdsKillerService;
-
-    struct
-    {
-        bool isAuthed;
-        AdbDevice adbDevice;
-        DeviceConnectType connectionType;
-    } connectPhone;
+    friend class ServiceProvider;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -70,10 +63,9 @@ public:
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
-    void DelayUISync(int ms);
-    void delayPushLoop(int ms, std::function<bool()> call);
-    void delayPush(int ms, std::function<void()> call);
-    void startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<Service> service);
+    void delayUI(int ms);
+    void delayUICallLoop(int ms, std::function<bool()> call);
+    void delayUICall(int ms, std::function<void()> call);
 
     Network network;
     QTimer *timerAuthAnim;
@@ -109,8 +101,7 @@ private slots:
 public slots:
     void setThemeAction();
     void updateCabinet(bool newAuthenticate = true);
-    void logout();
-    void runService(std::shared_ptr<Service> service);
+    void logoutSystem();
 
 private:
     Ui::MainWindow *ui;
@@ -124,16 +115,19 @@ private:
     QPropertyAnimation *deviceLeftAnimator;
     PageIndex startPage = PageIndex::AuthPage;
     PageIndex curPage = startPage;
-    PageIndex lastPage = PageIndex::AuthPage;
+    PageIndex lastPage = startPage;
     QTimer *versionChecker;
     Snowflake *snows;
     bool deviceSelectSwitched;
 
     template <typename Pred>
-    void showPageLoader(PageIndex pageNum, int msWait, Pred &&pred);
-    void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = "");
+    void showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text);
+
+    void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = QString {});
+
     void showPage(PageIndex pageNum);
-    void pageShown(int page);
+    void pageShownPreStart(int page);
+    void runService(std::shared_ptr<Service> service);
 
     void clearAuthInfoPage();
     void fillAuthInfoPage();
@@ -141,5 +135,12 @@ private:
     void initServiceModules();
     void checkVersion(bool firstRun);
     void willTerminate();
+
+    struct
+    {
+        bool isAuthed;
+        AdbDevice adbDevice;
+        DeviceConnectType connectionType;
+    } connectPhone;
 };
 #endif // MAINWINDOW_H

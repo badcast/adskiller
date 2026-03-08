@@ -39,6 +39,7 @@ std::list<std::shared_ptr<Service>> Service::EnumAppServices(QObject *parent)
     services.emplace_back(std::move(std::make_shared<BoostRamService>(parent)));
     services.emplace_back(std::move(std::make_shared<ContactFixerService>(parent)));
     services.emplace_back(std::move(std::make_shared<MiDeviceUnlockService>(parent)));
+    services.emplace_back(std::move(std::make_shared<BuyVIPService>(parent)));
     return services;
 }
 

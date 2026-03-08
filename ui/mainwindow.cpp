@@ -1,3 +1,4 @@
+#include <functional>
 #include <algorithm>
 #include <cctype>
 #include <list>
@@ -33,7 +34,7 @@ constexpr struct
 {
     PageIndex index;
     const char *widgetName;
-} PageConstNames[LengthPages] = {{AuthPage, "page_auth"}, {CabinetPage, "page_cabinet"}, {LongInfoPage, "page_adsmalware"}, {LoaderPage, "page_loader"}, {DevicesPage, "page_devices"}, {MyDevicesPage, "page_mydevices"}};
+} PageConstNames[LengthPages] = {{AuthPage, "page_auth"}, {CabinetPage, "page_cabinet"}, {LongInfoPage, "page_adsmalware"}, {LoaderPage, "page_loader"}, {DevicesPage, "page_devices"}, {MyDevicesPage, "page_mydevices"}, {BuyVIPPage, "page_buyvip"}};
 
 MainWindow *MainWindow::current;
 
@@ -145,6 +146,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     model = new QStringListModel(ui->processLogStatus);
     ui->processLogStatus->setModel(model);
 
+    versionChecker = new QTimer(this);
+    versionChecker->setSingleShot(true);
+    versionChecker->setInterval(VersionCheckRate);
+
     // Signals
     QObject::connect(&network, &Network::sLoginFinish, this, &MainWindow::slotAuthFinish);
     QObject::connect(&network, &Network::sFetchingVersion, this, &MainWindow::slotFetchVersionFinish);
@@ -152,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateCabinet);
-    QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
+    QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logoutSystem);
     QObject::connect(
         ui->malwareReRun,
         &QPushButton::clicked,
@@ -161,10 +166,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             if(currentService && !currentService->isStarted())
                 currentService->start();
         });
-
-    versionChecker = new QTimer(this);
-    versionChecker->setSingleShot(true);
-    versionChecker->setInterval(VersionCheckRate);
     QObject::connect(versionChecker, &QTimer::timeout, [this]() { checkVersion(false); });
 
     // Font init
@@ -197,15 +198,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     snows = nullptr;
 
     QDate d = QDate::currentDate();
-    if(d >= QDate(d.year(), 12, 20) || d <= QDate(d.year(), 1, 20))
+    if(d >= QDate(d.year(), 12, 20) || d <= QDate(d.year(), 2, 1))
     {
         // ADD Snowflakes
         snows = new Snowflake(this, 50);
-
-        // QVBoxLayout * vboxLayout = new QVBoxLayout(snows);
-        // vboxLayout->setContentsMargins(0,0,0,0);
-        // vboxLayout->setSpacing(0);
-        // vboxLayout->addWidget(snows);
         ui->centralwidget_Layout->addWidget(snows, 0, 0, 0, 0);
         snows->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         snows->setSnowPixmap(QPixmap(":/resources/snowflake-image"));
@@ -346,18 +342,23 @@ void MainWindow::willTerminate()
 {
     setEnabled(false);
     showMessageFromStatus(NetworkError);
-    delayPush(5000, [this]() { this->close(); });
+    delayUICall(5000, [this]() { this->close(); });
     QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
 }
 
 template <typename Pred>
-void MainWindow::showPageLoader(PageIndex pageNum, int msWait, Pred &&pred)
+void MainWindow::showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text)
 {
     if(pageNum == LoaderPage)
         return;
 
+    if(text.isEmpty())
+        text = "Ожидайте";
+
+    ui->loaderPageText->setText(text);
+
     showPage(LoaderPage);
-    delayPushLoop(
+    delayUICallLoop(
         msWait,
         [this, pageNum, pred]()
         {
@@ -375,8 +376,8 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
     if(text.isEmpty())
         text = "Ожидайте";
 
-    ui->loaderPageText->setText(text);
-    showPageLoader(pageNum, msWait, []() { return true; });
+
+    showPageLoader(pageNum, msWait, []() { return true; }, text);
 }
 
 void MainWindow::showPage(PageIndex pageNum)
@@ -399,10 +400,10 @@ void MainWindow::showPage(PageIndex pageNum)
     contentOpacityAnimator->start();
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
-    pageShown(curPage);
+    pageShownPreStart(curPage);
 }
 
-void MainWindow::pageShown(int page)
+void MainWindow::pageShownPreStart(int page)
 {
     switch(page)
     {
@@ -416,20 +417,23 @@ void MainWindow::pageShown(int page)
                 ui->authButton->click();
             break;
         case DevicesPage:
-            if(nullptr == currentService || currentService->deviceConnectType() != ADB)
+            if(nullptr == currentService)
             {
                 QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
-                logout();
+                logoutSystem();
                 return;
             }
+
+            currentService->reset();
+            currentService->stop();
 
             // Unset
             deviceSelectSwitched = false;
             deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
 
-            DelayUISync(1000);
+            delayUI(1000);
 
-            delayPushLoop(
+            delayUICallLoop(
                 300,
                 [this]() -> bool
                 {
@@ -452,7 +456,7 @@ void MainWindow::pageShown(int page)
                     {
                         deviceSelectSwitched = true;
                         deviceLeftAnimator->start();
-                        DelayUISync(2000);
+                        delayUI(2000);
                         showPageLoader(currentService->targetPage());
                     }
                     if(curPage != DevicesPage)
@@ -468,12 +472,7 @@ void MainWindow::pageShown(int page)
         {
             ui->scrollArea_3->verticalScrollBar()->setValue(0);
             fillAuthInfoPage();
-            if(currentService)
-            {
-                currentService->reset();
-                currentService->stop();
-                currentService.reset();
-            }
+
             break;
         }
         case LongInfoPage:
@@ -501,18 +500,23 @@ void MainWindow::pageShown(int page)
             {
                 place << QString("<< Ожидаем >>").arg(currentService->title);
 
-                delayPush(500, [this]() { currentService->start(); });
+                delayUICall(500, [this]() { currentService->start(); });
             }
 
             model->setStringList(place);
             break;
         }
-        case MyDevicesPage:
-            currentService->reset();
-            currentService->start();
-            break;
         default:
             break;
+    }
+}
+
+void MainWindow::runService(std::shared_ptr<Service> service)
+{
+    if(!ServiceProvider::runService(service))
+    {
+        QMessageBox::warning(this, "Service is shutdown", "Service module is no load or disabled by server.");
+        logoutSystem();
     }
 }
 
@@ -639,6 +643,8 @@ void MainWindow::initServiceModules()
                 tmp0 += "(безлимит)";
             else if(remoteService->price == 0)
                 tmp0 += "(бесплатно)";
+            else if(remoteService->price == static_cast<std::uint32_t>(-1))
+                tmp0 += "(на выбор)";
             else
                 tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : remoteService->price).arg(network.authedId.currencyType);
         }
@@ -676,46 +682,10 @@ void MainWindow::initServiceModules()
         if(!instance->active)
             button->setStyleSheet(button->styleSheet() + "QPushButton { background: #4D4D4D;}");
 
-        if(remoteService->uuid == IDServiceAdsString)
-        {
-            QObject::connect(
-                button,
-                &QPushButton::clicked,
-                [this, instance]()
-                {
-                    if(!instance || !instance->active)
-                        return;
-                    startDeviceConnect(instance->deviceConnectType(), instance);
-                });
-        }
-        else if(remoteService->uuid == IDServiceMyDeviceString)
-        {
-            QObject::connect(
-                button,
-                &QPushButton::clicked,
-                [this, instance]()
-                {
-                    if(!instance || !instance->active)
-                        return;
-                    currentService = instance;
-                    showPageLoader(MyDevicesPage);
-                });
-        }
-        else if(remoteService->uuid == IDServiceBoostRamString)
-        {
-            QObject::connect(
-                button,
-                &QPushButton::clicked,
-                [this, instance]()
-                {
-                    if(!instance || !instance->active)
-                        return;
-                    startDeviceConnect(instance->deviceConnectType(), instance);
-                });
-        }
+        // Target service by slot
+        QObject::connect(button, &QPushButton::clicked, this, std::bind(&ServiceProvider::runService, this, instance));
 
         instance->title = remoteService->name;
-
         instance->ownerWidget = button;
 
         button->setIconSize({70, 70});
@@ -724,6 +694,7 @@ void MainWindow::initServiceModules()
         services << std::move(instance);
     }
     std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) { return static_cast<int>(lhs->active) > static_cast<int>(rhs->active); });
+
     x = 0;
     for(const std::shared_ptr<Service> &item : std::as_const(services))
     {
@@ -734,7 +705,7 @@ void MainWindow::initServiceModules()
     serverServices.reset();
 }
 
-void MainWindow::DelayUISync(int ms)
+void MainWindow::delayUI(int ms)
 {
     QEventLoop loop;
     QTimer timer;
@@ -746,7 +717,7 @@ void MainWindow::DelayUISync(int ms)
     loop.exec();
 }
 
-void MainWindow::delayPushLoop(int ms, std::function<bool()> call)
+void MainWindow::delayUICallLoop(int ms, std::function<bool()> call)
 {
     QTimer *qtimer = new QTimer(this);
     (void) qtimer;
@@ -766,36 +737,15 @@ void MainWindow::delayPushLoop(int ms, std::function<bool()> call)
     qtimer->start();
 }
 
-void MainWindow::delayPush(int ms, std::function<void()> call)
+void MainWindow::delayUICall(int ms, std::function<void()> call)
 {
-    delayPushLoop(
+    delayUICallLoop(
         ms,
         [call]() -> bool
         {
             call();
             return false;
         });
-}
-
-void MainWindow::startDeviceConnect(DeviceConnectType targetType, std::shared_ptr<Service> service)
-{
-    // TODO: use next any type <Target Type>| now use ADB
-    if(targetType == DeviceConnectType::None)
-    {
-        QMessageBox::critical(this, "Fatal module", "Module is invalid type.");
-        return;
-    }
-
-    if(currentService && currentService->isStarted())
-    {
-        // TODO: Show error is busy
-        QMessageBox::critical(this, "Fatal module", "Module is already started.");
-        return;
-    }
-    currentService = service;
-    connectPhone = {};
-    connectPhone.connectionType = targetType;
-    showPageLoader(DevicesPage, 2000, QString("Запуск службы\n\"%1\"").arg(currentService->title));
 }
 
 bool MainWindow::accessUi_adskiller(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun)
@@ -848,13 +798,13 @@ void MainWindow::on_authButton_clicked()
 
     AppSetting::autoLogin(nullptr, ui->checkAutoLogin->isChecked());
 
-    delayPushLoop(
+    delayUICallLoop(
         100,
         [this]()
         {
             if(!network.pending() && network.isAuthed())
             {
-                delayPush(
+                delayUICall(
                     2000,
                     [this]()
                     {
@@ -884,7 +834,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::slotAuthFinish(int status, bool ok)
 {
-    delayPush(
+    delayUICall(
         1000,
         [ok, status, this]() -> void
         {
@@ -1003,7 +953,7 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 void MainWindow::showEvent(QShowEvent *event)
 {
     if(snows)
-        delayPush(50, [this]() { snows->start(); });
+        delayUICall(50, [this]() { snows->start(); });
     event->accept();
 }
 
@@ -1076,7 +1026,7 @@ void MainWindow::updateCabinet(bool newAuthenticate)
     QString tryToken;
     if(!network.isAuthed())
     {
-        logout();
+        logoutSystem();
         return;
     }
 
@@ -1101,20 +1051,16 @@ void MainWindow::updateCabinet(bool newAuthenticate)
             ui->loaderPageText->setText(str);
             if(status && (!serverServices || !network.isAuthed()))
             {
-                delayPush(1, [this]() { logout(); });
+                delayUICall(1, [this]() { logoutSystem(); });
             }
             return status;
         });
 }
 
-void MainWindow::logout()
+void MainWindow::logoutSystem()
 {
     if(network.isAuthed())
         network.authedId = {};
     clearAuthInfoPage();
     showPageLoader(AuthPage, 500, QString("Выход из системы"));
-}
-
-void MainWindow::runService(std::shared_ptr<Service> service)
-{
 }

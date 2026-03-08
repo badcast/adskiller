@@ -10,6 +10,11 @@ QString MyDeviceService::uuid() const
     return IDServiceMyDeviceString;
 }
 
+PageIndex MyDeviceService::targetPage()
+{
+    return PageIndex::MyDevicesPage;
+}
+
 void MyDeviceService::slotRefresh()
 {
     clearMyDevicesPage("Запрос...");
@@ -24,7 +29,7 @@ void MyDeviceService::slotRefresh()
         expired->clear();
     quaranteeFilter->setEnabled(false);
     refreshButton->setEnabled(false);
-    MainWindow::current->DelayUISync(2000);
+    MainWindow::current->delayUI(2000);
     MainWindow::current->network.pullDeviceList(&dtStart, &dtEnd);
 }
 

@@ -79,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>7</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -954,7 +954,7 @@
          </widget>
          <widget class="QWidget" name="page_devices">
           <attribute name="title">
-           <string/>
+           <string>adbdevice-page</string>
           </attribute>
           <layout class="QHBoxLayout">
            <item>
@@ -1212,7 +1212,7 @@
          </widget>
          <widget class="QWidget" name="page_adsmalware">
           <attribute name="title">
-           <string>Malware Process Page</string>
+           <string>page-adskiller</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_asd2" rowstretch="0,0,0">
            <property name="leftMargin">
@@ -1674,7 +1674,7 @@
          </widget>
          <widget class="QWidget" name="page_mydevices">
           <attribute name="title">
-           <string>Страница</string>
+           <string>mydevices-page</string>
           </attribute>
           <layout class="QVBoxLayout">
            <item>
@@ -1764,6 +1764,71 @@
               <string>Мои устройства и гарантия.</string>
              </property>
             </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_buyvip">
+          <attribute name="title">
+           <string>buyvip-page</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="1" column="2">
+            <spacer name="horizontalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>158</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="1">
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>На этой страннице вы можете купить VIP премиум только для удаление рекламы.</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_13">
+                <property name="text">
+                 <string>Выберите время действия VIP аккаунта</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QComboBox" name="comboBoxSelectVIPDays"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="0">
+            <spacer name="horizontalSpacer_6">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>

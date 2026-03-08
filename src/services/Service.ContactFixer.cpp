@@ -49,6 +49,10 @@ bool ContactFixerService::start()
     QString value1 = QString::fromStdString(np.format(NumberFormat::Beauty | NumberFormat::Local));
     QString value2 = QString::fromStdString(np.format(NumberFormat::Compact | NumberFormat::Global));
     QString value3 = QString::fromStdString(np.format(NumberFormat::Compact | NumberFormat::Local));
+    (void) value0;
+    (void) value1;
+    (void) value2;
+    (void) value3;
     return false;
 }
 

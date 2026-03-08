@@ -36,7 +36,7 @@
         <file>res/icons/white-clean-garbage.png</file>
         <file alias="white-devices-list">res/icons/white-devices-list.png</file>
         <file>res/icons/white-media-transfer.png</file>
-        <file>res/icons/white-transfer.png</file>
+        <file alias="white-transfer">res/icons/white-transfer.png</file>
         <file>res/icons/white-unlock.png</file>
         <file>res/icons/white-vibration.png</file>
     </qresource>

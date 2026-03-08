@@ -37,10 +37,10 @@ int mProgress;
 int mCmd;
 int mUserValue;
 
-void malwareStart(const QString &deviceSerial);
-void malwareKill();
-bool malwareClean();
-void malwaring();
+void adskiller_start_cmd(const QString &deviceSerial);
+void adskiller_kill_proc();
+bool adskiller_clean_cmd();
+void adskiller_awake();
 void malwareWriteVal(int userValue);
 
 inline void malwareWriteVal(int userValue)
@@ -152,7 +152,7 @@ bool AdsKillerService::start()
     place << "<< Не отсоединяйте устройство от компьютера >>";
     model->setStringList(place);
 
-    MainWindow::current->delayPush(
+    MainWindow::current->delayUICall(
         500,
         [this, deviceName]()
         {
@@ -189,7 +189,7 @@ bool AdsKillerService::start()
                         malwareUpdateTimer->stop();
                         malwareUpdateTimer->deleteLater();
                         pushButtonReRun->setEnabled(true);
-                        malwareClean();
+                        adskiller_clean_cmd();
                     }
                     else if(mUserValue == 1000)
                     {
@@ -205,14 +205,14 @@ bool AdsKillerService::start()
                 });
         });
 
-    malwareStart(mAdbDevice.devId);
+    adskiller_start_cmd(mAdbDevice.devId);
     return isStarted();
 }
 
 void AdsKillerService::stop()
 {
     if(isStarted())
-        malwareKill();
+        adskiller_kill_proc();
 }
 
 void AdsKillerService::cirlceMalwareState(bool success)
@@ -295,7 +295,7 @@ inline T1 compare_list(const T0 &t0, const T1 &t1, Pred &&pred)
     return result;
 }
 
-void malwareStart(const QString &deviceSerial)
+void adskiller_start_cmd(const QString &deviceSerial)
 {
     if(malwareThread != nullptr)
     {
@@ -305,7 +305,7 @@ void malwareStart(const QString &deviceSerial)
     adbDeviceSerial = deviceSerial;
     mutex = new QMutex();
     malwareThread = new QThread();
-    QObject::connect(malwareThread, &QThread::started, &malwaring);
+    QObject::connect(malwareThread, &QThread::started, &adskiller_awake);
     network = new Network(MainWindow::current);
     network->authedId = MainWindow::current->network.authedId;
     mCmd = 0;
@@ -314,7 +314,7 @@ void malwareStart(const QString &deviceSerial)
     malwareThread->start();
 }
 
-bool malwareClean()
+bool adskiller_clean_cmd()
 {
     if(status == MalwareStatus::Running)
         return false;
@@ -324,14 +324,14 @@ bool malwareClean()
     return true;
 }
 
-void malwareKill()
+void adskiller_kill_proc()
 {
     if(malwareThread == nullptr)
         return;
     mCmd = MalwareForclyKill;
 }
 
-void malwaring()
+void adskiller_awake()
 {
     using namespace std::chrono;
 
@@ -637,9 +637,7 @@ void malwaring()
 
                 malwareWriteLog("Распаковка", 57);
                 resultList = compare_list(localPackageNames, resultList, [](const auto &lhs, const auto &rhs) -> bool { return lhs == rhs; });
-                // resultList = existencePackages(localPackageNames,resultList);
                 disableList = compare_list(localPackages, disableList, [](const auto &lhs, const auto &rhs) -> bool { return !lhs.disabled && lhs.packageName == rhs; });
-                // disableList = existencePackageDisables(localPackages,disableList);
                 totalMalwareDetected = static_cast<int>(resultList.size() + disableList.size());
                 WAITMODE;
 

@@ -15,7 +15,7 @@ QByteArray CipherAlgoCrypto::RandomKey()
     {
         key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
     }
-    return key;
+    return key; 
 }
 
 QByteArray CipherAlgoCrypto::ConvBytes(const QByteArray &bytes, const QByteArray &key)

@@ -50,6 +50,7 @@ enum PageIndex
     LongInfoPage,
     DevicesPage,
     MyDevicesPage,
+    BuyVIPPage,
 
     LengthPages
 };
@@ -58,9 +59,22 @@ class Service;
 class UnavailableService;
 class AdsKillerService;
 class StorageCacheCleanService;
+class BuyVIPService;
 class ApkManagerService;
 class ContactFixerService;
 class MiDeviceUnlockService;
+class ServiceProvider;
+
+class ServiceProvider
+{
+public:
+    ServiceProvider() = delete;
+    ~ServiceProvider() = delete;
+
+    static bool runService(std::shared_ptr<Service> service);
+    static void closeService();
+    static std::shared_ptr<Service> currentService();
+};
 
 class Service : public QObject
 {
@@ -162,6 +176,25 @@ public:
     void reset() override;
 };
 
+class BuyVIPService : public Service
+{
+    Q_OBJECT
+
+public:
+    BuyVIPService(QObject *parent = nullptr);
+
+    void setArgs(const AdbDevice &adbDevice) override;
+
+    QString uuid() const override;
+    bool canStart() override;
+    bool isStarted() override;
+    PageIndex targetPage() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    void reset() override; QString widgetIconName() override;
+};
+
 class MyDeviceService : public Service
 {
     Q_OBJECT
@@ -170,6 +203,7 @@ public:
     ~MyDeviceService();
 
     QString uuid() const override;
+    PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -218,6 +252,8 @@ public:
 
 class ContactFixerService : public Service
 {
+    Q_OBJECT
+
 private:
     struct CFSInternalData *mInternal;
 
@@ -236,6 +272,8 @@ public:
 
 class MiDeviceUnlockService : public Service
 {
+    Q_OBJECT
+
 public:
     MiDeviceUnlockService(QObject *parent = nullptr);
     QString uuid() const override;
