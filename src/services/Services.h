@@ -192,7 +192,8 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override; QString widgetIconName() override;
+    void reset() override;
+    QString widgetIconName() override;
 };
 
 class MyDeviceService : public Service

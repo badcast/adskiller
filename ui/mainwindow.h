@@ -120,10 +120,17 @@ private:
     Snowflake *snows;
     bool deviceSelectSwitched;
 
-    template <typename Pred>
-    void showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text);
+    template<typename Pred>
+    void showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text = QString{});
 
-    void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = QString {});
+    inline void showPageLoader(PageIndex pageNum, int msWait = 1000,  QString text = QString {})
+    {
+        if(text.isEmpty())
+            text = "Ожидайте";
+
+        std::function<bool(void)> func = []() -> bool { return true; };
+        showPageLoader(pageNum, msWait, func, text);
+    }
 
     void showPage(PageIndex pageNum);
     void pageShownPreStart(int page);

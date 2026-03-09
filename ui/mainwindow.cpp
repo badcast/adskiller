@@ -346,39 +346,7 @@ void MainWindow::willTerminate()
     QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
 }
 
-template <typename Pred>
-void MainWindow::showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text)
-{
-    if(pageNum == LoaderPage)
-        return;
 
-    if(text.isEmpty())
-        text = "Ожидайте";
-
-    ui->loaderPageText->setText(text);
-
-    showPage(LoaderPage);
-    delayUICallLoop(
-        msWait,
-        [this, pageNum, pred]()
-        {
-            if(pred())
-            {
-                showPage(pageNum);
-                return false;
-            }
-            return true;
-        });
-}
-
-void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
-{
-    if(text.isEmpty())
-        text = "Ожидайте";
-
-
-    showPageLoader(pageNum, msWait, []() { return true; }, text);
-}
 
 void MainWindow::showPage(PageIndex pageNum)
 {
@@ -683,7 +651,7 @@ void MainWindow::initServiceModules()
             button->setStyleSheet(button->styleSheet() + "QPushButton { background: #4D4D4D;}");
 
         // Target service by slot
-        QObject::connect(button, &QPushButton::clicked, this, std::bind(&ServiceProvider::runService, this, instance));
+        QObject::connect(button, &QPushButton::clicked, this, std::bind(&MainWindow::runService, this, instance));
 
         instance->title = remoteService->name;
         instance->ownerWidget = button;
@@ -1063,4 +1031,29 @@ void MainWindow::logoutSystem()
         network.authedId = {};
     clearAuthInfoPage();
     showPageLoader(AuthPage, 500, QString("Выход из системы"));
+}
+
+template<typename Pred>
+void MainWindow::showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text)
+{
+    if(pageNum == LoaderPage)
+        return;
+
+    if(text.isEmpty())
+        text = "Ожидайте";
+
+    ui->loaderPageText->setText(text);
+
+    showPage(LoaderPage);
+    delayUICallLoop(
+        msWait,
+        [this, pageNum, pred]()
+        {
+            if(pred())
+            {
+                showPage(pageNum);
+                return false;
+            }
+            return true;
+        });
 }

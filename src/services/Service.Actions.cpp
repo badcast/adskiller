@@ -28,7 +28,11 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     {
         _preloadPage = _CurrentService->targetPage();
     }
-    MainWindow::current->showPageLoader(_preloadPage, 2000, QString("Запуск службы\n\"%1\"").arg(_CurrentService->title));
+    MainWindow::current->showPageLoader(_preloadPage, 2000, [_CurrentService](){
+        _CurrentService->start();
+        return false;
+    }, QString("Запуск службы\n\"%1\"").arg(_CurrentService->title));
+    return true;
 }
 
 void ServiceProvider::closeService()
