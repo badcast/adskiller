@@ -79,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>7</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -813,20 +813,20 @@
                <number>10</number>
               </property>
               <property name="topMargin">
-               <number>5</number>
+               <number>2</number>
               </property>
               <property name="rightMargin">
                <number>10</number>
               </property>
               <property name="bottomMargin">
-               <number>5</number>
+               <number>2</number>
               </property>
               <item>
                <widget class="QPushButton" name="logoutButton">
                 <property name="minimumSize">
                  <size>
                   <width>90</width>
-                  <height>40</height>
+                  <height>20</height>
                  </size>
                 </property>
                 <property name="maximumSize">
@@ -898,7 +898,7 @@
                                 background: transparent</string>
                 </property>
                 <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/resources/kz-flag&quot;/&gt;&lt;span style=&quot; font-size:24pt;&quot;/&gt;&lt;span style=&quot; font-size:24pt; font-weight:700; vertical-align:super;&quot;&gt;      СДЕЛАНО В КАЗАХСТАНЕ&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;img src=&quot;:/resources/kz-flag&quot;/&gt;&lt;span style=&quot; font-size:24pt; font-weight:700; vertical-align:super;&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="openExternalLinks">
                  <bool>true</bool>
