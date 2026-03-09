@@ -30,7 +30,7 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     }
     MainWindow::current->showPageLoader(_preloadPage, 2000, [_CurrentService](){
         _CurrentService->start();
-        return false;
+        return true;
     }, QString("Запуск службы\n\"%1\"").arg(_CurrentService->title));
     return true;
 }

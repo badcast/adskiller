@@ -1799,7 +1799,27 @@
                </widget>
               </item>
               <item row="1" column="0">
+               <widget class="QLabel" name="labelVipBalance">
+                <property name="text">
+                 <string>BalanceCredits</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
                <widget class="QComboBox" name="comboBoxSelectVIPDays"/>
+              </item>
+              <item row="2" column="1">
+               <widget class="QPushButton" name="pushButton">
+                <property name="maximumSize">
+                 <size>
+                  <width>120</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>КУПИТЬ</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -1826,6 +1846,19 @@
               <size>
                <width>40</width>
                <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="1">
+            <spacer name="verticalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
               </size>
              </property>
             </spacer>

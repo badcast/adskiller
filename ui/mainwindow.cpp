@@ -163,8 +163,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         &QPushButton::clicked,
         [this]()
         {
-            if(currentService && !currentService->isStarted())
-                currentService->start();
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
         });
     QObject::connect(versionChecker, &QTimer::timeout, [this]() { checkVersion(false); });
 
@@ -220,13 +220,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
-    if(currentService)
-    {
-        currentService->stop();
-    }
-    delete ui;
+    ServiceProvider::closeService();
     Adb::killServer();
     AppSetting::save();
+    delete ui;
 }
 
 void MainWindow::on_actionAboutUs_triggered()
@@ -342,11 +339,9 @@ void MainWindow::willTerminate()
 {
     setEnabled(false);
     showMessageFromStatus(NetworkError);
-    delayUICall(5000, [this]() { this->close(); });
+    delayUICall(5000, std::bind(&MainWindow::close, this));
     QMessageBox::question(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::StandardButton::Ok);
 }
-
-
 
 void MainWindow::showPage(PageIndex pageNum)
 {
@@ -385,15 +380,15 @@ void MainWindow::pageShownPreStart(int page)
                 ui->authButton->click();
             break;
         case DevicesPage:
-            if(nullptr == currentService)
+            if(nullptr == ServiceProvider::currentService())
             {
                 QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
                 logoutSystem();
                 return;
             }
 
-            currentService->reset();
-            currentService->stop();
+            ServiceProvider::currentService()->reset();
+            ServiceProvider::currentService()->stop();
 
             // Unset
             deviceSelectSwitched = false;
@@ -415,17 +410,17 @@ void MainWindow::pageShownPreStart(int page)
                             {
                                 connectPhone.isAuthed = status == DEVICE;
                                 connectPhone.adbDevice = device;
-                                currentService->setArgs(device);
+                                ServiceProvider::currentService()->setArgs(device);
                                 break;
                             }
                         }
                     }
-                    if(currentService->canStart() && !deviceSelectSwitched)
+                    if(ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
                     {
                         deviceSelectSwitched = true;
                         deviceLeftAnimator->start();
                         delayUI(2000);
-                        showPageLoader(currentService->targetPage());
+                        showPageLoader(ServiceProvider::currentService()->targetPage());
                     }
                     if(curPage != DevicesPage)
                     {
@@ -452,23 +447,22 @@ void MainWindow::pageShownPreStart(int page)
             malwareProgressCircle->setValue(0);
             malwareProgressCircle->setMaximum(100);
             malwareProgressCircle->setInfinilyMode(false);
-            currentService->reset();
 
             place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
 
             // TODO: set auto start mode flag.
             // IF THERE AUTO_START = YES?
 
-            if(!currentService->canStart())
+            if(!ServiceProvider::currentService()->canStart())
             {
                 place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад "
                          "и повторите попытку.";
             }
             else
             {
-                place << QString("<< Ожидаем >>").arg(currentService->title);
+                place << QString("<< Ожидаем >>").arg(ServiceProvider::currentService()->title);
 
-                delayUICall(500, [this]() { currentService->start(); });
+                delayUICall(500, [this]() { ServiceProvider::currentService()->start(); });
             }
 
             model->setStringList(place);
@@ -1033,8 +1027,7 @@ void MainWindow::logoutSystem()
     showPageLoader(AuthPage, 500, QString("Выход из системы"));
 }
 
-template<typename Pred>
-void MainWindow::showPageLoader(PageIndex pageNum, int msWait, Pred &&pred, QString text)
+void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> pred, QString text)
 {
     if(pageNum == LoaderPage)
         return;
