@@ -578,10 +578,10 @@ void MainWindow::initServiceModules()
         if(remoteService->hide)
             continue;
 
-        // Find build uuid service.
+        // Find build guid service.
         for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
         {
-            if(remoteService->uuid == (*iter)->uuid())
+            if(remoteService->guid == (*iter)->guid())
             {
                 instance = std::move(*iter);
                 buildServices.erase(iter);
@@ -710,7 +710,7 @@ void MainWindow::delayUICall(int ms, std::function<void()> call)
         });
 }
 
-bool MainWindow::accessUi_adskiller(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun)
+bool MainWindow::accessUi_page_longinfo(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun)
 {
     processLogStatusV = ui->processLogStatus;
     malareStatusText0V = ui->malwareStatusText0;
@@ -720,13 +720,27 @@ bool MainWindow::accessUi_adskiller(QListView *&processLogStatusV, QLabel *&mala
     return true;
 }
 
-bool MainWindow::accessUi_myDevices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter)
+bool MainWindow::accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter)
 {
     tableActual = ui->myDeviceActual;
     dateEditStart = ui->myDeviceFilterDateStart;
     dateEditEnd = ui->myDeviceFilterDateEnd;
     refreshButton = ui->myDeviceSend;
     quaranteeFilter = ui->myDeviceQuaranteeFilter;
+    return true;
+}
+
+bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *& infoAfterPeriod, QPushButton *&buyButton)
+{
+    listVariants = ui->comboBoxSelectVIPDays;
+    balanceText = ui->labelVipBalance;
+    buyButton = ui->buttonBuyVip;
+    infoAfterPeriod = ui->labelInfoVip;
+
+    infoAfterPeriod->clear();
+    listVariants->clear();
+    balanceText->clear();
+
     return true;
 }
 

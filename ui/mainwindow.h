@@ -81,8 +81,9 @@ public:
     QList<std::shared_ptr<Service>> services {};
     std::shared_ptr<QList<ServiceItemInfo>> serverServices {};
 
-    bool accessUi_adskiller(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
-    bool accessUi_myDevices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter);
+    bool accessUi_page_longinfo(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
+    bool accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter);
+    bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *& balanceText, QLabel *&infoAfterPeriod, QPushButton *& buyButton);
 
     static MainWindow *current;
 

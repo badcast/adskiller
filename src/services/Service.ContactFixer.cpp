@@ -22,7 +22,7 @@ ContactFixerService::~ContactFixerService()
     }
 }
 
-QString ContactFixerService::uuid() const
+QString ContactFixerService::guid() const
 {
     return IDServiceContactFixerString;
 }

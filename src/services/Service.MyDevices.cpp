@@ -5,7 +5,7 @@
 #include "Services.h"
 #include "mainwindow.h"
 
-QString MyDeviceService::uuid() const
+QString MyDeviceService::guid() const
 {
     return IDServiceMyDeviceString;
 }
@@ -147,7 +147,7 @@ bool MyDeviceService::isFinish()
 
 bool MyDeviceService::start()
 {
-    if(!canStart() || isStarted() || !MainWindow::current->accessUi_myDevices(table, dateEditBegin, dateEditEnd, refreshButton, quaranteeFilter) || !(table && dateEditBegin && dateEditEnd && refreshButton && quaranteeFilter))
+    if(!canStart() || isStarted() || !MainWindow::current->accessUi_page_devices(table, dateEditBegin, dateEditEnd, refreshButton, quaranteeFilter) || !(table && dateEditBegin && dateEditEnd && refreshButton && quaranteeFilter))
         return false;
 
     mInternalData |= 1;

@@ -4,3 +4,4 @@ build
 .qtcreator
 .vscode
 .cache
+.env*

@@ -89,6 +89,11 @@ target_link_libraries(services PRIVATE adbfront widgets)
 target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services widgets)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.env")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/.env" REMOTEADDR)
+target_compile_definitions(application PRIVATE NREMOTEADDR="${REMOTEADDR}")
+endif()
+
 if(WIN32)
   set_property(TARGET application PROPERTY WIN32_EXECUTABLE true)
   set_property(TARGET update PROPERTY WIN32_EXECUTABLE true)

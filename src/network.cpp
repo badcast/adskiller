@@ -8,11 +8,14 @@
 #include "begin.h"
 #include "network.h"
 
-constexpr auto Protocol = "https";
-constexpr auto URL_Remote = "adskill.imister.kz";
+#ifndef NREMOTEADDR
+#define NREMOTEADDR "http://localhost:8000/"
+#endif
+
+constexpr auto URL_Remote = NREMOTEADDR;
 constexpr auto URL_CDN = "cdn";
 constexpr auto URL_SupVer = "v2";
-constexpr auto URL_Work = "action";
+constexpr auto URL_Work = "action1.php";
 constexpr auto URL_Version = "version";
 
 enum
@@ -23,13 +26,13 @@ enum
     FpullDeviceList = 8,
     FpullServiceList = 16,
     FpullUserPackages = 32,
-    Fauth = 64
+    FpullServiceGUID = 64,
+    Fauth = 128
 };
 
 inline QString url_fetch()
 {
-    QString url = Protocol;
-    url += "://";
+    QString url;
     url += URL_Remote;
     url += '/';
     url += URL_SupVer;
@@ -40,8 +43,7 @@ inline QString url_fetch()
 
 inline QString url_version()
 {
-    QString url = Protocol;
-    url += "://";
+    QString url;
     url += URL_Remote;
     url += '/';
     url += URL_CDN;
@@ -176,6 +178,24 @@ void Network::pullServiceList()
     json["request"] = "LISTSERVICES";
     reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceList);
+}
+
+void Network::pullServiceGUID(const QString guid, QJsonObject request)
+{
+    QJsonObject json;
+    QNetworkReply *reply;
+    QUrl url(url_fetch());
+    QNetworkRequest netRequest(url);
+    if(!isAuthed())
+        return;
+    _pending |= FpullServiceGUID;
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    netRequest.setRawHeader("Token", authedId.token.toUtf8());
+    json["request"] = "BUYDEVICEKEY";
+    json["guid"] = guid;
+    json["service"] = request;
+    reply = manager->post(netRequest, QJsonDocument(json).toJson(QJsonDocument::Compact));
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceGUID);
 }
 
 void Network::pullFetchVersion(bool populate)
@@ -464,7 +484,7 @@ void Network::onPullServiceList()
                 std::function<ServiceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj) -> ServiceItemInfo
                 {
                     ServiceItemInfo sii;
-                    sii.uuid = obj["uuid"].toString();
+                    sii.guid = obj["uuid"].toString();
                     sii.active = obj["active"].toBool();
                     sii.name = obj["name"].toString();
                     sii.description = obj["description"].toString();
@@ -486,6 +506,33 @@ void Network::onPullServiceList()
         reply->deleteLater();
     }
     _pending &= ~FpullServiceList;
+}
+
+void Network::onPullServiceGUID()
+{
+    int status = NetworkStatus::NetworkError;
+    QJsonObject responce {};
+    QString guid {};
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
+    if(reply)
+    {
+        if(reply->error() == QNetworkReply::NoError)
+        {
+            QByteArray resp = std::move(reply->readAll());
+            _lastBytes = resp.size();
+            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && !jsonResp["result"].isNull() && !jsonResp["guid"].isNull())
+            {
+                guid = jsonResp["guid"].toString();
+                responce = jsonResp["result"].toObject();
+                status = NetworkStatus::OK;
+            }
+        }
+        emit sPullServiceGUID(responce, guid, status == NetworkStatus::OK);
+        reply->deleteLater();
+    }
+    _pending &= ~FpullServiceGUID;
 }
 
 VersionInfo::VersionInfo(const QString &version, const QString &url, int status) : mDownloadUrl(url), mStatus(status)

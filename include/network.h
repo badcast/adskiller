@@ -75,7 +75,7 @@ struct ServiceItemInfo
     bool needVIP;
     bool hide;
     std::uint32_t price;
-    QString uuid;
+    QString guid;
     QString name;
     QString description;
 };
@@ -132,6 +132,8 @@ public:
     void pullDeviceList(const QDateTime *rangeStart = nullptr, const QDateTime *rangeEnd = nullptr, int showFlag = (1 | 2));
     void pullServiceList();
 
+    void pullServiceGUID(const QString guid, QJsonObject request);
+
     void pushAuth(const QString &token);
     bool pushUserPackages(const AdbDevice &device, const QStringList &packages);
 
@@ -143,6 +145,7 @@ signals:
     void sFetchingLabs(int status, const LabStatusInfo &labs, bool ok);
     void sPullDeviceList(const QList<DeviceItemInfo> &actual, const QList<DeviceItemInfo> &expired, bool ok);
     void sPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
+    void sPullServiceGUID(const QJsonObject responce, const QString guid, bool ok);
 
 private slots:
     void onAuthFinished();
@@ -152,6 +155,7 @@ private slots:
     void onFetchingLabs();
     void onPullDeviceList();
     void onPullServiceList();
+    void onPullServiceGUID();
 };
 
 #endif // NETWORK_H

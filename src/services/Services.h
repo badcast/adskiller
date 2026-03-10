@@ -21,6 +21,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QUrl>
+#include <QComboBox>
 
 #include "adbfront.h"
 #include "extension.h"
@@ -95,7 +96,7 @@ public:
 
     virtual void setArgs(const AdbDevice &adbDevice);
 
-    virtual QString uuid() const = 0;
+    virtual QString guid() const = 0;
     virtual bool isAvailable() const;
     virtual PageIndex targetPage();
     virtual bool canStart();
@@ -118,7 +119,7 @@ class UnavailableService : public Service
 public:
     UnavailableService(QObject *parent = nullptr);
 
-    QString uuid() const override;
+    QString guid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -147,7 +148,7 @@ public:
 
     void setArgs(const AdbDevice &adbDevice) override;
 
-    QString uuid() const override;
+    QString guid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -167,7 +168,7 @@ public:
 
     void setArgs(const AdbDevice &adbDevice) override;
 
-    QString uuid() const override;
+    QString guid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -183,9 +184,7 @@ class BuyVIPService : public Service
 public:
     BuyVIPService(QObject *parent = nullptr);
 
-    void setArgs(const AdbDevice &adbDevice) override;
-
-    QString uuid() const override;
+    QString guid() const override;
     bool canStart() override;
     bool isStarted() override;
     PageIndex targetPage() override;
@@ -194,6 +193,21 @@ public:
     void stop() override;
     void reset() override;
     QString widgetIconName() override;
+
+private slots:
+    void click_buy_vip();
+    void variant_selected();
+    void service_guid_responce(const QJsonObject responce, const QString guid, bool ok);
+
+private:
+    Network *network;
+    QComboBox *listVariants;
+    QLabel *balanceText;
+    QLabel *infoAfterPeriod;
+    QPushButton *buyButton;
+    std::uint32_t dailyRate;
+    int mind, maxd;
+    QList<std::tuple<QString, int>> mPresets;
 };
 
 class MyDeviceService : public Service
@@ -203,7 +217,7 @@ public:
     MyDeviceService(QObject *parent = nullptr);
     ~MyDeviceService();
 
-    QString uuid() const override;
+    QString guid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -216,6 +230,7 @@ public:
 public slots:
     void slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok);
     void slotQuaranteeUpdate();
+    void slotRefresh();
 
 private:
     int mInternalData;
@@ -229,9 +244,6 @@ private:
 
     void clearMyDevicesPage(QString text);
     void fillMyDevicesPage();
-
-private slots:
-    void slotRefresh();
 };
 
 class BoostRamService : public Service
@@ -242,7 +254,7 @@ public:
     BoostRamService(QObject *parent = nullptr);
     ~BoostRamService();
 
-    QString uuid() const override;
+    QString guid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -262,7 +274,7 @@ public:
     ContactFixerService(QObject *parent = nullptr);
     ~ContactFixerService();
 
-    QString uuid() const override;
+    QString guid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -277,7 +289,7 @@ class MiDeviceUnlockService : public Service
 
 public:
     MiDeviceUnlockService(QObject *parent = nullptr);
-    QString uuid() const override;
+    QString guid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

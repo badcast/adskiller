@@ -49,7 +49,7 @@ UnavailableService::UnavailableService(QObject *parent) : Service(DeviceConnectT
 {
 }
 
-QString UnavailableService::uuid() const
+QString UnavailableService::guid() const
 {
     return {};
 }
