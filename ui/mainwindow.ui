@@ -79,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>7</number>
+          <number>5</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -586,7 +586,7 @@
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: red;</string>
+                  <string notr="true">background-color: #b71c1c;</string>
                  </property>
                  <property name="frameShape">
                   <enum>QFrame::Shape::NoFrame</enum>
@@ -800,7 +800,7 @@
            <item row="0" column="0">
             <widget class="QFrame" name="toplevel_up">
              <property name="styleSheet">
-              <string notr="true">background-color: red;</string>
+              <string notr="true">background-color: #b71c1c;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1553,7 +1553,7 @@
             </size>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: red;</string>
+            <string notr="true">background-color: #b71c1c;</string>
            </property>
            <property name="frameShape">
             <enum>QFrame::Shape::NoFrame</enum>
