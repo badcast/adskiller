@@ -22,6 +22,10 @@
 #include <QTimer>
 #include <QUrl>
 #include <QComboBox>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 
 #include "adbfront.h"
 #include "extension.h"
@@ -228,7 +232,8 @@ public:
     QString widgetIconName() override;
 
 public slots:
-    void slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok);
+    void slotPullMyDeviceList(const QJsonObject responce, const QString guid, bool ok);
+
     void slotQuaranteeUpdate();
     void slotRefresh();
 

@@ -29,8 +29,16 @@ void MyDeviceService::slotRefresh()
         expired->clear();
     quaranteeFilter->setEnabled(false);
     refreshButton->setEnabled(false);
+
+    // Take fake delay
     MainWindow::current->delayUI(2000);
-    MainWindow::current->network.pullDeviceList(&dtStart, &dtEnd);
+
+    QJsonObject request;
+    request["rangeStart"] = dtStart.toString(Qt::ISODate);
+    request["rangeEnd"] = dtEnd.toString(Qt::ISODate);
+    request["showFlag"] = 0x3;
+
+    MainWindow::current->network.pullServiceGUID(guid(), request);
 }
 
 void MyDeviceService::clearMyDevicesPage(QString text)
@@ -94,8 +102,43 @@ void MyDeviceService::fillMyDevicesPage()
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
-void MyDeviceService::slotPullMyDeviceList(const QList<DeviceItemInfo> actual, const QList<DeviceItemInfo> expired, bool ok)
+void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QString guid, bool ok)
 {
+    QList<DeviceItemInfo> actual {}, expired {};
+    if(ok && !responce.isEmpty() && responce["actual"].isArray() && responce["expired"].isArray())
+    {
+        std::function<DeviceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj)
+        {
+            DeviceItemInfo dit;
+            dit.mdkey = obj["mdkey"].toString();
+            dit.logTime = QDateTime::fromSecsSinceEpoch(obj["logTime"].toVariant().toULongLong());
+            dit.lastConnectTime = QDateTime::fromSecsSinceEpoch(obj["lastConnectTime"].toVariant().toULongLong());
+            dit.expire = QDateTime::fromSecsSinceEpoch(obj["expire"].toVariant().toULongLong());
+            dit.vendor = obj["vendor"].toString();
+            dit.model = obj["model"].toString();
+            dit.purchasedType = obj["purchased_type"].toInt();
+            dit.purchasedValue = obj["purchased_value"].toInt();
+            dit.connectionCount = obj["connectionCount"].toInt();
+            dit.packages = obj["packages"].toInt();
+            dit.deviceId = obj["devId"].toInt();
+            return dit;
+        };
+
+        QJsonArray arr = responce["actual"].toArray();
+        for(auto iter = arr.begin(); iter != arr.end(); ++iter)
+        {
+            actual << convertToObj(iter->toObject());
+            actual.last().serverQuarantee = 1;
+        }
+
+        arr = responce["expired"].toArray();
+        for(auto iter = arr.begin(); iter != arr.end(); ++iter)
+        {
+            expired << convertToObj(iter->toObject());
+            expired.last().serverQuarantee = 0;
+        }
+    }
+
     this->actual = std::make_shared<QList<DeviceItemInfo>>(actual);
     this->expired = std::make_shared<QList<DeviceItemInfo>>(expired);
     mInternalData &= ~2;
@@ -107,7 +150,10 @@ void MyDeviceService::slotPullMyDeviceList(const QList<DeviceItemInfo> actual, c
             fillMyDevicesPage();
     }
     else
+    {
         clearMyDevicesPage("Ошибка при загрузке.");
+    }
+
     quaranteeFilter->setEnabled(true);
     refreshButton->setEnabled(true);
 }
@@ -123,7 +169,6 @@ void MyDeviceService::slotQuaranteeUpdate()
 
 MyDeviceService::MyDeviceService(QObject *parent) : Service(None, parent), mInternalData(0), table(nullptr), dateEditBegin(nullptr), dateEditEnd(nullptr), refreshButton(nullptr), quaranteeFilter(nullptr)
 {
-    QObject::connect(&MainWindow::current->network, &Network::sPullDeviceList, this, &MyDeviceService::slotPullMyDeviceList);
 }
 
 MyDeviceService::~MyDeviceService()
@@ -155,6 +200,10 @@ bool MyDeviceService::start()
     dateEditBegin->setDate(QDate(2024, 1, 1));
     // Set maximum as default current date.
     dateEditEnd->setDate(QDate::currentDate());
+
+    QObject::disconnect(&MainWindow::current->network, &Network::sPullServiceGUID, this, &MyDeviceService::slotPullMyDeviceList);
+    QObject::connect(&MainWindow::current->network, &Network::sPullServiceGUID, this, &MyDeviceService::slotPullMyDeviceList);
+
     QObject::disconnect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
     QObject::connect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
     QObject::disconnect(quaranteeFilter, &QCheckBox::clicked, this, &MyDeviceService::slotQuaranteeUpdate);

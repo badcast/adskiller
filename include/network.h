@@ -129,10 +129,9 @@ public:
     void pullAdsData(const QString &mdKey);
     void pullFetchVersion(bool populate);
     void pullLabState(const QString &mdKey);
-    void pullDeviceList(const QDateTime *rangeStart = nullptr, const QDateTime *rangeEnd = nullptr, int showFlag = (1 | 2));
     void pullServiceList();
 
-    void pullServiceGUID(const QString guid, QJsonObject request);
+    void pullServiceGUID(const QString &guid, const QJsonObject& request);
 
     void pushAuth(const QString &token);
     bool pushUserPackages(const AdbDevice &device, const QStringList &packages);
@@ -143,7 +142,6 @@ signals:
     void sUploadUserPackages(int status, const LabStatusInfo &labs, bool ok);
     void sFetchingVersion(int status, const QString &version, const QString &url, bool ok);
     void sFetchingLabs(int status, const LabStatusInfo &labs, bool ok);
-    void sPullDeviceList(const QList<DeviceItemInfo> &actual, const QList<DeviceItemInfo> &expired, bool ok);
     void sPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
     void sPullServiceGUID(const QJsonObject responce, const QString guid, bool ok);
 
@@ -153,7 +151,6 @@ private slots:
     void onUserPackagesUploadFinished();
     void onFetchingVersion();
     void onFetchingLabs();
-    void onPullDeviceList();
     void onPullServiceList();
     void onPullServiceGUID();
 };
