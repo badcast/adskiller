@@ -83,6 +83,7 @@ bool BuyVIPService::start()
     QObject::connect(listVariants, &QComboBox::currentIndexChanged, this, &BuyVIPService::variant_selected);
 
     network->pullServiceUUID(guid(), QJsonObject {}, ServiceOperation::Get);
+
     return true;
 }
 
@@ -115,6 +116,7 @@ void BuyVIPService::click_buy_vip()
 
     QJsonObject request;
     request["days"] = std::get<int>(mPresets[i - 1]);
+
     network->pullServiceUUID(guid(), request, ServiceOperation::Set);
 }
 

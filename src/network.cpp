@@ -475,6 +475,7 @@ void Network::onPullServiceUUID()
                 status = NetworkStatus::OK;
             }
         }
+
         emit sPullServiceUUID(responce, guid, so, status == NetworkStatus::OK);
         reply->deleteLater();
     }
