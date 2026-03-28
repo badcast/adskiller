@@ -32,7 +32,3 @@ bool MiDeviceUnlockService::start()
 void MiDeviceUnlockService::stop()
 {
 }
-
-void MiDeviceUnlockService::reset()
-{
-}

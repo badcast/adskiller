@@ -38,6 +38,3 @@ void StorageCacheCleanService::stop()
 {
 }
 
-void StorageCacheCleanService::reset()
-{
-}

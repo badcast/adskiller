@@ -36,7 +36,3 @@ bool BoostRamService::start()
 void BoostRamService::stop()
 {
 }
-
-void BoostRamService::reset()
-{
-}

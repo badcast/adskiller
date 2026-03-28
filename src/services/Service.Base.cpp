@@ -1,4 +1,5 @@
 #include "Services.h"
+#include "mainwindow.h"
 
 void Service::setArgs(const AdbDevice &adbDevice)
 {
@@ -23,6 +24,21 @@ bool Service::canStart()
 QString Service::widgetIconName()
 {
     return DefaultIconWidget;
+}
+
+bool Service::restart()
+{
+    stop();
+    return start();
+}
+
+void Service::close()
+{
+    if(isStarted())
+    {
+        MainWindow::current->delayUICall(10, [this]() { emit _closeEvent(); });
+        stop();
+    }
 }
 
 DeviceConnectType Service::deviceConnectType() const
@@ -80,9 +96,5 @@ bool UnavailableService::start()
 }
 
 void UnavailableService::stop()
-{
-}
-
-void UnavailableService::reset()
 {
 }

@@ -83,6 +83,16 @@ inline void adskiller_write_log_head(QString msg, int progress = -1)
         mProgress = progress;
 }
 
+QString AdsKillerService::guid() const
+{
+    return IDServiceAdsString;
+}
+
+QString AdsKillerService::widgetIconName()
+{
+    return "white-ads-remove";
+}
+
 AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr)
 {
 }
@@ -91,11 +101,6 @@ void AdsKillerService::setArgs(const AdbDevice &adbDevice)
 {
     Service::setArgs(adbDevice);
     MainWindow::current->accessUi_page_longinfo(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
-}
-
-QString AdsKillerService::guid() const
-{
-    return IDServiceAdsString;
 }
 
 PageIndex AdsKillerService::targetPage()
@@ -116,19 +121,6 @@ bool AdsKillerService::isStarted()
 bool AdsKillerService::isFinish()
 {
     return status != MalwareStatus::Running;
-}
-
-void AdsKillerService::reset()
-{
-    if(isFinish())
-        cirlceMalwareStateReset();
-    if(pushButtonReRun)
-        pushButtonReRun->setEnabled(true);
-}
-
-QString AdsKillerService::widgetIconName()
-{
-    return "white-ads-remove";
 }
 
 bool AdsKillerService::start()
@@ -214,6 +206,10 @@ void AdsKillerService::stop()
 {
     if(isStarted())
         adskiller_kill_proc();
+    if(isFinish())
+        cirlceMalwareStateReset();
+    if(pushButtonReRun)
+        pushButtonReRun->setEnabled(true);
 }
 
 void AdsKillerService::cirlceMalwareState(bool success)
@@ -358,13 +354,7 @@ void adskiller_awake()
                    "       Ядро: %6\n"
                    "       Архитектура: %7\n"
                    "------------------------------------")
-            .arg(device.model)
-            .arg(device.vendor)
-            .arg(sysInfo->OSVersionString())
-            .arg(sysInfo->StorageDesignString())
-            .arg(sysInfo->RAMDesignString())
-            .arg(sysInfo->systemName)
-            .arg(sysInfo->machine);
+            .arg(device.model, device.vendor, sysInfo->OSVersionString(), sysInfo->StorageDesignString(), sysInfo->RAMDesignString(), sysInfo->systemName, sysInfo->machine);
     };
 
     const std::function<QString(int)> generate_error_report = [](int status) -> QString

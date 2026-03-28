@@ -72,6 +72,9 @@ class ServiceProvider;
 
 class ServiceProvider
 {
+    friend Service;
+    friend MainWindow;
+
 public:
     ServiceProvider() = delete;
     ~ServiceProvider() = delete;
@@ -84,6 +87,9 @@ public:
 class Service : public QObject
 {
     Q_OBJECT
+
+signals:
+    void _closeEvent();
 
 protected:
     DeviceConnectType mDeviceConnectType;
@@ -108,11 +114,14 @@ public:
     virtual bool isFinish() = 0;
     virtual bool start() = 0;
     virtual void stop() = 0;
-    virtual void reset() = 0;
     virtual QString widgetIconName();
+
+    bool restart();
+    void close();
 
     DeviceConnectType deviceConnectType() const;
 
+public:
     static std::list<std::shared_ptr<Service>> EnumAppServices(QObject *parent = nullptr);
 };
 
@@ -130,7 +139,6 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
 };
 
 class AdsKillerService : public Service
@@ -159,7 +167,6 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
     QString widgetIconName() override;
 };
 
@@ -178,7 +185,6 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
 };
 
 class BuyVIPService : public Service
@@ -187,6 +193,7 @@ class BuyVIPService : public Service
 
 public:
     BuyVIPService(QObject *parent = nullptr);
+    ~BuyVIPService();
 
     QString guid() const override;
     bool canStart() override;
@@ -195,13 +202,12 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
     QString widgetIconName() override;
 
 private slots:
     void click_buy_vip();
     void variant_selected();
-    void service_guid_responce(const QJsonObject responce, const QString guid, bool ok);
+    void service_uuid_responce(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok);
 
 private:
     Network *network;
@@ -228,7 +234,6 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
     QString widgetIconName() override;
 
 public slots:
@@ -265,7 +270,6 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
 };
 
 class ContactFixerService : public Service
@@ -285,7 +289,6 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
 };
 
 class MiDeviceUnlockService : public Service
@@ -300,5 +303,4 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
-    void reset() override;
 };

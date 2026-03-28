@@ -10,6 +10,11 @@ QString MyDeviceService::guid() const
     return IDServiceMyDeviceString;
 }
 
+QString MyDeviceService::widgetIconName()
+{
+    return "white-devices-list";
+}
+
 PageIndex MyDeviceService::targetPage()
 {
     return PageIndex::MyDevicesPage;
@@ -38,7 +43,7 @@ void MyDeviceService::slotRefresh()
     request["rangeEnd"] = dtEnd.toString(Qt::ISODate);
     request["showFlag"] = 0x3;
 
-    MainWindow::current->network.pullServiceGUID(guid(), request);
+    MainWindow::current->network.pullServiceUUID(guid(), request, ServiceOperation::Get);
 }
 
 void MyDeviceService::clearMyDevicesPage(QString text)
@@ -201,8 +206,10 @@ bool MyDeviceService::start()
     // Set maximum as default current date.
     dateEditEnd->setDate(QDate::currentDate());
 
-    QObject::disconnect(&MainWindow::current->network, &Network::sPullServiceGUID, this, &MyDeviceService::slotPullMyDeviceList);
-    QObject::connect(&MainWindow::current->network, &Network::sPullServiceGUID, this, &MyDeviceService::slotPullMyDeviceList);
+    quaranteeFilter->setChecked(true);
+
+    QObject::disconnect(&MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
+    QObject::connect(&MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
 
     QObject::disconnect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
     QObject::connect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
@@ -215,16 +222,6 @@ bool MyDeviceService::start()
 void MyDeviceService::stop()
 {
     mInternalData = 0;
-}
-
-void MyDeviceService::reset()
-{
     actual.reset();
     expired.reset();
-    stop();
-}
-
-QString MyDeviceService::widgetIconName()
-{
-    return "white-devices-list";
 }
