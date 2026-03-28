@@ -64,7 +64,7 @@ public:
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();
     void delayUI(int ms);
-    void delayUICallLoop(int ms, std::function<bool()> call);
+    void delayUICallLoop(int ms, std::function<bool()> callFalseEnd);
     void delayUICall(int ms, std::function<void()> call);
 
     Network network;
@@ -83,7 +83,7 @@ public:
 
     bool accessUi_page_longinfo(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
     bool accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter);
-    bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *& balanceText, QLabel *&infoAfterPeriod, QPushButton *& buyButton);
+    bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton);
 
     static MainWindow *current;
 
@@ -100,7 +100,7 @@ private slots:
 
 public slots:
     void setThemeAction();
-    void updateCabinet(bool newAuthenticate = true);
+    void updateCabinet();
     void logoutSystem();
 
 private:
@@ -120,9 +120,9 @@ private:
     Snowflake *snows;
     bool deviceSelectSwitched;
 
-    void showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> pred, QString text = QString{});
+    void showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> predFalseEnd, QString text = QString {});
 
-    inline void showPageLoader(PageIndex pageNum, int msWait = 1000,  QString text = QString {})
+    inline void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = QString {})
     {
         if(text.isEmpty())
             text = "Ожидайте";
@@ -134,6 +134,7 @@ private:
     void showPage(PageIndex pageNum);
     void pageShownPreStart(int page);
     void runService(std::shared_ptr<Service> service);
+    void closeService(std::shared_ptr<Service> service);
 
     void clearAuthInfoPage();
     void fillAuthInfoPage();

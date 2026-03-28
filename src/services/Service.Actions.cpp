@@ -8,7 +8,6 @@ std::shared_ptr<Service> _CurrentService = nullptr;
 
 bool ServiceProvider::runService(std::shared_ptr<Service> service)
 {
-    closeService();
     if(service == nullptr || !service->active || service->isStarted())
     {
         return false;
@@ -16,7 +15,7 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
 
     PageIndex _preloadPage;
     _CurrentService = std::move(service);
-    _CurrentService->reset();
+    _CurrentService->stop();
 
     if(_CurrentService->deviceConnectType() == DeviceConnectType::ADB)
     {
@@ -28,10 +27,16 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     {
         _preloadPage = _CurrentService->targetPage();
     }
-    MainWindow::current->showPageLoader(_preloadPage, 2000, [_CurrentService](){
-        _CurrentService->start();
-        return true;
-    }, QString("Запуск службы\n\"%1\"").arg(_CurrentService->title));
+
+    MainWindow::current->showPageLoader(
+        _preloadPage,
+        1500,
+        [_CurrentService]()
+        {
+            _CurrentService->start();
+            return true;
+        },
+        QString("Запуск службы\n\"%1\"").arg(_CurrentService->title));
     return true;
 }
 
@@ -39,8 +44,7 @@ void ServiceProvider::closeService()
 {
     if(_CurrentService)
     {
-        _CurrentService->stop();
-        _CurrentService->reset();
+        currentService()->stop();
         _CurrentService.reset();
     }
 }

@@ -97,6 +97,16 @@ struct AdsInfo
     QStringList disabling;
 };
 
+enum ServiceOperation
+{
+    Invalid = -1,
+    Get,
+    Set,
+    Open,
+    Close,
+    Other
+};
+
 enum NetworkStatus
 {
     OK,
@@ -106,6 +116,7 @@ enum NetworkStatus
     NetworkError = 1000
 };
 
+// TODO: Make Mutex lock by run Network opertion
 class Network : public QObject
 {
     Q_OBJECT
@@ -131,7 +142,7 @@ public:
     void pullLabState(const QString &mdKey);
     void pullServiceList();
 
-    void pullServiceGUID(const QString &guid, const QJsonObject& request);
+    void pullServiceGUID(const QString &guid, const QJsonObject& request, ServiceOperation so);
 
     void pushAuth(const QString &token);
     bool pushUserPackages(const AdbDevice &device, const QStringList &packages);
@@ -143,7 +154,7 @@ signals:
     void sFetchingVersion(int status, const QString &version, const QString &url, bool ok);
     void sFetchingLabs(int status, const LabStatusInfo &labs, bool ok);
     void sPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
-    void sPullServiceGUID(const QJsonObject responce, const QString guid, bool ok);
+    void sPullServiceGUID(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok);
 
 private slots:
     void onAuthFinished();

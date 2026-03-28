@@ -59,8 +59,3 @@ bool ContactFixerService::start()
 void ContactFixerService::stop()
 {
 }
-
-void ContactFixerService::reset()
-{
-    stop();
-}

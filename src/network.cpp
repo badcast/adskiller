@@ -63,6 +63,26 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue &jroot)
     return retval;
 }
 
+inline QString so_strify(ServiceOperation so)
+{
+    return so == ServiceOperation::Get ? "get" : so == ServiceOperation::Set ? "set" : so == ServiceOperation::Open ? "open" : so == ServiceOperation::Close ? "close" : so == ServiceOperation::Other ? "other" : "invalid";
+}
+
+inline ServiceOperation so_destrify(const QString &so)
+{
+    if(so == "get")
+        return ServiceOperation::Get;
+    if(so == "set")
+        return ServiceOperation::Set;
+    if(so == "open")
+        return ServiceOperation::Open;
+    if(so == "close")
+        return ServiceOperation::Close;
+    if(so == "other")
+        return ServiceOperation::Other;
+    return ServiceOperation::Invalid;
+}
+
 Network::Network(QObject *parent) : QObject(parent), _pending(0)
 {
     manager = new QNetworkAccessManager(this);
@@ -158,7 +178,7 @@ void Network::pullServiceList()
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceList);
 }
 
-void Network::pullServiceGUID(const QString& guid, const QJsonObject &request)
+void Network::pullServiceGUID(const QString &guid, const QJsonObject &request, ServiceOperation so)
 {
     QJsonObject json;
     QNetworkReply *reply;
@@ -171,6 +191,7 @@ void Network::pullServiceGUID(const QString& guid, const QJsonObject &request)
     netRequest.setRawHeader("Token", authedId.token.toUtf8());
     json["request"] = "SERVICEREQ";
     json["guid"] = guid;
+    json["type"] = so_strify(so);
     json["service"] = request;
     reply = manager->post(netRequest, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceGUID);
@@ -436,6 +457,7 @@ void Network::onPullServiceGUID()
     int status = NetworkStatus::NetworkError;
     QJsonObject responce {};
     QString guid {};
+    ServiceOperation so = ServiceOperation::Invalid;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     _lastBytes = 0;
     if(reply)
@@ -449,10 +471,11 @@ void Network::onPullServiceGUID()
             {
                 guid = jsonResp["guid"].toString();
                 responce = jsonResp["result"].toObject();
+                so = so_destrify(jsonResp["type"].toString());
                 status = NetworkStatus::OK;
             }
         }
-        emit sPullServiceGUID(responce, guid, status == NetworkStatus::OK);
+        emit sPullServiceGUID(responce, guid, so, status == NetworkStatus::OK);
         reply->deleteLater();
     }
     _pending &= ~FpullServiceGUID;

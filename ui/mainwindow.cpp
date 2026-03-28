@@ -387,7 +387,6 @@ void MainWindow::pageShownPreStart(int page)
                 return;
             }
 
-            ServiceProvider::currentService()->reset();
             ServiceProvider::currentService()->stop();
 
             // Unset
@@ -435,7 +434,6 @@ void MainWindow::pageShownPreStart(int page)
         {
             ui->scrollArea_3->verticalScrollBar()->setValue(0);
             fillAuthInfoPage();
-
             break;
         }
         case LongInfoPage:
@@ -480,6 +478,13 @@ void MainWindow::runService(std::shared_ptr<Service> service)
         QMessageBox::warning(this, "Service is shutdown", "Service module is no load or disabled by server.");
         logoutSystem();
     }
+}
+
+void MainWindow::closeService(std::shared_ptr<Service> service)
+{
+    if(service != nullptr)
+        ServiceProvider::closeService();
+    updateCabinet();
 }
 
 void MainWindow::clearAuthInfoPage()
@@ -647,6 +652,9 @@ void MainWindow::initServiceModules()
         // Target service by slot
         QObject::connect(button, &QPushButton::clicked, this, std::bind(&MainWindow::runService, this, instance));
 
+        // Take Signal By Close Service.
+        QObject::connect(&(*instance), &Service::_closeEvent, this, std::bind(&MainWindow::closeService, this, instance));
+
         instance->title = remoteService->name;
         instance->ownerWidget = button;
 
@@ -679,7 +687,7 @@ void MainWindow::delayUI(int ms)
     loop.exec();
 }
 
-void MainWindow::delayUICallLoop(int ms, std::function<bool()> call)
+void MainWindow::delayUICallLoop(int ms, std::function<bool()> callFalseEnd)
 {
     QTimer *qtimer = new QTimer(this);
     (void) qtimer;
@@ -688,9 +696,9 @@ void MainWindow::delayUICallLoop(int ms, std::function<bool()> call)
     QObject::connect(
         qtimer,
         &QTimer::timeout,
-        [qtimer, call]()
+        [qtimer, callFalseEnd]()
         {
-            if(!call())
+            if(!callFalseEnd())
             {
                 qtimer->stop();
                 qtimer->deleteLater();
@@ -730,8 +738,13 @@ bool MainWindow::accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dat
     return true;
 }
 
-bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *& infoAfterPeriod, QPushButton *&buyButton)
+bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton)
 {
+    ui->comboBoxSelectVIPDays->disconnect();
+    ui->labelVipBalance->disconnect();
+    ui->buttonBuyVip->disconnect();
+    ui->labelInfoVip->disconnect();
+
     listVariants = ui->comboBoxSelectVIPDays;
     balanceText = ui->labelVipBalance;
     buyButton = ui->buttonBuyVip;
@@ -785,7 +798,7 @@ void MainWindow::on_authButton_clicked()
                     [this]()
                     {
                         showPage(CabinetPage);
-                        updateCabinet(false);
+                        updateCabinet();
                     });
             }
             return network.pending();
@@ -821,6 +834,10 @@ void MainWindow::slotAuthFinish(int status, bool ok)
                 case 0:
                     resText = "Токен успешно прошел проверку. Добро пожаловать, %1!";
                     resText = resText.arg(network.authedId.idName);
+
+                    if(!network.authedId.token.isEmpty())
+                        AppSetting::encryptedToken(nullptr, CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
+
                     if(network.authedId.isNotValidBalance())
                     {
                         ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
@@ -837,19 +854,15 @@ void MainWindow::slotAuthFinish(int status, bool ok)
                         showMessageFromStatus(NetworkStatus::AccountBlocked);
                     }
 
-                    if(!network.authedId.token.isEmpty())
-                        AppSetting::encryptedToken(nullptr, CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
-
                     break;
                 case 401:
-                    resText = "Сервер вернул код 401 - не действительный токен или запрос "
-                              "обработан с ошибкой.";
+                    resText = infoServer401;
                     break;
                 case NetworkStatus::NoEnoughMoney:
                     resText = infoNoBalance;
                     break;
                 default:
-                    resText = "Проверьте интернет соединение.";
+                    resText = infoNoInternet;
                     break;
             }
 
@@ -892,7 +905,7 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
     text += "откроется ссылка в вашем браузере.\n"
             "Пожалуйста, скачайте обновление по прямой ссылке.\n";
 #endif
-    text += "\nС уважением ваша команда imister.kz.";
+    text += "\nС уважением ваша команда Adskiller Team.";
     text += "\n\nВаша версия: v";
     text += runtimeVersion.mVersion.toString();
     text += "\nВерсия на сервере: v";
@@ -988,7 +1001,7 @@ ThemeScheme MainWindow::getTheme()
 void MainWindow::showMessageFromStatus(int statusCode)
 {
     if(statusCode == NetworkStatus::NetworkError)
-        QMessageBox::warning(this, "Ошибка подключения", infoNoNetwork);
+        QMessageBox::warning(this, "Ошибка подключения", infoNoNetworkUpdate);
 
     if(statusCode == NetworkStatus::NoEnoughMoney)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance);
@@ -997,7 +1010,7 @@ void MainWindow::showMessageFromStatus(int statusCode)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoAccountBlocked);
 }
 
-void MainWindow::updateCabinet(bool newAuthenticate)
+void MainWindow::updateCabinet()
 {
     QString tryToken;
     if(!network.isAuthed())
@@ -1007,27 +1020,38 @@ void MainWindow::updateCabinet(bool newAuthenticate)
     }
 
     tryToken = network.authedId.token;
-    if(newAuthenticate)
-        network.pushAuth(tryToken);
+    network.pushAuth(tryToken);
 
+    services.clear();
     serverServices.reset();
-    network.pullServiceList();
 
     showPageLoader(
         CabinetPage,
         1000,
         [this]() -> bool
         {
-            bool status = !network.pending();
             const char *str = "Обновление странницы";
-            if(!serverServices)
+            bool status = network.isAuthed() && !network.pending();
+            if(network.isAuthed() && !serverServices)
             {
                 str = "Еще чуть-чуть";
             }
+
+            if(status && !serverServices)
+            {
+                network.pullServiceList();
+                status = !network.pending();
+            }
+
             ui->loaderPageText->setText(str);
-            if(status && (!serverServices || !network.isAuthed()))
+
+            if(status && !serverServices)
             {
                 delayUICall(1, [this]() { logoutSystem(); });
+            }
+            else if(status && network.authedId.vipDays < 5 && network.authedId.vipDays > 0)
+            {
+                delayUICall(300, [this]() { QMessageBox::warning(this, "Уведомление", infoVipExpire); });
             }
             return status;
         });
@@ -1041,7 +1065,7 @@ void MainWindow::logoutSystem()
     showPageLoader(AuthPage, 500, QString("Выход из системы"));
 }
 
-void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> pred, QString text)
+void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> predFalseEnd, QString text)
 {
     if(pageNum == LoaderPage)
         return;
@@ -1054,9 +1078,9 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<boo
     showPage(LoaderPage);
     delayUICallLoop(
         msWait,
-        [this, pageNum, pred]()
+        [this, pageNum, predFalseEnd]()
         {
-            if(pred())
+            if(predFalseEnd())
             {
                 showPage(pageNum);
                 return false;

@@ -9,29 +9,33 @@ constexpr auto acceptLinkWaMe = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQ/"
                                 "El"
                                 "RDElODIlRDElODAlRDAlQkUlRDAlQjklRDElODElRDElODIlRDAlQjIuCg==";
 constexpr auto acceptLinkMail = "aHR0cHM6Ly93YS5tZS8rNzcwMjEwOTQ4MTQK";
+constexpr auto infoNoInternet = "Проверьте интернет-соединение.";
 
-constexpr auto infoMessage = "Программа для удаления реклам (назоиливых и не "
-                             "приятных) на телефонах/смартфонах Android.\n\n"
-                             "Программа предоставлена из imister.kz.\n\n"
+constexpr auto infoMessage = "Программа для удаления назойливой рекламы "
+                             "на смартфонах Android.\n\n"
+                             "Разработано imister.kz.\n\n"
                              "----------------------------------------\n\n"
                              "Программист: badcast <anon>\n"
                              "Дизайн иконок: LeoJames <anon>\n\n"
-                             "* Код клиента доступен по ссылке:\n"
+                             "* Исходный код клиента доступен по ссылке:\n"
                              "https://adskill.imister.kz";
 
-constexpr auto infoNoBalance = "Попытка войти в аккаунт была безуспешной, так "
-                               "как у вас закончился баланс. "
-                               "Если вы хотите пополнить баланс, пожалуйста, "
-                               "свяжитесь с нашей службой поддержки. "
-                               "Для этого перейдите в меню и выберите раздел "
-                               "'Поддержка', затем нажмите на опцию "
-                               "'Связаться через WhatsApp'.";
-constexpr auto infoNoNetwork = "Не удалось связаться с сервером обновления.\n"
-                               "Проверьте интернет соединение и повторите попытку еще раз.\n"
-                               "Программа будет завершена.";
-constexpr auto infoAccountBlocked = "Ваш аккаунт заблокирован, если вы считаете что это не справедливо,\n"
-                                    "пожалуйста обратитесь в службу поддержки клиентов.";
+constexpr auto infoNoBalance = "Не удалось войти: недостаточно средств на балансе. "
+                               "Чтобы пополнить счет, свяжитесь с поддержкой: "
+                               "Меню -> Поддержка -> Связаться через WhatsApp.";
 
+constexpr auto infoNoNetworkUpdate = "Не удалось связаться с сервером обновлений.\n"
+                                     "Проверьте интернет-соединение и повторите попытку.\n"
+                                     "Приложение будет закрыто.";
+
+constexpr auto infoAccountBlocked = "Ваш аккаунт заблокирован. Если вы считаете, что это "
+                                    "произошло по ошибке, обратитесь в службу поддержки.";
+
+constexpr auto infoServer401 = "Ошибка авторизации (401): недействительный токен "
+                               "или сессия устарела.";
+
+constexpr auto infoVipExpire = "Срок действия VIP-статуса истекает. Не забудьте пополнить счет "
+                               "или воспользуйтесь автопродлением.";
 #ifdef WIN32
 constexpr auto UpdateManagerExecute = "update.exe";
 #endif
