@@ -23,7 +23,7 @@ QList<std::tuple<QString, int>> dayPresetsFilter(int min, int max)
     return n;
 }
 
-QString BuyVIPService::guid() const
+QString BuyVIPService::uuid() const
 {
     return IDServiceVIPBuyString;
 }
@@ -82,7 +82,7 @@ bool BuyVIPService::start()
     QObject::connect(buyButton, &QPushButton::clicked, this, &BuyVIPService::click_buy_vip);
     QObject::connect(listVariants, &QComboBox::currentIndexChanged, this, &BuyVIPService::variant_selected);
 
-    network->pullServiceUUID(guid(), QJsonObject {}, ServiceOperation::Get);
+    network->pullServiceUUID(uuid(), QJsonObject {}, ServiceOperation::Get);
 
     return true;
 }
@@ -117,7 +117,7 @@ void BuyVIPService::click_buy_vip()
     QJsonObject request;
     request["days"] = std::get<int>(mPresets[i - 1]);
 
-    network->pullServiceUUID(guid(), request, ServiceOperation::Set);
+    network->pullServiceUUID(uuid(), request, ServiceOperation::Set);
 }
 
 void BuyVIPService::variant_selected()

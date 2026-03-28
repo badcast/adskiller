@@ -1,4 +1,4 @@
-name: CMake on multiple platforms
+name: CMake Multi-Platform Build
 
 on:
   push:
@@ -16,15 +16,15 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
 
         exclude:
           - os: windows-latest
@@ -37,35 +37,33 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies (Linux only)
+
+    - name: Install Qt and dependencies (Linux)
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
+        sudo apt-get update -qq
         sudo apt-get install -y \
           qt6-base-dev \
-          qt6-base-dev-tools \
-          qt6-tools-dev \
           qt6-tools-dev-tools \
+          qt6-tools-dev \
           libgl1-mesa-dev \
-          libvulkan-dev
+          libvulkan-dev \
+          ninja-build
 
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
       run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        cmake -B ${{ github.workspace }}/build
+        -G "Ninja"
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         -S ${{ github.workspace }}
 
     - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
 
     - name: Test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }} -V   # добавил -V для более подробного вывода при падении тестов
+      working-directory: ${{ github.workspace }}/build
+      run: ctest --build-config ${{ matrix.build_type }} --output-on-failure

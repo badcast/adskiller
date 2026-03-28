@@ -4,7 +4,7 @@ MiDeviceUnlockService::MiDeviceUnlockService(QObject *parent) : Service(DeviceCo
 {
 }
 
-QString MiDeviceUnlockService::guid() const
+QString MiDeviceUnlockService::uuid() const
 {
     return IDServiceMiUnlockString;
 }

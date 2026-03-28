@@ -36,8 +36,8 @@ void Service::close()
 {
     if(isStarted())
     {
-        MainWindow::current->delayUICall(10, [this]() { emit _closeEvent(); });
         stop();
+        MainWindow::current->updateCabinet();
     }
 }
 
@@ -65,7 +65,7 @@ UnavailableService::UnavailableService(QObject *parent) : Service(DeviceConnectT
 {
 }
 
-QString UnavailableService::guid() const
+QString UnavailableService::uuid() const
 {
     return {};
 }

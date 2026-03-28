@@ -75,7 +75,7 @@ struct ServiceItemInfo
     bool needVIP;
     bool hide;
     std::uint32_t price;
-    QString guid;
+    QString uuid;
     QString name;
     QString description;
 };

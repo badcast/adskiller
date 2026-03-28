@@ -88,9 +88,6 @@ class Service : public QObject
 {
     Q_OBJECT
 
-signals:
-    void _closeEvent();
-
 protected:
     DeviceConnectType mDeviceConnectType;
     AdbDevice mAdbDevice;
@@ -106,7 +103,7 @@ public:
 
     virtual void setArgs(const AdbDevice &adbDevice);
 
-    virtual QString guid() const = 0;
+    virtual QString uuid() const = 0;
     virtual bool isAvailable() const;
     virtual PageIndex targetPage();
     virtual bool canStart();
@@ -132,7 +129,7 @@ class UnavailableService : public Service
 public:
     UnavailableService(QObject *parent = nullptr);
 
-    QString guid() const override;
+    QString uuid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -160,7 +157,7 @@ public:
 
     void setArgs(const AdbDevice &adbDevice) override;
 
-    QString guid() const override;
+    QString uuid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -179,7 +176,7 @@ public:
 
     void setArgs(const AdbDevice &adbDevice) override;
 
-    QString guid() const override;
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -195,7 +192,7 @@ public:
     BuyVIPService(QObject *parent = nullptr);
     ~BuyVIPService();
 
-    QString guid() const override;
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     PageIndex targetPage() override;
@@ -227,7 +224,7 @@ public:
     MyDeviceService(QObject *parent = nullptr);
     ~MyDeviceService();
 
-    QString guid() const override;
+    QString uuid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -237,7 +234,7 @@ public:
     QString widgetIconName() override;
 
 public slots:
-    void slotPullMyDeviceList(const QJsonObject responce, const QString guid, bool ok);
+    void slotPullMyDeviceList(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok);
 
     void slotQuaranteeUpdate();
     void slotRefresh();
@@ -264,7 +261,7 @@ public:
     BoostRamService(QObject *parent = nullptr);
     ~BoostRamService();
 
-    QString guid() const override;
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -283,7 +280,7 @@ public:
     ContactFixerService(QObject *parent = nullptr);
     ~ContactFixerService();
 
-    QString guid() const override;
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -297,7 +294,7 @@ class MiDeviceUnlockService : public Service
 
 public:
     MiDeviceUnlockService(QObject *parent = nullptr);
-    QString guid() const override;
+    QString uuid() const override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;

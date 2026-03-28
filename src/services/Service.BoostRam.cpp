@@ -8,7 +8,7 @@ BoostRamService::~BoostRamService()
 {
 }
 
-QString BoostRamService::guid() const
+QString BoostRamService::uuid() const
 {
     return IDServiceBoostRamString;
 }

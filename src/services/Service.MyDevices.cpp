@@ -5,7 +5,7 @@
 #include "Services.h"
 #include "mainwindow.h"
 
-QString MyDeviceService::guid() const
+QString MyDeviceService::uuid() const
 {
     return IDServiceMyDeviceString;
 }
@@ -43,7 +43,7 @@ void MyDeviceService::slotRefresh()
     request["rangeEnd"] = dtEnd.toString(Qt::ISODate);
     request["showFlag"] = 0x3;
 
-    MainWindow::current->network.pullServiceUUID(guid(), request, ServiceOperation::Get);
+    MainWindow::current->network.pullServiceUUID(uuid(), request, ServiceOperation::Get);
 }
 
 void MyDeviceService::clearMyDevicesPage(QString text)
@@ -107,7 +107,7 @@ void MyDeviceService::fillMyDevicesPage()
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
-void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QString guid, bool ok)
+void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok)
 {
     QList<DeviceItemInfo> actual {}, expired {};
     if(ok && !responce.isEmpty() && responce["actual"].isArray() && responce["expired"].isArray())

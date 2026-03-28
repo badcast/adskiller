@@ -583,10 +583,10 @@ void MainWindow::initServiceModules()
         if(remoteService->hide)
             continue;
 
-        // Find build guid service.
+        // Find build uuid service.
         for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
         {
-            if(remoteService->guid == (*iter)->guid())
+            if(remoteService->uuid == (*iter)->uuid())
             {
                 instance = std::move(*iter);
                 buildServices.erase(iter);
@@ -651,9 +651,6 @@ void MainWindow::initServiceModules()
 
         // Target service by slot
         QObject::connect(button, &QPushButton::clicked, this, std::bind(&MainWindow::runService, this, instance));
-
-        // Take Signal By Close Service.
-        QObject::connect(&(*instance), &Service::_closeEvent, this, std::bind(&MainWindow::closeService, this, instance));
 
         instance->title = remoteService->name;
         instance->ownerWidget = button;

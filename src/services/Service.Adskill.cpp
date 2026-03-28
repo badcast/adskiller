@@ -83,7 +83,7 @@ inline void adskiller_write_log_head(QString msg, int progress = -1)
         mProgress = progress;
 }
 
-QString AdsKillerService::guid() const
+QString AdsKillerService::uuid() const
 {
     return IDServiceAdsString;
 }

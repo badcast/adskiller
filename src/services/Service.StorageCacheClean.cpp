@@ -1,6 +1,6 @@
 #include "Services.h"
 
-QString StorageCacheCleanService::guid() const
+QString StorageCacheCleanService::uuid() const
 {
     return IDServiceStorageCleanString;
 }
