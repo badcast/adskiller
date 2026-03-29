@@ -20,7 +20,7 @@ ProgressCircle::ProgressCircle(QWidget *parent)
     : QWidget(parent), mInfinilyMode(true), mVisibleText(true), mValue(0), mMaximum(100), mInnerRadius(0.6), mOuterRadius(1.0), mColor(110, 190, 235), mVisibleValue(0), mValueAnimation(this, "visibleValue"), mInfiniteAnimation(this, "infiniteAnimationValue"), mInfiniteAnimationValue(0.0)
 {
     mInfiniteAnimation.setLoopCount(-1); // infinite
-    mInfiniteAnimation.setDuration(1000);
+    mInfiniteAnimation.setDuration(400);
     mInfiniteAnimation.setStartValue(0.0);
     mInfiniteAnimation.setEndValue(1.0);
     mInfiniteAnimation.start();
@@ -201,55 +201,82 @@ QString ProgressCircle::key() const
 
 QPixmap ProgressCircle::generatePixmap() const
 {
-    QPixmap pixmap(squared(rect()).size().toSize());
-    pixmap.fill(QColor(0, 0, 0, 0));
+    QSize size = squared(rect()).size().toSize();
+    QPixmap pixmap(size);
+    pixmap.fill(Qt::transparent);
+
     QPainter painter(&pixmap);
-
     painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-    QRectF rect = pixmap.rect().adjusted(1, 1, -1, -1);
-    qreal margin = rect.width() * (1.0 - mOuterRadius) / 2.0;
-    rect.adjust(margin, margin, -margin, -margin);
-    qreal innerRadius = mInnerRadius * rect.width() / 2.0;
+    QRectF bounds = pixmap.rect().adjusted(3, 3, -3, -3);
 
-    // background grey circle
-    painter.setBrush(QColor(225, 225, 225));
-    painter.setPen(QColor(225, 225, 225));
-    painter.drawPie(rect, 0, 360 * 16);
+    qreal margin = bounds.width() * (1.0 - mOuterRadius) / 2.0;
+    QRectF circleRect = bounds.adjusted(margin, margin, -margin, -margin);
 
-    painter.setBrush(mColor);
-    painter.setPen(mColor);
+    qreal radius = circleRect.width() / 2.0;
+    qreal innerRadius = mInnerRadius * radius;
+\
+    QColor glassTrack(255, 255, 255, 80);
+
+    qreal trackThickness = 10;
+
+    painter.setPen(QPen(glassTrack, trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawEllipse(circleRect.center(), radius - trackThickness/2.0,
+                        radius - trackThickness/2.0);
+
     int value = qMin(mVisibleValue, mMaximum);
-    if(mInfinilyMode)
+
+    if (mInfinilyMode)
     {
-        // draw as infinite process
+        QPen progressPen(mColor, trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+        progressPen.setCapStyle(Qt::RoundCap);
+        painter.setPen(progressPen);
+
         int startAngle = -mInfiniteAnimationValue * 360 * 16;
-        int spanAngle = 0.15 * 360 * 16;
-        painter.drawPie(rect, startAngle, spanAngle);
+        int spanAngle = 70 * 16;
+
+        painter.drawArc(circleRect, startAngle, spanAngle);
+
+        painter.setPen(QPen(mColor.lighter(120), trackThickness - 3, Qt::SolidLine, Qt::RoundCap));
+        painter.drawArc(circleRect, startAngle, spanAngle);
     }
-    else if(value != 0)
+    else if (value > 0)
     {
+        QPen progressPen(mColor, trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+        painter.setPen(progressPen);
+
         int startAngle = 90 * 16;
-        int spanAngle = -qreal(value) * 360 * 16 / mMaximum;
-        painter.drawPie(rect, startAngle, spanAngle);
+        int spanAngle = -qRound(qreal(value) * 360 * 16 / mMaximum);
+
+        painter.drawArc(circleRect, startAngle, spanAngle);
+
+        painter.setPen(QPen(mColor.lighter(130), trackThickness - 9.0, Qt::SolidLine, Qt::RoundCap));
+        painter.drawArc(circleRect, startAngle, spanAngle);
     }
 
-    // inner circle and frame
-    painter.setBrush(QColor(255, 255, 255));
-    painter.setPen(QColor(0, 0, 0, 60));
-    painter.drawEllipse(rect.center(), innerRadius, innerRadius);
-    // outer frame
-    painter.drawArc(rect, 0, 360 * 16);
-    // Add Text Percentage %
-    if(mVisibleText)
+    painter.setBrush(QColor(255, 255, 255, 90));
+    painter.setPen(QPen(QColor(255, 255, 255, 120), 2.0));
+    painter.drawEllipse(circleRect.center(), innerRadius, innerRadius);
+
+    painter.setPen(QPen(QColor(0, 0, 0, 40), 1.5));
+    painter.setBrush(Qt::LinearGradientPattern);
+    painter.drawEllipse(circleRect.center(), innerRadius, innerRadius);
+
+    if (mVisibleText && value > 0)
     {
-        QString progressText = QString::number(value) + "%";
+        QString text = QString::number(value) + "%";
+
         QFont font = this->font();
-        font.setPixelSize(rect.width() / 5);
+        font.setPixelSize(static_cast<int>(circleRect.width() / 4.2));
+        font.setWeight(QFont::DemiBold);
+
         painter.setFont(font);
-        painter.setPen(Qt::black);
-        QRectF textRect = painter.boundingRect(rect, Qt::AlignCenter, progressText);
-        painter.drawText(textRect, progressText);
+        painter.setPen(QColor(30, 30, 30));
+
+        QRectF textRect = painter.boundingRect(circleRect, Qt::AlignCenter, text);
+        painter.drawText(textRect, Qt::AlignCenter, text);
     }
 
     return pixmap;
