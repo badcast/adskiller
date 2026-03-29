@@ -1,8 +1,12 @@
+#include <tuple>
+#include <memory>
+#include <functional>
+
 #include "Services.h"
 #include "mainwindow.h"
 
-#define FORCLYQUIT_CHECK          \
-    if(mCmd == MalwareForclyKill) \
+#define FORCLYQUIT_CHECK             \
+    if(mCmd == CommandExecForceKill) \
     break
 #define WAIT(MS) QThread::msleep(MS)
 #define WAITMODE      \
@@ -13,10 +17,14 @@
     WAIT(50)
 #define PRINT_LINE adskiller_write_log("--------------------------------------------------------")
 
+constexpr auto NET_COMMAND_GETADS = "GETADS";
+constexpr auto NET_COMMAND_MDKEYSTATE = "MDKEYSTATUS";
+constexpr auto NET_COMMAND_UPLOADPACKAGES = "UPLOADPKGS";
+
 enum
 {
-    MalwareExecFail = -1,
-    MalwareForclyKill = -2
+    CommandExecFailed = -1,
+    CommandExecForceKill = -2
 };
 
 enum MalwareStatus
@@ -26,6 +34,13 @@ enum MalwareStatus
     Error
 };
 
+struct PrivateKillerRes
+{
+    int lastNetStatus;
+    std::shared_ptr<AdsInfo> adsdata;
+    std::shared_ptr<LabStatusInfo> labInfo;
+};
+
 QStringList outLogs;
 QString outHeads;
 QString adbDeviceSerial;
@@ -33,15 +48,27 @@ QThread *malwareThread;
 QMutex *mutex;
 MalwareStatus status;
 Network *network;
+
 int mProgress;
 int mCmd;
 int mUserValue;
 
-void adskiller_start_cmd(const QString &deviceSerial);
 void adskiller_kill_proc();
 bool adskiller_clean_cmd();
-void adskiller_awake();
+void adskiller_awake(AdsKillerService *servive);
 void adskiller_user_confirm(int userValue);
+
+inline LabStatusInfo fromJsonLabs(const QJsonValue &jroot)
+{
+    LabStatusInfo retval {};
+    if(jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
+    {
+        retval.analyzeStatus = jroot["analyzeStatus"].toString();
+        retval.mdKey = jroot["mdKey"].toString();
+        retval.purchased = jroot["purchased"].toBool();
+    }
+    return retval;
+}
 
 inline void adskiller_user_confirm(int userValue)
 {
@@ -93,8 +120,17 @@ QString AdsKillerService::widgetIconName()
     return "white-ads-remove";
 }
 
-AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr)
+AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr), _priv(new PrivateKillerRes)
 {
+}
+
+AdsKillerService::~AdsKillerService()
+{
+    if(_priv)
+    {
+        delete _priv;
+        _priv = nullptr;
+    }
 }
 
 void AdsKillerService::setArgs(const AdbDevice &adbDevice)
@@ -198,7 +234,21 @@ bool AdsKillerService::start()
                 });
         });
 
-    adskiller_start_cmd(mAdbDevice.devId);
+    if(malwareThread != nullptr)
+    {
+        adskiller_write_log("Процесс уже запущен.");
+        return false;
+    }
+
+    mutex = new QMutex();
+    malwareThread = new QThread();
+    QObject::connect(malwareThread, &QThread::started, std::bind(adskiller_awake, this));
+    mCmd = 0;
+    mProgress = 0;
+    adbDeviceSerial = mAdbDevice.devId;
+    status = MalwareStatus::Running;
+    malwareThread->start();
+
     return isStarted();
 }
 
@@ -292,31 +342,14 @@ inline T1 compare_list(const T0 &t0, const T1 &t1, Pred &&pred)
     return result;
 }
 
-void adskiller_start_cmd(const QString &deviceSerial)
-{
-    if(malwareThread != nullptr)
-    {
-        adskiller_write_log("Процесс уже запущен.");
-        return;
-    }
-    adbDeviceSerial = deviceSerial;
-    mutex = new QMutex();
-    malwareThread = new QThread();
-    QObject::connect(malwareThread, &QThread::started, &adskiller_awake);
-    network = new Network(MainWindow::current);
-    network->authedId = MainWindow::current->network.authedId;
-    mCmd = 0;
-    mProgress = 0;
-    status = MalwareStatus::Running;
-    malwareThread->start();
-}
-
 bool adskiller_clean_cmd()
 {
     if(status == MalwareStatus::Running)
         return false;
     delete network;
+    network = nullptr;
     delete mutex;
+    mutex = nullptr;
     malwareThread = nullptr;
     return true;
 }
@@ -325,18 +358,66 @@ void adskiller_kill_proc()
 {
     if(malwareThread == nullptr)
         return;
-    mCmd = MalwareForclyKill;
+    mCmd = CommandExecForceKill;
 }
 
-void adskiller_awake()
+std::shared_ptr<AdsInfo> fetch_ads_data(AdsKillerService *service, const QString &mdKey)
+{
+    QJsonObject request;
+    request["cmd"] = NET_COMMAND_GETADS;
+    request["mdKey"] = mdKey;
+    QEventLoop loop;
+    QObject::connect(network, &Network::sPullServiceUUID, &loop, &QEventLoop::quit);
+    network->pullServiceUUID(service->uuid(), request, ServiceOperation::Get);
+    loop.exec();
+    return std::move(service->_priv->adsdata);
+}
+
+std::shared_ptr<LabStatusInfo> fetch_lab_state(AdsKillerService *service, const QString &mdKey)
+{
+    QJsonObject request;
+    request["cmd"] = NET_COMMAND_MDKEYSTATE;
+    request["mdKey"] = mdKey;
+    QEventLoop loop;
+    QObject::connect(network, &Network::sPullServiceUUID, &loop, &QEventLoop::quit);
+    network->pullServiceUUID(service->uuid(), request, ServiceOperation::Get);
+    loop.exec();
+    return std::move(service->_priv->labInfo);
+}
+
+std::shared_ptr<LabStatusInfo> fetch_device_packages(AdsKillerService *service, const AdbDevice &device, const QStringList &packages)
+{
+    QJsonArray array;
+    QJsonObject request;
+    QEventLoop loop;
+    QObject::connect(network, &Network::sPullServiceUUID, &loop, &QEventLoop::quit);
+    request["cmd"] = NET_COMMAND_UPLOADPACKAGES;
+    request["deviceSerial"] = device.devId;
+    request["deviceModel"] = device.model;
+    request["deviceVendor"] = device.vendor;
+    for(const QString &str : packages)
+        array.append(str);
+    request["packages"] = array;
+    network->pullServiceUUID(service->uuid(), request, ServiceOperation::Open);
+    loop.exec();
+    return std::move(service->_priv->labInfo);
+}
+
+void adskiller_awake(AdsKillerService *service)
 {
     using namespace std::chrono;
 
     int isFinish = 0;
-    int lastResult, num0, num1, totalMalwareDetected;
+    int &lastResult = service->_priv->lastNetStatus = 0;
+
+    int num0, num1, totalMalwareDetected;
     QList<PackageIO> localPackages;
-    QEventLoop loop;
     std::shared_ptr<AdbSysInfo> sysInfo;
+
+    network = new Network(MainWindow::current);
+    network->authedId = MainWindow::current->network.authedId;
+
+    QObject::connect(network, &Network::sPullServiceUUID, service, &AdsKillerService::onPullServiceUUID, Qt::DirectConnection);
 
     auto procedureStartAt = steady_clock::now();
 
@@ -375,7 +456,7 @@ void adskiller_awake()
     {
         switch(mCmd)
         {
-                // INIT
+            // INIT
             case 0:
             {
                 adskiller_write_log_head("Запуск процедуры удаление рекламы (Malware)...", 1);
@@ -391,10 +472,8 @@ void adskiller_awake()
                 if(!check_device_connect())
                 {
                     adskiller_write_log_head("Устройство внезапно отключилась.");
-                    adskiller_write_log(
-                        "Пожалуйста, убедитесь что устройство подключено "
-                        "корректно и кабель не поврежден.");
-                    mCmd = MalwareExecFail;
+                    adskiller_write_log("Пожалуйста, убедитесь что устройство подключено корректно и кабель не поврежден.");
+                    mCmd = CommandExecFailed;
                     break;
                 }
                 adskiller_write_log_head(QString("Получение данных с устройства ") + device.displayName + "(" + device.devId + ")", 2);
@@ -408,14 +487,14 @@ void adskiller_awake()
                     if(localPackages.isEmpty())
                     {
                         adskiller_write_log_head("Получили пустой результат.");
-                        mCmd = MalwareExecFail;
+                        mCmd = CommandExecFailed;
                         break;
                     }
                 }
                 else
                 {
                     adskiller_write_log_head("Устройство внезапно отключилась.");
-                    mCmd = MalwareExecFail;
+                    mCmd = CommandExecFailed;
                     break;
                 }
                 adskiller_write_log("Распаковка");
@@ -441,32 +520,23 @@ void adskiller_awake()
                 WAITMODE;
 
                 QStringList resultList {}, disableList {}, localPackageNames;
-                LabStatusInfo labs;
+                std::shared_ptr<LabStatusInfo> labs;
                 QString mdKey;
+
                 std::transform(localPackages.begin(), localPackages.end(), std::back_inserter(localPackageNames), [](const PackageIO &package) { return package.packageName; });
-                QObject::connect(
-                    network,
-                    &Network::sUploadUserPackages,
-                    [&lastResult, &labs, &loop](int status, const LabStatusInfo &labsResult, bool ok)
-                    {
-                        if(ok)
-                        {
-                            labs = labsResult;
-                        }
-                        lastResult = status;
-                        loop.quit();
-                    });
-                if(!network->pushUserPackages(device, localPackageNames))
+
+                labs = fetch_device_packages(service, device, localPackageNames);
+                if(!labs)
                 {
                     adskiller_write_log_head("Ошибка при отправке");
                     adskiller_write_log(generate_error_report(lastResult));
                     WAITMODE;
-                    mCmd = MalwareExecFail;
+                    mCmd = CommandExecFailed;
                     break;
                 }
                 adskiller_write_log("Отправка образцов на сервер imister.kz и получение md-ключа", 49);
-                loop.exec();
-                mdKey = labs.mdKey;
+
+                mdKey = labs->mdKey;
                 WAITMODE;
 
                 if(lastResult)
@@ -474,35 +544,12 @@ void adskiller_awake()
                     adskiller_write_log_head("Ошибка во время загрузки");
                     adskiller_write_log(generate_error_report(lastResult));
                     WAITMODE;
-                    mCmd = MalwareExecFail;
-                    break;
-                }
-
-                // Test MDKey
-                QObject::connect(
-                    network,
-                    &Network::sFetchingLabs,
-                    [&labs, &lastResult, &loop](int status, const LabStatusInfo &labsResult, bool ok)
-                    {
-                        if(ok)
-                        {
-                            labs = labsResult;
-                        }
-                        lastResult = status;
-                        loop.quit();
-                    });
-
-                if(lastResult)
-                {
-                    adskiller_write_log_head("Ошибка проверки ключа");
-                    adskiller_write_log(generate_error_report(lastResult));
-                    WAITMODE;
-                    mCmd = MalwareExecFail;
+                    mCmd = CommandExecFailed;
                     break;
                 }
 
                 int chances = 5;
-                if(!labs.ready())
+                if(!labs->ready())
                 {
                     adskiller_write_log_head(
                         "Выполняется серверная обработка. Ожидаем. Если пройдет больше "
@@ -512,17 +559,16 @@ void adskiller_awake()
                         "действий администратора для продолжения. Ожидайте.");
                 }
                 mProgress = 49;
-                while(labs.exists() && !labs.ready() && chances > 0)
+                while(labs && labs->exists() && !labs->ready() && chances > 0)
                 {
                     if(!check_device_connect())
                     {
                         adskiller_write_log_head("Устройство внезапно отключилась.");
-                        mCmd = MalwareExecFail;
+                        mCmd = CommandExecFailed;
                         break;
                     }
 
-                    network->pullLabState(mdKey);
-                    loop.exec();
+                    labs = fetch_lab_state(service, mdKey);
 
                     WAITMODE2;
 
@@ -545,11 +591,11 @@ void adskiller_awake()
                     adskiller_write_log_head("Возникла ошибка.");
                     adskiller_write_log(generate_error_report(lastResult));
                     WAITMODE;
-                    mCmd = MalwareExecFail;
+                    mCmd = CommandExecFailed;
                     break;
                 }
 
-                if(!network->authedId.hasVipAccount() && !labs.purchased)
+                if(!network->authedId.hasVipAccount() && !labs->purchased)
                 {
                     mUserValue = 1000;
                     while(mUserValue == 1000)
@@ -562,50 +608,38 @@ void adskiller_awake()
                         adskiller_write_log_head("Запрос отклонен пользователем");
                         adskiller_write_log("вы отказались от оплаты");
                         WAIT(1000);
-                        mCmd = MalwareExecFail;
+                        mCmd = CommandExecFailed;
                         break;
                     }
                 }
 
-                if(labs.analyzeStatus == "part-verify")
+                if(labs->analyzeStatus == "part-verify")
                 {
                     adskiller_write_log_head("АВТОМАТИЧЕСКИЙ РЕЖИМ (BETA) -- ВЫПОЛНЕНИЕ");
                     WAIT(2500);
                 }
 
-                adskiller_write_log(QString("md-ключ получен ") + labs.mdKey, 51);
+                adskiller_write_log(QString("md-ключ получен ") + labs->mdKey, 51);
                 adskiller_write_log("Применение md-ключа и получение лабараторного анализа.", 52);
                 WAITMODE;
 
                 resultList.clear();
                 disableList.clear();
-                QObject::connect(
-                    network,
-                    &Network::sLabAdsFinish,
-                    [&](int status, const AdsInfo &adsData, bool ok)
-                    {
-                        (void) lastResult;
-                        (void) loop;
-                        if(ok)
-                        {
-                            labs = adsData.labs;
-                            resultList = adsData.blacklist;
-                            disableList = adsData.disabling;
-                        }
-                        lastResult = status;
-                        loop.quit();
-                    });
-                network->pullAdsData(labs.mdKey);
-                loop.exec();
 
-                if(lastResult != NetworkStatus::OK)
+                std::shared_ptr<AdsInfo> ads_data_input = fetch_ads_data(service, labs->mdKey);
+                if(lastResult != NetworkStatus::OK || !ads_data_input)
                 {
                     adskiller_write_log_head("Ошибка во время получения.");
                     adskiller_write_log(generate_error_report(lastResult));
                     WAITMODE;
-                    mCmd = MalwareExecFail;
+                    mCmd = CommandExecFailed;
                     break;
                 }
+
+                labs = std::make_shared<LabStatusInfo>(ads_data_input->labs);
+                resultList = ads_data_input->blacklist;
+                disableList = ads_data_input->disabling;
+
                 adskiller_write_log_head("Результаты из лаборатории получены.", 55);
                 WAITMODE;
 
@@ -637,7 +671,6 @@ void adskiller_awake()
                 for(const QString &pkg : std::as_const(resultList))
                 {
                     ++num1;
-                    // HAVE
                     int curValue = Map<int, int>(num1, 0, resultList.size(), num0, 80);
                     adskiller_write_log(QString(" >> md5 hash %1").arg(QString(QCryptographicHash::hash(pkg.toLatin1(), QCryptographicHash::Md5).toHex())), curValue);
                     WAITMODE2;
@@ -654,7 +687,7 @@ void adskiller_awake()
                     adskiller_write_log("Что-то пошло не так. Возможно устройство было отключено.");
                     adskiller_write_log("Пожалуйста начните процедуру заново.");
                     WAITMODE;
-                    mCmd = MalwareExecFail;
+                    mCmd = CommandExecFailed;
                     break;
                 }
                 num0 = lastResult;
@@ -667,7 +700,7 @@ void adskiller_awake()
                         adskiller_write_log("Что-то пошло не так. Возможно устройство было отключено.");
                         adskiller_write_log("Пожалуйста начните процедуру заново.");
                         WAITMODE;
-                        mCmd = MalwareExecFail;
+                        mCmd = CommandExecFailed;
                         break;
                     }
                     num0 += lastResult;
@@ -711,6 +744,42 @@ void adskiller_awake()
     }
 }
 
+void AdsKillerService::onPullServiceUUID(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok)
+{
+    QJsonArray jarray;
+    QString cmd;
+
+    _priv->lastNetStatus = 1;
+    while(true)
+    {
+        if(ok)
+        {
+            cmd = responce["cmd"].toString();
+            if(cmd == NET_COMMAND_GETADS)
+            {
+                _priv->adsdata = std::make_shared<AdsInfo>();
+                _priv->adsdata->labs = fromJsonLabs(responce["labs"]);
+                jarray = responce["result"].toArray();
+                for(const QJsonValue &val : std::as_const(jarray))
+                    _priv->adsdata->blacklist << val.toString();
+                jarray = responce["autodisable"].toArray();
+                if(!responce["autodisable"].isNull())
+                    for(const QJsonValue &val : std::as_const(jarray))
+                        _priv->adsdata->disabling << val.toString();
+            }
+            else if(cmd == NET_COMMAND_MDKEYSTATE || cmd == NET_COMMAND_UPLOADPACKAGES)
+            {
+                _priv->labInfo = std::make_shared<LabStatusInfo>(fromJsonLabs(responce["labs"]));
+            }
+            else
+            {
+                break;
+            }
+            _priv->lastNetStatus = 0;
+        }
+        break;
+    }
+}
 #undef WAITMODE
 #undef FORCLYQUIT_CHECK
 #undef WAIT

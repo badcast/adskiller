@@ -104,64 +104,6 @@ void Network::pushAuth(const QString &token)
     connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
 }
 
-void Network::pullAdsData(const QString &mdKey)
-{
-    QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest request(url);
-    if(!isAuthed())
-        return;
-    _pending |= FpullAdsData;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Token", authedId.token.toUtf8());
-    json["request"] = "GETADS";
-    json["mdKey"] = mdKey;
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onAdsFinished);
-}
-
-bool Network::pushUserPackages(const AdbDevice &device, const QStringList &packages)
-{
-    QJsonObject json;
-    QJsonArray array;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest request(url);
-    if(device.devId.isEmpty() || packages.empty())
-        return false;
-    _pending |= FpullUserPackages;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Token", authedId.token.toUtf8());
-    json["request"] = "UPLOADPKGS";
-    json["deviceSerial"] = device.devId;
-    json["deviceModel"] = device.model;
-    json["deviceVendor"] = device.vendor;
-    for(const QString &str : packages)
-        array.append(str);
-    json["packages"] = array;
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onUserPackagesUploadFinished);
-    return true;
-}
-
-void Network::pullLabState(const QString &mdKey)
-{
-    QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest request(url);
-    if(!isAuthed())
-        return;
-    _pending |= FpullLabState;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Token", authedId.token.toUtf8());
-    json["request"] = "MDKEYSTATUS";
-    json["mdKey"] = mdKey;
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingLabs);
-}
-
 void Network::pullServiceList()
 {
     QJsonObject json;
@@ -282,78 +224,6 @@ void Network::onAuthFinished()
     _pending &= ~Fauth;
 }
 
-void Network::onAdsFinished()
-{
-    int status = NetworkStatus::NetworkError;
-    AdsInfo adsData {};
-    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    _lastBytes = 0;
-    if(reply)
-    {
-        for(;;)
-        {
-            if(reply->error() == QNetworkReply::NoError)
-            {
-                QByteArray responce = reply->readAll();
-                _lastBytes = responce.size();
-                QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
-                if(jsonResp.isNull() || !jsonResp["status"].isDouble() || !jsonResp["labs"].isObject())
-                    status = NetworkStatus::ServerError;
-                else
-                    status = jsonResp["status"].toInt();
-                if(status == NetworkStatus::OK)
-                {
-                    adsData.labs = fromJsonLabs(jsonResp["labs"]);
-                    QJsonArray jarray = jsonResp["result"].toArray();
-                    for(const QJsonValue &val : std::as_const(jarray))
-                        adsData.blacklist << val.toString();
-                    jarray = jsonResp["autodisable"].toArray();
-                    if(!jsonResp["autodisable"].isNull())
-                        for(const QJsonValue &val : std::as_const(jarray))
-                            adsData.disabling << val.toString();
-                }
-            }
-            break;
-        }
-        emit sLabAdsFinish(status, adsData, status == NetworkStatus::OK);
-        reply->deleteLater();
-    }
-    _pending &= ~FpullAdsData;
-}
-
-void Network::onUserPackagesUploadFinished()
-{
-    int status = NetworkStatus::NetworkError;
-    LabStatusInfo labs;
-    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    _lastBytes = 0;
-    if(reply)
-    {
-        for(;;)
-        {
-            if(reply->error() == QNetworkReply::NoError)
-            {
-                QByteArray responce = reply->readAll();
-                _lastBytes = responce.size();
-                QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
-                if(jsonResp.isNull() || !jsonResp["status"].isDouble())
-                    status = NetworkStatus::ServerError;
-                else
-                {
-                    status = jsonResp["status"].toInt();
-                    if(status == NetworkStatus::OK)
-                    {
-                        labs = fromJsonLabs(jsonResp["labs"]);
-                    }
-                }
-            }
-            break;
-        }
-        emit sUploadUserPackages(status, labs, status == NetworkStatus::OK);
-        reply->deleteLater();
-    }
-    _pending &= ~FpullUserPackages;
-}
 
 void Network::onFetchingVersion()
 {
@@ -383,31 +253,6 @@ void Network::onFetchingVersion()
         reply->deleteLater();
     }
     _pending &= ~FpullFetchVersion;
-}
-
-void Network::onFetchingLabs()
-{
-    int status = NetworkStatus::NetworkError;
-    LabStatusInfo labs;
-    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    _lastBytes = 0;
-    if(reply)
-    {
-        if(reply->error() == QNetworkReply::NoError)
-        {
-            QByteArray resp = std::move(reply->readAll());
-            _lastBytes = resp.size();
-            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
-            if(!jsonResp.isNull() && jsonResp["labs"].isObject())
-            {
-                labs = fromJsonLabs(jsonResp["labs"]);
-                status = NetworkStatus::OK;
-            }
-        }
-        emit sFetchingLabs(status, labs, status == NetworkStatus::OK);
-        reply->deleteLater();
-    }
-    _pending &= ~FpullLabState;
 }
 
 void Network::onPullServiceList()

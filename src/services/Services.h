@@ -152,8 +152,13 @@ private:
     void cirlceMalwareState(bool success);
     void cirlceMalwareStateReset();
 
+public slots:
+    void onPullServiceUUID(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok);
+
 public:
+    struct PrivateKillerRes * _priv;
     AdsKillerService(QObject *parent = nullptr);
+    ~AdsKillerService();
 
     void setArgs(const AdbDevice &adbDevice) override;
 

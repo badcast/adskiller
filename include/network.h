@@ -137,31 +137,23 @@ public:
     bool checkNet();
 
     void setTimeout(int value);
-    void pullAdsData(const QString &mdKey);
+
     void pullFetchVersion(bool populate);
-    void pullLabState(const QString &mdKey);
     void pullServiceList();
 
     void pullServiceUUID(const QString &uuid, const QJsonObject& request, ServiceOperation so);
 
     void pushAuth(const QString &token);
-    bool pushUserPackages(const AdbDevice &device, const QStringList &packages);
 
 signals:
     void sLoginFinish(int status, bool ok);
-    void sLabAdsFinish(int status, const AdsInfo &adsData, bool ok);
-    void sUploadUserPackages(int status, const LabStatusInfo &labs, bool ok);
     void sFetchingVersion(int status, const QString &version, const QString &url, bool ok);
-    void sFetchingLabs(int status, const LabStatusInfo &labs, bool ok);
     void sPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
     void sPullServiceUUID(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok);
 
 private slots:
     void onAuthFinished();
-    void onAdsFinished();
-    void onUserPackagesUploadFinished();
     void onFetchingVersion();
-    void onFetchingLabs();
     void onPullServiceList();
     void onPullServiceUUID();
 };
