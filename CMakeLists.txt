@@ -91,6 +91,7 @@ target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSI
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.env")
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/.env" REMOTEADDR)
+string(STRIP "${REMOTEADDR}" REMOTEADDR)
 target_compile_definitions(application PRIVATE NREMOTEADDR="${REMOTEADDR}")
 endif()
 

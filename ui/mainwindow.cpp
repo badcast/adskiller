@@ -273,7 +273,7 @@ void MainWindow::checkVersion(bool firstRun)
                     {
                         ui->loaderPageText->setText("Проблема с интернетом?");
                         ui->loaderPageText->update();
-                        DelayUISync(2000);
+                        delayUI(2000);
                         lastPage = PageIndex(-1);
                         willTerminate();
                     }
@@ -282,7 +282,7 @@ void MainWindow::checkVersion(bool firstRun)
                         verChansesAvailable = ChansesRunInvalid;
                         ui->loaderPageText->setText("Ваша версия актуальная!");
                         ui->loaderPageText->update();
-                        DelayUISync(2000);
+                        delayUI(2000);
                         versionChecker->start();
                         return true;
                     }
@@ -292,7 +292,7 @@ void MainWindow::checkVersion(bool firstRun)
     }
     else if(verChansesAvailable > -1)
     {
-        delayPushLoop(
+        delayUICallLoop(
             70,
             [this]()
             {

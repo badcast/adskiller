@@ -9,13 +9,13 @@
 #include "network.h"
 
 #ifndef NREMOTEADDR
-#define NREMOTEADDR "http://localhost:8000/"
+#define NREMOTEADDR "http://localhost:8000/api"
 #endif
 
 constexpr auto URL_Remote = NREMOTEADDR;
 constexpr auto URL_CDN = "cdn";
 constexpr auto URL_SupVer = "v2";
-constexpr auto URL_Work = "action1.php";
+constexpr auto URL_Work = "callback";
 constexpr auto URL_Version = "version";
 
 enum

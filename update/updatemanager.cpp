@@ -1,8 +1,12 @@
 #include "UpdateManager.h"
 
+#ifndef NREMOTEADDR
+#define NREMOTEADDR "http://localhost:8000/api"
+#endif
+
 constexpr int MaxTimeout = 10000;
 constexpr int MaxDownloadAtemp = 4;
-constexpr char URLFetch[] = "https://adskill.imister.kz/cdn/update";
+constexpr char URLFetch[] = NREMOTEADDR;
 
 UpdateManager::UpdateManager(QObject *parent) : QObject(parent)
 {
@@ -20,7 +24,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::fetch()
     QNetworkReply *reply;
     QList<FetchResult> contents;
     m_manager->setTransferTimeout(MaxTimeout);
-    reply = m_manager->get(QNetworkRequest(QUrl(URLFetch)));
+    reply = m_manager->get(QNetworkRequest(QUrl(QString(URLFetch) + "/cdn/update")));
     QObject::connect(
         reply,
         &QNetworkReply::finished,
