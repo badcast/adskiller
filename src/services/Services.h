@@ -32,7 +32,7 @@
 #include "network.h"
 
 #if !NDEBUG
-#define SHOW_SERVICE_BY_DEBUG 1
+#define SHOW_SERVICE_BY_DEBUG 0
 #endif
 
 constexpr auto DefaultIconWidget = "unavailable";
@@ -156,7 +156,7 @@ public slots:
     void onPullServiceUUID(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok);
 
 public:
-    struct PrivateKillerRes * _priv;
+    struct PrivateKillerRes *_priv;
     AdsKillerService(QObject *parent = nullptr);
     ~AdsKillerService();
 

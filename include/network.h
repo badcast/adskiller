@@ -19,10 +19,11 @@ struct AdbDevice;
 
 struct UserDataInfo
 {
-    QString token;
     QString idName;
     QString location;
     QString currencyType;
+    QString login;
+    QString pass;
 
     bool blocked;
     std::uint32_t vipDays;
@@ -35,6 +36,8 @@ struct UserDataInfo
     bool isNotValidBalance() const;
     bool hasBalance() const;
     bool hasVipAccount() const;
+
+    void cleanExceptLoginPass();
 };
 
 struct VersionInfo
@@ -127,6 +130,7 @@ private:
     QString _token;
     std::int64_t _lastBytes;
     int _pending;
+    bool forclyExit;
 
 public:
     UserDataInfo authedId;
@@ -141,18 +145,22 @@ public:
     void pullFetchVersion(bool populate);
     void pullServiceList();
 
-    void pullServiceUUID(const QString &uuid, const QJsonObject& request, ServiceOperation so);
+    void pullServiceUUID(const QString &uuid, const QJsonObject &request, ServiceOperation so);
 
-    void pushAuth(const QString &token);
+    [[deprecated]] void pushAuthOld(const QString &token);
+    void pushLoginPass(const QString &login, const QString &pass);
+    void pushAuthToken();
 
 signals:
+    void sOldTokenFinish(int status, bool ok);
     void sLoginFinish(int status, bool ok);
     void sFetchingVersion(int status, const QString &version, const QString &url, bool ok);
     void sPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
     void sPullServiceUUID(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok);
 
 private slots:
-    void onAuthFinished();
+    void onAuthOldFinished();
+    void onAuthJWTFinished();
     void onFetchingVersion();
     void onPullServiceList();
     void onPullServiceUUID();

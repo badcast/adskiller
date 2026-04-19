@@ -38,7 +38,7 @@ constexpr struct
 
 MainWindow *MainWindow::current;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), timerAuthAnim(nullptr)
 {
     int x;
     QStringListModel *model;
@@ -47,17 +47,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Load settings
     AppSetting::load();
 
-    bool containsParam;
+    bool paramCheck;
     QVariant value;
-    value = AppSetting::encryptedToken(&containsParam);
-    if(containsParam)
+
+    // V1 Old Token ID
+    value = AppSetting::encryptedToken(&paramCheck);
+    if(paramCheck)
     {
         QByteArray decData = CipherAlgoCrypto::UnpackDC(value.toString());
-        network._token = QLatin1String(decData);
+        network.authedId.pass = QLatin1String(decData);
+
+        if(!std::all_of(std::begin(network.authedId.pass), std::end(network.authedId.pass), [](auto &lhs) { return std::isalnum(lhs.toLatin1()); }))
+        {
+            network.authedId.pass.clear();
+        }
     }
 
-    value = AppSetting::autoLogin(&containsParam);
-    if(containsParam)
+    // V2 - newer JWT
+    std::tuple<QString, QString> _ps = AppSetting::loginAndPass(&paramCheck);
+    if(paramCheck)
+    {
+        ui->lineLoginEdit->setText(std::get<0>(_ps));
+        ui->linePassEdit->setText(std::get<1>(_ps));
+    }
+
+    value = AppSetting::autoLogin(&paramCheck);
+    if(paramCheck)
     {
         ui->checkAutoLogin->setChecked(value.toBool());
     }
@@ -66,8 +81,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->checkAutoLogin->setChecked(true);
     }
 
-    value = AppSetting::networkTimeout(&containsParam);
-    if(containsParam)
+    value = AppSetting::networkTimeout(&paramCheck);
+    if(paramCheck)
     {
         value = value.toInt() < 1000 ? 1000 : value.toInt() > 30000 ? 30000 : value;
     }
@@ -75,13 +90,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         value = NetworkTimeoutDefault;
     }
+
     AppSetting::networkTimeout(nullptr, value);
     network.setTimeout(value.toInt());
-
-    if(!std::all_of(std::begin(network._token), std::end(network._token), [](auto &lhs) { return std::isalnum(lhs.toLatin1()); }))
-    {
-        network._token.clear();
-    }
 
     // Refresh TabPages to Content widget (Selective)
     QList<QWidget *> _w;
@@ -154,6 +165,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(&network, &Network::sLoginFinish, this, &MainWindow::slotAuthFinish);
     QObject::connect(&network, &Network::sFetchingVersion, this, &MainWindow::slotFetchVersionFinish);
     QObject::connect(&network, &Network::sPullServiceList, this, &MainWindow::slotPullServiceList);
+    QObject::connect(&network, &Network::sOldTokenFinish, this, &MainWindow::slotOldTokenFinish);
 
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateCabinet);
@@ -372,11 +384,14 @@ void MainWindow::pageShownPreStart(int page)
     {
             // WELCOME
         case AuthPage:
-            ui->lineEditToken->setText(network._token);
+            if(network.authedId.login.isEmpty())
+            {
+                ui->linePassEdit->setText(network.authedId.pass);
+            }
             ui->statusAuthText->setText("Выполните аутентификацию");
             ui->authButton->setEnabled(true);
             clearAuthInfoPage();
-            if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->lineEditToken->text().isEmpty() && ui->checkAutoLogin->isChecked())
+            if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty() && ui->checkAutoLogin->isChecked())
                 ui->authButton->click();
             break;
         case DevicesPage:
@@ -756,18 +771,44 @@ bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balance
 
 void MainWindow::on_authButton_clicked()
 {
+    network.forclyExit = false;
     if(network.pending() || network.isAuthed())
         return;
 
-    constexpr int Dots = 3;
-    QString tryToken = ui->lineEditToken->text();
-    network.pushAuth(tryToken);
-    ui->statusAuthText->setText("Подключение");
-    timerAuthAnim = new QTimer(this);
-    timerAuthAnim->start(350);
+    if(ui->lineLoginEdit->text().isEmpty() && ui->linePassEdit->text().isEmpty())
+    {
+        QMessageBox::warning(this, "Предупреждение", "Поле авторизаций не заполнено.");
+        return;
+    }
+
+    bool imitate_token = false;
+    if(imitate_token = (network.authedId.login.isEmpty()))
+    {
+        QString tryToken = ui->linePassEdit->text();
+        network.pushAuthOld(tryToken);
+    }
+    else
+    {
+        network.pushLoginPass(ui->lineLoginEdit->text(), ui->linePassEdit->text());
+    }
+    ui->statusAuthText->setText("Авторизация");
 
     qobject_cast<QWidget *>(sender())->setEnabled(false);
-    ui->lineEditToken->setEnabled(false);
+    ui->lineLoginEdit->setEnabled(false);
+    ui->linePassEdit->setEnabled(false);
+
+    if(timerAuthAnim != nullptr)
+    {
+        delete timerAuthAnim;
+        timerAuthAnim = nullptr;
+    }
+
+    if(imitate_token)
+        return;
+
+    constexpr int Dots = 3;
+    timerAuthAnim = new QTimer(this);
+    timerAuthAnim->start(350);
     QObject::connect(
         timerAuthAnim,
         &QTimer::timeout,
@@ -824,16 +865,25 @@ void MainWindow::slotAuthFinish(int status, bool ok)
         1000,
         [ok, status, this]() -> void
         {
-            timerAuthAnim->stop();
             QString resText;
-            switch(status)
+            int _status = status;
+
+            if(!network.isAuthed())
+            {
+                _status = NetworkStatus::NetworkError;
+            }
+
+            timerAuthAnim->stop();
+            switch(_status)
             {
                 case 0:
                     resText = "Токен успешно прошел проверку. Добро пожаловать, %1!";
                     resText = resText.arg(network.authedId.idName);
 
-                    if(!network.authedId.token.isEmpty())
-                        AppSetting::encryptedToken(nullptr, CipherAlgoCrypto::PackDC(network.authedId.token.toLatin1(), CipherAlgoCrypto::RandomKey()));
+                    if(!network.authedId.login.isEmpty() && !network.authedId.pass.isEmpty())
+                    {
+                        AppSetting::loginAndPass(nullptr, network.authedId.login, network.authedId.pass);
+                    }
 
                     if(network.authedId.isNotValidBalance())
                     {
@@ -863,17 +913,51 @@ void MainWindow::slotAuthFinish(int status, bool ok)
                     break;
             }
 
-            ui->statusAuthText->setText(resText);
-            ui->lineEditToken->setEnabled(true);
+            ui->lineLoginEdit->setEnabled(true);
+            ui->linePassEdit->setEnabled(true);
             ui->authButton->setEnabled(true);
+            ui->statusAuthText->setText(resText);
+        });
+}
+
+void MainWindow::slotOldTokenFinish(int status, bool ok)
+{
+    delayUICall(
+        1000,
+        [ok, status, this]() -> void
+        {
+            ui->authButton->setEnabled(true);
+            ui->lineLoginEdit->setEnabled(true);
+            ui->linePassEdit->setEnabled(true);
+
+            if(!ok)
+            {
+                ui->statusAuthText->setText("Ошибка подключения");
+                return;
+            }
+            ui->lineLoginEdit->setText(network.authedId.login);
+            ui->linePassEdit->setText(network.authedId.pass);
+
+            AppSetting::removeEncToken();
+            AppSetting::loginAndPass(nullptr, network.authedId.login, network.authedId.pass);
+
+            QString s = "Логин и пароль успешно получены. Переходим на новую стадию получения JWT-токена, войдите снова. Чтобы перейти на уровень выше.";
+            ui->statusAuthText->setText(s);
+            QMessageBox::information(this, "Success.", s);
         });
 }
 
 void MainWindow::slotPullServiceList(const QList<ServiceItemInfo> &services, bool ok)
 {
+    serverServices.reset();
+
     if(ok)
     {
         serverServices = std::move(std::make_shared<QList<ServiceItemInfo>>(services));
+    }
+    else
+    {
+        logoutSystem();
     }
 }
 
@@ -1009,15 +1093,13 @@ void MainWindow::showMessageFromStatus(int statusCode)
 
 void MainWindow::updateCabinet()
 {
-    QString tryToken;
     if(!network.isAuthed())
     {
         logoutSystem();
         return;
     }
 
-    tryToken = network.authedId.token;
-    network.pushAuth(tryToken);
+    network.pushAuthToken();
 
     services.clear();
     serverServices.reset();
@@ -1029,6 +1111,13 @@ void MainWindow::updateCabinet()
         {
             const char *str = "Обновление странницы";
             bool status = network.isAuthed() && !network.pending();
+
+            if(network.forclyExit)
+            {
+                logoutSystem();
+                return true;
+            }
+
             if(network.isAuthed() && !serverServices)
             {
                 str = "Еще чуть-чуть";
@@ -1057,9 +1146,17 @@ void MainWindow::updateCabinet()
 void MainWindow::logoutSystem()
 {
     if(network.isAuthed())
-        network.authedId = {};
-    clearAuthInfoPage();
-    showPageLoader(AuthPage, 500, QString("Выход из системы"));
+    {
+        network.forclyExit = true;
+        network._token = {};
+        network.authedId.cleanExceptLoginPass();
+        clearAuthInfoPage();
+        showPageLoader(AuthPage, 500, QString("Выход из системы"));
+    }
+    else
+    {
+        showPageLoader(AuthPage, 0, QString("Выход из системы"));
+    }
 }
 
 void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> predFalseEnd, QString text)

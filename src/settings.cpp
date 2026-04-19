@@ -6,6 +6,8 @@ constexpr auto ParamEncryptedToken = "encrypted_token";
 constexpr auto ParamAutoLogin = "autologin";
 constexpr auto ParamThemeIndex = "theme";
 constexpr auto ParamNetworkTimeout = "networkTimeout";
+constexpr auto ParamLogin = "auth_login";
+constexpr auto ParamPassword = "auth_pass_enc";
 
 inline QVariant GenericValue(const QString &key, bool *contains, const QVariant &set)
 {
@@ -52,11 +54,37 @@ void AppSetting::writeValue(const QString &key, const QVariant &value)
     settings->setValue(key, value);
 }
 
+void AppSetting::removeKey(const QString &key)
+{
+    settings->remove(key);
+}
+
+void AppSetting::removeEncToken()
+{
+    removeKey(ParamEncryptedToken);
+}
+
 QString AppSetting::encryptedToken(bool *contains, const QVariant &set)
 {
     QVariant retval;
     retval = GenericValue(ParamEncryptedToken, contains, set);
     return retval.toString();
+}
+
+std::tuple<QString, QString> AppSetting::loginAndPass(bool *contains, const QVariant &login, const QVariant &pass)
+{
+    QString lg, ps;
+    QVariant retval;
+    retval = GenericValue(ParamLogin, contains, login);
+    lg = retval.toString();
+
+    if(pass.isValid())
+        retval = CipherAlgoCrypto::PackDC(pass.toByteArray(), CipherAlgoCrypto::RandomKey());
+    else
+        retval = {};
+    retval = CipherAlgoCrypto::UnpackDC(GenericValue(ParamPassword, contains, retval).toByteArray());
+    ps = retval.toString();
+    return {lg, ps};
 }
 
 bool AppSetting::autoLogin(bool *contains, const QVariant &set)

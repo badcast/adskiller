@@ -79,7 +79,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>6</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -125,9 +125,9 @@
               <property name="geometry">
                <rect>
                 <x>90</x>
-                <y>340</y>
+                <y>350</y>
                 <width>461</width>
-                <height>61</height>
+                <height>51</height>
                </rect>
               </property>
               <property name="text">
@@ -140,11 +140,11 @@
                <bool>true</bool>
               </property>
              </widget>
-             <widget class="QLineEdit" name="lineEditToken">
+             <widget class="QLineEdit" name="linePassEdit">
               <property name="geometry">
                <rect>
                 <x>90</x>
-                <y>270</y>
+                <y>274</y>
                 <width>461</width>
                 <height>26</height>
                </rect>
@@ -155,7 +155,7 @@
                </font>
               </property>
               <property name="maxLength">
-               <number>128</number>
+               <number>64</number>
               </property>
               <property name="echoMode">
                <enum>QLineEdit::EchoMode::Password</enum>
@@ -165,7 +165,7 @@
               <property name="geometry">
                <rect>
                 <x>90</x>
-                <y>250</y>
+                <y>224</y>
                 <width>361</width>
                 <height>18</height>
                </rect>
@@ -178,7 +178,7 @@
               <property name="geometry">
                <rect>
                 <x>90</x>
-                <y>300</y>
+                <y>310</y>
                 <width>191</width>
                 <height>23</height>
                </rect>
@@ -194,7 +194,7 @@
               <property name="geometry">
                <rect>
                 <x>440</x>
-                <y>300</y>
+                <y>310</y>
                 <width>111</width>
                 <height>26</height>
                </rect>
@@ -207,7 +207,7 @@
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>30</y>
+                <y>10</y>
                 <width>221</width>
                 <height>201</height>
                </rect>
@@ -226,7 +226,7 @@
               <property name="geometry">
                <rect>
                 <x>300</x>
-                <y>304</y>
+                <y>314</y>
                 <width>131</width>
                 <height>20</height>
                </rect>
@@ -242,6 +242,27 @@
               </property>
               <property name="buddy">
                <cstring>authButton</cstring>
+              </property>
+             </widget>
+             <widget class="QLineEdit" name="lineLoginEdit">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>244</y>
+                <width>461</width>
+                <height>26</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="maxLength">
+               <number>64</number>
+              </property>
+              <property name="echoMode">
+               <enum>QLineEdit::EchoMode::Normal</enum>
               </property>
              </widget>
             </widget>
@@ -2044,7 +2065,7 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>lineEditToken</tabstop>
+  <tabstop>linePassEdit</tabstop>
   <tabstop>processLogStatus</tabstop>
   <tabstop>scrollArea_3</tabstop>
   <tabstop>authInfo</tabstop>

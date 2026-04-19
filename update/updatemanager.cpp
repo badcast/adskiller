@@ -107,7 +107,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
         for(int x = 0; x < updates.size(); ++x)
         {
             skip = false;
-            for(const QString &f : files)
+            for(const QString &f : std::as_const(files))
             {
                 if(updates[x].remoteLink == f)
                 {

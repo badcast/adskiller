@@ -83,13 +83,13 @@ inline ServiceOperation so_destrify(const QString &so)
     return ServiceOperation::Invalid;
 }
 
-Network::Network(QObject *parent) : QObject(parent), _pending(0)
+Network::Network(QObject *parent) : QObject(parent), _pending(0), forclyExit(false)
 {
     manager = new QNetworkAccessManager(this);
     manager->setTransferTimeout(NetworkTimeoutDefault);
 }
 
-void Network::pushAuth(const QString &token)
+void Network::pushAuthOld(const QString &token)
 {
     QJsonObject json;
     QNetworkReply *reply;
@@ -101,7 +101,45 @@ void Network::pushAuth(const QString &token)
     request.setRawHeader("Token", token.toUtf8());
     json["request"] = "TOKENVERIFY";
     reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    connect(reply, &QNetworkReply::finished, this, &Network::onAuthFinished);
+    connect(reply, &QNetworkReply::finished, this, &Network::onAuthOldFinished);
+}
+
+void Network::pushLoginPass(const QString &login, const QString &pass)
+{
+    QJsonObject json;
+    QNetworkReply *reply;
+    QUrl url(url_fetch());
+    QNetworkRequest request(url);
+    authedId = {}; // Clean last info
+    authedId.login = login;
+    authedId.pass = pass;
+    _pending |= Fauth;
+
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    json["request"] = "TOKENVERIFY";
+    json["login"] = login;
+    json["pass"] = pass;
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, &Network::onAuthJWTFinished);
+}
+
+void Network::pushAuthToken()
+{
+    QJsonObject json;
+    QNetworkReply *reply;
+    QUrl url(url_fetch());
+    QNetworkRequest request(url);
+    if(!isAuthed())
+        return;
+    _pending |= Fauth;
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
+
+    json["request"] = "TOKENVERIFY";
+
+    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
+    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onAuthJWTFinished);
 }
 
 void Network::pullServiceList()
@@ -114,8 +152,10 @@ void Network::pullServiceList()
         return;
     _pending |= FpullServiceList;
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Token", authedId.token.toUtf8());
+    request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
+
     json["request"] = "LISTSERVICES";
+
     reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceList);
 }
@@ -130,7 +170,8 @@ void Network::pullServiceUUID(const QString &uuid, const QJsonObject &request, S
         return;
     _pending |= FpullServiceUUID;
     netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    netRequest.setRawHeader("Token", authedId.token.toUtf8());
+    netRequest.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
+
     json["request"] = "SERVICEREQ";
     json["uuid"] = uuid;
     json["type"] = so_strify(so);
@@ -166,7 +207,7 @@ void Network::setTimeout(int value)
 
 bool Network::isAuthed()
 {
-    return !authedId.token.isEmpty();
+    return !_token.isEmpty();
 }
 
 bool Network::pending()
@@ -174,7 +215,7 @@ bool Network::pending()
     return _pending != 0;
 }
 
-void Network::onAuthFinished()
+void Network::onAuthOldFinished()
 {
     int status = NetworkStatus::NetworkError;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
@@ -198,12 +239,42 @@ void Network::onAuthFinished()
                 {
                     break;
                 }
-                _token = jsonResp["token"].toString();
-                // Update current token from server replace.
-                if(authedId.token != _token)
+                authedId.login = jsonResp["login"].toString();
+                authedId.pass = jsonResp["pass"].toString();
+                status = 0;
+            }
+            break;
+        }
+        emit sOldTokenFinish(status, status == NetworkStatus::OK);
+        reply->deleteLater();
+    }
+    _pending &= ~Fauth;
+}
+
+void Network::onAuthJWTFinished()
+{
+    int status = NetworkStatus::NetworkError;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    _lastBytes = 0;
+    if(reply)
+    {
+        for(;;)
+        {
+            if(reply->error() == QNetworkReply::NoError)
+            {
+                QByteArray responce = reply->readAll();
+                _lastBytes = responce.size();
+                QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
+                status = NetworkStatus::ServerError;
+
+                if(jsonResp.isNull() || !jsonResp["status"].isDouble() || (status = jsonResp["status"].toInt()) != NetworkStatus::OK)
                 {
-                    authedId.token = _token;
+                    break;
                 }
+
+                if(!jsonResp["token"].isUndefined())
+                    _token = jsonResp["token"].toString();
+
                 authedId.idName = jsonResp["username"].toString();
                 authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
                 authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
@@ -214,7 +285,6 @@ void Network::onAuthFinished()
                 authedId.blocked = jsonResp["blocked"].toBool();
                 authedId.basePrice = jsonResp["base_price"].toVariant().toUInt();
                 authedId.currencyType = jsonResp["currency_type"].toString();
-                status = 0;
             }
             break;
         }
@@ -223,7 +293,6 @@ void Network::onAuthFinished()
     }
     _pending &= ~Fauth;
 }
-
 
 void Network::onFetchingVersion()
 {

@@ -216,19 +216,18 @@ QPixmap ProgressCircle::generatePixmap() const
 
     qreal radius = circleRect.width() / 2.0;
     qreal innerRadius = mInnerRadius * radius;
-\
+
     QColor glassTrack(255, 255, 255, 80);
 
     qreal trackThickness = 10;
 
     painter.setPen(QPen(glassTrack, trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.setBrush(Qt::NoBrush);
-    painter.drawEllipse(circleRect.center(), radius - trackThickness/2.0,
-                        radius - trackThickness/2.0);
+    painter.drawEllipse(circleRect.center(), radius - trackThickness / 2.0, radius - trackThickness / 2.0);
 
     int value = qMin(mVisibleValue, mMaximum);
 
-    if (mInfinilyMode)
+    if(mInfinilyMode)
     {
         QPen progressPen(mColor, trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
         progressPen.setCapStyle(Qt::RoundCap);
@@ -242,7 +241,7 @@ QPixmap ProgressCircle::generatePixmap() const
         painter.setPen(QPen(mColor.lighter(120), trackThickness - 3, Qt::SolidLine, Qt::RoundCap));
         painter.drawArc(circleRect, startAngle, spanAngle);
     }
-    else if (value > 0)
+    else if(value > 0)
     {
         QPen progressPen(mColor, trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
         painter.setPen(progressPen);
@@ -264,7 +263,7 @@ QPixmap ProgressCircle::generatePixmap() const
     painter.setBrush(Qt::LinearGradientPattern);
     painter.drawEllipse(circleRect.center(), innerRadius, innerRadius);
 
-    if (mVisibleText && value > 0)
+    if(mVisibleText && value > 0)
     {
         QString text = QString::number(value) + "%";
 

@@ -15,6 +15,16 @@ bool UserDataInfo::hasVipAccount() const
     return vipDays > 0;
 }
 
+void UserDataInfo::cleanExceptLoginPass()
+{
+    QString lg = login;
+    QString ps = pass;
+
+    (*this) = {};
+    login = lg;
+    pass = ps;
+}
+
 bool LabStatusInfo::ready() const
 {
     return analyzeStatus == "verified" || analyzeStatus == "part-verify";
