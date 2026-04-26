@@ -93,7 +93,6 @@ private slots:
     void on_action_Qt_triggered();
     void on_authButton_clicked();
     void slotAuthFinish(int status, bool ok);
-    void slotOldTokenFinish(int status, bool ok);
     void slotPullServiceList(const QList<ServiceItemInfo> &services, bool ok);
     void slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok);
     void showEvent(QShowEvent *event) override;

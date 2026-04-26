@@ -51,17 +51,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QVariant value;
 
     // V1 Old Token ID
-    value = AppSetting::encryptedToken(&paramCheck);
-    if(paramCheck)
-    {
-        QByteArray decData = CipherAlgoCrypto::UnpackDC(value.toString());
-        network.authedId.pass = QLatin1String(decData);
-
-        if(!std::all_of(std::begin(network.authedId.pass), std::end(network.authedId.pass), [](auto &lhs) { return std::isalnum(lhs.toLatin1()); }))
-        {
-            network.authedId.pass.clear();
-        }
-    }
+    AppSetting::removeEncToken();
+    // value = AppSetting::encryptedToken(&paramCheck);
 
     // V2 - newer JWT
     std::tuple<QString, QString> _ps = AppSetting::loginAndPass(&paramCheck);
@@ -165,7 +156,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(&network, &Network::sLoginFinish, this, &MainWindow::slotAuthFinish);
     QObject::connect(&network, &Network::sFetchingVersion, this, &MainWindow::slotFetchVersionFinish);
     QObject::connect(&network, &Network::sPullServiceList, this, &MainWindow::slotPullServiceList);
-    QObject::connect(&network, &Network::sOldTokenFinish, this, &MainWindow::slotOldTokenFinish);
 
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateCabinet);
@@ -384,10 +374,6 @@ void MainWindow::pageShownPreStart(int page)
     {
             // WELCOME
         case AuthPage:
-            if(network.authedId.login.isEmpty())
-            {
-                ui->linePassEdit->setText(network.authedId.pass);
-            }
             ui->statusAuthText->setText("Выполните аутентификацию");
             ui->authButton->setEnabled(true);
             clearAuthInfoPage();
@@ -781,16 +767,7 @@ void MainWindow::on_authButton_clicked()
         return;
     }
 
-    bool imitate_token = false;
-    if(imitate_token = (network.authedId.login.isEmpty()))
-    {
-        QString tryToken = ui->linePassEdit->text();
-        network.pushAuthOld(tryToken);
-    }
-    else
-    {
-        network.pushLoginPass(ui->lineLoginEdit->text(), ui->linePassEdit->text());
-    }
+    network.pushLoginPass(ui->lineLoginEdit->text(), ui->linePassEdit->text());
     ui->statusAuthText->setText("Авторизация");
 
     qobject_cast<QWidget *>(sender())->setEnabled(false);
@@ -802,9 +779,6 @@ void MainWindow::on_authButton_clicked()
         delete timerAuthAnim;
         timerAuthAnim = nullptr;
     }
-
-    if(imitate_token)
-        return;
 
     constexpr int Dots = 3;
     timerAuthAnim = new QTimer(this);
@@ -877,12 +851,14 @@ void MainWindow::slotAuthFinish(int status, bool ok)
             switch(_status)
             {
                 case 0:
-                    resText = "Токен успешно прошел проверку. Добро пожаловать, %1!";
-                    resText = resText.arg(network.authedId.idName);
+                    resText = "Токен успешно прошел проверку. Добро пожаловать!";
 
-                    if(!network.authedId.login.isEmpty() && !network.authedId.pass.isEmpty())
+                    if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
                     {
-                        AppSetting::loginAndPass(nullptr, network.authedId.login, network.authedId.pass);
+                        AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
+
+                        // Only get token.
+                        break;
                     }
 
                     if(network.authedId.isNotValidBalance())
@@ -917,33 +893,6 @@ void MainWindow::slotAuthFinish(int status, bool ok)
             ui->linePassEdit->setEnabled(true);
             ui->authButton->setEnabled(true);
             ui->statusAuthText->setText(resText);
-        });
-}
-
-void MainWindow::slotOldTokenFinish(int status, bool ok)
-{
-    delayUICall(
-        1000,
-        [ok, status, this]() -> void
-        {
-            ui->authButton->setEnabled(true);
-            ui->lineLoginEdit->setEnabled(true);
-            ui->linePassEdit->setEnabled(true);
-
-            if(!ok)
-            {
-                ui->statusAuthText->setText("Ошибка подключения");
-                return;
-            }
-            ui->lineLoginEdit->setText(network.authedId.login);
-            ui->linePassEdit->setText(network.authedId.pass);
-
-            AppSetting::removeEncToken();
-            AppSetting::loginAndPass(nullptr, network.authedId.login, network.authedId.pass);
-
-            QString s = "Логин и пароль успешно получены. Переходим на новую стадию получения JWT-токена, войдите снова. Чтобы перейти на уровень выше.";
-            ui->statusAuthText->setText(s);
-            QMessageBox::information(this, "Success.", s);
         });
 }
 
@@ -1145,11 +1094,11 @@ void MainWindow::updateCabinet()
 
 void MainWindow::logoutSystem()
 {
+    network.forclyExit = true;
     if(network.isAuthed())
     {
-        network.forclyExit = true;
         network._token = {};
-        network.authedId.cleanExceptLoginPass();
+        network.authedId = {};
         clearAuthInfoPage();
         showPageLoader(AuthPage, 500, QString("Выход из системы"));
     }

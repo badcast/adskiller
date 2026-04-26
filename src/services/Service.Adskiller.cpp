@@ -414,8 +414,7 @@ void adskiller_awake(AdsKillerService *service)
     QList<PackageIO> localPackages;
     std::shared_ptr<AdbSysInfo> sysInfo;
 
-    network = new Network(MainWindow::current);
-    network->authedId = MainWindow::current->network.authedId;
+    network = new Network(MainWindow::current->network);
 
     QObject::connect(network, &Network::sPullServiceUUID, service, &AdsKillerService::onPullServiceUUID, Qt::DirectConnection);
 

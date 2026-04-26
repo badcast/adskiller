@@ -22,8 +22,6 @@ struct UserDataInfo
     QString idName;
     QString location;
     QString currencyType;
-    QString login;
-    QString pass;
 
     bool blocked;
     std::uint32_t vipDays;
@@ -36,8 +34,6 @@ struct UserDataInfo
     bool isNotValidBalance() const;
     bool hasBalance() const;
     bool hasVipAccount() const;
-
-    void cleanExceptLoginPass();
 };
 
 struct VersionInfo
@@ -135,6 +131,7 @@ private:
 public:
     UserDataInfo authedId;
 
+    Network(const Network& other);
     Network(QObject *parent = nullptr);
     bool isAuthed();
     bool pending();
@@ -147,7 +144,6 @@ public:
 
     void pullServiceUUID(const QString &uuid, const QJsonObject &request, ServiceOperation so);
 
-    [[deprecated]] void pushAuthOld(const QString &token);
     void pushLoginPass(const QString &login, const QString &pass);
     void pushAuthToken();
 
@@ -159,7 +155,6 @@ signals:
     void sPullServiceUUID(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok);
 
 private slots:
-    void onAuthOldFinished();
     void onAuthJWTFinished();
     void onFetchingVersion();
     void onPullServiceList();
