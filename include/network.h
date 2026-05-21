@@ -131,7 +131,7 @@ private:
 public:
     UserDataInfo authedId;
 
-    Network(const Network& other);
+    Network(const Network &other);
     Network(QObject *parent = nullptr);
     bool isAuthed();
     bool pending();
