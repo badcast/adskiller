@@ -6,6 +6,7 @@
 #include <QRandomGenerator>
 #include <QSet>
 #include <QStringList>
+#include <QRegularExpression>
 
 #include "adbcmds.h"
 #include "adbfront.h"
@@ -345,6 +346,125 @@ bool AdbDevice::isEmpty() const
     return devId.isEmpty() && model.isEmpty() && displayName.isEmpty() && vendor.isEmpty();
 }
 
-AdbFileIO::AdbFileIO(const QString &deviceId) : AdbShell(deviceId)
+AdbFileIO::AdbFileIO(const QString &deviceId) : AdbShell(deviceId), m_deviceId(deviceId)
 {
+}
+
+bool AdbFileIO::exists(const QString &filePath)
+{
+    std::pair<bool, QString> result = commandQueueWait(QStringList() << "ls" << filePath);
+    if(!result.first)
+        return false;
+    return !result.second.contains("No such file or directory");
+}
+
+bool AdbFileIO::deleteFile(const QString &filePath)
+{
+    std::pair<bool, QString> result = commandQueueWait(QStringList() << "rm" << "-rf" << filePath);
+    return result.first && !result.second.contains("Permission denied");
+}
+
+QStringList AdbFileIO::getFiles(const QString &dirPath, bool includeDirs)
+{
+    QStringList files;
+    // Format output as JSON strings for easier parsing in QML
+    std::pair<bool, QString> result = commandQueueWait(QStringList() << "ls" << "-lA" << dirPath);
+    if(result.first)
+    {
+        QStringList lines = result.second.split('\n', Qt::SkipEmptyParts);
+        for(const QString &line : lines)
+        {
+            QString trimmed = line.trimmed();
+            if(trimmed.startsWith("total"))
+                continue;
+
+            // Typical format:
+            // drwxr-xr-x 2 root root 4096 2023-01-01 12:00 dir_name
+            // -rw-r--r-- 1 root root 1234 2023-01-01 12:00 file_name
+
+            QStringList parts = trimmed.split(QRegularExpression("\\s+"));
+            if(parts.length() < 7)
+                continue;
+
+            bool isDir = parts[0].startsWith("d") || parts[0].startsWith("l"); // handle links as dirs
+            if(!includeDirs && isDir)
+                continue;
+
+            QString perms = parts[0];
+            qint64 size = -1;
+            QString dateStr = "";
+            QString name = "";
+
+            // Try to figure out name and size based on typical ls -l output
+            int dateIndex = -1;
+            for(int i = 3; i < parts.length(); i++)
+            {
+                if(parts[i].contains("-") && parts[i].split("-").length() == 3)
+                {
+                    dateIndex = i;
+                    break;
+                }
+            }
+
+            if(dateIndex != -1)
+            {
+                if(dateIndex > 0)
+                    size = parts[dateIndex - 1].toLongLong();
+                dateStr = parts[dateIndex];
+                if(dateIndex + 1 < parts.length() && parts[dateIndex + 1].contains(":"))
+                {
+                    dateStr += " " + parts[dateIndex + 1];
+                    name = parts.mid(dateIndex + 2).join(" ");
+                }
+                else
+                {
+                    name = parts.mid(dateIndex + 1).join(" ");
+                }
+            }
+            else
+            {
+                // fallback
+                if(parts.length() > 6)
+                {
+                    size = parts[3].toLongLong();
+                    dateStr = parts[4] + " " + parts[5];
+                    name = parts.mid(6).join(" ");
+                }
+                else
+                {
+                    name = parts.last();
+                }
+            }
+
+            // Create JSON string
+            QString json = QString("{\"name\":\"%1\", \"isDir\":%2, \"size\":%3, \"date\":\"%4\", \"perms\":\"%5\"}").arg(name).arg(isDir ? "true" : "false").arg(size).arg(dateStr).arg(perms);
+
+            files.append(json);
+        }
+    }
+    return files;
+}
+
+QByteArray AdbFileIO::read(const QString &filePath)
+{
+    // Not implemented via shell. Needs adb pull or base64.
+    return QByteArray();
+}
+
+bool AdbFileIO::write(const QString &filePath, const QByteArray &buffer)
+{
+    // Not implemented via shell. Needs adb push.
+    return false;
+}
+
+bool AdbFileIO::push(const QString &localPath, const QString &remotePath)
+{
+    std::pair<bool, QString> res = adb_send_cmd(QStringList() << "-s" << m_deviceId << "push" << localPath << remotePath);
+    return res.first;
+}
+
+bool AdbFileIO::pull(const QString &remotePath, const QString &localPath)
+{
+    std::pair<bool, QString> res = adb_send_cmd(QStringList() << "-s" << m_deviceId << "pull" << remotePath << localPath);
+    return res.first;
 }

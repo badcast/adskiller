@@ -33,7 +33,7 @@ QString BuyVIPService::widgetIconName()
     return "white-transfer";
 }
 
-BuyVIPService::BuyVIPService(QObject *parent) : Service(DeviceConnectType::None, parent), network(nullptr), listVariants(nullptr), balanceText(nullptr), buyButton(nullptr), infoAfterPeriod(nullptr)
+BuyVIPService::BuyVIPService(QObject *parent) : Service(DeviceConnectType::None, parent), network(nullptr)
 {
     mind = -1;
     maxd = -1;
@@ -56,7 +56,7 @@ bool BuyVIPService::canStart()
 
 bool BuyVIPService::isStarted()
 {
-    return network != nullptr || listVariants != nullptr || balanceText != nullptr || buyButton != nullptr || infoAfterPeriod != nullptr;
+    return network != nullptr;
 }
 
 PageIndex BuyVIPService::targetPage()
@@ -73,14 +73,12 @@ bool BuyVIPService::start()
 {
     if(isStarted())
         return false;
-    MainWindow::current->accessUi_page_buyvip(listVariants, balanceText, infoAfterPeriod, buyButton);
-    network = new Network(MainWindow::current);
+
+    network = new Network(MainWindow::current->network);
     network->authedId = MainWindow::current->network.authedId;
-    balanceText->setText(QString(BalanceStrFormat).arg(network->authedId.credits));
+    setBalanceText(QString(BalanceStrFormat).arg(network->authedId.credits));
 
     QObject::connect(network, &Network::sPullServiceUUID, this, &BuyVIPService::service_uuid_responce);
-    QObject::connect(buyButton, &QPushButton::clicked, this, &BuyVIPService::click_buy_vip);
-    QObject::connect(listVariants, &QComboBox::currentIndexChanged, this, &BuyVIPService::variant_selected);
 
     network->pullServiceUUID(uuid(), QJsonObject {}, ServiceOperation::Get);
 
@@ -89,48 +87,46 @@ bool BuyVIPService::start()
 
 void BuyVIPService::stop()
 {
-    listVariants = nullptr;
-    balanceText = nullptr;
-    buyButton = nullptr;
-    infoAfterPeriod = nullptr;
     mPresets.clear();
     mind = -1;
     maxd = -1;
     dailyRate = 0;
+    setVariants(QStringList {});
 }
 
-void BuyVIPService::click_buy_vip()
+void BuyVIPService::buyVip(int index)
 {
     QString error_msg;
-    int i = listVariants->currentIndex();
 
-    if(i == -1 || i == 0)
+    if(index == -1 || index == 0)
         error_msg = "Выберите вариант из списка.";
-    else if(network->authedId.credits == 0 || network->authedId.credits < std::get<int>(mPresets[i - 1]) * dailyRate)
+    else if(network->authedId.credits == 0 || network->authedId.credits < std::get<int>(mPresets[index - 1]) * dailyRate)
         error_msg = "Недостаточна средств на вашем балансе, для начало пополните ее через Поддержка->связаться.";
+
     if(!error_msg.isEmpty())
     {
-        QMessageBox::warning(MainWindow::current, "Попытка покупки не удалась", error_msg);
+        // In QML, we can just set infoText or emit a signal. For now, since QML can't natively show QMessageBox directly from C++ without blocking,
+        // we can set infoText to error msg. But we will keep QMessageBox since QML supports native dialogs popping up from C++ just fine!
+        QMessageBox::warning(nullptr, "Попытка покупки не удалась", error_msg);
         return;
     }
 
     QJsonObject request;
-    request["days"] = std::get<int>(mPresets[i - 1]);
+    request["days"] = std::get<int>(mPresets[index - 1]);
 
     network->pullServiceUUID(uuid(), request, ServiceOperation::Set);
 }
 
-void BuyVIPService::variant_selected()
+void BuyVIPService::selectVariant(int index)
 {
     if(!isStarted())
         return;
-    buyButton->setEnabled(listVariants->currentIndex() > 0);
 
     QString message;
     if(!mPresets.isEmpty())
     {
-        if(listVariants->currentIndex() > 0)
-            message = QString("Стоимость вашей заявки будет %1").arg(dailyRate * (std::get<1>(mPresets[listVariants->currentIndex() - 1])));
+        if(index > 0)
+            message = QString("Стоимость вашей заявки будет %1").arg(dailyRate * (std::get<1>(mPresets[index - 1])));
         else
             message = "Выберите доступный вариант.";
     }
@@ -139,18 +135,17 @@ void BuyVIPService::variant_selected()
         message = "Нет вариантов для покупки.";
     }
 
-    infoAfterPeriod->setText(message);
+    setInfoText(message);
 }
 
 void BuyVIPService::service_uuid_responce(const QJsonObject responce, const QString uuid, ServiceOperation so, bool ok)
 {
-    listVariants->clear();
     mind = -1;
     maxd = -1;
     dailyRate = 0;
     if(!ok)
     {
-        int i = QMessageBox::warning(MainWindow::current, "Ошибка сети", "Обнаружена проблема с подключением к сети, что делать дальше, вам потребуется перезапустить данный сервис или выйти в личный кабинет.", "Выйти", "Перезапустить");
+        int i = QMessageBox::warning(nullptr, "Ошибка сети", "Обнаружена проблема с подключением к сети, что делать дальше, вам потребуется перезапустить данный сервис или выйти в личный кабинет.", "Выйти", "Перезапустить");
         if(i == 0)
         {
             close();
@@ -170,18 +165,20 @@ void BuyVIPService::service_uuid_responce(const QJsonObject responce, const QStr
 
         mPresets = dayPresetsFilter(mind, maxd);
 
-        listVariants->addItem("Выберите в списке");
+        QStringList varList;
+        varList << "Выберите в списке";
         for(int x = 0; x < mPresets.size(); ++x)
         {
-            listVariants->addItem(std::get<0>(mPresets[x]));
+            varList << std::get<0>(mPresets[x]);
         }
+        setVariants(varList);
     }
     else if(so == ServiceOperation::Set)
     {
         if(responce["subtracked"].toInt() > 0)
-            QMessageBox::information(MainWindow::current, "Уведомление", "VIP успешно куплен.");
+            QMessageBox::information(nullptr, "Уведомление", "VIP успешно куплен.");
         else
-            QMessageBox::warning(MainWindow::current, "Уведомление", "Ошибка транзакций.");
+            QMessageBox::warning(nullptr, "Уведомление", "Ошибка транзакций.");
         close();
     }
 }

@@ -133,9 +133,9 @@ public:
 
     Network(const Network &other);
     Network(QObject *parent = nullptr);
-    bool isAuthed();
-    bool pending();
-    bool checkNet();
+    bool isAuthed() const;
+    bool pending() const;
+    bool checkNet() const;
 
     void setTimeout(int value);
 

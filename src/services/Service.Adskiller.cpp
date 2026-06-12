@@ -39,6 +39,7 @@ struct PrivateKillerRes
     int lastNetStatus;
     std::shared_ptr<AdsInfo> adsdata;
     std::shared_ptr<LabStatusInfo> labInfo;
+    std::shared_ptr<AdbSysInfo> sysInfoCache;
 };
 
 QStringList outLogs;
@@ -120,7 +121,7 @@ QString AdsKillerService::widgetIconName()
     return "white-ads-remove";
 }
 
-AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr), _priv(new PrivateKillerRes)
+AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), _priv(new PrivateKillerRes)
 {
 }
 
@@ -136,7 +137,6 @@ AdsKillerService::~AdsKillerService()
 void AdsKillerService::setArgs(const AdbDevice &adbDevice)
 {
     Service::setArgs(adbDevice);
-    MainWindow::current->accessUi_page_longinfo(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
 }
 
 PageIndex AdsKillerService::targetPage()
@@ -146,7 +146,7 @@ PageIndex AdsKillerService::targetPage()
 
 bool AdsKillerService::canStart()
 {
-    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus && pushButtonReRun;
+    return Service::canStart();
 }
 
 bool AdsKillerService::isStarted()
@@ -163,23 +163,20 @@ bool AdsKillerService::start()
 {
     if(!canStart())
         return false;
-    pushButtonReRun->setEnabled(false);
 
-    QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
-    QStringList place = model->stringList();
+    setIsRunning(true);
+    setSuccessState(false);
+    _priv->sysInfoCache = nullptr;
+
     QString deviceName = QString("Выбранное устройство (%1)").arg(mAdbDevice.displayName);
 
-    cirlceMalwareStateReset();
+    setProgress(0);
+    setDeviceName(deviceName);
 
-    processBarStatus->setValue(0);
-    MainWindow::current->malwareProgressCircle->setInfinilyMode(true);
-    MainWindow::current->malwareProgressCircle->setValue(0);
-
-    deviceLabelName->setText(deviceName);
-
+    QStringList place;
     place << "<< Запуск процесса удаления рекламы, пожалуйста подождите >>";
     place << "<< Не отсоединяйте устройство от компьютера >>";
-    model->setStringList(place);
+    setLogs(place);
 
     MainWindow::current->delayUICall(
         500,
@@ -194,30 +191,37 @@ bool AdsKillerService::start()
                 this,
                 [this, deviceName, malwareUpdateTimer]()
                 {
-                    QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
-                    QString header;
-                    QStringList from;
-                    std::pair<QStringList, int> reads;
-                    header = adskiller_read_head();
-                    reads = adskiller_read_log();
+                    QString header = adskiller_read_head();
+                    std::pair<QStringList, int> reads = adskiller_read_log();
 
-                    malwareStatusText0->setText(header);
-                    processBarStatus->setValue(reads.second);
-                    MainWindow::current->malwareProgressCircle->setValue(reads.second);
+                    setStatusText(header);
+                    setProgress(reads.second);
+
+                    if(_priv->sysInfoCache)
+                    {
+                        if(sysOsVersion() != _priv->sysInfoCache->OSVersionString())
+                        {
+                            setSysOsVersion(_priv->sysInfoCache->OSVersionString());
+                            setSysStorage(_priv->sysInfoCache->StorageDesignString());
+                            setSysRam(_priv->sysInfoCache->RAMDesignString());
+                            setSysKernel(_priv->sysInfoCache->systemName + " " + _priv->sysInfoCache->machine);
+                            setSysModel(mAdbDevice.model);
+                            setSysVendor(mAdbDevice.vendor);
+                        }
+                    }
+
                     if(!reads.first.isEmpty())
                     {
-                        from = model->stringList();
-                        from.append(reads.first);
-                        model->setStringList(from);
-                        processLogStatus->scrollToBottom();
+                        QStringList currentLogs = logs();
+                        currentLogs.append(reads.first);
+                        setLogs(currentLogs);
                     }
                     if(status != MalwareStatus::Running)
                     {
-                        cirlceMalwareState(status != MalwareStatus::Error);
-                        MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
+                        setSuccessState(status != MalwareStatus::Error);
+                        setIsRunning(false);
                         malwareUpdateTimer->stop();
                         malwareUpdateTimer->deleteLater();
-                        pushButtonReRun->setEnabled(true);
                         adskiller_clean_cmd();
                     }
                     else if(mUserValue == 1000)
@@ -228,7 +232,7 @@ bool AdsKillerService::start()
                                           "станет %6 %7\nЖелаете продолжить?\n<!>";
                         int num0 = qMax<int>(0, static_cast<int>(data.credits) - static_cast<int>(data.basePrice));
                         buyText = buyText.arg(deviceName).arg(data.basePrice).arg(data.currencyType).arg(data.credits).arg(data.currencyType).arg(num0).arg(data.currencyType);
-                        num0 = QMessageBox::question(MainWindow::current, QString("Подтверждение покупки"), buyText, QMessageBox::StandardButton::Yes, QMessageBox::StandardButton::No);
+                        num0 = QMessageBox::question(nullptr, QString("Подтверждение покупки"), buyText, QMessageBox::StandardButton::Yes, QMessageBox::StandardButton::No);
                         adskiller_user_confirm(num0);
                     }
                 });
@@ -256,60 +260,7 @@ void AdsKillerService::stop()
 {
     if(isStarted())
         adskiller_kill_proc();
-    if(isFinish())
-        cirlceMalwareStateReset();
-    if(pushButtonReRun)
-        pushButtonReRun->setEnabled(true);
-}
-
-void AdsKillerService::cirlceMalwareState(bool success)
-{
-    MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
-
-    QPropertyAnimation *animation;
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
-    animation->setDuration(1500);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(0.8);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(0.0);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    QColor color = success ? QColor(155, 219, 58) : QColor(255, 100, 100);
-
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(color);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void AdsKillerService::cirlceMalwareStateReset()
-{
-    QPropertyAnimation *animation;
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
-    animation->setDuration(1500);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(1.0);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(0.6);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-
-    QColor color {110, 190, 235};
-
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
-    animation->setDuration(750);
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->setEndValue(color);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    setIsRunning(false);
 }
 
 template <typename InT, typename OutT>
@@ -477,6 +428,7 @@ void adskiller_awake(AdsKillerService *service)
                 }
                 adskiller_write_log_head(QString("Получение данных с устройства ") + device.displayName + "(" + device.devId + ")", 2);
                 sysInfo = AdbShell(device.devId).getInfo();
+                service->_priv->sysInfoCache = sysInfo;
                 adskiller_write_log(print_device_info());
                 WAITMODE;
 

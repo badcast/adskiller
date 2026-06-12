@@ -128,6 +128,11 @@ public:
     QByteArray read(const QString &filePath);
     bool deleteFile(const QString &filePath);
     QStringList getFiles(const QString &dirPath, bool includeDirs = true);
+    bool push(const QString &localPath, const QString &remotePath);
+    bool pull(const QString &remotePath, const QString &localPath);
+
+private:
+    QString m_deviceId;
 };
 
 class Adb : public QObject

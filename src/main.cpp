@@ -3,12 +3,12 @@
 #include <QDataStream>
 #include <QDir>
 #include <QFile>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QMessageBox>
-#include <QPixmap>
 #include <QSharedMemory>
-#include <QWidget>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QQuickStyle>
+#include <QSplashScreen>
+#include <QTimer>
 
 #include "begin.h"
 #include "mainwindow.h"
@@ -18,8 +18,6 @@ constexpr auto ShowCommandPipe = "adskiller_window_show";
 constexpr auto HideCommandPipe = "adskiller_window_hide";
 
 bool checkout();
-
-QWidget *createBanner();
 
 int main(int argc, char **argv)
 {
@@ -45,44 +43,63 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    MainWindow *w = nullptr;
+    QQmlApplicationEngine engine;
+    QQuickStyle::setStyle("Material");
 
-    QWidget *banner = createBanner();
-    banner->show();
+    MainWindow *w = new MainWindow();
+    w->app = &app;
+
+    qmlRegisterSingletonInstance("Adskiller", 1, 0, "AppController", w);
+
+    QPixmap pixmap(":/resources/banner");
+    QSplashScreen *splash = new QSplashScreen(pixmap);
+    splash->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::SplashScreen);
+    splash->setAttribute(Qt::WA_TranslucentBackground);
+    splash->show();
+
+    const QUrl url("qrc:/Adskiller/qml/main.qml");
+    QObject::connect(
+        &engine,
+        &QQmlApplicationEngine::objectCreated,
+        &app,
+        [url](QObject *obj, const QUrl &objUrl)
+        {
+            if(!obj && url == objUrl)
+                QCoreApplication::exit(-1);
+        },
+        Qt::QueuedConnection);
+
     QTimer::singleShot(
         3000,
-        [&]()
+        [&engine, url, splash]()
         {
-            banner->close();
-            delete banner;
-            banner = nullptr;
-            w = new MainWindow;
-            w->current = w;
-            w->app = &app;
-            w->delayUICallLoop(
-                100,
-                [&sharedMem, &w]() -> bool
-                {
-                    if(!sharedMem.lock())
-                        return true;
-                    QString cmd = QLatin1String(reinterpret_cast<const char *>(sharedMem.constData()));
-                    if(cmd == ShowCommandPipe)
-                    {
-                        w->showNormal();
-                    }
-                    if(cmd == HideCommandPipe)
-                    {
-                        w->hide();
-                    }
-                    memset(sharedMem.data(), 0, 1);
-                    sharedMem.unlock();
-                    return true;
-                });
-            w->show();
+            splash->close();
+            splash->deleteLater();
+            engine.load(url);
         });
+
+    w->delayUICallLoop(
+        100,
+        [&sharedMem, &w]() -> bool
+        {
+            if(!sharedMem.lock())
+                return true;
+            QString cmd = QLatin1String(reinterpret_cast<const char *>(sharedMem.constData()));
+            if(cmd == ShowCommandPipe)
+            {
+                // To do: Show window
+            }
+            if(cmd == HideCommandPipe)
+            {
+                // To do: Hide window
+            }
+            memset(sharedMem.data(), 0, 1);
+            sharedMem.unlock();
+            return true;
+        });
+
     exitCode = app.exec();
-    if(w != nullptr)
-        delete w;
+    delete w;
     sharedMem.detach();
     return exitCode;
 }
@@ -97,25 +114,4 @@ bool checkout()
         return false;
     }
     return true;
-}
-
-QWidget *createBanner()
-{
-    QWidget *banner = new QWidget;
-    banner->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
-    banner->setAttribute(Qt::WA_TranslucentBackground);
-    banner->setCursor(Qt::WaitCursor);
-    banner->resize(500, 478);
-    banner->setStyleSheet("background: transparent;");
-
-    QPixmap pixmap(":/resources/banner");
-    QLabel *lab = new QLabel(banner);
-    lab->setAttribute(Qt::WA_TranslucentBackground);
-    lab->setStyleSheet("background: transparent; border: none;");
-    lab->setPixmap(pixmap);
-
-    QHBoxLayout *layout = new QHBoxLayout(banner);
-    layout->addWidget(lab);
-    layout->setContentsMargins(0, 0, 0, 0);
-    return banner;
 }

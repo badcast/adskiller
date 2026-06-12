@@ -29,25 +29,15 @@ enum
     Fauth = 128
 };
 
-inline QString url_fetch()
+const QString &url_fetch()
 {
-    QString url;
-    url += URL_Remote;
-    url += '/';
-    url += URL_SupVer;
-    url += '/';
-    url += URL_Work;
+    static const QString url = QStringLiteral(NREMOTEADDR "/v2/callback");
     return url;
 }
 
-inline QString url_version()
+const QString &url_version()
 {
-    QString url;
-    url += URL_Remote;
-    url += '/';
-    url += URL_CDN;
-    url += '/';
-    url += URL_Version;
+    static const QString url = QStringLiteral(NREMOTEADDR "/cdn/version");
     return url;
 }
 
@@ -83,6 +73,12 @@ inline ServiceOperation so_destrify(const QString &so)
     return ServiceOperation::Invalid;
 }
 
+static QByteArray getCachedUserAgent()
+{
+    static QByteArray ua = QString("Adskiller/%1 application with Qt6").arg(APPVERSION).toUtf8();
+    return ua;
+}
+
 Network::Network(const Network &other) : manager(new QNetworkAccessManager()), _token(other._token), _lastBytes(0), _pending(0), forclyExit(false)
 {
     manager->setTransferTimeout(NetworkTimeoutDefault);
@@ -100,10 +96,11 @@ void Network::pushLoginPass(const QString &login, const QString &pass)
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     authedId = {}; // Clean last info
     _pending |= Fauth;
-
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, getCachedUserAgent());
 
     json["request"] = "TOKENVERIFY";
     json["login"] = login;
@@ -118,10 +115,12 @@ void Network::pushAuthToken()
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     if(!isAuthed())
         return;
     _pending |= Fauth;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, getCachedUserAgent());
     request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
 
     json["request"] = "TOKENVERIFY";
@@ -136,10 +135,12 @@ void Network::pullServiceList()
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     if(!isAuthed())
         return;
     _pending |= FpullServiceList;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, getCachedUserAgent());
     request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
 
     json["request"] = "LISTSERVICES";
@@ -154,10 +155,12 @@ void Network::pullServiceUUID(const QString &uuid, const QJsonObject &request, S
     QNetworkReply *reply;
     QUrl url(url_fetch());
     QNetworkRequest netRequest(url);
+    netRequest.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     if(!isAuthed())
         return;
     _pending |= FpullServiceUUID;
-    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    netRequest.setHeader(QNetworkRequest::UserAgentHeader, getCachedUserAgent());
     netRequest.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
 
     json["request"] = "SERVICEREQ";
@@ -174,7 +177,10 @@ void Network::pullFetchVersion(bool populate)
     QNetworkReply *reply;
     QUrl url(url_version());
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     _pending |= FpullFetchVersion;
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, getCachedUserAgent());
     if(populate)
     {
         json["currentClient"] = QString("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
@@ -183,7 +189,7 @@ void Network::pullFetchVersion(bool populate)
     QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
 }
 
-bool Network::checkNet()
+bool Network::checkNet() const
 {
     return _lastBytes <= 0;
 }
@@ -193,12 +199,12 @@ void Network::setTimeout(int value)
     manager->setTransferTimeout(value);
 }
 
-bool Network::isAuthed()
+bool Network::isAuthed() const
 {
     return !_token.isEmpty();
 }
 
-bool Network::pending()
+bool Network::pending() const
 {
     return _pending != 0;
 }
@@ -214,9 +220,8 @@ void Network::onAuthJWTFinished()
         {
             if(reply->error() == QNetworkReply::NoError)
             {
-                QByteArray responce = reply->readAll();
-                _lastBytes = responce.size();
-                QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
+                QJsonDocument jsonResp = QJsonDocument::fromJson(reply->readAll());
+                _lastBytes = 0; // Optimised out
                 status = NetworkStatus::ServerError;
 
                 if(jsonResp.isNull() || !jsonResp["status"].isDouble() || (status = jsonResp["status"].toInt()) != NetworkStatus::OK)
@@ -228,7 +233,7 @@ void Network::onAuthJWTFinished()
                 {
                     _token = jsonResp["token"].toString();
                 }
-                else
+                if(!jsonResp["username"].isUndefined())
                 {
                     authedId.idName = jsonResp["username"].toString();
                     authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
@@ -262,9 +267,8 @@ void Network::onFetchingVersion()
         {
             if(reply->error() == QNetworkReply::NoError)
             {
-                QByteArray resp = std::move(reply->readAll());
-                _lastBytes = resp.size();
-                QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+                QJsonDocument jsonResp = QJsonDocument::fromJson(reply->readAll());
+                _lastBytes = 0; // Optimised out
                 if(!jsonResp.isNull() && !jsonResp["version"].isNull() && !jsonResp["url"].isNull())
                 {
                     version = jsonResp["version"].toString();
@@ -290,12 +294,11 @@ void Network::onPullServiceList()
     {
         if(reply->error() == QNetworkReply::NoError)
         {
-            QByteArray resp = std::move(reply->readAll());
-            _lastBytes = resp.size();
-            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            QJsonDocument jsonResp = QJsonDocument::fromJson(reply->readAll());
+            _lastBytes = 0; // Optimised out
             if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && jsonResp["result"].isArray())
             {
-                std::function<ServiceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj) -> ServiceItemInfo
+                auto convertToObj = [](const QJsonObject &obj) -> ServiceItemInfo
                 {
                     ServiceItemInfo sii;
                     sii.uuid = obj["uuid"].toString();
@@ -309,6 +312,7 @@ void Network::onPullServiceList()
                 };
 
                 QJsonArray result = jsonResp["result"].toArray();
+                services.reserve(result.size());
                 for(auto iter = result.begin(); iter != result.end(); ++iter)
                 {
                     services << convertToObj(iter->toObject());
@@ -334,9 +338,8 @@ void Network::onPullServiceUUID()
     {
         if(reply->error() == QNetworkReply::NoError)
         {
-            QByteArray resp = std::move(reply->readAll());
-            _lastBytes = resp.size();
-            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            QJsonDocument jsonResp = QJsonDocument::fromJson(reply->readAll());
+            _lastBytes = 0; // Optimised out
             if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && !jsonResp["result"].isNull() && !jsonResp["guid"].isNull())
             {
                 guid = jsonResp["guid"].toString();

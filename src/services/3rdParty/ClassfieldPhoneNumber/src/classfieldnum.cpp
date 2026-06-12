@@ -125,27 +125,27 @@ std::string NumberPreview::format(int numberFormatFlag) const
     return result;
 }
 
-inline bool NumberPreview::isGenericNumber() const
+bool NumberPreview::isGenericNumber() const
 {
     return (_numerics & 0x8000000000000000) != 0 || _numerics <= 9999999999999ul && _numerics >= 10000000000ul;
 }
 
-inline bool NumberPreview::isEmpty() const
+bool NumberPreview::isEmpty() const
 {
     return _numerics == 0;
 }
 
-inline std::string NumberPreview::country() const
+std::string NumberPreview::country() const
 {
     return CountryCodeDB::country(_countryCode);
 }
 
-inline std::string NumberPreview::dialCode() const
+std::string NumberPreview::dialCode() const
 {
     return CountryCodeDB::dialcode(_countryCode);
 }
 
-inline int NumberPreview::countryCode() const
+int NumberPreview::countryCode() const
 {
     return _countryCode;
 }

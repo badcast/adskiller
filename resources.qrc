@@ -4,9 +4,7 @@
         <file alias="app-style-light">res/style/metro-blue.qss</file>
         <file alias="app-logo-merry">res/icon.png</file>
         <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
-        <file alias="icon-hello">res/icon-hello.png</file>
-        <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
-        <file alias="icon-authlogin">res/icon-authlogin.png</file>
+
         <file alias="icon-arrow-right">res/icon-arrow-right.png</file>
         <file alias="font-DigitalNumbers">res/fonts/font-DigitalNumbers/DigitalNumbers-Regular.ttf</file>
         <file alias="android-mobile-source">res/mobile-phone.png</file>
@@ -14,7 +12,7 @@
         <file alias="no-avatar">res/no-avatar.png</file>
         <file alias="snowflake-image">res/snowflake-image.png</file>
         <file alias="kz-flag">res/kz-flag.png</file>
-        <file alias="banner">res/banner-low.png</file>
+        <file alias="banner">res/banner-2.0beta.jpeg</file>
         <file alias="app-logo">res/icon_std.png</file>
     </qresource>
     <qresource prefix="/service-icons">

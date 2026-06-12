@@ -1,25 +1,32 @@
 #include "update_window.h"
-#include "ui_update_window.h"
+#include <QVBoxLayout>
 
-UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::update_window)
+UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent)
 {
-    ui->setupUi(this);
+    QWidget *centralWidget = new QWidget(this);
+    setCentralWidget(centralWidget);
+    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    label = new QLabel(this);
+    progressBarCurrent = new QProgressBar(this);
+    progressBarTotal = new QProgressBar(this);
+    layout->addWidget(label);
+    layout->addWidget(progressBarCurrent);
+    layout->addWidget(progressBarTotal);
 }
 
 UpdateWindow::~UpdateWindow()
 {
-    delete ui;
 }
 
 void UpdateWindow::setText(const QString &value)
 {
-    ui->label->setText(value);
+    label->setText(value);
 }
 
 void UpdateWindow::setProgress(int v1, int v2)
 {
-    ui->progressBarCurrent->setValue(v1);
-    ui->progressBarTotal->setValue(v2);
+    progressBarCurrent->setValue(v1);
+    progressBarTotal->setValue(v2);
 }
 
 void UpdateWindow::delayPush(int ms, std::function<void()> call, bool loop)

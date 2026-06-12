@@ -13,12 +13,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network Quick Qml QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Quick Qml QuickControls2)
 
 set(PROJECT_SOURCES
         ui/mainwindow.h
-        ui/mainwindow.ui
         ui/mainwindow.cpp
         ui/icontextbutton.cpp
         ui/icontextbutton.h
@@ -48,6 +47,22 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(application
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+    )
+    qt_add_qml_module(application
+        URI Adskiller
+        VERSION 1.0
+        QML_FILES
+            qml/main.qml
+            qml/pages/AuthPage.qml
+            qml/pages/CabinetPage.qml
+            qml/pages/LongInfoPage.qml
+            qml/pages/BuyVIPPage.qml
+            qml/pages/MyDevicesPage.qml
+            qml/pages/DevicesPage.qml
+            qml/pages/ContactFixerPage.qml
+            qml/pages/FileExplorerPage.qml
+            qml/components/GlassCard.qml
+            qml/components/CircularProgress.qml
     )
     qt_add_executable(update
         MANUAL_FINALIZATION
@@ -86,7 +101,7 @@ target_include_directories(application PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMA
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
 target_link_libraries(services PRIVATE adbfront widgets)
-target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services widgets)
+target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Qml Qt${QT_VERSION_MAJOR}::QuickControls2 adbfront services widgets)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.env")

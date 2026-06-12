@@ -3,13 +3,9 @@
 
 #include <QMainWindow>
 #include <QTimer>
-
-QT_BEGIN_NAMESPACE
-namespace Ui
-{
-    class update_window;
-}
-QT_END_NAMESPACE
+#include <QLabel>
+#include <QProgressBar>
+#include <functional>
 
 class UpdateWindow : public QMainWindow
 {
@@ -24,7 +20,9 @@ public:
     void delayPush(int ms, std::function<void()> call, bool loop = false);
 
 private:
-    Ui::update_window *ui;
+    QLabel *label;
+    QProgressBar *progressBarCurrent;
+    QProgressBar *progressBarTotal;
 };
 
 #endif // UPDATE_WINDOW_H
