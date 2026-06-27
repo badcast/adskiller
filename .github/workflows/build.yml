@@ -1,0 +1,72 @@
+name: Build Qt App
+
+on:
+  push:
+    branches: ["new_version_v2_beta"]
+  pull_request:
+    branches: ["new_version_v2_beta"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install OpenGL dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 x11-utils libx11-xcb-dev libxcb-glx0-dev
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.10.0'
+        modules: 'qtmultimedia'
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
+
+    - name: Build and Install
+      run: cmake --build build --config Release --target install -j 4
+
+    - name: Deploy Qt (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        windeployqt --release install_dir\bin\adskiller.exe
+
+    - name: Deploy Qt (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        # Copy multimedia plugins manually
+        QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
+        if [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
+          mkdir -p install_dir/lib/plugins/multimedia
+          cp -r "$QT_PLUGIN_PATH/multimedia/"* install_dir/lib/plugins/multimedia/
+        fi
+
+    - name: Deploy Qt (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        # Run macdeployqt on the shared library location
+        QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
+        APP_BUNDLE=$(find install_dir -name "*.app" -maxdepth 1 | head -1)
+        if [ -n "$APP_BUNDLE" ] && [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
+          mkdir -p "$APP_BUNDLE/Contents/PlugIns/multimedia"
+          cp -r "$QT_PLUGIN_PATH/multimedia/"* "$APP_BUNDLE/Contents/PlugIns/multimedia/"
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pixelblast-${{ runner.os }}
+        path: install_dir/
