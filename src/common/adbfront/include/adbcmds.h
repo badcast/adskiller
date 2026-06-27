@@ -1,8 +1,8 @@
 #pragma once
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 constexpr const char AdbFilename[] = "adb";
-#elif WIN32
+#elif defined(WIN32)
 constexpr const char AdbFilename[] = "adb.exe";
 #endif
 

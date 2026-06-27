@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
     if(!parser.isSet(dirOption))
     {
-        if(!m.exists(workDir + QDir::separator() + "adskiller.exe"))
+        if(!QFile::exists(workDir + QDir::separator() + "adskiller.exe"))
         {
             qDebug() << "Update manager require adskiller.exe";
             sharedMemory.detach();
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 
     if(parser.isSet(execOption))
     {
-        if(!m.exists(parser.value(execOption)))
+        if(!QFile::exists(parser.value(execOption)))
         {
             qDebug() << "Program file is not exists";
             sharedMemory.detach();

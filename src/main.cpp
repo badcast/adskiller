@@ -3,6 +3,7 @@
 #include <QDataStream>
 #include <QDir>
 #include <QFile>
+#include <QMessageBox>
 #include <QSharedMemory>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -24,7 +25,13 @@ int main(int argc, char **argv)
     int exitCode;
     QApplication app(argc, argv);
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
-    if(sharedMemUpdate.attach() || !checkout())
+    if(sharedMemUpdate.attach())
+    {
+        // Update process is running, exit
+        sharedMemUpdate.detach();
+        return EXIT_FAILURE;
+    }
+    if(!checkout())
     {
         return EXIT_FAILURE;
     }
@@ -106,11 +113,17 @@ int main(int argc, char **argv)
 
 bool checkout()
 {
-    QDir qdir;
     QString adbfile = AdbExecutableFilename();
-    if(!qdir.exists(adbfile))
+    if(!QFile::exists(adbfile))
     {
-        qDebug() << "Adb not found";
+        qDebug() << "Adb not found:" << adbfile;
+        QMessageBox::critical(
+            nullptr,
+            "Ошибка запуска",
+            QString(
+                "Не найден ADB файл:\n%1\n\nУбедитесь, что файл ADB "
+                "находится рядом с исполняемым файлом приложения.")
+                .arg(adbfile));
         return false;
     }
     return true;

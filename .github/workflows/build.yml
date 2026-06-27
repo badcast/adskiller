@@ -9,12 +9,20 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} (${{ matrix.compiler }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: windows-latest
+            compiler: msvc
+          - os: windows-latest
+            compiler: mingw
+          - os: macos-latest
+            compiler: clang
 
     steps:
     - name: Checkout Code
@@ -31,23 +39,65 @@ jobs:
       with:
         version: '6.10.0'
         modules: 'qtmultimedia'
+        arch: ${{ matrix.compiler == 'mingw' && 'win64_mingw' || '' }}
+        tools: ${{ matrix.compiler == 'mingw' && 'tools_mingw1310' || '' }}
 
-    - name: Configure CMake
+    - name: Setup MinGW PATH
+      if: matrix.compiler == 'mingw'
+      shell: pwsh
+      run: |
+        # Find the MinGW bin directory installed by install-qt-action
+        $mingwBin = Get-ChildItem -Path "$env:RUNNER_WORKSPACE" -Recurse -Filter "g++.exe" -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'mingw' } | Select-Object -First 1
+        if ($mingwBin) {
+          $binDir = $mingwBin.DirectoryName
+          Write-Host "Found MinGW at: $binDir"
+          echo "$binDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        } else {
+          Write-Host "WARNING: MinGW g++.exe not found, trying default IQTA path"
+          # Default path pattern for install-qt-action tools
+          $defaultPath = "$env:IQTA_TOOLS/mingw1310_64/bin"
+          if (Test-Path $defaultPath) {
+            echo "$defaultPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          } else {
+            Write-Error "MinGW toolchain not found!"
+            exit 1
+          }
+        }
+
+    - name: Configure CMake (MinGW)
+      if: matrix.compiler == 'mingw'
+      run: cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
+
+    - name: Configure CMake (MSVC)
+      if: matrix.compiler == 'msvc'
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
 
-    - name: Build and Install
-      run: cmake --build build --config Release --target install -j 4
+    - name: Configure CMake (Unix)
+      if: runner.os != 'Windows'
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
+
+    - name: Build and Install (MinGW)
+      if: matrix.compiler == 'mingw'
+      run: cmake --build build --target install -j
+
+    - name: Build and Install (MSVC)
+      if: matrix.compiler == 'msvc'
+      run: cmake --build build --config Release --target install -j
+
+    - name: Build and Install (Unix)
+      if: runner.os != 'Windows'
+      run: cmake --build build --config Release --target install -j
 
     - name: Deploy Qt (Windows)
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        windeployqt --release install_dir\bin\adskiller.exe
+        windeployqt --release --compiler-runtime install_dir\bin\adskiller.exe
+        windeployqt --release --compiler-runtime install_dir\bin\update.exe
 
     - name: Deploy Qt (Linux)
       if: runner.os == 'Linux'
       run: |
-        # Copy multimedia plugins manually
         QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
         if [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
           mkdir -p install_dir/lib/plugins/multimedia
@@ -57,7 +107,6 @@ jobs:
     - name: Deploy Qt (macOS)
       if: runner.os == 'macOS'
       run: |
-        # Run macdeployqt on the shared library location
         QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
         APP_BUNDLE=$(find install_dir -name "*.app" -maxdepth 1 | head -1)
         if [ -n "$APP_BUNDLE" ] && [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
@@ -68,5 +117,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: pixelblast-${{ runner.os }}
+        name: adskiller-${{ runner.os }}-${{ matrix.compiler }}
         path: install_dir/

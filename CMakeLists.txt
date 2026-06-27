@@ -39,11 +39,19 @@ file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT
 
 if(WIN32)
     file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")
+    # Also copy adb to multi-config output dirs (e.g. Release/, Debug/) for MSVC
+    file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}/Release")
+    file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}/Debug")
     set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/adskiller.rc")
     set(UPDATE_SOURCES ${UPDATE_SOURCES} "${CMAKE_SOURCE_DIR}/update.rc")
 endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    # Redirect QML module output to avoid name collision with the executable
+    # on case-insensitive filesystems (macOS/Windows): URI "Adskiller" directory
+    # would clash with OUTPUT_NAME "adskiller"
+    set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml")
+
     qt_add_executable(application
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
@@ -51,6 +59,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_qml_module(application
         URI Adskiller
         VERSION 1.0
+        RESOURCE_PREFIX /
         QML_FILES
             qml/main.qml
             qml/pages/AuthPage.qml
@@ -116,11 +125,15 @@ if(WIN32)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS application
+install(TARGETS application update
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+if(WIN32)
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 qt_finalize_executable(application)
 qt_finalize_executable(update)
