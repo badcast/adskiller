@@ -92,7 +92,7 @@ jobs:
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        windeployqt --release --compiler-runtime install_dir\bin\adskiller.exe
+        windeployqt --release --compiler-runtime --qmldir qml install_dir\bin\adskiller.exe
         windeployqt --release --compiler-runtime install_dir\bin\update.exe
 
     - name: Deploy Qt (Linux)

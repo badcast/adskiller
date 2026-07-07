@@ -15,6 +15,7 @@
 #include <QTableView>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QIcon>
 
 #include "Services.h"
 #include "adbfront.h"
@@ -104,7 +105,7 @@ public:
     }
     QIcon windowIcon() const
     {
-        return QIcon();
+        return QIcon(":/resources/app-logo");
     }
 
     struct

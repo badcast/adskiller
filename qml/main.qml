@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Controls.Material
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import Adskiller 1.0
 

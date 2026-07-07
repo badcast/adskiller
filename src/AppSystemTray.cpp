@@ -5,10 +5,10 @@
 #include "AppSystemTray.h"
 #include "mainwindow.h"
 
-AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
+AdsAppSystemTray::AdsAppSystemTray(MainWindow *parent) : QSystemTrayIcon(parent)
 {
-    QMenu *menu = new QMenu(parent);
-    MainWindow *mainWindow = qobject_cast<MainWindow *>(parent);
+    QMenu *menu = new QMenu();
+    MainWindow *mainWindow = parent;
     if(mainWindow == nullptr)
     {
         qDebug() << "Require parent as MainWindow instance";

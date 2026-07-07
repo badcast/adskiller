@@ -2,12 +2,13 @@
 
 #include <QMenu>
 #include <QSystemTrayIcon>
-#include <QWidget>
+
+class MainWindow;
 
 class AdsAppSystemTray : public QSystemTrayIcon
 {
     Q_OBJECT
 
 public:
-    AdsAppSystemTray(QWidget *parent = nullptr);
+    AdsAppSystemTray(MainWindow *parent = nullptr);
 };

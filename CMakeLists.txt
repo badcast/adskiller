@@ -1,4 +1,4 @@
- cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20)
 
 # READ VERSION
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt" APPVERSION)
@@ -72,6 +72,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             qml/pages/FileExplorerPage.qml
             qml/components/GlassCard.qml
             qml/components/CircularProgress.qml
+        DEPENDENCIES
+            QtQuick
+            QtQuick.Controls
+            QtQuick.Layouts
     )
     qt_add_executable(update
         MANUAL_FINALIZATION
@@ -133,6 +137,21 @@ install(TARGETS application update
 
 if(WIN32)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Run windeployqt after build to copy all required Qt QML modules, plugins,
+# and DLLs next to the executable. This makes the build self-contained.
+if(WIN32)
+    get_filename_component(_qt_prefix_path "${Qt6_DIR}/../../.." ABSOLUTE)
+    set(_windeployqt "${_qt_prefix_path}/bin/windeployqt.exe")
+    add_custom_command(TARGET application POST_BUILD
+        COMMAND "${_windeployqt}"
+            --no-translations
+            --no-compiler-runtime
+            --qmldir "${CMAKE_SOURCE_DIR}/qml"
+            "$<TARGET_FILE:application>"
+        COMMENT "Running windeployqt to deploy QML modules..."
+    )
 endif()
 
 qt_finalize_executable(application)

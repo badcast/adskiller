@@ -3,10 +3,12 @@
 #include <QDataStream>
 #include <QDir>
 #include <QFile>
+#include <QLibraryInfo>
 #include <QMessageBox>
 #include <QSharedMemory>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlError>
 #include <QQuickStyle>
 #include <QSplashScreen>
 #include <QTimer>
@@ -22,6 +24,13 @@ bool checkout();
 
 int main(int argc, char **argv)
 {
+    // Force single-threaded render loop and OpenGL backend for Wine compatibility.
+    // The default threaded D3D11 pipeline can break input event delivery under Wine.
+    if(!qEnvironmentVariableIsSet("QSG_RENDER_LOOP"))
+        qputenv("QSG_RENDER_LOOP", "basic");
+    if(!qEnvironmentVariableIsSet("QSG_RHI_BACKEND"))
+        qputenv("QSG_RHI_BACKEND", "opengl");
+
     int exitCode;
     QApplication app(argc, argv);
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
@@ -51,6 +60,18 @@ int main(int argc, char **argv)
     }
 
     QQmlApplicationEngine engine;
+
+    // Explicitly add Qt's QML imports path so the engine can find
+    // QtQuick.Controls and other standard modules at runtime
+    QString qtQmlPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+    engine.addImportPath(qtQmlPath);
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+
+    // Diagnostic: print where the QML engine is searching for modules
+    qDebug() << "Qt prefix:" << QLibraryInfo::path(QLibraryInfo::PrefixPath);
+    qDebug() << "Qt QML imports path:" << qtQmlPath;
+    qDebug() << "QML engine import paths:" << engine.importPathList();
+
     QQuickStyle::setStyle("Material");
 
     MainWindow *w = new MainWindow();
@@ -65,14 +86,32 @@ int main(int argc, char **argv)
     splash->show();
 
     const QUrl url("qrc:/Adskiller/qml/main.qml");
+
+    // Collect QML engine warnings for error reporting
+    QStringList qmlWarnings;
+    QObject::connect(&engine, &QQmlApplicationEngine::warnings, [&qmlWarnings](const QList<QQmlError> &warnings) {
+        for(const auto &w : warnings)
+            qmlWarnings << w.toString();
+    });
+
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreated,
         &app,
-        [url](QObject *obj, const QUrl &objUrl)
+        [url, &qmlWarnings](QObject *obj, const QUrl &objUrl)
         {
             if(!obj && url == objUrl)
+            {
+                QString errorDetail = qmlWarnings.isEmpty()
+                    ? "Неизвестная ошибка загрузки QML."
+                    : qmlWarnings.join("\n");
+                qCritical() << "QML load failed:" << errorDetail;
+                QMessageBox::critical(
+                    nullptr,
+                    "Ошибка загрузки интерфейса",
+                    QString("Не удалось загрузить QML интерфейс:\n\n%1").arg(errorDetail));
                 QCoreApplication::exit(-1);
+            }
         },
         Qt::QueuedConnection);
 

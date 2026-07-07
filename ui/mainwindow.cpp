@@ -78,7 +78,7 @@ MainWindow::MainWindow(QObject *parent) : QObject(parent), timerAuthAnim(nullptr
         });
     networkPollTimer->start(100);
 
-    tray = new AdsAppSystemTray(nullptr);
+    tray = new AdsAppSystemTray(this);
 }
 
 MainWindow::~MainWindow()

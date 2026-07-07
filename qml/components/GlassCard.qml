@@ -8,7 +8,7 @@ Rectangle {
     border.color: "#33FFFFFF"
     border.width: 1
 
-    property alias content: container.children
+    default property alias content: container.children
 
     Item {
         id: container
