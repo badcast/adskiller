@@ -62,6 +62,10 @@ class MainWindow : public QObject
     Q_PROPERTY(QObject *activeService READ activeService NOTIFY activeServiceChanged)
     Q_PROPERTY(QString savedLogin READ savedLogin CONSTANT)
     Q_PROPERTY(QString savedPassword READ savedPassword CONSTANT)
+    Q_PROPERTY(QString textColor READ textColor CONSTANT)
+    Q_PROPERTY(QString textSecondary READ textSecondary CONSTANT)
+    Q_PROPERTY(QString cardColor READ cardColor CONSTANT)
+    Q_PROPERTY(bool explicitLogout READ explicitLogout WRITE setExplicitLogout NOTIFY explicitLogoutChanged)
 
 public:
     explicit MainWindow(QObject *parent = nullptr);
@@ -83,6 +87,7 @@ public:
 
     void updateCabinet();
     Q_INVOKABLE void logoutSystem();
+    Q_INVOKABLE void refreshServices();
     void showMessageFromStatus(int statusCode);
 
     // Dummy methods for AppSystemTray
@@ -188,6 +193,30 @@ public:
     {
         return m_savedPassword;
     }
+    QString textColor() const
+    {
+        return QStringLiteral("#FFFFFF");
+    }
+    QString textSecondary() const
+    {
+        return QStringLiteral("#B0BEC5");
+    }
+    QString cardColor() const
+    {
+        return QStringLiteral("#40000000");
+    }
+    bool explicitLogout() const
+    {
+        return m_explicitLogout;
+    }
+    void setExplicitLogout(bool value)
+    {
+        if(m_explicitLogout != value)
+        {
+            m_explicitLogout = value;
+            emit explicitLogoutChanged();
+        }
+    }
 
     // Dummy widgets to satisfy services during migration
     ProgressCircle *malwareProgressCircle;
@@ -246,6 +275,7 @@ signals:
     void openServicePage(const QString &pageName);
     void activeServiceChanged();
     void networkPendingChanged();
+    void explicitLogoutChanged();
 public slots:
     Q_INVOKABLE void openSupport();
     Q_INVOKABLE void openAbout();
@@ -259,6 +289,7 @@ private:
     QString m_statusAuthText;
     QString m_savedLogin;
     QString m_savedPassword;
+    bool m_explicitLogout = false;
     int verChansesAvailable = 3;
     QTimer *versionChecker;
     PageIndex curPage = AuthPage;

@@ -75,6 +75,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         DEPENDENCIES
             QtQuick
             QtQuick.Controls
+            QtQuick.Controls.Material
+            QtQuick.Dialogs
             QtQuick.Layouts
     )
     qt_add_executable(update
@@ -146,13 +148,15 @@ if(WIN32)
     set(_windeployqt "${_qt_prefix_path}/bin/windeployqt.exe")
     add_custom_command(TARGET application POST_BUILD
         COMMAND "${_windeployqt}"
+            --force
             --no-translations
-            --no-compiler-runtime
             --qmldir "${CMAKE_SOURCE_DIR}/qml"
+            --qmldir "${CMAKE_BINARY_DIR}/qml"
             "$<TARGET_FILE:application>"
-        COMMENT "Running windeployqt to deploy QML modules..."
+        COMMENT "Running windeployqt to deploy QML modules and MinGW runtime..."
     )
 endif()
 
+qt_import_qml_plugins(application)
 qt_finalize_executable(application)
 qt_finalize_executable(update)

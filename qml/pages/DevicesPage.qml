@@ -23,7 +23,7 @@ Item {
                 text: "Выберите устройство"
                 font.pixelSize: 24
                 font.bold: true
-                color: window.textColor
+                color: AppController.textColor
                 Layout.fillWidth: true
             }
 
@@ -116,7 +116,7 @@ Item {
             delegate: Rectangle {
                 width: listView.width
                 height: 100
-                color: window.cardColor
+                color: AppController.cardColor
                 radius: 12
                 border.color: hoverArea.containsMouse ? Material.accent : "#333333"
                 border.width: hoverArea.containsMouse ? 2 : 1
@@ -143,12 +143,12 @@ Item {
                             text: modelData.displayName !== "" ? modelData.displayName : (modelData.vendor + " " + modelData.model)
                             font.pixelSize: 18
                             font.bold: true
-                            color: window.textColor
+                            color: AppController.textColor
                         }
                         Label {
                             text: "ID: " + modelData.devId
                             font.pixelSize: 14
-                            color: window.textSecondary
+                            color: AppController.textSecondary
                         }
                     }
 
@@ -216,7 +216,7 @@ Item {
             Label {
                 text: "Пожалуйста, подключите устройство по USB\nи убедитесь, что отладка по USB включена."
                 font.pixelSize: 16
-                color: window.textSecondary
+                color: AppController.textSecondary
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
             }

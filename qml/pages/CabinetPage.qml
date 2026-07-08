@@ -3,7 +3,6 @@ import QtQuick.Controls.Material
 import QtQuick.Controls
 import QtQuick.Layouts
 import Adskiller 1.0
-import "../components"
 
 Item {
     id: root
@@ -231,7 +230,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                                window.explicitLogout = true;
+                                AppController.explicitLogout = true;
                                 AppController.logoutSystem();
                             }
                         }

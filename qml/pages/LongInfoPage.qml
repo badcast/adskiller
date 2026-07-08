@@ -3,7 +3,6 @@ import QtQuick.Controls.Material
 import QtQuick.Controls
 import QtQuick.Layouts
 import Adskiller 1.0
-import "../components"
 
 Item {
     id: root

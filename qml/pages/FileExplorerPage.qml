@@ -4,7 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import Adskiller 1.0
-import "../components"
 import QtCore
 
 Item {

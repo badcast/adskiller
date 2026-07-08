@@ -3,7 +3,6 @@ import QtQuick.Controls.Material
 import QtQuick.Controls
 import QtQuick.Layouts
 import Adskiller 1.0
-import "../components"
 
 Item {
     id: root
@@ -13,10 +12,10 @@ Item {
             loginField.text = AppController.savedLogin || "";
             passwordField.text = AppController.savedPassword || "";
             if (loginField.text !== "" && passwordField.text !== "") {
-                if (!window.explicitLogout) {
+                if (!AppController.explicitLogout) {
                     loginButton.clicked();
                 } else {
-                    window.explicitLogout = false;
+                    AppController.explicitLogout = false;
                 }
             }
         }

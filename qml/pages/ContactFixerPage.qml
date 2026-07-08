@@ -66,7 +66,7 @@ Item {
                 text: "Массовое исправление VCard"
                 font.pixelSize: 24
                 font.bold: true
-                color: window.textColor
+                color: AppController.textColor
             }
 
             RowLayout {
@@ -91,7 +91,7 @@ Item {
 
             Label {
                 text: "Загружено контактов: " + loadedContacts.length
-                color: window.textSecondary
+                color: AppController.textSecondary
                 visible: loadedContacts.length > 0
             }
 
@@ -142,7 +142,7 @@ Item {
                         text: "Анализатор номера"
                         font.pixelSize: 20
                         font.bold: true
-                        color: window.textColor
+                        color: AppController.textColor
                     }
 
                     TextField {
@@ -173,31 +173,31 @@ Item {
                         Label {
                             text: "Результат:"
                             font.bold: true
-                            color: window.textSecondary
+                            color: AppController.textSecondary
                             visible: resultView.currentData !== null
                         }
 
                         Label {
                             text: resultView.currentData ? "Страна: " + resultView.currentData.country + " (+" + resultView.currentData.dialCode + ")" : ""
-                            color: window.textColor
+                            color: AppController.textColor
                             visible: resultView.currentData !== null && !resultView.currentData.isEmpty
                         }
 
                         Label {
                             text: resultView.currentData ? "Международный: " + resultView.currentData.beautyGlobal : ""
-                            color: window.textColor
+                            color: AppController.textColor
                             visible: resultView.currentData !== null && !resultView.currentData.isEmpty
                         }
 
                         Label {
                             text: resultView.currentData ? "Локальный: " + resultView.currentData.beautyLocal : ""
-                            color: window.textColor
+                            color: AppController.textColor
                             visible: resultView.currentData !== null && !resultView.currentData.isEmpty
                         }
                         
                         Label {
                             text: resultView.currentData ? "Компактный: " + resultView.currentData.compactGlobal : ""
-                            color: window.textColor
+                            color: AppController.textColor
                             visible: resultView.currentData !== null && !resultView.currentData.isEmpty
                         }
 

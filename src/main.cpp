@@ -13,6 +13,10 @@
 #include <QSplashScreen>
 #include <QTimer>
 
+#ifdef Q_OS_WIN
+#include <QProcessEnvironment>
+#endif
+
 #include "begin.h"
 #include "mainwindow.h"
 #include "network.h"
@@ -30,6 +34,8 @@ int main(int argc, char **argv)
         qputenv("QSG_RENDER_LOOP", "basic");
     if(!qEnvironmentVariableIsSet("QSG_RHI_BACKEND"))
         qputenv("QSG_RHI_BACKEND", "opengl");
+
+    QQuickStyle::setStyle("Material");
 
     int exitCode;
     QApplication app(argc, argv);
@@ -59,20 +65,30 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    const QString appDir = QCoreApplication::applicationDirPath();
+    QCoreApplication::addLibraryPath(appDir);
+#ifdef Q_OS_WIN
+    // QML style plugins live in ./qml/... but depend on Qt DLLs next to the exe.
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("PATH"), QDir::toNativeSeparators(appDir) + QLatin1Char(';') + env.value(QStringLiteral("PATH")));
+    qputenv("PATH", env.value(QStringLiteral("PATH")).toUtf8());
+#endif
+
     QQmlApplicationEngine engine;
 
     // Explicitly add Qt's QML imports path so the engine can find
     // QtQuick.Controls and other standard modules at runtime
     QString qtQmlPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
-    engine.addImportPath(qtQmlPath);
-    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+    if(QDir::isAbsolutePath(qtQmlPath))
+        engine.addImportPath(qtQmlPath);
+    else
+        engine.addImportPath(appDir + QLatin1Char('/') + qtQmlPath);
+    engine.addImportPath(appDir + QStringLiteral("/qml"));
 
     // Diagnostic: print where the QML engine is searching for modules
     qDebug() << "Qt prefix:" << QLibraryInfo::path(QLibraryInfo::PrefixPath);
     qDebug() << "Qt QML imports path:" << qtQmlPath;
     qDebug() << "QML engine import paths:" << engine.importPathList();
-
-    QQuickStyle::setStyle("Material");
 
     MainWindow *w = new MainWindow();
     w->app = &app;
@@ -85,7 +101,7 @@ int main(int argc, char **argv)
     splash->setAttribute(Qt::WA_TranslucentBackground);
     splash->show();
 
-    const QUrl url("qrc:/Adskiller/qml/main.qml");
+    const QUrl url(QStringLiteral("qrc:/Adskiller/qml/main.qml"));
 
     // Collect QML engine warnings for error reporting
     QStringList qmlWarnings;

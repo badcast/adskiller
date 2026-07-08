@@ -23,7 +23,6 @@ ApplicationWindow {
     property color textColor: "#FFFFFF"
     property color textSecondary: "#B0BEC5"
     property color cardBorderColor: "#33FFFFFF"
-    property bool explicitLogout: false
     
     function showToast(message) {
         toastPopup.text = message;

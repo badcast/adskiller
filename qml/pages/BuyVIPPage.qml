@@ -17,14 +17,14 @@ Item {
             text: "Покупка VIP Статуса"
             font.pixelSize: 24
             font.bold: true
-            color: window.textColor
+            color: AppController.textColor
             Layout.alignment: Qt.AlignHCenter
         }
 
         Rectangle {
             Layout.preferredWidth: 400
             Layout.preferredHeight: 300
-            color: window.cardColor
+            color: AppController.cardColor
             radius: 12
             border.color: "#333333"
             border.width: 1
@@ -57,7 +57,7 @@ Item {
                 Label {
                     text: service ? service.infoText : "Выберите доступный вариант."
                     font.pixelSize: 14
-                    color: window.textSecondary
+                    color: AppController.textSecondary
                     Layout.alignment: Qt.AlignHCenter
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap

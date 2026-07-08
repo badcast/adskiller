@@ -194,6 +194,12 @@ void MainWindow::updateCabinet()
     emit authInfoChanged();
 }
 
+void MainWindow::refreshServices()
+{
+    if(network.isAuthed())
+        network.pullServiceList();
+}
+
 void MainWindow::logoutSystem()
 {
     network.forclyExit = true;
