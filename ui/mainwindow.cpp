@@ -1,7 +1,16 @@
 #include "mainwindow.h"
+#include <QDesktopServices>
 #include <QEventLoop>
 #include <QTimer>
 #include <QMessageBox>
+#include <QVersionNumber>
+#ifdef WIN32
+#include <QDir>
+#include <QProcess>
+#include <QTemporaryDir>
+#endif
+
+#include "Strings.h"
 
 MainWindow *MainWindow::current = nullptr;
 
@@ -28,6 +37,8 @@ MainWindow::MainWindow(QObject *parent) : QObject(parent), timerAuthAnim(nullptr
 {
     current = this;
     AppSetting::load();
+
+    runtimeVersion = VersionInfo(QString("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch), QString(), static_cast<int>(NetworkStatus::OK));
 
     malwareProgressCircle = new ProgressCircle();
     loaderProgressCircle = new ProgressCircle();
@@ -83,14 +94,13 @@ MainWindow::MainWindow(QObject *parent) : QObject(parent), timerAuthAnim(nullptr
 
 MainWindow::~MainWindow()
 {
+    if (tray) {
+        tray->hide();
+    }
     ServiceProvider::closeService();
     Adb::killServer();
     AppSetting::save();
 }
-
-#include <QDesktopServices>
-#include <QMessageBox>
-#include "Strings.h"
 
 void MainWindow::openSupport()
 {
@@ -177,7 +187,62 @@ void MainWindow::slotAuthFinish(int status, bool ok)
 
 void MainWindow::slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
 {
-    // simplified
+    VersionInfo fetchedVersion = {{}, {}, status};
+    if(status == NetworkStatus::NetworkError)
+    {
+        this->actualVersion = fetchedVersion;
+        if(m_updateCheckActive)
+        {
+            setUpdateCheckStatus("Проблема с интернетом?");
+            QTimer::singleShot(2000, this, [this]() {
+                setUpdateCheckActive(false);
+            });
+        }
+        else if (verChansesAvailable > -1)
+        {
+            if(verChansesAvailable == 0)
+            {
+                verChansesAvailable = -1;
+                willTerminate();
+                versionChecker->stop();
+            }
+            else
+            {
+                emit networkWarning(verChansesAvailable);
+                verChansesAvailable = qMax<int>(verChansesAvailable - 1, 0);
+                versionChecker->start();
+            }
+        }
+        return;
+    }
+
+    fetchedVersion = {version, url, status};
+    this->actualVersion = fetchedVersion;
+
+    if(runtimeVersion.mVersion >= actualVersion.mVersion)
+    {
+        verChansesAvailable = ChansesRunInvalid;
+        if(m_updateCheckActive)
+        {
+            setUpdateCheckStatus("Ваша версия актуальная!");
+            QTimer::singleShot(2000, this, [this]() {
+                setUpdateCheckActive(false);
+                versionChecker->start();
+            });
+        }
+        else
+        {
+            versionChecker->start();
+        }
+        return;
+    }
+
+    // New version available
+    if(m_updateCheckActive)
+    {
+        setUpdateCheckActive(false);
+    }
+    emit updateAvailable(actualVersion.mVersion.toString(), actualVersion.mDownloadUrl);
 }
 
 void MainWindow::slotPullServiceList(const QList<ServiceItemInfo> &servicesList, bool ok)
@@ -198,6 +263,11 @@ void MainWindow::refreshServices()
 {
     if(network.isAuthed())
         network.pullServiceList();
+}
+
+void MainWindow::startVersionCheck()
+{
+    checkVersion(true);
 }
 
 void MainWindow::logoutSystem()
@@ -223,12 +293,23 @@ void MainWindow::showMessageFromStatus(int statusCode)
 
 void MainWindow::checkVersion(bool firstRun)
 {
-    //
+    network.pullFetchVersion(firstRun);
+
+    if(firstRun)
+    {
+        setUpdateCheckStatus("Проверка обновления...");
+        setUpdateCheckActive(true);
+    }
+    else if(verChansesAvailable > -1)
+    {
+        // Background version check — handle via slotFetchVersionFinish
+    }
 }
 
 void MainWindow::willTerminate()
 {
-    //
+    emit forceCloseApp();
+    QApplication::quit();
 }
 
 void MainWindow::showPageLoader(PageIndex pageNum, int msWait, QString text)
@@ -387,4 +468,99 @@ void MainWindow::closeService()
 {
     ServiceProvider::closeService();
     emit activeServiceChanged();
+}
+
+void MainWindow::setUpdateCheckStatus(const QString &status)
+{
+    if(m_updateCheckStatus != status)
+    {
+        m_updateCheckStatus = status;
+        emit updateCheckStatusChanged();
+    }
+}
+
+void MainWindow::setUpdateCheckActive(bool active)
+{
+    if(m_updateCheckActive != active)
+    {
+        m_updateCheckActive = active;
+        emit updateCheckActiveChanged();
+    }
+}
+
+QWindow *MainWindow::findMainWindow() const
+{
+    const auto windows = QGuiApplication::topLevelWindows();
+    for(QWindow *w : windows)
+    {
+        if(w && w->isVisible())
+            return w;
+    }
+    // Return first window even if not visible
+    if(!windows.isEmpty())
+        return windows.first();
+    return nullptr;
+}
+
+bool MainWindow::isHidden() const
+{
+    QWindow *w = findMainWindow();
+    return w ? !w->isVisible() : true;
+}
+
+void MainWindow::show()
+{
+    QWindow *w = findMainWindow();
+    if(w)
+    {
+        w->show();
+        w->raise();
+        w->requestActivate();
+    }
+}
+
+void MainWindow::hide()
+{
+    QWindow *w = findMainWindow();
+    if(w)
+    {
+        w->hide();
+    }
+}
+
+void MainWindow::startUpdate(const QString &url)
+{
+#ifdef WIN32
+    QTemporaryDir tempdir;
+    tempdir.setAutoRemove(false);
+    QDir appDir(QCoreApplication::applicationDirPath());
+    QStringList entries = appDir.entryList(QStringList() << "*.dll" << UpdateManagerExecute, QDir::Files);
+    for(const QString &e : entries)
+    {
+        QFile::copy(appDir.filePath(e), tempdir.filePath(e));
+    }
+    auto copyDir = [&](const QString &dirName) {
+        QDir().mkpath(tempdir.filePath(dirName));
+        QDir sourceDir(appDir.filePath(dirName));
+        if (!sourceDir.exists()) return;
+        for(const QString &file : sourceDir.entryList(QStringList() << "*.dll", QDir::Files))
+        {
+            QFile::copy(sourceDir.filePath(file), tempdir.filePath(dirName + "/" + file));
+        }
+    };
+    
+    copyDir("platforms");
+    copyDir("networkinformation");
+    copyDir("tls");
+    copyDir("styles");
+    copyDir("imageformats");
+
+    if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
+    {
+        QApplication::quit();
+        return;
+    }
+#endif
+    QDesktopServices::openUrl(QUrl(url));
+    QApplication::quit();
 }

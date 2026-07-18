@@ -23,6 +23,14 @@ ApplicationWindow {
     property color textColor: "#FFFFFF"
     property color textSecondary: "#B0BEC5"
     property color cardBorderColor: "#33FFFFFF"
+
+    Component.onCompleted: {
+        AppController.startVersionCheck()
+    }
+    
+    onClosing: {
+        Qt.quit()
+    }
     
     function showToast(message) {
         toastPopup.text = message;
@@ -155,6 +163,201 @@ ApplicationWindow {
         }
         function onOpenServicePage(pageName) {
             stackView.push("pages/" + pageName + ".qml")
+        }
+        function onUpdateAvailable(version, url) {
+            updateAvailableDialog.newVersion = version
+            updateAvailableDialog.downloadUrl = url
+            updateAvailableDialog.countdown = 5
+            updateAvailableDialog.open()
+        }
+        function onNetworkWarning(attemptsLeft) {
+            networkWarningDialog.attempts = attemptsLeft
+            networkWarningDialog.open()
+        }
+        function onForceCloseApp() {
+            Qt.quit()
+        }
+    }
+
+    // Update check dialog (spinner + status text)
+    Popup {
+        id: updateCheckPopup
+        anchors.centerIn: parent
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        padding: 0
+
+        Connections {
+            target: AppController
+            function onUpdateCheckActiveChanged() {
+                if (AppController.updateCheckActive)
+                    updateCheckPopup.open()
+                else
+                    updateCheckPopup.close()
+            }
+        }
+
+        enter: Transition { NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 200 } }
+        exit: Transition { NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 200 } }
+
+        background: Rectangle {
+            color: "#1a1a2e"
+            radius: 16
+            border.color: "#33FFFFFF"
+            border.width: 1
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 20
+            implicitWidth: 300
+
+            Item { Layout.preferredHeight: 10 }
+
+            BusyIndicator {
+                Layout.alignment: Qt.AlignHCenter
+                running: updateCheckPopup.opened
+                Material.accent: "#FF416C"
+                implicitWidth: 56
+                implicitHeight: 56
+            }
+
+            Label {
+                text: AppController.updateCheckStatus
+                Layout.alignment: Qt.AlignHCenter
+                Layout.leftMargin: 30
+                Layout.rightMargin: 30
+                Layout.fillWidth: true
+                font.pixelSize: 16
+                font.weight: Font.Medium
+                color: "#FFFFFF"
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+            }
+
+            Item { Layout.preferredHeight: 10 }
+        }
+    }
+
+    // Update available dialog
+    Dialog {
+        id: updateAvailableDialog
+        anchors.centerIn: parent
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        title: "Обнаружена новая версия"
+
+        property string newVersion: ""
+        property string downloadUrl: ""
+        property int countdown: 5
+
+        Material.background: "#1a1a2e"
+
+        background: Rectangle {
+            color: "#1a1a2e"
+            radius: 16
+            border.color: "#33FFFFFF"
+            border.width: 1
+        }
+
+        Timer {
+            id: updateTimer
+            interval: 1000
+            repeat: true
+            running: updateAvailableDialog.opened
+            onTriggered: {
+                if (updateAvailableDialog.countdown > 0) {
+                    updateAvailableDialog.countdown--
+                }
+                if (updateAvailableDialog.countdown === 0) {
+                    updateTimer.stop()
+                    updateAvailableDialog.accept()
+                }
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 16
+            implicitWidth: 400
+
+            Label {
+                text: {
+                    var msg = "Обнаружена новая версия программного обеспечения.\n\n"
+                    msg += "Версия на сервере: v" + updateAvailableDialog.newVersion + "\n\n"
+                    msg += Qt.platform.os === "windows"
+                        ? "После нажатия кнопки \"Обновить\" будет запущено обновление ПО."
+                        : "После нажатия кнопки \"Обновить\" откроется ссылка в вашем браузере.\nПожалуйста, скачайте обновление по прямой ссылке."
+                    msg += "\n\nС уважением ваша команда Adskiller Team."
+                    return msg
+                }
+                Layout.fillWidth: true
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+                font.pixelSize: 14
+                color: "#FFFFFF"
+                wrapMode: Text.WordWrap
+            }
+
+            Label {
+                text: "Приложение будет обновлено автоматически через " + updateAvailableDialog.countdown + " сек..."
+                Layout.fillWidth: true
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+                font.pixelSize: 14
+                font.bold: true
+                color: "#FF416C"
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                text: "Обновить"
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                Material.background: "#FF416C"
+                Material.foreground: "#FFFFFF"
+            }
+        }
+
+        onAccepted: {
+            updateTimer.stop()
+            AppController.startUpdate(downloadUrl)
+        }
+    }
+
+    // Network Warning Dialog
+    Dialog {
+        id: networkWarningDialog
+        anchors.centerIn: parent
+        modal: true
+        title: "Отсутствует соединение с интернетом"
+
+        property int attempts: 3
+
+        Material.background: "#1a1a2e"
+
+        background: Rectangle {
+            color: "#1a1a2e"
+            radius: 16
+            border.color: "#33FFFFFF"
+            border.width: 1
+        }
+
+        contentItem: Label {
+            text: "У вас осталось попыток (" + networkWarningDialog.attempts + "), срочно восстановите связь, иначе приложение аварийно завершится."
+            font.pixelSize: 14
+            color: "#FFFFFF"
+            wrapMode: Text.WordWrap
+            width: 300
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                text: "ОК"
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                Material.background: "#FF416C"
+                Material.foreground: "#FFFFFF"
+            }
         }
     }
 }

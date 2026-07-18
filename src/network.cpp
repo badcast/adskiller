@@ -9,7 +9,7 @@
 #include "network.h"
 
 #ifndef NREMOTEADDR
-#define NREMOTEADDR "http://localhost:8000/api"
+#define NREMOTEADDR "https://adskiller.imister.kz/api"
 #endif
 
 constexpr auto URL_Remote = NREMOTEADDR;

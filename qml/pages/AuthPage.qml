@@ -11,12 +11,28 @@ Item {
         if (typeof AppController !== "undefined" && AppController) {
             loginField.text = AppController.savedLogin || "";
             passwordField.text = AppController.savedPassword || "";
-            if (loginField.text !== "" && passwordField.text !== "") {
-                if (!AppController.explicitLogout) {
-                    loginButton.clicked();
-                } else {
-                    AppController.explicitLogout = false;
-                }
+            // Auto-login is deferred until the update check finishes
+            if (!AppController.updateCheckActive) {
+                root.tryAutoLogin();
+            }
+        }
+    }
+
+    function tryAutoLogin() {
+        if (loginField.text !== "" && passwordField.text !== "") {
+            if (!AppController.explicitLogout) {
+                loginButton.clicked();
+            } else {
+                AppController.explicitLogout = false;
+            }
+        }
+    }
+
+    Connections {
+        target: AppController
+        function onUpdateCheckActiveChanged() {
+            if (!AppController.updateCheckActive) {
+                root.tryAutoLogin();
             }
         }
     }

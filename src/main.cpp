@@ -13,6 +13,8 @@
 #include <QSplashScreen>
 #include <QTimer>
 
+#include <QWindow>
+
 #ifdef Q_OS_WIN
 #include <QProcessEnvironment>
 #endif
@@ -39,6 +41,7 @@ int main(int argc, char **argv)
 
     int exitCode;
     QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(true);
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
     if(sharedMemUpdate.attach())
     {
@@ -142,18 +145,30 @@ int main(int argc, char **argv)
 
     w->delayUICallLoop(
         100,
-        [&sharedMem, &w]() -> bool
+        [&sharedMem, &w, &engine]() -> bool
         {
             if(!sharedMem.lock())
                 return true;
             QString cmd = QLatin1String(reinterpret_cast<const char *>(sharedMem.constData()));
             if(cmd == ShowCommandPipe)
             {
-                // To do: Show window
+                for (QObject *obj : engine.rootObjects()) {
+                    QWindow *window = qobject_cast<QWindow*>(obj);
+                    if (window) {
+                        window->show();
+                        window->raise();
+                        window->requestActivate();
+                    }
+                }
             }
             if(cmd == HideCommandPipe)
             {
-                // To do: Hide window
+                for (QObject *obj : engine.rootObjects()) {
+                    QWindow *window = qobject_cast<QWindow*>(obj);
+                    if (window) {
+                        window->hide();
+                    }
+                }
             }
             memset(sharedMem.data(), 0, 1);
             sharedMem.unlock();

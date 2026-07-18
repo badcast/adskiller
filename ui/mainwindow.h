@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QGuiApplication>
+#include <QWindow>
 #include <QList>
 #include <QMap>
 #include <QString>
@@ -66,6 +68,8 @@ class MainWindow : public QObject
     Q_PROPERTY(QString textSecondary READ textSecondary CONSTANT)
     Q_PROPERTY(QString cardColor READ cardColor CONSTANT)
     Q_PROPERTY(bool explicitLogout READ explicitLogout WRITE setExplicitLogout NOTIFY explicitLogoutChanged)
+    Q_PROPERTY(QString updateCheckStatus READ updateCheckStatus NOTIFY updateCheckStatusChanged)
+    Q_PROPERTY(bool updateCheckActive READ updateCheckActive NOTIFY updateCheckActiveChanged)
 
 public:
     explicit MainWindow(QObject *parent = nullptr);
@@ -88,19 +92,13 @@ public:
     void updateCabinet();
     Q_INVOKABLE void logoutSystem();
     Q_INVOKABLE void refreshServices();
+    Q_INVOKABLE void startVersionCheck();
     void showMessageFromStatus(int statusCode);
 
-    // Dummy methods for AppSystemTray
-    bool isHidden() const
-    {
-        return false;
-    }
-    void show()
-    {
-    }
-    void hide()
-    {
-    }
+    // Window management via QWindow (for AppSystemTray)
+    bool isHidden() const;
+    void show();
+    void hide();
     ThemeScheme getTheme() const
     {
         return System;
@@ -111,6 +109,18 @@ public:
     QIcon windowIcon() const
     {
         return QIcon(":/resources/app-logo");
+    }
+
+    Q_INVOKABLE void startUpdate(const QString &url);
+
+    // Update check properties
+    QString updateCheckStatus() const
+    {
+        return m_updateCheckStatus;
+    }
+    bool updateCheckActive() const
+    {
+        return m_updateCheckActive;
     }
 
     struct
@@ -276,6 +286,11 @@ signals:
     void activeServiceChanged();
     void networkPendingChanged();
     void explicitLogoutChanged();
+    void updateCheckStatusChanged();
+    void updateCheckActiveChanged();
+    void updateAvailable(const QString &version, const QString &url);
+    void networkWarning(int attemptsLeft);
+    void forceCloseApp();
 public slots:
     Q_INVOKABLE void openSupport();
     Q_INVOKABLE void openAbout();
@@ -289,11 +304,19 @@ private:
     QString m_statusAuthText;
     QString m_savedLogin;
     QString m_savedPassword;
+    QString m_updateCheckStatus;
+    bool m_updateCheckActive = false;
     bool m_explicitLogout = false;
     int verChansesAvailable = 3;
     QTimer *versionChecker;
     PageIndex curPage = AuthPage;
     PageIndex lastPage = AuthPage;
+    VersionInfo runtimeVersion;
+    VersionInfo actualVersion;
+
+    void setUpdateCheckStatus(const QString &status);
+    void setUpdateCheckActive(bool active);
+    QWindow *findMainWindow() const;
 
     void checkVersion(bool firstRun);
     void willTerminate();
