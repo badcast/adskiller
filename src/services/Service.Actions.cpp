@@ -31,7 +31,7 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     MainWindow::current->showPageLoader(
         _preloadPage,
         1500,
-        [_CurrentService]()
+        []()
         {
             _CurrentService->start();
             return true;
