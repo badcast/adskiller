@@ -66,6 +66,8 @@ public:
 
     QString getLastError(int *lastStatus = nullptr);
 
+    void setSimulate(bool simulate) { m_simulate = simulate; }
+
     int finishSuccess;
 
 private:
@@ -83,4 +85,5 @@ private:
     DownloadStatus m_statusDownload;
     int m_lastStatus;
     QString m_lastError;
+    bool m_simulate = false;
 };

@@ -1,119 +1,522 @@
-name: Build Qt App
+
+name: Build Qt6 application
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  BUILD_TYPE: Release
+  QT_VERSION: '6.10.1'
+
 jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            toolchain: linux
-          - os: windows-latest
-            toolchain: msvc
-          - os: windows-latest
-            toolchain: mingw64
-          - os: macos-latest
-            toolchain: macos
+
+  # ============================================================
+  # Linux
+  # ============================================================
+  linux:
+    name: Linux / GCC / Qt6
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install OpenGL dependencies (Linux)
-      if: matrix.toolchain == 'linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 x11-utils libx11-xcb-dev libxcb-glx0-dev
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            qt6-base-dev \
+            qt6-tools-dev \
+            qt6-tools-dev-tools \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libxcb1-dev \
+            libxcb-cursor0 \
+            libxcb-xinerama0 \
+            libxcb-keysyms1 \
+            libxcb-image0 \
+            libxcb-render-util0
 
-    - name: Install Qt (non-mingw)
-      if: matrix.toolchain != 'mingw64'
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '6.10.0'
-        modules: 'qtmultimedia'
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install_dir"
 
-    - name: Setup MSYS2 + MinGW64 (Windows mingw64)
-      if: matrix.toolchain == 'mingw64'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: |
-          mingw-w64-x86_64-toolchain
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-qt5
+      - name: Build application and updater
+        run: |
+          cmake --build build \
+            --parallel \
+            --target application update
 
-    - name: Configure CMake (MSVC)
-      if: matrix.toolchain == 'msvc' && runner.os == 'Windows'
-      run: cmake -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
+      - name: Install complete project
+        run: |
+          cmake --build build \
+            --parallel \
+            --target install
 
-    - name: Configure CMake (MinGW)
-      if: matrix.toolchain == 'mingw64'
-      shell: bash
-      run: |
-        mkdir -p build
-        cd build
-        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir ..
+      - name: Verify artifact
+        run: |
+          echo "===== install_dir ====="
+          find install_dir -maxdepth 4 -type f -print | sort
 
-    - name: Configure CMake (Unix/macOS)
-      if: matrix.toolchain == 'linux' || matrix.toolchain == 'macos'
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
+          test -d install_dir/adb
 
-    - name: Build (MSVC)
-      if: matrix.toolchain == 'msvc'
-      run: cmake --build build --config Release --target install -v
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adskiller-linux
+          path: install_dir/
+          if-no-files-found: error
 
-    - name: Build (MinGW)
-      if: matrix.toolchain == 'mingw64'
-      shell: bash
-      run: |
-        cd build
-        mingw32-make -j$(nproc)
 
-    - name: Build (Unix/macOS)
-      if: matrix.toolchain == 'linux' || matrix.toolchain == 'macos'
-      run: cmake --build build --config Release --target install -j
+  # ============================================================
+  # Windows MSVC
+  # ============================================================
+  windows-msvc:
+    name: Windows / MSVC / Qt6
+    runs-on: windows-latest
 
-    - name: Deploy Qt (Windows MSVC)
-      if: matrix.toolchain == 'msvc' && runner.os == 'Windows'
-      shell: cmd
-      run: |
-        if exist install_dir\bin\adskiller.exe (
-          windeployqt --release install_dir\bin\adskiller.exe
-        )
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Deploy Qt (Windows MinGW)
-      if: matrix.toolchain == 'mingw64'
-      shell: bash
-      run: |
-        # attempt to copy Qt plugins from MSYS2
-        QT_PLUGIN_PATH="/mingw64/lib/qt5/plugins"
-        if [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
-          mkdir -p install_dir/lib/plugins/multimedia
-          cp -r "$QT_PLUGIN_PATH/multimedia/"* install_dir/lib/plugins/multimedia/ || true
-        fi
+      - name: Setup Qt (official)
+        uses: jurplel/install-qt-action@v4
+        with:
+          dir: ${{ github.workspace }}/Qt
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          arch: win64_msvc2022_64
+          install-deps: true
+          cache: true
 
-    - name: Deploy Qt (macOS)
-      if: matrix.toolchain == 'macos'
-      run: |
-        QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
-        APP_BUNDLE=$(find install_dir -name "*.app" -maxdepth 1 | head -1)
-        if [ -n "$APP_BUNDLE" ] && [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
-          mkdir -p "$APP_BUNDLE/Contents/PlugIns/multimedia"
-          cp -r "$QT_PLUGIN_PATH/multimedia/"* "$APP_BUNDLE/Contents/PlugIns/multimedia/"
-        fi
+      - name: Find Qt6 CMake dir and export
+        shell: pwsh
+        run: |
+          Write-Host "Searching for Qt6Config.cmake..."
+          $qtRoot = "${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_msvc2022_64"
+          $found = $null
+          
+          # First check the expected installation path
+          if (Test-Path $qtRoot) {
+            Write-Host "Checking Qt root: $qtRoot"
+            $f = Get-ChildItem -Path $qtRoot -Filter Qt6Config.cmake -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($f) { $found = $f.Directory.FullName }
+          }
+          
+          # Fallback to broader search if needed
+          if (-not $found) {
+            $candidates = @("${{ github.workspace }}/Qt", "C:\Qt", "C:\Program Files\Qt")
+            foreach ($p in $candidates) {
+              if (Test-Path $p) {
+                $f = Get-ChildItem -Path $p -Filter Qt6Config.cmake -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($f) { $found = $f.Directory.FullName; break }
+              }
+            }
+          }
+          
+          if (-not $found) { 
+            Write-Error "Qt6Config.cmake not found; please check Qt installation"
+            Write-Host "Listing Qt directory structure:"
+            if (Test-Path "${{ github.workspace }}/Qt") {
+              Get-ChildItem -Path "${{ github.workspace }}/Qt" -Recurse -Depth 5
+            }
+            exit 1 
+          }
+          
+          Write-Host "Found Qt6 CMake dir: $found"
+          Add-Content -Path $env:GITHUB_ENV -Value ("QT_CMAKE_DIR=$found")
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: adskiller-${{ matrix.toolchain }}-${{ runner.os }}
-        path: install_dir/
+      - name: Configure
+        shell: pwsh
+        env:
+          QT_CMAKE_DIR: ${{ env.QT_CMAKE_DIR }}
+          QT_INSTALL_DIR: ${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_msvc2022_64
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          New-Item -ItemType Directory -Force install_dir | Out-Null
+
+          cmake -S . -B build `
+            -G "Visual Studio 17 2022" `
+            -A x64 `
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+            -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\install_dir" `
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_msvc2022_64" `
+            -DQt6_DIR="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_msvc2022_64/lib/cmake/Qt6"
+
+      - name: Build application and updater
+        shell: pwsh
+        run: |
+          cmake --build build `
+            --config ${{ env.BUILD_TYPE }} `
+            --parallel `
+            --target application update
+
+      - name: Install complete project
+        shell: pwsh
+        run: |
+          cmake --build build `
+            --config ${{ env.BUILD_TYPE }} `
+            --parallel `
+            --target install
+
+      - name: Deploy Qt runtime with windeployqt
+        shell: pwsh
+        run: |
+          $qtBin = $env:QT_ROOT_DIR
+
+          if (-not $qtBin) {
+            Write-Host "QT_ROOT_DIR is not set. Searching for windeployqt..."
+            $windeploy = Get-ChildItem `
+              -Path $env:RUNNER_WORKSPACE `
+              -Filter windeployqt.exe `
+              -Recurse `
+              -ErrorAction SilentlyContinue |
+              Select-Object -First 1 -ExpandProperty FullName
+          }
+          else {
+            $windeploy = Join-Path $qtBin "bin\windeployqt.exe"
+          }
+
+          if (-not (Test-Path $windeploy)) {
+            throw "windeployqt.exe was not found"
+          }
+
+          Write-Host "Using windeployqt: $windeploy"
+
+          & $windeploy `
+            --release `
+            --no-translations `
+            --compiler-runtime `
+            "$env:GITHUB_WORKSPACE\install_dir\bin\adskiller.exe"
+
+          if (Test-Path "$env:GITHUB_WORKSPACE\install_dir\bin\update.exe") {
+            & $windeploy `
+              --release `
+              --no-translations `
+              --compiler-runtime `
+              "$env:GITHUB_WORKSPACE\install_dir\bin\update.exe"
+          }
+
+      - name: Copy adb explicitly
+        shell: pwsh
+        run: |
+          $adbSource = "$env:GITHUB_WORKSPACE\3rdParty\adb"
+          $adbDestination = "$env:GITHUB_WORKSPACE\install_dir\adb"
+
+          if (-not (Test-Path $adbSource)) {
+            throw "3rdParty/adb was not found"
+          }
+
+          New-Item -ItemType Directory -Force $adbDestination | Out-Null
+          Copy-Item "$adbSource\*" $adbDestination -Recurse -Force
+
+      - name: Verify Windows artifact
+        shell: pwsh
+        run: |
+          Write-Host "===== install_dir ====="
+          Get-ChildItem "$env:GITHUB_WORKSPACE\install_dir" -Recurse
+
+          if (-not (Test-Path "$env:GITHUB_WORKSPACE\install_dir\bin\adskiller.exe")) {
+            throw "adskiller.exe was not found"
+          }
+
+          if (-not (Test-Path "$env:GITHUB_WORKSPACE\install_dir\adb")) {
+            throw "adb directory was not found"
+          }
+
+      - name: Upload Windows MSVC artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adskiller-windows-msvc
+          path: install_dir/
+          if-no-files-found: error
+
+
+  # ============================================================
+  # Windows MinGW64 / MSYS2
+  # ============================================================
+  windows-mingw:
+    name: Windows / MinGW64 / MSYS2 / Qt6
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2 MinGW64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          cache: true
+          install: >-
+            git
+            make
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-qt6
+            mingw-w64-x86_64-qt6-tools
+
+      - name: Install Qt (aqt) into workspace for MinGW
+        uses: jurplel/install-qt-action@v4
+        with:
+          dir: ${{ github.workspace }}/Qt
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          arch: win64_mingw
+          cache: true
+          install-deps: true
+
+      - name: Show toolchain and Qt
+        run: |
+          echo "===== compiler ====="
+          which gcc
+          which g++
+          g++ --version
+
+          echo "===== cmake ====="
+          which cmake
+          cmake --version
+
+          echo "===== ninja ====="
+          which ninja
+          ninja --version
+
+          echo "===== Qt ====="
+          ls -la /mingw64/lib/cmake/Qt6
+          test -f /mingw64/lib/cmake/Qt6/Qt6Config.cmake
+
+      - name: Export Qt6_DIR for CMake
+        run: |
+          if [ -f /mingw64/lib/cmake/Qt6/Qt6Config.cmake ]; then
+            echo "Qt6_DIR=/mingw64/lib/cmake/Qt6" >> $GITHUB_ENV
+            echo "CMAKE_PREFIX_PATH=/mingw64/lib/cmake" >> $GITHUB_ENV
+            echo "Exported Qt6_DIR and CMAKE_PREFIX_PATH"
+          else
+            echo "Qt6Config.cmake not found under /mingw64/lib/cmake/Qt6" >&2
+            exit 1
+          fi
+
+      - name: Configure MinGW64
+        run: |
+          rm -rf build install_dir
+          mkdir -p build install_dir
+
+          export Qt6_DIR=${Qt6_DIR:-/mingw64/lib/cmake/Qt6}
+          export QT_DIR=${Qt6_DIR:-/mingw64/lib/cmake/Qt6}
+          export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-/mingw64/lib/cmake}
+
+          echo "Qt6_DIR=$Qt6_DIR"
+          echo "QT_DIR=$QT_DIR"
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
+
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH=/mingw64/lib/cmake \
+            -DQt6_DIR=/mingw64/lib/cmake/Qt6 \
+            -DCMAKE_INSTALL_PREFIX="$PWD/install_dir"
+
+      - name: Build MinGW64 in parallel
+        run: |
+          cmake --build build \
+            --parallel \
+            --target application update
+
+      - name: Install complete project
+        run: |
+          cmake --build build \
+            --parallel \
+            --target install
+
+      - name: Copy adb
+        run: |
+          test -d 3rdParty/adb
+
+          mkdir -p install_dir/adb
+          cp -a 3rdParty/adb/. install_dir/adb/
+
+      - name: Deploy MinGW Qt runtime
+        run: |
+          QT_PREFIX="/mingw64"
+          QT_PLUGINS="/mingw64/plugins"
+
+          echo "Qt prefix: $QT_PREFIX"
+          echo "Qt plugins: $QT_PLUGINS"
+
+          test -d "$QT_PLUGINS"
+
+          # Copy Qt runtime DLLs required by the application.
+          find /mingw64/bin \
+            -maxdepth 1 \
+            -type f \
+            \( -name 'Qt6*.dll' -o -name 'libgcc_s_*.dll' -o -name 'libstdc++-*.dll' -o -name 'libwinpthread-*.dll' \) \
+            -exec cp -f {} install_dir/bin/ \;
+
+          # Copy all Qt plugins.
+          mkdir -p install_dir/plugins
+          cp -a "$QT_PLUGINS/." install_dir/plugins/
+
+      - name: Verify MinGW artifact
+        run: |
+          echo "===== install_dir ====="
+          find install_dir -maxdepth 5 -type f -print | sort
+
+          test -f install_dir/bin/adskiller.exe
+          test -f install_dir/bin/update.exe
+          test -d install_dir/adb
+          test -d install_dir/plugins
+
+      - name: Upload Windows MinGW artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adskiller-windows-mingw64
+          path: install_dir/
+          if-no-files-found: error
+
+
+  # ============================================================
+  # macOS
+  # ============================================================
+  macos:
+    name: macOS / Clang / Qt6
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install qt cmake ninja
+
+      - name: Configure
+        shell: bash
+        run: |
+          QT_PREFIX="$(brew --prefix qt)"
+
+          echo "Qt prefix: $QT_PREFIX"
+
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_PREFIX_PATH="$QT_PREFIX" \
+            -DQt6_DIR="$QT_PREFIX/lib/cmake/Qt6" \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install_dir"
+
+      - name: Build application and updater
+        run: |
+          cmake --build build \
+            --parallel \
+            --target application update
+
+      - name: Install complete project
+        run: |
+          cmake --build build \
+            --parallel \
+            --target install
+
+      - name: Copy adb
+        run: |
+          test -d 3rdParty/adb
+
+          mkdir -p install_dir/adb
+          cp -a 3rdParty/adb/. install_dir/adb/
+
+      - name: Verify macOS artifact
+        run: |
+          echo "===== install_dir ====="
+          find install_dir -maxdepth 5 -type f -print | sort
+
+          test -d install_dir/adb
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adskiller-macos
+          path: install_dir/
+          if-no-files-found: error
+
+
+  # ============================================================
+  # Update artifact
+  #
+  # Only produced for branch:
+  # new_version_v2_beta
+  # ============================================================
+  update-artifact:
+    name: Update artifact / new_version_v2_beta
+    runs-on: ubuntu-latest
+    needs:
+      - linux
+      - windows-msvc
+      - windows-mingw
+      - macos
+
+    if: github.ref == 'refs/heads/new_version_v2_beta'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: adskiller-linux
+          path: artifacts/linux
+
+      - name: Download MSVC artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: adskiller-windows-msvc
+          path: artifacts/windows-msvc
+
+      - name: Download MinGW artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: adskiller-windows-mingw64
+          path: artifacts/windows-mingw64
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: adskiller-macos
+          path: artifacts/macos
+
+      - name: Create update bundle
+        run: |
+          mkdir -p update_bundle
+
+          cp -a artifacts/linux/. update_bundle/linux/
+          cp -a artifacts/windows-msvc/. update_bundle/windows-msvc/
+          cp -a artifacts/windows-mingw64/. update_bundle/windows-mingw64/
+          cp -a artifacts/macos/. update_bundle/macos/
+
+      - name: Upload update artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adskiller-update-new_version_v2_beta
+          path: update_bundle/
+          if-no-files-found: error
