@@ -83,7 +83,7 @@ inline ServiceOperation so_destrify(const QString &so)
     return ServiceOperation::Invalid;
 }
 
-Network::Network(const Network &other) : manager(new QNetworkAccessManager()), _token(other._token), _lastBytes(0), _pending(0), forclyExit(false)
+Network::Network(const Network &other) : QObject(nullptr), manager(new QNetworkAccessManager(this)), _token(other._token), _lastBytes(0), _pending(0), forclyExit(false)
 {
     manager->setTransferTimeout(NetworkTimeoutDefault);
 }

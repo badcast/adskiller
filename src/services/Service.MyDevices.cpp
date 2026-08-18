@@ -48,6 +48,7 @@ void MyDeviceService::slotRefresh()
 
 void MyDeviceService::clearMyDevicesPage(QString text)
 {
+    delete table->model(); // fix: delete old model before replacing to avoid accumulation
     QStandardItemModel *model = new QStandardItemModel(table);
     table->setModel(model);
 

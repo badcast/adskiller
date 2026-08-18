@@ -350,6 +350,9 @@ bool adskiller_clean_cmd()
     network = nullptr;
     delete mutex;
     mutex = nullptr;
+    malwareThread->quit();
+    malwareThread->wait();
+    delete malwareThread;
     malwareThread = nullptr;
     return true;
 }

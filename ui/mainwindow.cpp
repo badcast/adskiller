@@ -21,6 +21,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QVector>
+#include <QRandomGenerator>
 
 #include "AppSystemTray.h"
 #include "Services.h"
@@ -75,7 +76,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     value = AppSetting::networkTimeout(&paramCheck);
     if(paramCheck)
     {
-        value = value.toInt() < 1000 ? 1000 : value.toInt() > 30000 ? 30000 : value;
+        value = value.toInt() < 1000 ? 1000 : value.toInt() > 60000 ? 60000 : value;
     }
     else
     {
@@ -99,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     vPageSpacer = ui->topcontent;
     vPageSpacer->setMaximumHeight(400);
-    vPageSpacerAnimator = new QPropertyAnimation(vPageSpacer, "maximumHeight");
+    vPageSpacerAnimator = new QPropertyAnimation(vPageSpacer, "maximumHeight", this);
     vPageSpacerAnimator->setDuration(500);
     vPageSpacerAnimator->setStartValue(400);
     vPageSpacerAnimator->setEndValue(0);
@@ -107,12 +108,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(ui->contentLayout);
     ui->contentLayout->setGraphicsEffect(effect);
 
-    contentOpacityAnimator = new QPropertyAnimation(effect, "opacity");
+    contentOpacityAnimator = new QPropertyAnimation(effect, "opacity", this);
     contentOpacityAnimator->setDuration(1000);
     contentOpacityAnimator->setStartValue(0);
     contentOpacityAnimator->setEndValue(1.0);
 
-    deviceLeftAnimator = new QPropertyAnimation(ui->device_left_group, "maximumWidth");
+    deviceLeftAnimator = new QPropertyAnimation(ui->device_left_group, "maximumWidth", this);
     deviceLeftAnimator->setDuration(1000);
     deviceLeftAnimator->setStartValue(1000);
     deviceLeftAnimator->setEndValue(0);
@@ -168,7 +169,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
         });
-    QObject::connect(versionChecker, &QTimer::timeout, [this]() { checkVersion(false); });
+    QObject::connect(versionChecker, &QTimer::timeout, this, [this]() { checkVersion(false); });
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -241,6 +242,58 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                 ui->aiToolBoxContainer->setMaximumWidth(300);
             }
         });
+
+        // Add quick action buttons for AI
+        QWidget *quickButtonsWidget = new QWidget(ui->aiChatEdit->parentWidget());
+        QGridLayout *quickButtonsLayout = new QGridLayout(quickButtonsWidget);
+        quickButtonsLayout->setContentsMargins(0, 0, 0, 0);
+        quickButtonsLayout->setSpacing(5);
+
+        QList<QStringList> quickQuestions = {
+            { "Мои кредиты", "Сколько кредитов?", "Остаток кредитов?", "Показать баланс" },
+            { "Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты" },
+            { "Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства" },
+            { "VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?" }
+        };
+
+        for (int i = 0; i < quickQuestions.size(); ++i) {
+            QPushButton *btn = new QPushButton(quickQuestions[i].first(), quickButtonsWidget);
+            btn->setStyleSheet(
+                "QPushButton { "
+                "   background-color: #4D4D4D; "
+                "   color: white; "
+                "   border-radius: 6px; "
+                "   padding: 5px; "
+                "   font-size: 11px; "
+                "   border: none; "
+                "}"
+                "QPushButton:hover { background-color: #666666; }"
+            );
+            btn->setCursor(Qt::PointingHandCursor);
+            quickButtonsLayout->addWidget(btn, i / 2, i % 2);
+            QObject::connect(btn, &QPushButton::clicked, this, [this, btn, variations = quickQuestions[i], lastIdx = 0]() mutable {
+                ui->aiChatEdit->setText(btn->text());
+                ui->aiChatSend->click();
+                
+                if (variations.size() > 1) {
+                    int r;
+                    do {
+                        r = QRandomGenerator::global()->bounded(variations.size());
+                    } while (r == lastIdx);
+                    lastIdx = r;
+                    btn->setText(variations[r]);
+                }
+            });
+        }
+        
+        QGridLayout *aiLayout = qobject_cast<QGridLayout*>(ui->aiChatMessages->parentWidget()->layout());
+        if (aiLayout) {
+            aiLayout->removeWidget(ui->aiChatEdit);
+            aiLayout->removeWidget(ui->aiChatSend);
+            aiLayout->addWidget(quickButtonsWidget, 1, 0, 1, 2);
+            aiLayout->addWidget(ui->aiChatEdit, 2, 0);
+            aiLayout->addWidget(ui->aiChatSend, 2, 1);
+        }
     }
 }
 
@@ -643,6 +696,7 @@ void MainWindow::closeService(std::shared_ptr<Service> service)
 void MainWindow::clearAuthInfoPage()
 {
     int x, y;
+    delete ui->authInfo->model(); // fix: delete old model before replacing to avoid accumulation
     QStandardItemModel *model = new QStandardItemModel(ui->authInfo);
     model->setRowCount(7);
     model->setColumnCount(2);
@@ -680,7 +734,8 @@ void MainWindow::clearAuthInfoPage()
         ui->serviceContents->layout()->takeAt(0)->widget()->deleteLater();
 
     for(x = 0; x < services.count(); ++x)
-        services[x]->ownerWidget->deleteLater();
+        if(services[x]->ownerWidget != nullptr)
+            services[x]->ownerWidget->deleteLater();
 
 
     serverServices.reset();
@@ -841,6 +896,7 @@ void MainWindow::on_authButton_clicked()
     QObject::connect(
         timerAuthAnim,
         &QTimer::timeout,
+        this,
         [this]()
         {
             QString temp = ui->statusAuthText->text();
@@ -902,7 +958,8 @@ void MainWindow::slotAuthFinish(int status, bool ok)
                 _status = NetworkStatus::NetworkError;
             }
 
-            timerAuthAnim->stop();
+            if(timerAuthAnim)
+                timerAuthAnim->stop();
             switch(_status)
             {
             case 0:

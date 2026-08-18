@@ -52,6 +52,7 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
     QLinearGradient activeGradient(0, 0, totalWidth, totalHeight);
     activeGradient.setColorAt(0, QColor("#4776E6"));
     activeGradient.setColorAt(1, QColor("#8E54E9"));
+    QBrush activeBrush(activeGradient);
 
     QBrush inactiveBrush(QColor("#1A2639"));
 
@@ -69,7 +70,7 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
         path.addRoundedRect(blockRect, 2, 2);
 
         if (i < m_value) {
-            painter.fillPath(path, activeGradient);
+            painter.fillPath(path, activeBrush);
         } else {
             painter.fillPath(path, inactiveBrush);
         }

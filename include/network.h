@@ -11,7 +11,7 @@
 #include <QUrl>
 #include <QVersionNumber>
 
-constexpr auto NetworkTimeoutDefault = 15000;
+constexpr auto NetworkTimeoutDefault = 30000;
 
 class MainWindow;
 

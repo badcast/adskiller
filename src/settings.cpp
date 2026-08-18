@@ -5,7 +5,7 @@ std::shared_ptr<QSettings> AppSetting::settings;
 constexpr auto ParamEncryptedToken = "encrypted_token";
 constexpr auto ParamAutoLogin = "autologin";
 constexpr auto ParamThemeIndex = "theme";
-constexpr auto ParamNetworkTimeout = "networkTimeout";
+constexpr auto ParamNetworkTimeout = "network_timeout";
 constexpr auto ParamLogin = "auth_login";
 constexpr auto ParamPassword = "auth_pass_enc";
 
@@ -104,6 +104,8 @@ int AppSetting::themeIndex(bool *contains, const QVariant &set)
 int AppSetting::networkTimeout(bool *contains, const QVariant &set)
 {
     QVariant retval;
+    // REMOVE OLD
+    settings->remove("networkTimeout");
     retval = GenericValue(ParamNetworkTimeout, contains, set);
     return retval.toInt();
 }

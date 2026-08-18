@@ -1,0 +1,97 @@
+name: Build Qt CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux GCC
+            os: ubuntu-latest
+            qt_arch: gcc_64
+            qt_version: '6.11.0'
+          - name: Windows MSVC
+            os: windows-latest
+            qt_arch: win64_msvc2022_64
+            qt_version: '6.10.0'
+            setup_msvc: true
+          - name: Windows MinGW
+            os: windows-latest
+            qt_arch: win64_mingw
+            qt_version: '6.10.0'
+            qt_tools: 'tools_mingw'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # В вашем CMakeLists.txt требуется файл VERSION. 
+      # Этот шаг создает дефолтный файл, если вы забыли добавить его в репозиторий.
+      - name: Ensure VERSION file exists
+        run: |
+          if [ ! -f "VERSION" ]; then echo "1.0.0" > VERSION; fi
+        shell: bash
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Setup MSVC (Windows only)
+        if: matrix.setup_msvc
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ matrix.qt_version }}
+          arch: ${{ matrix.qt_arch }}
+          tools: ${{ matrix.qt_tools }}
+          cache: true
+
+      # Конфигурация с использованием генератора Ninja (быстрее и унифицирует пути вывода)
+      - name: Configure CMake
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      # Сборка только нужных таргетов
+      - name: Build Application and Update
+        run: cmake --build build --target application update --parallel
+
+      - name: Deploy Qt dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $deployDir = Join-Path $PWD 'build/deploy'
+          New-Item -ItemType Directory -Force -Path $deployDir | Out-Null
+          Copy-Item 'build/adskiller.exe' $deployDir -Force
+          Copy-Item 'build/update.exe' $deployDir -Force
+
+          Get-Command windeployqt -ErrorAction Stop | Out-Null
+          windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'adskiller.exe')
+          windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'update.exe')
+
+          if (Test-Path 'build/adb') {
+            Copy-Item 'build/adb' (Join-Path $deployDir 'adb') -Recurse -Force
+          }
+
+      - name: Upload Artifacts (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Adskiller-Linux-GCC
+          path: |
+            build/adskiller
+            build/update
+
+      - name: Upload Artifacts (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Adskiller-${{ matrix.name }}
+          path: build/deploy/

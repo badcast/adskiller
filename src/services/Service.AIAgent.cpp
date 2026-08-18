@@ -43,6 +43,8 @@ bool AIAgentService::start()
     auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
     auto *messages = MainWindow::current->findChild<QTextEdit *>("aiChatMessages");
 
+    aiMessages.clear();
+
     if(!btn || !edit || !messages)
         return false;
 
@@ -83,16 +85,9 @@ bool AIAgentService::start()
         // Prepare request object from full conversation
         QJsonObject serviceReq;
         if(aiSessionId >= 0)
-            serviceReq["sessionId"] = aiSessionId;
+            serviceReq["session_id"] = aiSessionId;
 
-        QJsonArray msgs;
-        for(const QString &s : aiMessages)
-        {
-            QJsonDocument d = QJsonDocument::fromJson(s.toUtf8());
-            if(!d.isNull() && d.isObject())
-                msgs.append(d.object());
-        }
-        serviceReq["messages"] = msgs;
+        serviceReq["message"] = aiMessages.last();
 
         // Create transient Network object parented to MainWindow so it lives asynchronously
         Network *net = new Network(MainWindow::current->network);
@@ -116,7 +111,7 @@ bool AIAgentService::start()
         // Start timer for dots animation
         QTimer *t = new QTimer(this);
         t->setInterval(500);
-        QObject::connect(t, &QTimer::timeout, MainWindow::current, [messages, this]() {
+        QObject::connect(t, &QTimer::timeout, this, [messages, this]() {
             // rotate dots 1..3
             aiTypingDots = (aiTypingDots % 3) + 1;
             QString dots;
@@ -190,7 +185,7 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
 {
     Q_UNUSED(guid)
     Q_UNUSED(so)
-    if(!ok)
+    if(!ok || (!responce["status"].isUndefined() &&responce["status"].toInteger() > 0))
     {
         // stop typing timer and remove placeholder
         if(aiTypingTimer)
@@ -271,9 +266,9 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     }
 
     // Update sessionId if provided
-    if(!responce["sessionId"].isNull())
+    if(!responce["session_id"].isNull())
     {
-        aiSessionId = responce["sessionId"].toInt();
+        aiSessionId = responce["session_id"].toInt();
     }
 
     // Store assistant message in history
