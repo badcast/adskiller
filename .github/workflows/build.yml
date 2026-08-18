@@ -50,7 +50,7 @@ jobs:
         install: |
           mingw-w64-x86_64-toolchain
           mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-qt5
+          mingw-w64-x86_64-qt6
 
     - name: Configure CMake (MSVC)
       if: matrix.toolchain == 'msvc' && runner.os == 'Windows'
@@ -62,7 +62,10 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir ..
+        # Ensure MinGW Qt6 is visible to CMake
+        export Qt6_DIR=/mingw64/lib/cmake/Qt6
+        export CMAKE_PREFIX_PATH=/mingw64/lib/cmake:$CMAKE_PREFIX_PATH
+        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir -DQt6_DIR="$Qt6_DIR" ..
 
     - name: Configure CMake (Unix/macOS)
       if: matrix.toolchain == 'linux' || matrix.toolchain == 'macos'
@@ -112,7 +115,73 @@ jobs:
           cp -r "$QT_PLUGIN_PATH/multimedia/"* "$APP_BUNDLE/Contents/PlugIns/multimedia/"
         fi
 
-    - name: Upload Artifact
+    - name: Include adb in install_dir (Linux/macOS)
+      if: github.ref != 'refs/heads/new_version_v2_beta' && (runner.os == 'Linux' || runner.os == 'macOS')
+      run: |
+        if [ -d "3rdParty/adb" ]; then
+          mkdir -p install_dir/3rdParty
+          cp -r 3rdParty/adb install_dir/3rdParty/adb || true
+        fi
+
+    - name: Include adb in install_dir (Windows)
+      if: github.ref != 'refs/heads/new_version_v2_beta' && runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if (Test-Path -Path "3rdParty\adb") {
+          New-Item -ItemType Directory -Force -Path install_dir\3rdParty | Out-Null
+          Copy-Item -Path 3rdParty\adb -Destination install_dir\3rdParty\adb -Recurse -Force
+        }
+
+    - name: Build `update` target (only for new_version_v2_beta)
+      if: github.ref == 'refs/heads/new_version_v2_beta'
+      run: |
+        # Build only the update target to speed up CI
+        if [ -d build ]; then
+          cmake --build build --target update --config Release -j || true
+        else
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build build --target update --config Release -j || true
+        fi
+
+    - name: Prepare update-only artifact (non-Windows)
+      if: github.ref == 'refs/heads/new_version_v2_beta' && runner.os != 'Windows'
+      run: |
+        rm -rf artifact_update || true
+        mkdir -p artifact_update
+        # copy built binaries (if any)
+        if [ -d build ]; then
+          cp -r build/update* artifact_update/ || true
+        fi
+        # copy source update folder and adb
+        cp -r update artifact_update/update_source || true
+        if [ -d "3rdParty/adb" ]; then
+          cp -r 3rdParty/adb artifact_update/adb || true
+        fi
+
+    - name: Prepare update-only artifact (Windows)
+      if: github.ref == 'refs/heads/new_version_v2_beta' && runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Remove-Item -Recurse -Force artifact_update -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path artifact_update | Out-Null
+        if (Test-Path -Path build\update.exe) {
+          Copy-Item -Path build\update.exe -Destination artifact_update -Force
+        }
+        Copy-Item -Path update -Destination artifact_update\update_source -Recurse -Force
+        if (Test-Path -Path 3rdParty\adb) {
+          Copy-Item -Path 3rdParty\adb -Destination artifact_update\adb -Recurse -Force
+        }
+
+    - name: Upload Artifact (update-only)
+      if: github.ref == 'refs/heads/new_version_v2_beta'
+      uses: actions/upload-artifact@v4
+      with:
+        name: adskiller-update-${{ matrix.toolchain }}-${{ runner.os }}
+        path: |
+          artifact_update/
+
+    - name: Upload Artifact (full)
+      if: github.ref != 'refs/heads/new_version_v2_beta'
       uses: actions/upload-artifact@v4
       with:
         name: adskiller-${{ matrix.toolchain }}-${{ runner.os }}

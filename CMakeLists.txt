@@ -93,6 +93,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.env")
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/.env" REMOTEADDR)
 string(STRIP "${REMOTEADDR}" REMOTEADDR)
 target_compile_definitions(application PRIVATE NREMOTEADDR="${REMOTEADDR}")
+target_compile_definitions(update PRIVATE NREMOTEADDR="${REMOTEADDR}")
 endif()
 
 if(WIN32)

@@ -1,7 +1,7 @@
 #include "UpdateManager.h"
 
 #ifndef NREMOTEADDR
-#define NREMOTEADDR "http://localhost:8000/api"
+#define NREMOTEADDR "https://adskiller.imister.kz/api"
 #endif
 
 constexpr int MaxTimeout = 10000;
@@ -76,6 +76,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::fetch()
 
 std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &existsDir, const QList<FetchResult> &updates)
 {
+    if (m_simulate) return {updates, 0};
     QStringList files;
     QList<FetchResult> result;
     QDir dir(existsDir);
@@ -148,6 +149,44 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
         dir.setPath(tempDir.path());
         m_statusDownload.maxDownloads = contents.size();
         m_statusDownload.totalDownloadBytes = std::accumulate(std::begin(contents), std::end(contents), 0, [](quint64 val, const FetchResult &t) { return val + t.bytes; });
+
+        if(m_simulate)
+        {
+            for(int x = 0; x < contents.size() && !m_forclyExit; ++x)
+            {
+                const FetchResult *fetch = &contents[x];
+                mutex.lock();
+                m_statusDownload.downloadStep = x + 1;
+                m_statusDownload.currentStatus = fetch->remoteLink.split("/", Qt::SkipEmptyParts).back();
+                mutex.unlock();
+                
+                int chunks = 20;
+                for(int c = 1; c <= chunks && !m_forclyExit; ++c)
+                {
+                    QThread::msleep(30); // 30ms * 20 = 600ms per file
+                    QMutexLocker locker(&mutex);
+                    quint64 chunkBytes = fetch->bytes / chunks;
+                    if(c == chunks) chunkBytes = fetch->bytes - (chunkBytes * (chunks - 1));
+                    m_statusDownload.currentDownloadBytes = (fetch->bytes * c) / chunks;
+                    m_statusDownload.currentMaxDownloadBytes = fetch->bytes;
+                    m_statusDownload.totalDownloadedBytes += chunkBytes;
+                }
+            }
+            mutex.lock();
+            if(!m_forclyExit)
+            {
+                m_statusDownload.currentStatus = "Apply update";
+                finishSuccess = true; // simulated success
+            }
+            else
+            {
+                m_statusDownload = {};
+                m_lastStatus = -1;
+                m_lastError = "Forcly exited";
+            }
+            mutex.unlock();
+            return m_lastStatus;
+        }
 
         int downloadAtempts = MaxDownloadAtemp;
         quint64 lastBytes;
