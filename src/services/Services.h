@@ -46,6 +46,7 @@ constexpr auto IDServiceWhatsAppMoveString = "95bdb8a2-06f9-4d00-9625-a2da334001
 constexpr auto IDServiceContactFixerString = "578f74ec-2453-4b6c-8db4-cbb92175d437";
 constexpr auto IDServiceMiUnlockString = "b05da077-dd39-4b70-980b-1b25379ec04a";
 constexpr auto IDServiceVIPBuyString = "3a8b33fa-f2b0-4c09-87fe-84c828565731";
+constexpr auto IDServiceAIAgentString = "039bc49d-6bdc-482b-a55e-1b6e8f73ea64";
 
 enum PageIndex
 {
@@ -305,4 +306,29 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
+};
+
+class AIAgentService : public Service
+{
+    Q_OBJECT
+
+    void slotPullMessage(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok);
+
+public:
+    AIAgentService(QObject *parent = nullptr);
+
+    QString uuid() const override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+
+    QStringList aiMessages;
+    int aiSessionId = -1;
+    // Typing indicator state
+    int aiTypingId = 0;
+    QString aiTypingSpanId;
+    int aiTypingDots = 0;
+    QTimer *aiTypingTimer = nullptr;
 };

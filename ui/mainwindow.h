@@ -98,6 +98,8 @@ private slots:
     void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
+    void on_butShowPass_clicked();
+
 public slots:
     void setThemeAction();
     void updateCabinet();

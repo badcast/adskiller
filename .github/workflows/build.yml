@@ -14,50 +14,97 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            toolchain: linux
+          - os: windows-latest
+            toolchain: msvc
+          - os: windows-latest
+            toolchain: mingw64
+          - os: macos-latest
+            toolchain: macos
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
     - name: Install OpenGL dependencies (Linux)
-      if: runner.os == 'Linux'
+      if: matrix.toolchain == 'linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 x11-utils libx11-xcb-dev libxcb-glx0-dev
 
-    - name: Install Qt
+    - name: Install Qt (non-mingw)
+      if: matrix.toolchain != 'mingw64'
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.10.0'
         modules: 'qtmultimedia'
 
-    - name: Configure CMake
+    - name: Setup MSYS2 + MinGW64 (Windows mingw64)
+      if: matrix.toolchain == 'mingw64'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: |
+          mingw-w64-x86_64-toolchain
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-qt5
+
+    - name: Configure CMake (MSVC)
+      if: matrix.toolchain == 'msvc' && runner.os == 'Windows'
+      run: cmake -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
+
+    - name: Configure CMake (MinGW)
+      if: matrix.toolchain == 'mingw64'
+      shell: bash
+      run: |
+        mkdir -p build
+        cd build
+        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir ..
+
+    - name: Configure CMake (Unix/macOS)
+      if: matrix.toolchain == 'linux' || matrix.toolchain == 'macos'
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install_dir
 
-    - name: Build and Install
+    - name: Build (MSVC)
+      if: matrix.toolchain == 'msvc'
+      run: cmake --build build --config Release --target install -v
+
+    - name: Build (MinGW)
+      if: matrix.toolchain == 'mingw64'
+      shell: bash
+      run: |
+        cd build
+        mingw32-make -j$(nproc)
+
+    - name: Build (Unix/macOS)
+      if: matrix.toolchain == 'linux' || matrix.toolchain == 'macos'
       run: cmake --build build --config Release --target install -j
 
-    - name: Deploy Qt (Windows)
-      if: runner.os == 'Windows'
+    - name: Deploy Qt (Windows MSVC)
+      if: matrix.toolchain == 'msvc' && runner.os == 'Windows'
       shell: cmd
       run: |
-        windeployqt --release install_dir\bin\adskiller.exe
+        if exist install_dir\bin\adskiller.exe (
+          windeployqt --release install_dir\bin\adskiller.exe
+        )
 
-    - name: Deploy Qt (Linux)
-      if: runner.os == 'Linux'
+    - name: Deploy Qt (Windows MinGW)
+      if: matrix.toolchain == 'mingw64'
+      shell: bash
       run: |
-        # Copy multimedia plugins manually
-        QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
+        # attempt to copy Qt plugins from MSYS2
+        QT_PLUGIN_PATH="/mingw64/lib/qt5/plugins"
         if [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
           mkdir -p install_dir/lib/plugins/multimedia
-          cp -r "$QT_PLUGIN_PATH/multimedia/"* install_dir/lib/plugins/multimedia/
+          cp -r "$QT_PLUGIN_PATH/multimedia/"* install_dir/lib/plugins/multimedia/ || true
         fi
 
     - name: Deploy Qt (macOS)
-      if: runner.os == 'macOS'
+      if: matrix.toolchain == 'macos'
       run: |
-        # Run macdeployqt on the shared library location
         QT_PLUGIN_PATH="${Qt6_DIR}/../../../plugins"
         APP_BUNDLE=$(find install_dir -name "*.app" -maxdepth 1 | head -1)
         if [ -n "$APP_BUNDLE" ] && [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
@@ -68,5 +115,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: pixelblast-${{ runner.os }}
+        name: adskiller-${{ matrix.toolchain }}-${{ runner.os }}
         path: install_dir/

@@ -218,6 +218,30 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Init tray
     tray = new AdsAppSystemTray(this);
+
+    // AI toolbox toggle button behavior
+    if(ui->aiToolBoxToggle)
+    {
+        ui->aiToolBoxToggle->setText(QString::fromUtf8("◀"));
+        ui->aiToolBoxToggle->setToolTip("Скрыть/Показать чат");
+        ui->aiToolBoxToggle->setCursor(Qt::PointingHandCursor);
+        ui->aiToolBoxContainer->setMaximumWidth(300);
+
+        QObject::connect(ui->aiToolBoxToggle, &QPushButton::clicked, this, [this]() {
+            if(ui->aiToolBox->isVisible())
+            {
+                ui->aiToolBox->setVisible(false);
+                ui->aiToolBoxToggle->setText(QString::fromUtf8("▶"));
+                ui->aiToolBoxContainer->setMaximumWidth(24);
+            }
+            else
+            {
+                ui->aiToolBox->setVisible(true);
+                ui->aiToolBoxToggle->setText(QString::fromUtf8("◀"));
+                ui->aiToolBoxContainer->setMaximumWidth(300);
+            }
+        });
+    }
 }
 
 MainWindow::~MainWindow()
@@ -226,6 +250,134 @@ MainWindow::~MainWindow()
     Adb::killServer();
     AppSetting::save();
     delete ui;
+}
+
+
+void MainWindow::initServiceModules()
+{
+    QString tmp0;
+    int x, y;
+
+    if(!services.isEmpty() || !serverServices)
+        return;
+
+    std::shared_ptr<Service> instance = nullptr;
+    std::list<std::shared_ptr<Service>> buildServices = Service::EnumAppServices(this);
+
+    for(x = 0, y = serverServices->size(); x < y; ++x)
+    {
+        const ServiceItemInfo *remoteService = &(serverServices->at(x));
+        if(remoteService->hide)
+            continue;
+
+        // Find build uuid service.
+        for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
+        {
+            if(remoteService->uuid == (*iter)->uuid())
+            {
+                instance = std::move(*iter);
+                buildServices.erase(iter);
+                break;
+            }
+        }
+
+        if(!instance)
+            instance = std::make_shared<UnavailableService>(this);
+
+#if SHOW_SERVICE_BY_DEBUG
+        instance->active = instance->isAvailable(); // EVERYTHING TRUE
+#else
+        instance->active = remoteService->active && instance->isAvailable();
+#endif
+
+        tmp0 = remoteService->name + '\n';
+        if(instance->active)
+        {
+            if(network.authedId.hasVipAccount() && remoteService->needVIP)
+                tmp0 += "(безлимит)";
+            else if(remoteService->price == 0)
+                tmp0 += "(бесплатно)";
+            else if(remoteService->price == static_cast<std::uint32_t>(-1))
+                tmp0 += "(на выбор)";
+            else
+                tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : remoteService->price).arg(network.authedId.currencyType);
+        }
+        else
+        {
+            if(!instance->isAvailable())
+                tmp0 += "(Не реализован)";
+            else if(!remoteService->active)
+                tmp0 += "(Не доступен)";
+        }
+
+        if(instance->uuid() != IDServiceAIAgentString)
+        {
+            QPushButton *button = new QPushButton(QIcon(":/service-icons/" + instance->widgetIconName()), tmp0, ui->serviceContents);
+            button->setStyleSheet(
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px;"
+                "   font-size: 14px;"
+                "   background:  #B71C1C;"
+                "   color: white;"
+                "   border-radius: 16px;"
+                "   border: none;"
+                "}"
+                "QPushButton:hover {"
+                "   background: gray;"
+                "   color: white;"
+                "   border-color: #363636; "
+                "}"
+                "QPushButton:pressed {"
+                "   background: gray;"
+                "   padding-top: 10px;"
+                "   padding-bottom: 7px;"
+                "   color: white;"
+                "}");
+
+            if(!instance->active)
+                button->setStyleSheet(button->styleSheet() + "QPushButton { background: #4D4D4D;}");
+
+            // Target service by slot
+            QObject::connect(button, &QPushButton::clicked, this, std::bind(&MainWindow::runService, this, instance));
+
+            instance->title = remoteService->name;
+            instance->ownerWidget = button;
+
+            button->setIconSize({70, 70});
+            button->setFixedSize(270, 80);
+            button->setEnabled(instance->active);
+
+        }
+        else
+        {
+            if(!instance->active)
+            {
+                ui->aiChatEdit->setDisabled(true);
+                ui->aiChatSend->setDisabled(true);
+                ui->aiChatMessages->append("К сожалению Сервис ИИ не доступен. Попробуйте позднее.");
+            }
+            else
+            {
+                instance->start(); // Auto start for AI
+            }
+        }
+
+        services << std::move(instance);
+    }
+    std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) { return static_cast<int>(lhs->active) > static_cast<int>(rhs->active); });
+
+    x = 0;
+    for(const std::shared_ptr<Service> &item : std::as_const(services))
+    {
+        // Adds widget to a grid
+        if(item->uuid() != IDServiceAIAgentString)
+        {
+            static_cast<QGridLayout *>(ui->serviceContents->layout())->addWidget(item->ownerWidget, x / 3, x % 3);
+            ++x;
+        }
+    }
+    serverServices.reset();
 }
 
 void MainWindow::on_actionAboutUs_triggered()
@@ -372,103 +524,103 @@ void MainWindow::pageShownPreStart(int page)
 {
     switch(page)
     {
-            // WELCOME
-        case AuthPage:
-            ui->statusAuthText->setText("Выполните аутентификацию");
-            ui->authButton->setEnabled(true);
-            clearAuthInfoPage();
-            if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty() && ui->checkAutoLogin->isChecked())
-                ui->authButton->click();
-            break;
-        case DevicesPage:
-            if(nullptr == ServiceProvider::currentService())
+        // WELCOME
+    case AuthPage:
+        ui->statusAuthText->setText("Выполните аутентификацию");
+        ui->authButton->setEnabled(true);
+        clearAuthInfoPage();
+        if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty() && ui->checkAutoLogin->isChecked())
+            ui->authButton->click();
+        break;
+    case DevicesPage:
+        if(nullptr == ServiceProvider::currentService())
+        {
+            QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
+            logoutSystem();
+            return;
+        }
+
+        ServiceProvider::currentService()->stop();
+
+        // Unset
+        deviceSelectSwitched = false;
+        deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
+
+        delayUI(1000);
+
+        delayUICallLoop(
+            300,
+            [this]() -> bool
             {
-                QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
-                logoutSystem();
-                return;
-            }
-
-            ServiceProvider::currentService()->stop();
-
-            // Unset
-            deviceSelectSwitched = false;
-            deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
-
-            delayUI(1000);
-
-            delayUICallLoop(
-                300,
-                [this]() -> bool
+                if(!deviceSelectSwitched)
                 {
-                    if(!deviceSelectSwitched)
+                    QList<AdbDevice> devices = Adb::getDevices();
+                    for(const AdbDevice &device : std::as_const(devices))
                     {
-                        QList<AdbDevice> devices = Adb::getDevices();
-                        for(const AdbDevice &device : std::as_const(devices))
+                        AdbConStatus status = Adb::deviceStatus(device.devId);
+                        if(status == DEVICE)
                         {
-                            AdbConStatus status = Adb::deviceStatus(device.devId);
-                            if(status == DEVICE)
-                            {
-                                connectPhone.isAuthed = status == DEVICE;
-                                connectPhone.adbDevice = device;
-                                ServiceProvider::currentService()->setArgs(device);
-                                break;
-                            }
+                            connectPhone.isAuthed = status == DEVICE;
+                            connectPhone.adbDevice = device;
+                            ServiceProvider::currentService()->setArgs(device);
+                            break;
                         }
                     }
-                    if(ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
-                    {
-                        deviceSelectSwitched = true;
-                        deviceLeftAnimator->start();
-                        delayUI(2000);
-                        showPageLoader(ServiceProvider::currentService()->targetPage());
-                    }
-                    if(curPage != DevicesPage)
-                    {
-                        deviceLeftAnimator->stop();
-                        ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
-                    }
-                    return curPage == DevicesPage;
-                });
+                }
+                if(ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
+                {
+                    deviceSelectSwitched = true;
+                    deviceLeftAnimator->start();
+                    delayUI(2000);
+                    showPageLoader(ServiceProvider::currentService()->targetPage());
+                }
+                if(curPage != DevicesPage)
+                {
+                    deviceLeftAnimator->stop();
+                    ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
+                }
+                return curPage == DevicesPage;
+            });
 
-            break;
-        case CabinetPage:
+        break;
+    case CabinetPage:
+    {
+        ui->scrollArea_3->verticalScrollBar()->setValue(0);
+        fillAuthInfoPage();
+        break;
+    }
+    case LongInfoPage:
+    {
+        QStringList place {};
+        QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
+        ui->processBarStatus->setValue(0);
+        ui->malwareStatusText0->setText("Ожидание запуска сервиса.");
+        malwareProgressCircle->setValue(0);
+        malwareProgressCircle->setMaximum(100);
+        malwareProgressCircle->setInfinilyMode(false);
+
+        place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
+
+        // TODO: set auto start mode flag.
+        // IF THERE AUTO_START = YES?
+
+        if(!ServiceProvider::currentService()->canStart())
         {
-            ui->scrollArea_3->verticalScrollBar()->setValue(0);
-            fillAuthInfoPage();
-            break;
+            place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад "
+                     "и повторите попытку.";
         }
-        case LongInfoPage:
+        else
         {
-            QStringList place {};
-            QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-            ui->processBarStatus->setValue(0);
-            ui->malwareStatusText0->setText("Ожидание запуска сервиса.");
-            malwareProgressCircle->setValue(0);
-            malwareProgressCircle->setMaximum(100);
-            malwareProgressCircle->setInfinilyMode(false);
+            place << QString("<< Ожидаем >>").arg(ServiceProvider::currentService()->title);
 
-            place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
-
-            // TODO: set auto start mode flag.
-            // IF THERE AUTO_START = YES?
-
-            if(!ServiceProvider::currentService()->canStart())
-            {
-                place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад "
-                         "и повторите попытку.";
-            }
-            else
-            {
-                place << QString("<< Ожидаем >>").arg(ServiceProvider::currentService()->title);
-
-                delayUICall(500, [this]() { ServiceProvider::currentService()->start(); });
-            }
-
-            model->setStringList(place);
-            break;
+            delayUICall(500, [this]() { ServiceProvider::currentService()->start(); });
         }
-        default:
-            break;
+
+        model->setStringList(place);
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -530,8 +682,16 @@ void MainWindow::clearAuthInfoPage()
     for(x = 0; x < services.count(); ++x)
         services[x]->ownerWidget->deleteLater();
 
+
     serverServices.reset();
     services.clear();
+
+    ui->aiChatEdit->clear();
+    ui->aiChatSend->setText("Отправить");
+
+    ui->aiChatEdit->setDisabled(true);
+    ui->aiChatSend->setDisabled(true);
+    ui->aiChatMessages->setText("Войдите в систему чтобы получить доступ к системе ИИ.");
 }
 
 void MainWindow::fillAuthInfoPage()
@@ -567,111 +727,6 @@ void MainWindow::fillAuthInfoPage()
     initServiceModules();
 }
 
-void MainWindow::initServiceModules()
-{
-    QString tmp0;
-    int x, y;
-
-    if(!services.isEmpty() || !serverServices)
-        return;
-
-    std::shared_ptr<Service> instance = nullptr;
-    std::list<std::shared_ptr<Service>> buildServices = Service::EnumAppServices(this);
-
-    for(x = 0, y = serverServices->size(); x < y; ++x)
-    {
-        const ServiceItemInfo *remoteService = &(serverServices->at(x));
-        if(remoteService->hide)
-            continue;
-
-        // Find build uuid service.
-        for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
-        {
-            if(remoteService->uuid == (*iter)->uuid())
-            {
-                instance = std::move(*iter);
-                buildServices.erase(iter);
-                break;
-            }
-        }
-
-        if(!instance)
-            instance = std::make_shared<UnavailableService>(this);
-
-#if SHOW_SERVICE_BY_DEBUG
-        instance->active = instance->isAvailable(); // EVERYTHING TRUE
-#else
-        instance->active = remoteService->active && instance->isAvailable();
-#endif
-
-        tmp0 = remoteService->name + '\n';
-        if(instance->active)
-        {
-            if(network.authedId.hasVipAccount() && remoteService->needVIP)
-                tmp0 += "(безлимит)";
-            else if(remoteService->price == 0)
-                tmp0 += "(бесплатно)";
-            else if(remoteService->price == static_cast<std::uint32_t>(-1))
-                tmp0 += "(на выбор)";
-            else
-                tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : remoteService->price).arg(network.authedId.currencyType);
-        }
-        else
-        {
-            if(!instance->isAvailable())
-                tmp0 += "(Не реализован)";
-            else if(!remoteService->active)
-                tmp0 += "(Не доступен)";
-        }
-
-        QPushButton *button = new QPushButton(QIcon(":/service-icons/" + instance->widgetIconName()), tmp0, ui->serviceContents);
-        button->setStyleSheet(
-            "QPushButton {"
-            "   text-align: left;"
-            "   padding: 10px;"
-            "   font-size: 14px;"
-            "   background:  #B71C1C;"
-            "   color: white;"
-            "   border-radius: 16px;"
-            "   border: none;"
-            "}"
-            "QPushButton:hover {"
-            "   background: gray;"
-            "   color: white;"
-            "   border-color: #363636; "
-            "}"
-            "QPushButton:pressed {"
-            "   background: gray;"
-            "   padding-top: 10px;"
-            "   padding-bottom: 7px;"
-            "   color: white;"
-            "}");
-
-        if(!instance->active)
-            button->setStyleSheet(button->styleSheet() + "QPushButton { background: #4D4D4D;}");
-
-        // Target service by slot
-        QObject::connect(button, &QPushButton::clicked, this, std::bind(&MainWindow::runService, this, instance));
-
-        instance->title = remoteService->name;
-        instance->ownerWidget = button;
-
-        button->setIconSize({70, 70});
-        button->setFixedSize(270, 80);
-        button->setEnabled(instance->active);
-        services << std::move(instance);
-    }
-    std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) { return static_cast<int>(lhs->active) > static_cast<int>(rhs->active); });
-
-    x = 0;
-    for(const std::shared_ptr<Service> &item : std::as_const(services))
-    {
-        // Adds widget to a grid
-        static_cast<QGridLayout *>(ui->serviceContents->layout())->addWidget(item->ownerWidget, x / 3, x % 3);
-        ++x;
-    }
-    serverServices.reset();
-}
 
 void MainWindow::delayUI(int ms)
 {
@@ -850,43 +905,43 @@ void MainWindow::slotAuthFinish(int status, bool ok)
             timerAuthAnim->stop();
             switch(_status)
             {
-                case 0:
-                    resText = "Токен успешно прошел проверку. Добро пожаловать!";
+            case 0:
+                resText = "Токен успешно прошел проверку. Добро пожаловать!";
 
-                    if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
-                    {
-                        AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
+                if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
+                {
+                    AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
 
-                        // Only get token.
-                        break;
-                    }
-
-                    if(network.authedId.isNotValidBalance())
-                    {
-                        ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
-                        showMessageFromStatus(NetworkStatus::NoEnoughMoney);
-                    }
-                    else
-                    {
-                        ui->statusAuthText->setText("Аутентификация прошла успешно.");
-                    }
-
-                    if(network.authedId.blocked)
-                    {
-                        ui->statusAuthText->setText("Аккаунт заблокирован");
-                        showMessageFromStatus(NetworkStatus::AccountBlocked);
-                    }
-
+                    // Only get token.
                     break;
-                case 401:
-                    resText = infoServer401;
-                    break;
-                case NetworkStatus::NoEnoughMoney:
-                    resText = infoNoBalance;
-                    break;
-                default:
-                    resText = infoNoInternet;
-                    break;
+                }
+
+                if(network.authedId.isNotValidBalance())
+                {
+                    ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
+                    showMessageFromStatus(NetworkStatus::NoEnoughMoney);
+                }
+                else
+                {
+                    ui->statusAuthText->setText("Аутентификация прошла успешно.");
+                }
+
+                if(network.authedId.blocked)
+                {
+                    ui->statusAuthText->setText("Аккаунт заблокирован");
+                    showMessageFromStatus(NetworkStatus::AccountBlocked);
+                }
+
+                break;
+            case 401:
+                resText = infoServer401;
+                break;
+            case NetworkStatus::NoEnoughMoney:
+                resText = infoNoBalance;
+                break;
+            default:
+                resText = infoNoInternet;
+                break;
             }
 
             ui->lineLoginEdit->setEnabled(true);
@@ -988,16 +1043,16 @@ void MainWindow::setTheme(ThemeScheme theme)
 
     switch(theme)
     {
-        case System:
-            resourceName = nullptr;
-            break;
-        case Dark:
-            resourceName = ":/resources/app-style-dark";
-            break;
-        case Light:
-        default:
-            resourceName = ":/resources/app-style-light";
-            break;
+    case System:
+        resourceName = nullptr;
+        break;
+    case Dark:
+        resourceName = ":/resources/app-style-dark";
+        break;
+    case Light:
+    default:
+        resourceName = ":/resources/app-style-light";
+        break;
     }
 
     QFile styleRes {};
@@ -1131,3 +1186,9 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<boo
             return true;
         });
 }
+
+void MainWindow::on_butShowPass_clicked()
+{
+    ui->linePassEdit->setEchoMode(ui->linePassEdit->echoMode() == QLineEdit::EchoMode::Normal ? QLineEdit::EchoMode::Password : QLineEdit::EchoMode::Normal);
+}
+
