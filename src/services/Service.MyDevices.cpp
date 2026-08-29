@@ -1,9 +1,111 @@
+#include <QBrush>
 #include <QCheckBox>
+#include <QColor>
+#include <QFont>
 #include <QHeaderView>
+#include <QIcon>
+#include <QLinearGradient>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPixmap>
 #include <QStandardItemModel>
 
 #include "Services.h"
 #include "mainwindow.h"
+
+static QIcon createBrandBadgeIcon(const QString &vendorRaw)
+{
+    QString vendor = vendorRaw.trimmed().toLower();
+    QString letter = "📱";
+    QColor bgTop, bgBot;
+    QColor textColor = Qt::white;
+
+    if(vendor.contains("xiaomi") || vendor.contains("redmi") || vendor.contains("poco") || vendor.contains("mi"))
+    {
+        letter = "X";
+        bgTop = QColor("#FF4D4D");
+        bgBot = QColor("#D32F2F"); // Red background for Xiaomi as requested
+    }
+    else if(vendor.contains("samsung"))
+    {
+        letter = "S";
+        bgTop = QColor("#1E88E5");
+        bgBot = QColor("#0D47A1");
+    }
+    else if(vendor.contains("huawei") || vendor.contains("honor"))
+    {
+        letter = "H";
+        bgTop = QColor("#EF5350");
+        bgBot = QColor("#B71C1C");
+    }
+    else if(vendor.contains("oneplus"))
+    {
+        letter = "1+";
+        bgTop = QColor("#E53935");
+        bgBot = QColor("#B71C1C");
+    }
+    else if(vendor.contains("oppo") || vendor.contains("realme"))
+    {
+        letter = vendor.contains("realme") ? "R" : "O";
+        bgTop = QColor("#43A047");
+        bgBot = QColor("#1B5E20");
+    }
+    else if(vendor.contains("vivo") || vendor.contains("iqoo"))
+    {
+        letter = "V";
+        bgTop = QColor("#00ACC1");
+        bgBot = QColor("#006064");
+    }
+    else if(vendor.contains("google") || vendor.contains("pixel"))
+    {
+        letter = "G";
+        bgTop = QColor("#4285F4");
+        bgBot = QColor("#1A73E8");
+    }
+    else if(vendor.contains("apple"))
+    {
+        letter = "A";
+        bgTop = QColor("#757575");
+        bgBot = QColor("#303030");
+    }
+    else
+    {
+        letter = vendorRaw.isEmpty() ? "D" : vendorRaw.left(1).toUpper();
+        bgTop = QColor("#0078D4");
+        bgBot = QColor("#004E8C");
+    }
+
+    constexpr int size = 26;
+    QPixmap pix(size, size);
+    pix.fill(Qt::transparent);
+
+    QPainter p(&pix);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::TextAntialiasing);
+
+    // Draw rounded badge rectangle
+    QPainterPath path;
+    path.addRoundedRect(QRectF(1, 1, size - 2, size - 2), 6, 6);
+
+    QLinearGradient grad(0, 0, 0, size);
+    grad.setColorAt(0.0, bgTop);
+    grad.setColorAt(1.0, bgBot);
+    p.fillPath(path, grad);
+
+    p.setPen(QPen(QColor(255, 255, 255, 70), 1));
+    p.drawPath(path);
+
+    // Draw text letter
+    p.setPen(textColor);
+    QFont f = p.font();
+    f.setBold(true);
+    f.setPixelSize(letter.length() > 1 ? 10 : 13);
+    p.setFont(f);
+    p.drawText(QRectF(0, 0, size, size), Qt::AlignCenter, letter);
+
+    p.end();
+    return QIcon(pix);
+}
 
 QString MyDeviceService::uuid() const
 {
@@ -46,66 +148,176 @@ void MyDeviceService::slotRefresh()
     MainWindow::current->network.pullServiceUUID(uuid(), request, ServiceOperation::Get);
 }
 
+class DeviceSortItem : public QStandardItem
+{
+public:
+    DeviceSortItem() : QStandardItem() {}
+    explicit DeviceSortItem(const QString &text) : QStandardItem(text) {}
+    DeviceSortItem(const QIcon &icon, const QString &text) : QStandardItem(icon, text) {}
+
+    bool operator<(const QStandardItem &other) const override
+    {
+        const QVariant v1 = data(Qt::UserRole);
+        const QVariant v2 = other.data(Qt::UserRole);
+        if(v1.isValid() && v2.isValid())
+        {
+            if(v1.userType() == QMetaType::QDateTime || v2.userType() == QMetaType::QDateTime)
+                return v1.toDateTime() < v2.toDateTime();
+            if(v1.userType() == QMetaType::Int || v1.userType() == QMetaType::LongLong || v1.userType() == QMetaType::Double)
+                return v1.toDouble() < v2.toDouble();
+            if(v1.userType() == QMetaType::Bool)
+                return static_cast<int>(v1.toBool()) < static_cast<int>(v2.toBool());
+            return v1.toString().localeAwareCompare(v2.toString()) < 0;
+        }
+
+        const QVariant d1 = data(Qt::DisplayRole);
+        const QVariant d2 = other.data(Qt::DisplayRole);
+        if(d1.userType() == QMetaType::Int || d1.userType() == QMetaType::LongLong || d1.userType() == QMetaType::Double)
+            return d1.toDouble() < d2.toDouble();
+        return text().localeAwareCompare(other.text()) < 0;
+    }
+};
+
 void MyDeviceService::clearMyDevicesPage(QString text)
 {
     delete table->model(); // fix: delete old model before replacing to avoid accumulation
     QStandardItemModel *model = new QStandardItemModel(table);
     table->setModel(model);
 
-    model->setRowCount(1);
-    model->setColumnCount(7);
+    model->setColumnCount(10);
 
-    model->setHorizontalHeaderItem(0, new QStandardItem("id"));
+    model->setHorizontalHeaderItem(0, new QStandardItem("ID"));
     model->setHorizontalHeaderItem(1, new QStandardItem("Производитель"));
     model->setHorizontalHeaderItem(2, new QStandardItem("Модель"));
-    model->setHorizontalHeaderItem(3, new QStandardItem("Дата регистраций"));
-    model->setHorizontalHeaderItem(4, new QStandardItem("Послед. подключение"));
+    model->setHorizontalHeaderItem(3, new QStandardItem("Регистрация"));
+    model->setHorizontalHeaderItem(4, new QStandardItem("Посл. подключение"));
     model->setHorizontalHeaderItem(5, new QStandardItem("Срок истечения"));
     model->setHorizontalHeaderItem(6, new QStandardItem("Пакетов"));
     model->setHorizontalHeaderItem(7, new QStandardItem("Подключений"));
     model->setHorizontalHeaderItem(8, new QStandardItem("Оплачено"));
-    model->setHorizontalHeaderItem(9, new QStandardItem("Есть гарантия?"));
+    model->setHorizontalHeaderItem(9, new QStandardItem("Гарантия"));
+
+    table->setIconSize(QSize(22, 22));
+    table->verticalHeader()->setDefaultSectionSize(34);
+    table->verticalHeader()->hide();
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    table->horizontalHeader()->setSortIndicatorShown(true);
+    table->horizontalHeader()->setSectionsClickable(true);
+    table->setSortingEnabled(true);
+
     if(text.isEmpty())
         return;
-    model->setItem(0, 0, new QStandardItem(text));
-    model->setItem(0, 1, new QStandardItem(text));
-    model->setItem(0, 2, new QStandardItem(text));
-    model->setItem(0, 3, new QStandardItem(text));
-    model->setItem(0, 4, new QStandardItem(text));
-    model->setItem(0, 5, new QStandardItem(text));
-    model->setItem(0, 6, new QStandardItem(text));
-    model->setItem(0, 7, new QStandardItem(text));
-    model->setItem(0, 8, new QStandardItem(text));
-    model->setItem(0, 9, new QStandardItem(text));
+
+    model->setRowCount(1);
+    for(int col = 0; col < 10; ++col)
+    {
+        QStandardItem *it = new QStandardItem(col == 1 ? text : "");
+        it->setTextAlignment(Qt::AlignCenter);
+        it->setForeground(QBrush(QColor("#8E9297")));
+        model->setItem(0, col, it);
+    }
 }
 
 void MyDeviceService::fillMyDevicesPage()
 {
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(table->model());
+    if(!model)
+        return;
     QList<DeviceItemInfo> items;
 
-    items << *actual;
-    items << *expired;
+    if(actual)
+        items << *actual;
+    if(expired)
+        items << *expired;
+
+    model->removeRows(0, model->rowCount());
 
     int idx = 0;
     for(const DeviceItemInfo &item : std::as_const(items))
     {
         if(quaranteeFilter->isChecked() && !item.serverQuarantee)
             continue;
-        model->setItem(idx, 0, new QStandardItem(QString::number(item.deviceId)));
-        model->setItem(idx, 1, new QStandardItem(item.vendor));
-        model->setItem(idx, 2, new QStandardItem(item.model));
-        model->setItem(idx, 3, new QStandardItem(item.logTime.toString(Qt::RFC2822Date)));
-        model->setItem(idx, 4, new QStandardItem(item.lastConnectTime.toString(Qt::RFC2822Date)));
-        model->setItem(idx, 5, new QStandardItem(item.expire.toString(Qt::RFC2822Date)));
-        model->setItem(idx, 6, new QStandardItem(QString::number(item.packages)));
-        model->setItem(idx, 7, new QStandardItem(QString::number(item.connectionCount)));
-        model->setItem(idx, 8, new QStandardItem(QString("%1").arg(item.purchasedType == 1 ? ("VIP") : (item.purchasedType == 2 ? (QString::number(item.purchasedValue)) : ("отсутствует")))));
-        model->setItem(idx, 9, new QStandardItem(QString("%1").arg(item.serverQuarantee == 1 ? "Да" : "Нет")));
+
+        model->insertRow(idx);
+
+        DeviceSortItem *idItem = new DeviceSortItem(QString::number(item.deviceId));
+        idItem->setData(item.deviceId, Qt::UserRole);
+        idItem->setTextAlignment(Qt::AlignCenter);
+        idItem->setForeground(QBrush(QColor("#8E9297")));
+
+        DeviceSortItem *vendorItem = new DeviceSortItem(createBrandBadgeIcon(item.vendor), item.vendor);
+        vendorItem->setData(item.vendor.trimmed().toLower(), Qt::UserRole);
+        vendorItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        vendorItem->setForeground(QBrush(QColor("#FFFFFF")));
+
+        DeviceSortItem *modelItem = new DeviceSortItem(item.model);
+        modelItem->setData(item.model.trimmed().toLower(), Qt::UserRole);
+        modelItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        modelItem->setForeground(QBrush(QColor("#E3E5E8")));
+
+        DeviceSortItem *logTimeItem = new DeviceSortItem(item.logTime.isValid() ? item.logTime.toString("yyyy-MM-dd HH:mm") : "—");
+        logTimeItem->setData(item.logTime, Qt::UserRole);
+        logTimeItem->setTextAlignment(Qt::AlignCenter);
+        logTimeItem->setForeground(QBrush(QColor("#BAC0CB")));
+
+        DeviceSortItem *lastConnItem = new DeviceSortItem(item.lastConnectTime.isValid() ? item.lastConnectTime.toString("yyyy-MM-dd HH:mm") : "—");
+        lastConnItem->setData(item.lastConnectTime, Qt::UserRole);
+        lastConnItem->setTextAlignment(Qt::AlignCenter);
+        lastConnItem->setForeground(QBrush(QColor("#BAC0CB")));
+
+        DeviceSortItem *expireItem = new DeviceSortItem(item.expire.isValid() ? item.expire.toString("yyyy-MM-dd HH:mm") : "—");
+        expireItem->setData(item.expire, Qt::UserRole);
+        expireItem->setTextAlignment(Qt::AlignCenter);
+        expireItem->setForeground(QBrush(QColor("#BAC0CB")));
+
+        DeviceSortItem *pkgItem = new DeviceSortItem(QString::number(item.packages));
+        pkgItem->setData(item.packages, Qt::UserRole);
+        pkgItem->setTextAlignment(Qt::AlignCenter);
+        pkgItem->setForeground(QBrush(QColor("#4CC2FF")));
+
+        DeviceSortItem *connCountItem = new DeviceSortItem(QString::number(item.connectionCount));
+        connCountItem->setData(item.connectionCount, Qt::UserRole);
+        connCountItem->setTextAlignment(Qt::AlignCenter);
+        connCountItem->setForeground(QBrush(QColor("#E3E5E8")));
+
+        QString payStr = (item.purchasedType == 1) ? "👑 VIP" : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "—");
+        DeviceSortItem *payItem = new DeviceSortItem(payStr);
+        int payRank = (item.purchasedType == 1) ? 999999 : ((item.purchasedType == 2) ? item.purchasedValue : 0);
+        payItem->setData(payRank, Qt::UserRole);
+        payItem->setTextAlignment(Qt::AlignCenter);
+        if(item.purchasedType == 1)
+            payItem->setForeground(QBrush(QColor("#FFD700")));
+        else
+            payItem->setForeground(QBrush(QColor("#8E9297")));
+
+        DeviceSortItem *guarItem = new DeviceSortItem(item.serverQuarantee == 1 ? "✓ Активна" : "✗ Истекла");
+        guarItem->setData(item.serverQuarantee == 1 ? 1 : 0, Qt::UserRole);
+        guarItem->setTextAlignment(Qt::AlignCenter);
+        if(item.serverQuarantee == 1)
+            guarItem->setForeground(QBrush(QColor("#00E676")));
+        else
+            guarItem->setForeground(QBrush(QColor("#8E9297")));
+
+        model->setItem(idx, 0, idItem);
+        model->setItem(idx, 1, vendorItem);
+        model->setItem(idx, 2, modelItem);
+        model->setItem(idx, 3, logTimeItem);
+        model->setItem(idx, 4, lastConnItem);
+        model->setItem(idx, 5, expireItem);
+        model->setItem(idx, 6, pkgItem);
+        model->setItem(idx, 7, connCountItem);
+        model->setItem(idx, 8, payItem);
+        model->setItem(idx, 9, guarItem);
         ++idx;
     }
+
+    table->setIconSize(QSize(22, 22));
+    table->verticalHeader()->setDefaultSectionSize(34);
+    table->verticalHeader()->hide();
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    table->horizontalHeader()->setSortIndicatorShown(true);
+    table->horizontalHeader()->setSectionsClickable(true);
+    table->setSortingEnabled(true);
 }
 
 void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok)

@@ -54,6 +54,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
     friend class AdsKillerService;
+    friend class BoostRamService;
     friend class ServiceProvider;
 
 public:

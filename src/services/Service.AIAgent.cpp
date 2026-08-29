@@ -21,6 +21,11 @@ AIAgentService::AIAgentService(QObject *parent) : Service(DeviceConnectType::Non
 {
 }
 
+AIAgentService::~AIAgentService()
+{
+    stop();
+}
+
 bool AIAgentService::canStart()
 {
     return Service::canStart();
@@ -36,148 +41,123 @@ bool AIAgentService::isFinish()
     return false;
 }
 
-bool AIAgentService::start()
+bool AIAgentService::eventFilter(QObject *obj, QEvent *ev)
 {
-    // Wire UI: find widgets by object name
+    if(ev->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(ev);
+        if((ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) && !(ke->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier)))
+        {
+            sendCurrentMessage();
+            return true;
+        }
+    }
+    return Service::eventFilter(obj, ev);
+}
+
+#include "AIChatView.h"
+
+void AIAgentService::sendCurrentMessage()
+{
+    if(!MainWindow::current)
+        return;
+
     auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
     auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
-    auto *messages = MainWindow::current->findChild<QTextEdit *>("aiChatMessages");
+    auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
+
+    if(!btn || !edit || !btn->isEnabled())
+        return;
+
+    QString text = edit->toPlainText().trimmed();
+    if(text.isEmpty())
+        return;
+
+    // Store message in conversation history as compact JSON string
+    QJsonObject userObj;
+    userObj["role"] = "user";
+    userObj["content"] = text;
+    QString serialized = QString::fromUtf8(QJsonDocument(userObj).toJson(QJsonDocument::Compact));
+    aiMessages.append(serialized);
+
+    // Add user message bubble widget
+    if(chatView)
+    {
+        chatView->addUserMessage(text);
+        chatView->showTyping(true);
+    }
+
+    // Disable button and show sending state
+    btn->setEnabled(false);
+    QString prevText = btn->text();
+    btn->setProperty("__prev_text", prevText);
+    btn->setText("•••");
+
+    // Prepare request object from full conversation
+    QJsonObject serviceReq;
+    if(aiSessionId >= 0)
+        serviceReq["session_id"] = aiSessionId;
+
+    serviceReq["message"] = aiMessages.last();
+
+    // Create transient Network object parented to MainWindow so it lives asynchronously
+    Network *net = new Network(MainWindow::current->network);
+
+    QObject::connect(net, &Network::sPullServiceUUID, this, &AIAgentService::slotPullMessage);
+    QObject::connect(net, &Network::sPullServiceUUID, net, &QObject::deleteLater);
+
+    net->pullServiceUUID(uuid(), serviceReq, ServiceOperation::Get);
+
+    // clear input
+    edit->clear();
+}
+
+bool AIAgentService::start()
+{
+    if(!MainWindow::current)
+        return false;
+
+    auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
+    auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
+    auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
 
     aiMessages.clear();
 
-    if(!btn || !edit || !messages)
+    if(!btn || !edit)
         return false;
+
+    // Disconnect any existing connection to this slot to prevent duplicates
+    btn->disconnect(this);
+    edit->removeEventFilter(this);
 
     btn->setEnabled(true);
     edit->setEnabled(true);
-    messages->setText("");
-    messages->setStyleSheet("color: black; background: white;");
 
-    // Prepare a reusable send function so both button and Enter-key can use it
-    std::function<void()> doSend = [this, btn, edit, messages]() {
-        if(!btn->isEnabled())
-            return;
-        QString text = edit->toPlainText().trimmed();
-        if(text.isEmpty())
-            return;
+    if(chatView)
+        chatView->showWelcome();
 
-        // Store message in conversation history as compact JSON string
-        QJsonObject userObj;
-        userObj["role"] = "user";
-        userObj["content"] = text;
-        QString serialized = QString::fromUtf8(QJsonDocument(userObj).toJson(QJsonDocument::Compact));
-        aiMessages.append(serialized);
-
-        // Append user message with time and prefix
-        QString time = QDateTime::currentDateTime().toString("HH:mm");
-        QString esc = text.toHtmlEscaped();
-        QString userHtml = QString("<div style='margin:8px; text-align:right;'><div style='display:inline-block; max-width:220px; min-height:28px; background:#d4f1c4; color:#000; padding:8px; border-radius:10px; font-size:12px;'><b>Вы:</b> %1</div><div style='font-size:9px;color:#999;margin-top:2px;'>%2</div></div>")
-                               .arg(esc)
-                               .arg(time);
-        messages->append(userHtml);
-
-        // Disable button and show sending state
-        btn->setEnabled(false);
-        QString prevText = btn->text();
-        btn->setProperty("__prev_text", prevText);
-        btn->setText("Отправка...");
-
-        // Prepare request object from full conversation
-        QJsonObject serviceReq;
-        if(aiSessionId >= 0)
-            serviceReq["session_id"] = aiSessionId;
-
-        serviceReq["message"] = aiMessages.last();
-
-        // Create transient Network object parented to MainWindow so it lives asynchronously
-        Network *net = new Network(MainWindow::current->network);
-
-        QObject::connect(net, &Network::sPullServiceUUID, this, &AIAgentService::slotPullMessage);
-        QObject::connect(net, &Network::sPullServiceUUID, net, &QObject::deleteLater);
-
-        net->pullServiceUUID(uuid(), serviceReq, ServiceOperation::Get);
-
-        // clear input
-        edit->clear();
-        
-        // Add typing placeholder and start animation
-        aiTypingId++;
-        aiTypingSpanId = QString("AI_TYPING_%1").arg(aiTypingId);
-        aiTypingDots = 1;
-        QString typingSpan = QString("<span id='%1'>%2</span>").arg(aiTypingSpanId).arg("...");
-        QString typingHtml = QString("<div style='margin:6px; text-align:left;'><div style='display:inline-block; background:#f1f0f0; padding:8px; border-radius:8px; font-style:italic; color:#666; min-height:20px;'><b>ИИ:</b> ") + typingSpan + "</div></div>";
-        messages->append(typingHtml);
-
-        // Start timer for dots animation
-        QTimer *t = new QTimer(this);
-        t->setInterval(500);
-        QObject::connect(t, &QTimer::timeout, this, [messages, this]() {
-            // rotate dots 1..3
-            aiTypingDots = (aiTypingDots % 3) + 1;
-            QString dots;
-            for(int i = 0; i < aiTypingDots; ++i)
-                dots += '.';
-            QString startTag = QString("<span id='%1'>").arg(aiTypingSpanId);
-            QString toHtml = messages->toHtml();
-            int pos = toHtml.indexOf(startTag);
-            if(pos != -1)
-            {
-                int startContent = pos + startTag.length();
-                int endPos = toHtml.indexOf("</span>", startContent);
-                if(endPos != -1)
-                {
-                    toHtml.replace(startContent, endPos - startContent, dots);
-                    messages->setHtml(toHtml);
-                }
-            }
-        });
-        t->start();
-        aiTypingTimer = t;
-    };
-
-    // Connect button click to send
-    QObject::connect(btn, &QPushButton::clicked, [doSend]() { doSend(); });
-
-    // Event filter to handle Enter key (without Shift/Ctrl/Alt) as send
-    class EnterFilter : public QObject
-    {
-    public:
-        EnterFilter(std::function<void()> f, QObject *parent = nullptr) : QObject(parent), fn(std::move(f))
-        {
-        }
-        bool eventFilter(QObject *obj, QEvent *ev) override
-        {
-            if(ev->type() == QEvent::KeyPress)
-            {
-                QKeyEvent *ke = static_cast<QKeyEvent *>(ev);
-                if((ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) && !(ke->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier)))
-                {
-                    if(fn)
-                        fn();
-                    return true;
-                }
-            }
-            return QObject::eventFilter(obj, ev);
-        }
-
-    private:
-        std::function<void()> fn;
-    };
+    // Connect button click directly to slot with 'this' receiver context (auto-disconnected when this is destroyed)
+    QObject::connect(btn, &QPushButton::clicked, this, &AIAgentService::sendCurrentMessage);
 
     // Install filter on edit
-    EnterFilter *filter = new EnterFilter(doSend, edit);
-    edit->installEventFilter(filter);
+    edit->installEventFilter(this);
 
     return true;
 }
 
 void AIAgentService::stop()
 {
-    if(aiTypingTimer)
+    if(MainWindow::current)
     {
-        aiTypingTimer->stop();
-        aiTypingTimer->deleteLater();
-        aiTypingTimer = nullptr;
+        auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
+        if(btn)
+            btn->disconnect(this);
+        auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
+        if(edit)
+            edit->removeEventFilter(this);
+        auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
+        if(chatView)
+            chatView->showTyping(false);
     }
 }
 
@@ -185,42 +165,22 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
 {
     Q_UNUSED(guid)
     Q_UNUSED(so)
-    if(!ok || (!responce["status"].isUndefined() &&responce["status"].toInteger() > 0))
-    {
-        // stop typing timer and remove placeholder
-        if(aiTypingTimer)
-        {
-            aiTypingTimer->stop();
-            aiTypingTimer->deleteLater();
-            aiTypingTimer = nullptr;
-        }
-        // remove typing placeholder HTML
-        auto *messagesWidget = MainWindow::current->findChild<QTextEdit *>("aiChatMessages");
-        if(messagesWidget && !aiTypingSpanId.isEmpty())
-        {
-            QString toHtml = messagesWidget->toHtml();
-            QString startTag = QString("<span id='%1'>").arg(aiTypingSpanId);
-            int pos = toHtml.indexOf(startTag);
-            if(pos != -1)
-            {
-                int startOuter = toHtml.lastIndexOf("<div style='margin:6px; text-align:left;'", pos);
-                int endPos = toHtml.indexOf("</div></div>", pos);
-                if(startOuter != -1 && endPos != -1)
-                {
-                    toHtml.remove(startOuter, endPos + QString("</div></div>").length() - startOuter);
-                    messagesWidget->setHtml(toHtml);
-                }
-            }
-        }
+    auto *chatView = MainWindow::current ? MainWindow::current->findChild<AIChatView *>("aiChatView") : nullptr;
+    if(chatView)
+        chatView->showTyping(false);
 
+    if(!ok || (!responce["status"].isUndefined() && responce["status"].toInteger() > 0))
+    {
         QMessageBox::warning(MainWindow::current, "AI Agent", "Ошибка сети или сервера при обращении к AI сервису.");
         // restore button
-        auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
+        auto *btn = MainWindow::current ? MainWindow::current->findChild<QPushButton *>("aiChatSend") : nullptr;
         if(btn)
         {
             QString prev = btn->property("__prev_text").toString();
             if(!prev.isEmpty())
                 btn->setText(prev);
+            else
+                btn->setText("Отправить");
             btn->setEnabled(true);
         }
         return;
@@ -236,35 +196,6 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     if(text.isEmpty())
         text = "(пустой ответ)";
 
-    // stop typing timer and remove placeholder
-    if(aiTypingTimer)
-    {
-        aiTypingTimer->stop();
-        aiTypingTimer->deleteLater();
-        aiTypingTimer = nullptr;
-    }
-    // remove typing placeholder HTML
-    if(!aiTypingSpanId.isEmpty())
-    {
-        auto *messagesWidget = MainWindow::current->findChild<QTextEdit *>("aiChatMessages");
-        if(messagesWidget)
-        {
-            QString toHtml = messagesWidget->toHtml();
-            QString startTag = QString("<span id='%1'>").arg(aiTypingSpanId);
-            int pos = toHtml.indexOf(startTag);
-            if(pos != -1)
-            {
-                int startOuter = toHtml.lastIndexOf("<div style='margin:6px; text-align:left;'", pos);
-                int endPos = toHtml.indexOf("</div></div>", pos);
-                if(startOuter != -1 && endPos != -1)
-                {
-                    toHtml.remove(startOuter, endPos + QString("</div></div>").length() - startOuter);
-                    messagesWidget->setHtml(toHtml);
-                }
-            }
-        }
-    }
-
     // Update sessionId if provided
     if(!responce["session_id"].isNull())
     {
@@ -278,25 +209,21 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     QString serializedAi = QString::fromUtf8(QJsonDocument(aiObj).toJson(QJsonDocument::Compact));
     aiMessages.append(serializedAi);
 
-    // Append AI message to chat view if available
-    auto *messages = MainWindow::current->findChild<QTextEdit *>("aiChatMessages");
-    if(messages)
+    // Append AI message bubble widget
+    if(chatView)
     {
-        QString time = QDateTime::currentDateTime().toString("HH:mm");
-        QString esc = text.toHtmlEscaped();
-        QString aiHtml = QString("<div style='margin:6px; text-align:left;'><div style='display:inline-block; background:#f1f0f0; padding:8px; border-radius:8px;'>🤖 %1</div><div style='font-size:9px;color:#999;'>%2</div></div>")
-                            .arg(esc)
-                            .arg(time);
-        messages->append(aiHtml);
+        chatView->addAIMessage(text);
     }
 
     // Restore send button state
-    auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
+    auto *btn = MainWindow::current ? MainWindow::current->findChild<QPushButton *>("aiChatSend") : nullptr;
     if(btn)
     {
         QString prev = btn->property("__prev_text").toString();
         if(!prev.isEmpty())
             btn->setText(prev);
+        else
+            btn->setText("Отправить");
         btn->setEnabled(true);
     }
 }

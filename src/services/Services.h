@@ -263,16 +263,30 @@ class BoostRamService : public Service
 {
     Q_OBJECT
 
+private:
+    QListView *processLogStatus;
+    QLabel *malwareStatusText0;
+    QLabel *deviceLabelName;
+    QProgressBar *processBarStatus;
+    QPushButton *pushButtonReRun;
+
+    void circleRamState(bool success);
+    void circleRamStateReset();
+
 public:
     BoostRamService(QObject *parent = nullptr);
     ~BoostRamService();
 
+    void setArgs(const AdbDevice &adbDevice) override;
+
     QString uuid() const override;
+    PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
     bool start() override;
     void stop() override;
+    QString widgetIconName() override;
 };
 
 class ContactFixerService : public Service
@@ -314,8 +328,12 @@ class AIAgentService : public Service
 
     void slotPullMessage(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *ev) override;
+
 public:
     AIAgentService(QObject *parent = nullptr);
+    ~AIAgentService();
 
     QString uuid() const override;
     bool canStart() override;
@@ -324,6 +342,10 @@ public:
     bool start() override;
     void stop() override;
 
+public slots:
+    void sendCurrentMessage();
+
+public:
     QStringList aiMessages;
     int aiSessionId = -1;
     // Typing indicator state

@@ -159,6 +159,41 @@ bool AdsKillerService::isFinish()
     return status != MalwareStatus::Running;
 }
 
+static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::shared_ptr<AdbSysInfo> &sysInfo)
+{
+    QString devTitle = !device.marketingName.isEmpty() ? device.marketingName : (!device.displayName.isEmpty() ? device.displayName : device.model);
+    QString vendorStr = !device.vendor.isEmpty() ? device.vendor : "Android";
+    QString osStr = sysInfo ? sysInfo->OSVersionString() : "Android";
+    QString storageStr = sysInfo ? sysInfo->StorageDesignString() : "—";
+    QString ramStr = sysInfo ? sysInfo->RAMDesignString() : "—";
+    QString kernelStr = (sysInfo && !sysInfo->kernelReleaseVersion.isEmpty()) ? sysInfo->kernelReleaseVersion.trimmed() : "Linux";
+    QString archStr = (sysInfo && !sysInfo->machine.isEmpty()) ? sysInfo->machine.trimmed() : "aarch64";
+    QString serialStr = !device.devId.isEmpty() ? device.devId : "USB";
+
+    return QString(
+        "<div style='padding: 2px 4px;'>"
+        "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
+        "    <tr>"
+        "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
+        "        📱 %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
+        "      </td>"
+        "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
+        "        ● Подключено [ %3 ]"
+        "      </td>"
+        "    </tr>"
+        "  </table>"
+        "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 6px;'>"
+        "    <tr>"
+        "      <td>🤖 <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
+        "      <td>💾 <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
+        "      <td>⚡ <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
+        "      <td>⚙️ <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
+        "    </tr>"
+        "  </table>"
+        "</div>"
+    ).arg(vendorStr + " " + devTitle, device.model, serialStr, osStr, storageStr, ramStr, archStr, kernelStr);
+}
+
 bool AdsKillerService::start()
 {
     if(!canStart())
@@ -175,7 +210,12 @@ bool AdsKillerService::start()
     MainWindow::current->malwareProgressCircle->setInfinilyMode(true);
     MainWindow::current->malwareProgressCircle->setValue(0);
 
-    deviceLabelName->setText(deviceName);
+    AdbDevice dev = mAdbDevice;
+    if(dev.isEmpty() && !adbDeviceSerial.isEmpty())
+        dev = Adb::getDevice(adbDeviceSerial);
+
+    std::shared_ptr<AdbSysInfo> initialInfo = AdbShell(dev.devId).getInfo();
+    deviceLabelName->setText(generateDeviceDashboardHtml(dev, initialInfo));
 
     place << "<< Запуск процесса удаления рекламы, пожалуйста подождите >>";
     place << "<< Не отсоединяйте устройство от компьютера >>";

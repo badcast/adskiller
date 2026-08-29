@@ -25,19 +25,19 @@
         <file alias="white-apk-manager">res/icons/white-apk-manager.png</file>
         <file alias="white-mi-remove">res/icons/white-mi-remove.png</file>
         <file alias="unavailable">res/icons/unvailable.png</file>
-        <file>res/icons/dark-boost-phone.png</file>
-        <file>res/icons/dark-clean-garbage.png</file>
+        <file alias="dark-boost-phone">res/icons/dark-boost-phone.png</file>
+        <file alias="dark-clean-garbage">res/icons/dark-clean-garbage.png</file>
         <file alias="dark-devices-list">res/icons/dark-devices-list.png</file>
-        <file>res/icons/dark-media-transfer.png</file>
-        <file>res/icons/dark-transfer.png</file>
-        <file>res/icons/dark-unlock.png</file>
-        <file>res/icons/dark-vibration.png</file>
-        <file>res/icons/white-boost-phone.png</file>
-        <file>res/icons/white-clean-garbage.png</file>
+        <file alias="dark-media-transfer">res/icons/dark-media-transfer.png</file>
+        <file alias="dark-transfer">res/icons/dark-transfer.png</file>
+        <file alias="dark-unlock">res/icons/dark-unlock.png</file>
+        <file alias="dark-vibration">res/icons/dark-vibration.png</file>
+        <file alias="white-boost-phone">res/icons/white-boost-phone.png</file>
+        <file alias="white-clean-garbage">res/icons/white-clean-garbage.png</file>
         <file alias="white-devices-list">res/icons/white-devices-list.png</file>
-        <file>res/icons/white-media-transfer.png</file>
+        <file alias="white-media-transfer">res/icons/white-media-transfer.png</file>
         <file alias="white-transfer">res/icons/white-transfer.png</file>
-        <file>res/icons/white-unlock.png</file>
-        <file>res/icons/white-vibration.png</file>
+        <file alias="white-unlock">res/icons/white-unlock.png</file>
+        <file alias="white-vibration">res/icons/white-vibration.png</file>
     </qresource>
 </RCC>
