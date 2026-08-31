@@ -838,6 +838,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         QList<QuickQuestion> quickQuestions = {
             { "💳", { "Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс" } },
             { "📧", { "Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты" } },
+            { "📱", { "Запусти удаление рекламы", "Какие есть сервисы?", "Какой сервис не активен?", "Открой окно покупки VIP" } },
             { "📱", { "Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства" } },
             { "👑", { "VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?" } },
             { "💡", { "Что ты умеешь?", "Как удалить рекламу?", "Возможности AdsKiller", "Справка по функциям" } },
@@ -1060,6 +1061,23 @@ void MainWindow::initServiceModules()
         }
         else
         {
+            if(auto *aiService = qobject_cast<AIAgentService *>(instance.get()))
+            {
+                connect(aiService, &AIAgentService::onRunService, this, [this](const QString &service_uuid) {
+                    for(const auto &s : std::as_const(services))
+                    {
+                        if(s && s->uuid() == service_uuid)
+                        {
+                            if(s->active)
+                            {
+                                runService(s);
+                            }
+                            break;
+                        }
+                    }
+                });
+            }
+
             if(!instance->active)
             {
                 ui->aiChatEdit->setDisabled(true);

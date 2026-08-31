@@ -345,6 +345,9 @@ public:
 public slots:
     void sendCurrentMessage();
 
+Q_SIGNALS:
+    void onRunService(QString service_uuid);
+
 public:
     QStringList aiMessages;
     int aiSessionId = -1;

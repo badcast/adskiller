@@ -226,4 +226,11 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
             btn->setText("Отправить");
         btn->setEnabled(true);
     }
+
+
+    if(responce["run_service"].isString())
+    {
+        QString serviceRunUuid = responce["run_service"].toString();
+        emit onRunService(serviceRunUuid);
+    }
 }

@@ -75,13 +75,19 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::Panel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Sunken</enum>
+         </property>
          <widget class="QWidget" name="aiToolBoxPage1">
           <property name="geometry">
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>300</width>
-            <height>453</height>
+            <width>298</width>
+            <height>512</height>
            </rect>
           </property>
           <attribute name="label">
@@ -131,8 +137,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>300</width>
-            <height>453</height>
+            <width>298</width>
+            <height>512</height>
            </rect>
           </property>
           <attribute name="label">
@@ -212,7 +218,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page_auth">
           <attribute name="title">
@@ -533,7 +539,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>500</width>
+                     <width>0</width>
                      <height>900</height>
                     </size>
                    </property>
@@ -588,6 +594,24 @@ li.checked::marker { content: &quot;\2612&quot;; }
                      </property>
                      <item>
                       <widget class="QFrame" name="frame_3">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>100</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>90</height>
+                        </size>
+                       </property>
                        <property name="styleSheet">
                         <string notr="true">image: url(:/resources/no-avatar);</string>
                        </property>
