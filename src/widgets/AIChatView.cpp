@@ -17,8 +17,7 @@ static QString formatMarkdown(const QString &raw)
 // -------------------------------------------------------------------
 // AIChatBubble Implementation
 // -------------------------------------------------------------------
-AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeStr, QWidget *parent)
-    : QWidget(parent), m_type(type)
+AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeStr, QWidget *parent) : QWidget(parent), m_type(type)
 {
     QHBoxLayout *rootLayout = new QHBoxLayout(this);
     rootLayout->setContentsMargins(4, 3, 4, 3);
@@ -26,7 +25,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
     m_cardFrame = new QFrame(this);
 
-    if (type == User)
+    if(type == User)
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
@@ -34,8 +33,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "   border: 1px solid #1084E3;"
             "   border-radius: 13px;"
             "   border-bottom-right-radius: 2px;"
-            "}"
-        );
+            "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
         cardLayout->setContentsMargins(12, 9, 12, 7);
@@ -62,7 +60,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         rootLayout->addStretch();
         rootLayout->addWidget(m_cardFrame);
     }
-    else if (type == AI)
+    else if(type == AI)
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
@@ -70,8 +68,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "   border: 1px solid #383A40;"
             "   border-radius: 13px;"
             "   border-bottom-left-radius: 2px;"
-            "}"
-        );
+            "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
         cardLayout->setContentsMargins(12, 10, 12, 8);
@@ -104,19 +101,27 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "   color: #4CC2FF;"
             "   background: rgba(255,255,255,0.08);"
             "   border-radius: 3px;"
-            "}"
-        );
+            "}");
 
-        connect(m_copyButton, &QPushButton::clicked, this, [this, text]() {
-            QClipboard *clipboard = QApplication::clipboard();
-            if (clipboard)
-                clipboard->setText(text);
-            m_copyButton->setText("✓");
-            QTimer::singleShot(1500, this, [this]() {
-                if (m_copyButton)
-                    m_copyButton->setText("📋");
+        connect(
+            m_copyButton,
+            &QPushButton::clicked,
+            this,
+            [this, text]()
+            {
+                QClipboard *clipboard = QApplication::clipboard();
+                if(clipboard)
+                    clipboard->setText(text);
+                m_copyButton->setText("✓");
+                QTimer::singleShot(
+                    1500,
+                    this,
+                    [this]()
+                    {
+                        if(m_copyButton)
+                            m_copyButton->setText("📋");
+                    });
             });
-        });
         headerLayout->addWidget(m_copyButton);
 
         cardLayout->addLayout(headerLayout);
@@ -139,15 +144,14 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         rootLayout->addWidget(m_cardFrame);
         rootLayout->addStretch();
     }
-    else if (type == Welcome)
+    else if(type == Welcome)
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
             "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(76,194,255,0.1), stop:1 rgba(76,194,255,0.02));"
             "   border: 1px dashed rgba(76,194,255,0.3);"
             "   border-radius: 10px;"
-            "}"
-        );
+            "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
         cardLayout->setContentsMargins(14, 12, 14, 12);
@@ -171,15 +175,14 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         rootLayout->addWidget(m_cardFrame);
     }
-    else if (type == Locked)
+    else if(type == Locked)
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
             "   background: rgba(0,0,0,0.15);"
             "   border: 1px solid #33363D;"
             "   border-radius: 10px;"
-            "}"
-        );
+            "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
         cardLayout->setContentsMargins(14, 16, 14, 16);
@@ -215,8 +218,7 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
         "   border: 1px solid #383A40;"
         "   border-radius: 12px;"
         "   border-bottom-left-radius: 2px;"
-        "}"
-    );
+        "}");
 
     QHBoxLayout *cardLayout = new QHBoxLayout(m_cardFrame);
     cardLayout->setContentsMargins(12, 7, 14, 7);
@@ -242,7 +244,7 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
 
 AITypingIndicator::~AITypingIndicator()
 {
-    if (m_timer)
+    if(m_timer)
         m_timer->stop();
 }
 
@@ -250,13 +252,13 @@ void AITypingIndicator::start()
 {
     m_step = 0;
     show();
-    if (m_timer && !m_timer->isActive())
+    if(m_timer && !m_timer->isActive())
         m_timer->start();
 }
 
 void AITypingIndicator::stop()
 {
-    if (m_timer && m_timer->isActive())
+    if(m_timer && m_timer->isActive())
         m_timer->stop();
     hide();
 }
@@ -264,9 +266,9 @@ void AITypingIndicator::stop()
 void AITypingIndicator::onTick()
 {
     m_step = (m_step + 1) % 3;
-    if (m_step == 0)
+    if(m_step == 0)
         m_dotsLabel->setText("думает ● • •");
-    else if (m_step == 1)
+    else if(m_step == 1)
         m_dotsLabel->setText("думает • ● •");
     else
         m_dotsLabel->setText("думает • • ●");
@@ -305,8 +307,7 @@ AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
         "QScrollArea#aiChatMessagesArea QScrollBar::add-line:vertical, "
         "QScrollArea#aiChatMessagesArea QScrollBar::sub-line:vertical {"
         "   height: 0px;"
-        "}"
-    );
+        "}");
 
     m_container = new QWidget(this);
     m_container->setStyleSheet("background: transparent;");
@@ -340,9 +341,9 @@ void AIChatView::addAIMessage(const QString &text, const QString &time)
 
 void AIChatView::showTyping(bool show)
 {
-    if (m_typingIndicator)
+    if(m_typingIndicator)
     {
-        if (show)
+        if(show)
             m_typingIndicator->start();
         else
             m_typingIndicator->stop();
@@ -370,14 +371,14 @@ void AIChatView::showLocked()
 
 void AIChatView::clearAll()
 {
-    if (m_typingIndicator)
+    if(m_typingIndicator)
         m_typingIndicator->stop();
 
     // Remove all widgets except typing indicator and spacer stretch
-    for (int i = m_layout->count() - 1; i >= 0; --i)
+    for(int i = m_layout->count() - 1; i >= 0; --i)
     {
         QLayoutItem *item = m_layout->itemAt(i);
-        if (item && item->widget() && item->widget() != m_typingIndicator)
+        if(item && item->widget() && item->widget() != m_typingIndicator)
         {
             QWidget *w = item->widget();
             m_layout->removeWidget(w);
@@ -388,8 +389,12 @@ void AIChatView::clearAll()
 
 void AIChatView::scrollToBottom()
 {
-    QTimer::singleShot(50, this, [this]() {
-        if (verticalScrollBar())
-            verticalScrollBar()->setValue(verticalScrollBar()->maximum());
-    });
+    QTimer::singleShot(
+        50,
+        this,
+        [this]()
+        {
+            if(verticalScrollBar())
+                verticalScrollBar()->setValue(verticalScrollBar()->maximum());
+        });
 }

@@ -42,33 +42,37 @@ constexpr struct
 
 namespace
 {
-class HorizontalWheelFilter : public QObject
-{
-public:
-    explicit HorizontalWheelFilter(QScrollArea *scrollArea) : QObject(scrollArea), m_scrollArea(scrollArea) {}
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override
+    class HorizontalWheelFilter : public QObject
     {
-        if(event->type() == QEvent::Wheel && m_scrollArea)
+    public:
+        explicit HorizontalWheelFilter(QScrollArea *scrollArea) : QObject(scrollArea), m_scrollArea(scrollArea)
         {
-            QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
-            int delta = wheelEvent->angleDelta().y();
-            if(delta == 0)
-                delta = wheelEvent->angleDelta().x();
-            if(delta != 0)
-            {
-                QScrollBar *hBar = m_scrollArea->horizontalScrollBar();
-                if(hBar)
-                    hBar->setValue(hBar->value() - delta);
-                return true;
-            }
         }
-        return QObject::eventFilter(obj, event);
-    }
-private:
-    QScrollArea *m_scrollArea;
-};
-}
+
+    protected:
+        bool eventFilter(QObject *obj, QEvent *event) override
+        {
+            if(event->type() == QEvent::Wheel && m_scrollArea)
+            {
+                QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
+                int delta = wheelEvent->angleDelta().y();
+                if(delta == 0)
+                    delta = wheelEvent->angleDelta().x();
+                if(delta != 0)
+                {
+                    QScrollBar *hBar = m_scrollArea->horizontalScrollBar();
+                    if(hBar)
+                        hBar->setValue(hBar->value() - delta);
+                    return true;
+                }
+            }
+            return QObject::eventFilter(obj, event);
+        }
+
+    private:
+        QScrollArea *m_scrollArea;
+    };
+} // namespace
 
 MainWindow *MainWindow::current;
 
@@ -213,8 +217,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         malwareProgressCircle->setStyleSheet(QString("QWidget { Font-family: '%1'; }").arg(fontFamily));
     }
 
-    // Set Default Theme is Light (1)
-    setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(AppSetting::themeIndex(), 0, 2))));
+    // Set Default Theme DARK ONLY
+
+    ui->menu_4->deleteLater();
+
+    setTheme(ThemeScheme::Dark);
+    // setTheme(static_cast<ThemeScheme>(static_cast<ThemeScheme>(std::clamp<int>(AppSetting::themeIndex(), 0, 2))));
 
     QString _version;
     _version += QString::number(AppVerMajor);
@@ -261,8 +269,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1B1D23);"
             "   border: 1px solid #363942;"
             "   border-radius: 16px;"
-            "}"
-        );
+            "}");
 
         ui->label_4->setStyleSheet("color: #8E9297; font-size: 11px; font-weight: normal; background: transparent;");
         ui->label_4->setText("Войдите для доступа к функциям AdsKiller");
@@ -283,8 +290,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QLineEdit#lineLoginEdit:focus {"
             "   border: 1px solid #4CC2FF;"
             "   background-color: #18191E;"
-            "}"
-        );
+            "}");
         ui->lineLoginEdit->setPlaceholderText("Введите логин или токен...");
 
         ui->linePassEdit->setStyleSheet(
@@ -300,8 +306,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QLineEdit#linePassEdit:focus {"
             "   border: 1px solid #4CC2FF;"
             "   background-color: #18191E;"
-            "}"
-        );
+            "}");
         ui->linePassEdit->setPlaceholderText("Введите пароль...");
 
         ui->butShowPass->setText("👁");
@@ -322,8 +327,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "}"
             "QPushButton#butShowPass:pressed {"
             "   background: #1C1E24;"
-            "}"
-        );
+            "}");
 
         ui->checkAutoLogin->setStyleSheet(
             "QCheckBox#checkAutoLogin {"
@@ -342,8 +346,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QCheckBox#checkAutoLogin::indicator:checked {"
             "   background: #0078D4;"
             "   border-color: #4CC2FF;"
-            "}"
-        );
+            "}");
 
         ui->label_2->setStyleSheet("QLabel#label_2 a { color: #4CC2FF; text-decoration: none; font-size: 11px; } QLabel#label_2 a:hover { text-decoration: underline; }");
 
@@ -366,8 +369,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QPushButton#authButton:disabled {"
             "   background: #2D2F34;"
             "   color: #5C6067;"
-            "}"
-        );
+            "}");
         ui->authButton->setCursor(Qt::PointingHandCursor);
 
         ui->statusAuthText->setStyleSheet("color: #FF6B6B; font-size: 11px; font-weight: bold; background: transparent;");
@@ -382,8 +384,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border-bottom: 1px solid #30333D;"
             "   min-height: 42px;"
             "   max-height: 42px;"
-            "}"
-        );
+            "}");
         ui->label_6->setStyleSheet("color: #E3E5E8; font-size: 13px; font-weight: bold; font-style: normal; background: transparent;");
         ui->label_6->setText("AdsKiller  |  Личный кабинет");
 
@@ -404,8 +405,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "}"
             "QPushButton#logoutButton:pressed {"
             "   background: #801818;"
-            "}"
-        );
+            "}");
         ui->logoutButton->setCursor(Qt::PointingHandCursor);
     }
 
@@ -417,8 +417,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border-bottom: 1px solid #30333D;"
             "   min-height: 42px;"
             "   max-height: 42px;"
-            "}"
-        );
+            "}");
         ui->label_10->setStyleSheet("color: #E3E5E8; font-size: 13px; font-weight: bold; font-style: normal; background: transparent;");
         ui->buttonBackTo->setStyleSheet(
             "QPushButton#buttonBackTo {"
@@ -436,8 +435,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "}"
             "QPushButton#buttonBackTo:pressed {"
             "   background: #005A9E;"
-            "}"
-        );
+            "}");
         ui->buttonBackTo->setCursor(Qt::PointingHandCursor);
     }
 
@@ -455,8 +453,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1C1E24);"
             "   border: 1px solid #363942;"
             "   border-radius: 14px;"
-            "}"
-        );
+            "}");
 
         // Install QHBoxLayout to dynamically place VIP, Avatar/Login, and Credits without overlaps
         QHBoxLayout *accountLayout = new QHBoxLayout(ui->frame_7);
@@ -471,8 +468,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border: 1px solid rgba(255, 185, 0, 0.35);"
             "   border-radius: 12px;"
             "   padding: 6px;"
-            "}"
-        );
+            "}");
         ui->labelVipDays->setStyleSheet("color: #FFD700; font-weight: bold; font-size: 11px; text-decoration: none; background: transparent;");
 
         // 2. User Avatar + Name (Center)
@@ -489,8 +485,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border: 1px solid rgba(76, 194, 255, 0.35);"
             "   border-radius: 12px;"
             "   padding: 6px;"
-            "}"
-        );
+            "}");
         ui->labelCredits->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 11px; text-decoration: none; background: transparent;");
 
         accountLayout->addWidget(ui->frame_6, 0, Qt::AlignCenter);
@@ -511,8 +506,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   margin: 12px 14px 4px 14px;"
             "   min-height: 32px;"
             "   max-height: 32px;"
-            "}"
-        );
+            "}");
         ui->label_7->setStyleSheet("color: #C8CDD5; font-weight: bold; font-size: 11.5px; font-style: normal; background: transparent; letter-spacing: 0.5px;");
         ui->label_7->setText("ДОСТУПНЫЕ УСЛУГИ И ИНСТРУМЕНТЫ");
     }
@@ -540,8 +534,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QScrollArea#scrollArea_3 QScrollBar::add-line:vertical, "
             "QScrollArea#scrollArea_3 QScrollBar::sub-line:vertical {"
             "   height: 0px;"
-            "}"
-        );
+            "}");
     }
 
     // 4. Modernize page_adsmalware (Ad Removal & RAM Optimization Page)
@@ -554,8 +547,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border-radius: 12px;"
             "   padding: 10px 14px;"
             "   color: #FFFFFF;"
-            "}"
-        );
+            "}");
         ui->deviceLabelName->setMinimumHeight(80);
     }
     if(ui->processLogStatus)
@@ -579,8 +571,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QListView#processLogStatus QScrollBar::handle:vertical {"
             "   background: #484B52;"
             "   border-radius: 2px;"
-            "}"
-        );
+            "}");
     }
     if(ui->processBarStatus)
     {
@@ -599,8 +590,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QProgressBar#processBarStatus::chunk {"
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0078D4, stop:1 #00E5FF);"
             "   border-radius: 5px;"
-            "}"
-        );
+            "}");
     }
     if(ui->malwareStatusText0)
     {
@@ -628,8 +618,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QPushButton#malwareReRun:disabled {"
             "   background: #282A30;"
             "   color: #555860;"
-            "}"
-        );
+            "}");
         ui->malwareReRun->setCursor(Qt::PointingHandCursor);
     }
 
@@ -642,8 +631,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border: 1px solid #363942;"
             "   border-radius: 14px;"
             "   padding: 8px;"
-            "}"
-        );
+            "}");
     }
     if(ui->scrollArea_2)
     {
@@ -671,8 +659,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   font-size: 11px;"
             "}"
             "QPushButton#myDeviceSend:hover { background: #1084E3; }"
-            "QPushButton#myDeviceSend:pressed { background: #005A9E; }"
-        );
+            "QPushButton#myDeviceSend:pressed { background: #005A9E; }");
         ui->myDeviceSend->setCursor(Qt::PointingHandCursor);
 
         ui->myDeviceActual->setStyleSheet(
@@ -693,8 +680,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   border: 1px solid #2B2D35;"
             "   font-weight: bold;"
             "   font-size: 11px;"
-            "}"
-        );
+            "}");
         ui->myDevicePageLabel->setStyleSheet("color: #8E9297; font-size: 11px; background: transparent;");
     }
 
@@ -711,8 +697,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "   color: #FFFFFF;"
             "   font-weight: bold;"
             "   font-size: 12px;"
-            "}"
-        );
+            "}");
         ui->labelVipBalance->setStyleSheet("color: #00E5FF; font-size: 13px; font-weight: bold; background: transparent;");
         ui->comboBoxSelectVIPDays->setStyleSheet("background-color: #1E2026; color: #FFFFFF; border: 1px solid #383A42; border-radius: 8px; padding: 6px 12px; font-size: 12px;");
         ui->labelInfoVip->setStyleSheet("color: #C8CDD5; font-size: 11px; background: transparent;");
@@ -729,8 +714,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QPushButton#buttonBuyVip:hover {"
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFC833, stop:1 #E69500);"
             "}"
-            "QPushButton#buttonBuyVip:pressed { background: #B27000; }"
-        );
+            "QPushButton#buttonBuyVip:pressed { background: #B27000; }");
         ui->buttonBuyVip->setCursor(Qt::PointingHandCursor);
     }
 
@@ -757,26 +741,30 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "}"
             "QPushButton#aiToolBoxToggle:pressed {"
             "   background-color: #1A1B1E;"
-            "}"
-        );
+            "}");
         ui->aiToolBoxContainer->setMaximumWidth(324);
 
-        QObject::connect(ui->aiToolBoxToggle, &QPushButton::clicked, this, [this]() {
-            if(ui->aiToolBox->isVisible())
+        QObject::connect(
+            ui->aiToolBoxToggle,
+            &QPushButton::clicked,
+            this,
+            [this]()
             {
-                ui->aiToolBox->setVisible(false);
-                ui->aiToolBoxToggle->setText(QString::fromUtf8("‹"));
-                ui->aiToolBoxToggle->setToolTip("Развернуть панель ИИ");
-                ui->aiToolBoxContainer->setMaximumWidth(24);
-            }
-            else
-            {
-                ui->aiToolBox->setVisible(true);
-                ui->aiToolBoxToggle->setText(QString::fromUtf8("›"));
-                ui->aiToolBoxToggle->setToolTip("Свернуть панель ИИ");
-                ui->aiToolBoxContainer->setMaximumWidth(324);
-            }
-        });
+                if(ui->aiToolBox->isVisible())
+                {
+                    ui->aiToolBox->setVisible(false);
+                    ui->aiToolBoxToggle->setText(QString::fromUtf8("‹"));
+                    ui->aiToolBoxToggle->setToolTip("Развернуть панель ИИ");
+                    ui->aiToolBoxContainer->setMaximumWidth(24);
+                }
+                else
+                {
+                    ui->aiToolBox->setVisible(true);
+                    ui->aiToolBoxToggle->setText(QString::fromUtf8("›"));
+                    ui->aiToolBoxToggle->setToolTip("Свернуть панель ИИ");
+                    ui->aiToolBoxContainer->setMaximumWidth(324);
+                }
+            });
 
         // Create custom widget-based AIChatView
         AIChatView *chatView = new AIChatView(ui->aiToolBoxPage1);
@@ -818,8 +806,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QScrollArea#aiQuickScrollArea QScrollBar::add-page:horizontal, "
             "QScrollArea#aiQuickScrollArea QScrollBar::sub-page:horizontal {"
             "   background: none;"
-            "}"
-        );
+            "}");
 
         scrollArea->viewport()->installEventFilter(new HorizontalWheelFilter(scrollArea));
         scrollArea->installEventFilter(new HorizontalWheelFilter(scrollArea));
@@ -830,24 +817,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         quickButtonsLayout->setContentsMargins(4, 3, 4, 3);
         quickButtonsLayout->setSpacing(5);
 
-        struct QuickQuestion {
+        struct QuickQuestion
+        {
             QString icon;
             QStringList variations;
         };
 
         QList<QuickQuestion> quickQuestions = {
-            { "💳", { "Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс" } },
-            { "📧", { "Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты" } },
-            { "📱", { "Запусти удаление рекламы", "Какие есть сервисы?", "Какой сервис не активен?", "Открой окно покупки VIP" } },
-            { "📱", { "Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства" } },
-            { "👑", { "VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?" } },
-            { "💡", { "Что ты умеешь?", "Как удалить рекламу?", "Возможности AdsKiller", "Справка по функциям" } },
-            { "🚀", { "Как ускорить телефон?", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу" } },
-            { "🛡️", { "Безопасно ли это?", "Как включить отладку?", "Проверка безопасности", "Как подключить телефон?" } },
-            { "⚡", { "Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?" } }
-        };
+            {"💳", {"Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс"}},
+            {"📧", {"Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты"}},
+            {"📱", {"Запусти удаление рекламы", "Какие есть сервисы?", "Какой сервис не активен?", "Открой окно покупки VIP"}},
+            {"📱", {"Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства"}},
+            {"👑", {"VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?"}},
+            {"💡", {"Что ты умеешь?", "Как удалить рекламу?", "Возможности AdsKiller", "Справка по функциям"}},
+            {"🚀", {"Как ускорить телефон?", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу"}},
+            {"🛡️", {"Безопасно ли это?", "Как включить отладку?", "Проверка безопасности", "Как подключить телефон?"}},
+            {"⚡", {"Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?"}}};
 
-        for (int i = 0; i < quickQuestions.size(); ++i) {
+        for(int i = 0; i < quickQuestions.size(); ++i)
+        {
             const auto &qData = quickQuestions[i];
             QPushButton *btn = new QPushButton(QString("%1  %2").arg(qData.icon, qData.variations.first()), quickButtonsWidget);
             btn->setStyleSheet(
@@ -868,27 +856,33 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                 "QPushButton:pressed { "
                 "   background-color: #1A1B1E; "
                 "   color: #FFFFFF; "
-                "}"
-            );
+                "}");
             btn->setCursor(Qt::PointingHandCursor);
             quickButtonsLayout->addWidget(btn, i % 2, i / 2);
 
-            QObject::connect(btn, &QPushButton::clicked, this, [this, btn, icon = qData.icon, variations = qData.variations, lastIdx = 0]() mutable {
-                QString textToSend = variations[lastIdx];
-                ui->aiChatEdit->setText(textToSend);
-                ui->aiChatSend->click();
-                
-                if (variations.size() > 1) {
-                    int r;
-                    do {
-                        r = QRandomGenerator::global()->bounded(variations.size());
-                    } while (r == lastIdx);
-                    lastIdx = r;
-                    btn->setText(QString("%1  %2").arg(icon, variations[r]));
-                }
-            });
+            QObject::connect(
+                btn,
+                &QPushButton::clicked,
+                this,
+                [this, btn, icon = qData.icon, variations = qData.variations, lastIdx = 0]() mutable
+                {
+                    QString textToSend = variations[lastIdx];
+                    ui->aiChatEdit->setText(textToSend);
+                    ui->aiChatSend->click();
+
+                    if(variations.size() > 1)
+                    {
+                        int r;
+                        do
+                        {
+                            r = QRandomGenerator::global()->bounded(variations.size());
+                        } while(r == lastIdx);
+                        lastIdx = r;
+                        btn->setText(QString("%1  %2").arg(icon, variations[r]));
+                    }
+                });
         }
-        
+
         scrollArea->setWidget(quickButtonsWidget);
 
         ui->aiChatEdit->setStyleSheet(
@@ -904,8 +898,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QTextEdit#aiChatEdit:focus {"
             "   border: 1px solid #4CC2FF;"
             "   background-color: #1E1F22;"
-            "}"
-        );
+            "}");
         ui->aiChatEdit->setPlaceholderText("Задайте вопрос ИИ...");
         ui->aiChatEdit->setMaximumHeight(38);
 
@@ -928,14 +921,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "QPushButton#aiChatSend:disabled {"
             "   background: #2D2F34;"
             "   color: #5C6067;"
-            "}"
-        );
+            "}");
         ui->aiChatSend->setCursor(Qt::PointingHandCursor);
         ui->aiChatSend->setMinimumHeight(38);
         ui->aiChatSend->setMaximumHeight(38);
 
-        QGridLayout *aiLayout = qobject_cast<QGridLayout*>(ui->aiChatMessages->parentWidget()->layout());
-        if (aiLayout) {
+        QGridLayout *aiLayout = qobject_cast<QGridLayout *>(ui->aiChatMessages->parentWidget()->layout());
+        if(aiLayout)
+        {
             aiLayout->setContentsMargins(4, 4, 4, 4);
             aiLayout->setSpacing(6);
             aiLayout->removeWidget(ui->aiChatMessages);
@@ -956,7 +949,6 @@ MainWindow::~MainWindow()
     AppSetting::save();
     delete ui;
 }
-
 
 void MainWindow::initServiceModules()
 {
@@ -1057,25 +1049,29 @@ void MainWindow::initServiceModules()
             button->setIconSize({56, 56});
             button->setFixedSize(260, 78);
             button->setEnabled(instance->active);
-
         }
         else
         {
             if(auto *aiService = qobject_cast<AIAgentService *>(instance.get()))
             {
-                connect(aiService, &AIAgentService::onRunService, this, [this](const QString &service_uuid) {
-                    for(const auto &s : std::as_const(services))
+                connect(
+                    aiService,
+                    &AIAgentService::onRunService,
+                    this,
+                    [this](const QString &service_uuid)
                     {
-                        if(s && s->uuid() == service_uuid)
+                        for(const auto &s : std::as_const(services))
                         {
-                            if(s->active)
+                            if(s && s->uuid() == service_uuid)
                             {
-                                runService(s);
+                                if(s->active)
+                                {
+                                    runService(s);
+                                }
+                                break;
                             }
-                            break;
                         }
-                    }
-                });
+                    });
             }
 
             if(!instance->active)
@@ -1163,16 +1159,15 @@ void MainWindow::checkVersion(bool firstRun)
                     {
                         ui->loaderPageText->setText("Проблема с интернетом?");
                         ui->loaderPageText->update();
-                        delayUI(2000);
                         lastPage = PageIndex(-1);
-                        willTerminate();
+                        QTimer::singleShot(2000, this, [this]() { willTerminate(); });
+                        return false;
                     }
                     else
                     {
                         verChansesAvailable = ChansesRunInvalid;
                         ui->loaderPageText->setText("Ваша версия актуальная!");
                         ui->loaderPageText->update();
-                        delayUI(2000);
                         versionChecker->start();
                         return true;
                     }
@@ -1260,103 +1255,103 @@ void MainWindow::pageShownPreStart(int page)
 {
     switch(page)
     {
-        // WELCOME
-    case AuthPage:
-        ui->statusAuthText->setText("Выполните аутентификацию");
-        ui->authButton->setEnabled(true);
-        clearAuthInfoPage();
-        if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty() && ui->checkAutoLogin->isChecked())
-            ui->authButton->click();
-        break;
-    case DevicesPage:
-        if(nullptr == ServiceProvider::currentService())
-        {
-            QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
-            logoutSystem();
-            return;
-        }
-
-        ServiceProvider::currentService()->stop();
-
-        // Unset
-        deviceSelectSwitched = false;
-        deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
-
-        delayUI(1000);
-
-        delayUICallLoop(
-            300,
-            [this]() -> bool
+            // WELCOME
+        case AuthPage:
+            ui->statusAuthText->setText("Выполните аутентификацию");
+            ui->authButton->setEnabled(true);
+            clearAuthInfoPage();
+            if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty() && ui->checkAutoLogin->isChecked())
+                ui->authButton->click();
+            break;
+        case DevicesPage:
+            if(nullptr == ServiceProvider::currentService())
             {
-                if(!deviceSelectSwitched)
+                QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
+                logoutSystem();
+                return;
+            }
+
+            ServiceProvider::currentService()->stop();
+
+            // Unset
+            deviceSelectSwitched = false;
+            deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
+
+            delayUI(1000);
+
+            delayUICallLoop(
+                300,
+                [this]() -> bool
                 {
-                    QList<AdbDevice> devices = Adb::getDevices();
-                    for(const AdbDevice &device : std::as_const(devices))
+                    if(!deviceSelectSwitched)
                     {
-                        AdbConStatus status = Adb::deviceStatus(device.devId);
-                        if(status == DEVICE)
+                        QList<AdbDevice> devices = Adb::getDevices();
+                        for(const AdbDevice &device : std::as_const(devices))
                         {
-                            connectPhone.isAuthed = status == DEVICE;
-                            connectPhone.adbDevice = device;
-                            ServiceProvider::currentService()->setArgs(device);
-                            break;
+                            AdbConStatus status = Adb::deviceStatus(device.devId);
+                            if(status == DEVICE)
+                            {
+                                connectPhone.isAuthed = status == DEVICE;
+                                connectPhone.adbDevice = device;
+                                ServiceProvider::currentService()->setArgs(device);
+                                break;
+                            }
                         }
                     }
-                }
-                if(ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
-                {
-                    deviceSelectSwitched = true;
-                    deviceLeftAnimator->start();
-                    delayUI(2000);
-                    showPageLoader(ServiceProvider::currentService()->targetPage());
-                }
-                if(curPage != DevicesPage)
-                {
-                    deviceLeftAnimator->stop();
-                    ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
-                }
-                return curPage == DevicesPage;
-            });
+                    if(ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
+                    {
+                        deviceSelectSwitched = true;
+                        deviceLeftAnimator->start();
+                        delayUI(2000);
+                        showPageLoader(ServiceProvider::currentService()->targetPage());
+                    }
+                    if(curPage != DevicesPage)
+                    {
+                        deviceLeftAnimator->stop();
+                        ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
+                    }
+                    return curPage == DevicesPage;
+                });
 
-        break;
-    case CabinetPage:
-    {
-        ui->scrollArea_3->verticalScrollBar()->setValue(0);
-        fillAuthInfoPage();
-        break;
-    }
-    case LongInfoPage:
-    {
-        QStringList place {};
-        QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
-        ui->processBarStatus->setValue(0);
-        ui->malwareStatusText0->setText("Ожидание запуска сервиса.");
-        malwareProgressCircle->setValue(0);
-        malwareProgressCircle->setMaximum(100);
-        malwareProgressCircle->setInfinilyMode(false);
-
-        place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
-
-        // TODO: set auto start mode flag.
-        // IF THERE AUTO_START = YES?
-
-        if(!ServiceProvider::currentService()->canStart())
+            break;
+        case CabinetPage:
         {
-            place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад "
-                     "и повторите попытку.";
+            ui->scrollArea_3->verticalScrollBar()->setValue(0);
+            fillAuthInfoPage();
+            break;
         }
-        else
+        case LongInfoPage:
         {
-            place << QString("<< Ожидаем >>").arg(ServiceProvider::currentService()->title);
+            QStringList place {};
+            QStringListModel *model = static_cast<QStringListModel *>(ui->processLogStatus->model());
+            ui->processBarStatus->setValue(0);
+            ui->malwareStatusText0->setText("Ожидание запуска сервиса.");
+            malwareProgressCircle->setValue(0);
+            malwareProgressCircle->setMaximum(100);
+            malwareProgressCircle->setInfinilyMode(false);
 
-            delayUICall(500, [this]() { ServiceProvider::currentService()->start(); });
+            place << "<< Во время процесса не отсоединяйте устройство от компьютера >>";
+
+            // TODO: set auto start mode flag.
+            // IF THERE AUTO_START = YES?
+
+            if(!ServiceProvider::currentService()->canStart())
+            {
+                place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад "
+                         "и повторите попытку.";
+            }
+            else
+            {
+                place << QString("<< Ожидаем >>").arg(ServiceProvider::currentService()->title);
+
+                delayUICall(500, [this]() { ServiceProvider::currentService()->start(); });
+            }
+
+            model->setStringList(place);
+            break;
         }
-
-        model->setStringList(place);
-        break;
-    }
-    default:
-        break;
+        default:
+            break;
     }
 }
 
@@ -1420,7 +1415,6 @@ void MainWindow::clearAuthInfoPage()
         if(services[x]->ownerWidget != nullptr)
             services[x]->ownerWidget->deleteLater();
 
-
     serverServices.reset();
     services.clear();
 
@@ -1468,7 +1462,6 @@ void MainWindow::fillAuthInfoPage()
     initServiceModules();
 }
 
-
 void MainWindow::delayUI(int ms)
 {
     QEventLoop loop;
@@ -1484,18 +1477,25 @@ void MainWindow::delayUI(int ms)
 void MainWindow::delayUICallLoop(int ms, std::function<bool()> callFalseEnd)
 {
     QTimer *qtimer = new QTimer(this);
-    (void) qtimer;
     qtimer->setSingleShot(false);
     qtimer->setInterval(ms);
+    auto isRunning = std::make_shared<bool>(false);
     QObject::connect(
         qtimer,
         &QTimer::timeout,
-        [qtimer, callFalseEnd]()
+        [qtimer, callFalseEnd, isRunning]()
         {
+            if(*isRunning)
+                return;
+            *isRunning = true;
             if(!callFalseEnd())
             {
                 qtimer->stop();
                 qtimer->deleteLater();
+            }
+            else
+            {
+                *isRunning = false;
             }
         });
     qtimer->start();
@@ -1616,12 +1616,12 @@ void MainWindow::on_authButton_clicked()
 
 void MainWindow::setThemeAction()
 {
-    QList<QAction *> virtualSelectItems {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
-    QAction *selfSender = qobject_cast<QAction *>(sender());
-    int scheme;
-    for(scheme = (0); scheme < virtualSelectItems.size() && selfSender != virtualSelectItems[scheme]; ++scheme)
-        ;
-    setTheme(static_cast<ThemeScheme>(scheme));
+    // QList<QAction *> virtualSelectItems {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
+    // QAction *selfSender = qobject_cast<QAction *>(sender());
+    // int scheme;
+    // for(scheme = (0); scheme < virtualSelectItems.size() && selfSender != virtualSelectItems[scheme]; ++scheme)
+    //     ;
+    // setTheme(static_cast<ThemeScheme>(scheme));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -1648,43 +1648,43 @@ void MainWindow::slotAuthFinish(int status, bool ok)
                 timerAuthAnim->stop();
             switch(_status)
             {
-            case 0:
-                resText = "Токен успешно прошел проверку. Добро пожаловать!";
+                case 0:
+                    resText = "Токен успешно прошел проверку. Добро пожаловать!";
 
-                if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
-                {
-                    AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
+                    if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
+                    {
+                        AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
 
-                    // Only get token.
+                        // Only get token.
+                        break;
+                    }
+
+                    if(network.authedId.isNotValidBalance())
+                    {
+                        ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
+                        showMessageFromStatus(NetworkStatus::NoEnoughMoney);
+                    }
+                    else
+                    {
+                        ui->statusAuthText->setText("Аутентификация прошла успешно.");
+                    }
+
+                    if(network.authedId.blocked)
+                    {
+                        ui->statusAuthText->setText("Аккаунт заблокирован");
+                        showMessageFromStatus(NetworkStatus::AccountBlocked);
+                    }
+
                     break;
-                }
-
-                if(network.authedId.isNotValidBalance())
-                {
-                    ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
-                    showMessageFromStatus(NetworkStatus::NoEnoughMoney);
-                }
-                else
-                {
-                    ui->statusAuthText->setText("Аутентификация прошла успешно.");
-                }
-
-                if(network.authedId.blocked)
-                {
-                    ui->statusAuthText->setText("Аккаунт заблокирован");
-                    showMessageFromStatus(NetworkStatus::AccountBlocked);
-                }
-
-                break;
-            case 401:
-                resText = infoServer401;
-                break;
-            case NetworkStatus::NoEnoughMoney:
-                resText = infoNoBalance;
-                break;
-            default:
-                resText = infoNoInternet;
-                break;
+                case 401:
+                    resText = infoServer401;
+                    break;
+                case NetworkStatus::NoEnoughMoney:
+                    resText = infoNoBalance;
+                    break;
+                default:
+                    resText = infoNoInternet;
+                    break;
             }
 
             ui->lineLoginEdit->setEnabled(true);
@@ -1786,16 +1786,16 @@ void MainWindow::setTheme(ThemeScheme theme)
 
     switch(theme)
     {
-    case System:
-        resourceName = nullptr;
-        break;
-    case Dark:
-        resourceName = ":/resources/app-style-dark";
-        break;
-    case Light:
-    default:
-        resourceName = ":/resources/app-style-light";
-        break;
+        case System:
+            resourceName = nullptr;
+            break;
+        case Dark:
+            resourceName = ":/resources/app-style-dark";
+            break;
+        case Light:
+        default:
+            resourceName = ":/resources/app-style-light";
+            break;
     }
 
     QFile styleRes {};
@@ -1923,7 +1923,7 @@ void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<boo
         {
             if(predFalseEnd())
             {
-                showPage(pageNum);
+                QTimer::singleShot(1500, this, [this, pageNum]() { showPage(pageNum); });
                 return false;
             }
             return true;
@@ -1945,4 +1945,3 @@ void MainWindow::on_butShowPass_clicked()
         ui->butShowPass->setToolTip("Показать пароль");
     }
 }
-

@@ -66,7 +66,10 @@ public:
 
     QString getLastError(int *lastStatus = nullptr);
 
-    void setSimulate(bool simulate) { m_simulate = simulate; }
+    void setSimulate(bool simulate)
+    {
+        m_simulate = simulate;
+    }
 
     int finishSuccess;
 

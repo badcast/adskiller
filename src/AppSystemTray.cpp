@@ -30,30 +30,30 @@ AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
     QAction *quitAction = new QAction("Exit", this);
     QObject::connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 
-    QAction *setThemeToDark = new QAction("Dark", this);
-    setThemeToDark->setCheckable(true);
-    QObject::connect(setThemeToDark, &QAction::triggered, [=]() { mainWindow->setTheme(ThemeScheme::Dark); });
+    // QAction *setThemeToDark = new QAction("Dark", this);
+    // setThemeToDark->setCheckable(true);
+    // QObject::connect(setThemeToDark, &QAction::triggered, [=]() { mainWindow->setTheme(ThemeScheme::Dark); });
 
-    QAction *setThemeToLight = new QAction("Light", this);
-    setThemeToLight->setCheckable(true);
-    QObject::connect(setThemeToLight, &QAction::triggered, [=]() { mainWindow->setTheme(ThemeScheme::Light); });
+    // QAction *setThemeToLight = new QAction("Light", this);
+    // setThemeToLight->setCheckable(true);
+    // QObject::connect(setThemeToLight, &QAction::triggered, [=]() { mainWindow->setTheme(ThemeScheme::Light); });
 
     QObject::connect(
         menu,
         &QMenu::aboutToShow,
         [=]()
         {
-            ThemeScheme scheme = mainWindow->getTheme();
-            setThemeToDark->setChecked(scheme == ThemeScheme::Dark);
-            setThemeToLight->setChecked(scheme == ThemeScheme::Light);
+            // ThemeScheme scheme = mainWindow->getTheme();
+            // setThemeToDark->setChecked(scheme == ThemeScheme::Dark);
+            // setThemeToLight->setChecked(scheme == ThemeScheme::Light);
 
             restoreWindow->setText((mainWindow->isHidden() ? "Restore" : "Hide"));
         });
 
     menu->addAction(restoreWindow);
     menu->addSeparator();
-    menu->addAction(setThemeToDark);
-    menu->addAction(setThemeToLight);
+    // menu->addAction(setThemeToDark);
+    // menu->addAction(setThemeToLight);
     menu->addSeparator();
     menu->addAction(quitAction);
 

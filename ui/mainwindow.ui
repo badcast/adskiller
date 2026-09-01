@@ -513,7 +513,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 <number>0</number>
                </property>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
+                <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0">
                  <property name="spacing">
                   <number>0</number>
                  </property>
@@ -529,6 +529,19 @@ li.checked::marker { content: &quot;\2612&quot;; }
                  <property name="bottomMargin">
                   <number>5</number>
                  </property>
+                 <item>
+                  <spacer name="horizontalSpacer_8">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
                  <item>
                   <widget class="QFrame" name="frame_7">
                    <property name="minimumSize">
@@ -791,6 +804,19 @@ li.checked::marker { content: &quot;\2612&quot;; }
                     </layout>
                    </widget>
                   </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_9">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                 </layout>
                </item>

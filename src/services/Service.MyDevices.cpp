@@ -76,35 +76,38 @@ static QIcon createBrandBadgeIcon(const QString &vendorRaw)
     }
 
     constexpr int size = 26;
-    QPixmap pix(size, size);
-    pix.fill(Qt::transparent);
+    QImage img(size, size, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
 
-    QPainter p(&pix);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setRenderHint(QPainter::TextAntialiasing);
+    QPainter p;
+    if(p.begin(&img))
+    {
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::TextAntialiasing);
 
-    // Draw rounded badge rectangle
-    QPainterPath path;
-    path.addRoundedRect(QRectF(1, 1, size - 2, size - 2), 6, 6);
+        // Draw rounded badge rectangle
+        QPainterPath path;
+        path.addRoundedRect(QRectF(1, 1, size - 2, size - 2), 6, 6);
 
-    QLinearGradient grad(0, 0, 0, size);
-    grad.setColorAt(0.0, bgTop);
-    grad.setColorAt(1.0, bgBot);
-    p.fillPath(path, grad);
+        QLinearGradient grad(0, 0, 0, size);
+        grad.setColorAt(0.0, bgTop);
+        grad.setColorAt(1.0, bgBot);
+        p.fillPath(path, grad);
 
-    p.setPen(QPen(QColor(255, 255, 255, 70), 1));
-    p.drawPath(path);
+        p.setPen(QPen(QColor(255, 255, 255, 70), 1));
+        p.drawPath(path);
 
-    // Draw text letter
-    p.setPen(textColor);
-    QFont f = p.font();
-    f.setBold(true);
-    f.setPixelSize(letter.length() > 1 ? 10 : 13);
-    p.setFont(f);
-    p.drawText(QRectF(0, 0, size, size), Qt::AlignCenter, letter);
+        // Draw text letter
+        p.setPen(textColor);
+        QFont f = p.font();
+        f.setBold(true);
+        f.setPixelSize(letter.length() > 1 ? 10 : 13);
+        p.setFont(f);
+        p.drawText(QRectF(0, 0, size, size), Qt::AlignCenter, letter);
 
-    p.end();
-    return QIcon(pix);
+        p.end();
+    }
+    return QIcon(QPixmap::fromImage(img));
 }
 
 QString MyDeviceService::uuid() const
@@ -151,9 +154,15 @@ void MyDeviceService::slotRefresh()
 class DeviceSortItem : public QStandardItem
 {
 public:
-    DeviceSortItem() : QStandardItem() {}
-    explicit DeviceSortItem(const QString &text) : QStandardItem(text) {}
-    DeviceSortItem(const QIcon &icon, const QString &text) : QStandardItem(icon, text) {}
+    DeviceSortItem() : QStandardItem()
+    {
+    }
+    explicit DeviceSortItem(const QString &text) : QStandardItem(text)
+    {
+    }
+    DeviceSortItem(const QIcon &icon, const QString &text) : QStandardItem(icon, text)
+    {
+    }
 
     bool operator<(const QStandardItem &other) const override
     {

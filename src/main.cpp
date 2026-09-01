@@ -68,14 +68,15 @@ int main(int argc, char **argv)
                 {
                     if(!sharedMem.lock())
                         return true;
-                    
+
                     const char *data = reinterpret_cast<const char *>(sharedMem.constData());
                     int len = 0;
-                    while (len < sharedMem.size() && data[len] != '\0') {
+                    while(len < sharedMem.size() && data[len] != '\0')
+                    {
                         len++;
                     }
                     QString cmd = QString::fromLatin1(data, len);
-                    
+
                     if(cmd == ShowCommandPipe)
                     {
                         w->showNormal();

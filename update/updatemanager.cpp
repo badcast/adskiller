@@ -76,7 +76,8 @@ std::pair<QList<FetchResult>, int> UpdateManager::fetch()
 
 std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &existsDir, const QList<FetchResult> &updates)
 {
-    if (m_simulate) return {updates, 0};
+    if(m_simulate)
+        return {updates, 0};
     QStringList files;
     QList<FetchResult> result;
     QDir dir(existsDir);
@@ -159,14 +160,15 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
                 m_statusDownload.downloadStep = x + 1;
                 m_statusDownload.currentStatus = fetch->remoteLink.split("/", Qt::SkipEmptyParts).back();
                 mutex.unlock();
-                
+
                 int chunks = 20;
                 for(int c = 1; c <= chunks && !m_forclyExit; ++c)
                 {
                     QThread::msleep(30); // 30ms * 20 = 600ms per file
                     QMutexLocker locker(&mutex);
                     quint64 chunkBytes = fetch->bytes / chunks;
-                    if(c == chunks) chunkBytes = fetch->bytes - (chunkBytes * (chunks - 1));
+                    if(c == chunks)
+                        chunkBytes = fetch->bytes - (chunkBytes * (chunks - 1));
                     m_statusDownload.currentDownloadBytes = (fetch->bytes * c) / chunks;
                     m_statusDownload.currentMaxDownloadBytes = fetch->bytes;
                     m_statusDownload.totalDownloadedBytes += chunkBytes;

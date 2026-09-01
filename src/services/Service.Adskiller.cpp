@@ -171,27 +171,27 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
     QString serialStr = !device.devId.isEmpty() ? device.devId : "USB";
 
     return QString(
-        "<div style='padding: 2px 4px;'>"
-        "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
-        "    <tr>"
-        "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
-        "        📱 %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
-        "      </td>"
-        "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
-        "        ● Подключено [ %3 ]"
-        "      </td>"
-        "    </tr>"
-        "  </table>"
-        "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 6px;'>"
-        "    <tr>"
-        "      <td>🤖 <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
-        "      <td>💾 <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
-        "      <td>⚡ <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
-        "      <td>⚙️ <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
-        "    </tr>"
-        "  </table>"
-        "</div>"
-    ).arg(vendorStr + " " + devTitle, device.model, serialStr, osStr, storageStr, ramStr, archStr, kernelStr);
+               "<div style='padding: 2px 4px;'>"
+               "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
+               "    <tr>"
+               "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
+               "        📱 %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
+               "      </td>"
+               "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
+               "        ● Подключено [ %3 ]"
+               "      </td>"
+               "    </tr>"
+               "  </table>"
+               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 6px;'>"
+               "    <tr>"
+               "      <td>🤖 <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
+               "      <td>💾 <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
+               "      <td>⚡ <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
+               "      <td>⚙️ <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
+               "    </tr>"
+               "  </table>"
+               "</div>")
+        .arg(vendorStr + " " + devTitle, device.model, serialStr, osStr, storageStr, ramStr, archStr, kernelStr);
 }
 
 bool AdsKillerService::start()

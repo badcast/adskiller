@@ -77,13 +77,7 @@ static inline void boostram_write_log_head(QString msg, int progress = -1)
         bProgress = progress;
 }
 
-BoostRamService::BoostRamService(QObject *parent)
-    : Service(DeviceConnectType::ADB, parent),
-      processLogStatus(nullptr),
-      malwareStatusText0(nullptr),
-      deviceLabelName(nullptr),
-      processBarStatus(nullptr),
-      pushButtonReRun(nullptr)
+BoostRamService::BoostRamService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr)
 {
 }
 
@@ -140,27 +134,27 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
     QString serialStr = !device.devId.isEmpty() ? device.devId : "USB";
 
     return QString(
-        "<div style='padding: 2px 4px;'>"
-        "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
-        "    <tr>"
-        "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
-        "        📱 %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
-        "      </td>"
-        "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
-        "        ● Подключено [ %3 ]"
-        "      </td>"
-        "    </tr>"
-        "  </table>"
-        "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 6px;'>"
-        "    <tr>"
-        "      <td>🤖 <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
-        "      <td>💾 <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
-        "      <td>⚡ <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
-        "      <td>⚙️ <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
-        "    </tr>"
-        "  </table>"
-        "</div>"
-    ).arg(vendorStr + " " + devTitle, device.model, serialStr, osStr, storageStr, ramStr, archStr, kernelStr);
+               "<div style='padding: 2px 4px;'>"
+               "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
+               "    <tr>"
+               "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
+               "        📱 %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
+               "      </td>"
+               "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
+               "        ● Подключено [ %3 ]"
+               "      </td>"
+               "    </tr>"
+               "  </table>"
+               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 6px;'>"
+               "    <tr>"
+               "      <td>🤖 <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
+               "      <td>💾 <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
+               "      <td>⚡ <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
+               "      <td>⚙️ <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
+               "    </tr>"
+               "  </table>"
+               "</div>")
+        .arg(vendorStr + " " + devTitle, device.model, serialStr, osStr, storageStr, ramStr, archStr, kernelStr);
 }
 
 bool BoostRamService::start()
@@ -346,7 +340,7 @@ static void boostram_awake(BoostRamService *service)
 
     AdbDevice device = Adb::getDevice(bAdbDeviceSerial);
 
-    const std::function<QString(const std::shared_ptr<AdbSysInfo>&)> print_device_info = [&device](const std::shared_ptr<AdbSysInfo> &sysInfo) -> QString
+    const std::function<QString(const std::shared_ptr<AdbSysInfo> &)> print_device_info = [&device](const std::shared_ptr<AdbSysInfo> &sysInfo) -> QString
     {
         if(!sysInfo)
             return {};
@@ -500,9 +494,7 @@ static void boostram_awake(BoostRamService *service)
                 else
                 {
                     auto durationProcedure = duration_cast<seconds>(steady_clock::now() - procedureStartAt);
-                    QString text = QString("Оптимизация завершена! Остановлено приложений: %1. Затрачено: %2 с.")
-                                       .arg(stoppedCount)
-                                       .arg(durationProcedure.count());
+                    QString text = QString("Оптимизация завершена! Остановлено приложений: %1. Затрачено: %2 с.").arg(stoppedCount).arg(durationProcedure.count());
                     boostram_write_log_head(text, 100);
                     bStatus = BoostRamStatus::Idle;
                 }

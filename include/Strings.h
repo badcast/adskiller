@@ -13,12 +13,12 @@ constexpr auto infoNoInternet = "Проверьте интернет-соеди�
 
 constexpr auto infoMessage = "Программа для удаления назойливой рекламы "
                              "на смартфонах Android.\n\n"
-                             "Разработано imister.kz.\n\n"
+                             "Разработано imister.\n\n"
                              "----------------------------------------\n\n"
                              "Программист: badcast <anon>\n"
                              "Дизайн иконок: LeoJames <anon>\n\n"
                              "* Исходный код клиента доступен по ссылке:\n"
-                             "https://adskill.imister.kz";
+                             "https://adskiller.imister.tech";
 
 constexpr auto infoNoBalance = "Не удалось войти: недостаточно средств на балансе. "
                                "Чтобы пополнить счет, свяжитесь с поддержкой: "

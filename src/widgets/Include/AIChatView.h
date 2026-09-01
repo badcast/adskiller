@@ -18,7 +18,8 @@ class AIChatBubble : public QWidget
 {
     Q_OBJECT
 public:
-    enum Type {
+    enum Type
+    {
         User,
         AI,
         Welcome,
@@ -27,7 +28,10 @@ public:
 
     explicit AIChatBubble(Type type, const QString &text, const QString &timeStr = QString(), QWidget *parent = nullptr);
 
-    Type type() const { return m_type; }
+    Type type() const
+    {
+        return m_type;
+    }
 
 private:
     Type m_type;

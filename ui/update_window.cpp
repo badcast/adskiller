@@ -16,7 +16,7 @@ RandomBlockProgress::RandomBlockProgress(QWidget *parent) : QWidget(parent), m_v
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     m_randomIndices.resize(100);
     std::iota(m_randomIndices.begin(), m_randomIndices.end(), 0);
-    
+
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(m_randomIndices.begin(), m_randomIndices.end(), g);
@@ -24,9 +24,12 @@ RandomBlockProgress::RandomBlockProgress(QWidget *parent) : QWidget(parent), m_v
 
 void RandomBlockProgress::setValue(int value)
 {
-    if (value < 0) value = 0;
-    if (value > 100) value = 100;
-    if (m_value != value) {
+    if(value < 0)
+        value = 0;
+    if(value > 100)
+        value = 100;
+    if(m_value != value)
+    {
         m_value = value;
         update();
     }
@@ -44,10 +47,10 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
     int spacing = 2;
     int totalWidth = width();
     int totalHeight = height();
-    
+
     // We calculate block size so it fits perfectly
-    float blockWidth = (float)(totalWidth - spacing * (cols - 1)) / cols;
-    float blockHeight = (float)(totalHeight - spacing * (rows - 1)) / rows;
+    float blockWidth = (float) (totalWidth - spacing * (cols - 1)) / cols;
+    float blockHeight = (float) (totalHeight - spacing * (rows - 1)) / rows;
 
     QLinearGradient activeGradient(0, 0, totalWidth, totalHeight);
     activeGradient.setColorAt(0, QColor("#4776E6"));
@@ -58,7 +61,8 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
 
     painter.setPen(Qt::NoPen);
 
-    for (int i = 0; i < 100; ++i) {
+    for(int i = 0; i < 100; ++i)
+    {
         int index = m_randomIndices[i];
         int row = index / cols;
         int col = index % cols;
@@ -69,9 +73,12 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
         QPainterPath path;
         path.addRoundedRect(blockRect, 2, 2);
 
-        if (i < m_value) {
+        if(i < m_value)
+        {
             painter.fillPath(path, activeBrush);
-        } else {
+        }
+        else
+        {
             painter.fillPath(path, inactiveBrush);
         }
     }
@@ -181,19 +188,24 @@ UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent)
         "iPhone — статус, Android — жизнь.",
         "Продал почку ради нового iPhone.",
         "Android: настройки, которые не трогаешь.",
-        "Экосистема Apple не отпускает!"
-    };
+        "Экосистема Apple не отпускает!"};
     jokeLabel->setText(jokes.first());
-    
+
     QTimer *jokeTimer = new QTimer(this);
-    connect(jokeTimer, &QTimer::timeout, this, [this, jokes]() {
-        int r = QRandomGenerator::global()->bounded(jokes.size());
-        jokeLabel->setText(jokes[r]);
-    });
+    connect(
+        jokeTimer,
+        &QTimer::timeout,
+        this,
+        [this, jokes]()
+        {
+            int r = QRandomGenerator::global()->bounded(jokes.size());
+            jokeLabel->setText(jokes[r]);
+        });
     jokeTimer->start(3500);
 
     // Center window
-    if (const QScreen *screen = QGuiApplication::primaryScreen()) {
+    if(const QScreen *screen = QGuiApplication::primaryScreen())
+    {
         QRect screenGeometry = screen->geometry();
         int x = (screenGeometry.width() - width()) / 2;
         int y = (screenGeometry.height() - height()) / 2;
@@ -203,7 +215,8 @@ UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent)
 
 void UpdateWindow::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton) {
+    if(event->button() == Qt::LeftButton)
+    {
         m_dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
         event->accept();
     }
@@ -211,7 +224,8 @@ void UpdateWindow::mousePressEvent(QMouseEvent *event)
 
 void UpdateWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    if (event->buttons() & Qt::LeftButton) {
+    if(event->buttons() & Qt::LeftButton)
+    {
         move(event->globalPosition().toPoint() - m_dragPosition);
         event->accept();
     }

@@ -5,6 +5,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,32 +17,40 @@ jobs:
         include:
           - name: Linux GCC
             os: ubuntu-latest
-            qt_arch: gcc_64
-            qt_version: '6.11.0'
+            qt_arch: linux_gcc_64
+            qt_version: '6.10.0'
+            artifact_name: Adskiller-Linux-GCC
           - name: Windows MSVC
             os: windows-latest
             qt_arch: win64_msvc2022_64
             qt_version: '6.10.0'
             setup_msvc: true
+            artifact_name: Adskiller-Windows-MSVC
           - name: Windows MinGW
             os: windows-latest
             qt_arch: win64_mingw
             qt_version: '6.10.0'
-            qt_tools: 'tools_mingw'
+            qt_tools: 'tools_mingw1310'
+            cmake_flags: '-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++'
+            artifact_name: Adskiller-Windows-MinGW
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # В вашем CMakeLists.txt требуется файл VERSION. 
-      # Этот шаг создает дефолтный файл, если вы забыли добавить его в репозиторий.
       - name: Ensure VERSION file exists
         run: |
           if [ ! -f "VERSION" ]; then echo "1.0.0" > VERSION; fi
         shell: bash
 
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libgl-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-cursor0
+
       - name: Setup Ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
+        uses: seanmiddleditch/gha-setup-ninja@v5
 
       - name: Setup MSVC (Windows only)
         if: matrix.setup_msvc
@@ -55,11 +64,9 @@ jobs:
           tools: ${{ matrix.qt_tools }}
           cache: true
 
-      # Конфигурация с использованием генератора Ninja (быстрее и унифицирует пути вывода)
       - name: Configure CMake
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_flags }}
 
-      # Сборка только нужных таргетов
       - name: Build Application and Update
         run: cmake --build build --target application update --parallel
 
@@ -76,6 +83,20 @@ jobs:
           windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'adskiller.exe')
           windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'update.exe')
 
+          if (Test-Path (Join-Path $deployDir 'networkinformation')) {
+            Remove-Item (Join-Path $deployDir 'networkinformation') -Recurse -Force
+          }
+
+          if (Get-Command gcc -ErrorAction SilentlyContinue) {
+            $gccDir = Split-Path (Get-Command gcc).Source
+            @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll') | ForEach-Object {
+              $dll = Join-Path $gccDir $_
+              if (Test-Path $dll) { Copy-Item $dll $deployDir -Force }
+            }
+            strip (Join-Path $deployDir 'adskiller.exe')
+            strip (Join-Path $deployDir 'update.exe')
+          }
+
           if (Test-Path 'build/adb') {
             Copy-Item 'build/adb' (Join-Path $deployDir 'adb') -Recurse -Force
           }
@@ -84,14 +105,16 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: Adskiller-Linux-GCC
+          name: ${{ matrix.artifact_name }}
           path: |
             build/adskiller
             build/update
+          if-no-files-found: error
 
       - name: Upload Artifacts (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: Adskiller-${{ matrix.name }}
+          name: ${{ matrix.artifact_name }}
           path: build/deploy/
+          if-no-files-found: error

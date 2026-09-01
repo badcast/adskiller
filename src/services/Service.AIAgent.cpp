@@ -11,7 +11,6 @@
 #include <QTimer>
 #include <QTextEdit>
 
-
 QString AIAgentService::uuid() const
 {
     return IDServiceAIAgentString;
@@ -226,7 +225,6 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
             btn->setText("Отправить");
         btn->setEnabled(true);
     }
-
 
     if(responce["run_service"].isString())
     {
