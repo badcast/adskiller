@@ -143,6 +143,7 @@ private:
     void clearAuthInfoPage();
     void fillAuthInfoPage();
 
+    void setupPagesDesign();
     void initServiceModules();
     void checkVersion(bool firstRun);
     void willTerminate();

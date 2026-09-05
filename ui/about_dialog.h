@@ -5,6 +5,10 @@
 class QTabWidget;
 class QTextEdit;
 class QPushButton;
+class QLabel;
+class QVBoxLayout;
+class QNetworkAccessManager;
+class QJsonArray;
 
 class AboutDialog : public QDialog
 {
@@ -15,7 +19,8 @@ public:
     {
         TabAbout = 0,
         TabAuthors = 1,
-        TabGplV3 = 2
+        TabGplV3 = 2,
+        TabChangelog = 3
     };
 
     explicit AboutDialog(QWidget *parent = nullptr);
@@ -28,6 +33,8 @@ private slots:
     void openProjectWebsite();
     void openGplWebsite();
     void openSupportWhatsApp();
+    void fetchChangelog();
+    void openChangelogWebsite();
 
 private:
     void setupUi();
@@ -35,6 +42,7 @@ private:
     QWidget *createAboutTab();
     QWidget *createAuthorsTab();
     QWidget *createGplTab();
+    QWidget *createChangelogTab();
     QWidget *createFooterWidget();
 
     QWidget *createAuthorCard(const QString &initials,
@@ -53,7 +61,21 @@ private:
 
     static QString loadLicenseText();
 
+    void renderChangelog(const QJsonArray &entries);
+    void showChangelogLoading();
+    void showChangelogError(const QString &errorMsg);
+    static QString formatChangelogText(const QString &raw);
+    static QJsonArray getFallbackChangelog();
+
     QTabWidget *m_tabWidget { nullptr };
     QTextEdit *m_licenseEdit { nullptr };
     QPushButton *m_copyLicenseBtn { nullptr };
+
+    // Changelog tab elements
+    QNetworkAccessManager *m_netManager { nullptr };
+    QVBoxLayout *m_changelogListLayout { nullptr };
+    QWidget *m_changelogStatusWidget { nullptr };
+    QLabel *m_changelogStatusLabel { nullptr };
+    QPushButton *m_changelogRetryBtn { nullptr };
+    QPushButton *m_changelogRefreshBtn { nullptr };
 };

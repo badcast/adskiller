@@ -24,6 +24,13 @@
 #include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QRegularExpression>
 
 AboutDialog::AboutDialog(QWidget *parent)
     : QDialog(parent)
@@ -93,6 +100,7 @@ void AboutDialog::setupUi()
     m_tabWidget->addTab(createAboutTab(), QStringLiteral("О программе"));
     m_tabWidget->addTab(createAuthorsTab(), QStringLiteral("Об авторах"));
     m_tabWidget->addTab(createGplTab(), QStringLiteral("GPL v3"));
+    m_tabWidget->addTab(createChangelogTab(), QStringLiteral("Что нового"));
 
     mainLayout->addWidget(m_tabWidget, 1);
 
@@ -167,7 +175,7 @@ QWidget *AboutDialog::createHeaderWidget()
 
     // Row 3: Meta info
     auto *metaLabel = new QLabel(
-        QStringLiteral("Лицензия: GNU GPL v3 • Авторские права © 2026 imister.kz"),
+        QStringLiteral("Лицензия: GNU GPL v3 • Авторские права © 2026 imister.tech"),
         headerFrame);
     metaLabel->setStyleSheet(QStringLiteral("font-size: 11px; color: rgba(127, 127, 127, 0.85);"));
     infoLayout->addWidget(metaLabel);
@@ -364,21 +372,21 @@ QWidget *AboutDialog::createAuthorsTab()
     );
     layout->addWidget(designerCard);
 
-    // Author 3: imister.kz (Project Lead & Infrastructure)
+    // Author 3: imister.tech (Project Lead & Infrastructure)
     QWidget *leadProjectCard = createAuthorCard(
         QStringLiteral("IM"),
         QColor(QStringLiteral("#059669")),
         QColor(QStringLiteral("#047857")),
-        QStringLiteral("Команда imister.kz"),
+        QStringLiteral("Команда imister.tech"),
         QStringLiteral("Издатель & Инфраструктура / Project Lead"),
         QStringLiteral("#047857"),
         QStringLiteral(
             "• Концепция, развитие и выпуск официальных релизов программы AdsKiller.<br>"
             "• Облачная инфраструктура, серверная база сигнатур рекламных модулей и вредоносного ПО.<br>"
             "• Поддержка серверов автоматического обновления и клиентской базы данных.<br>"
-            "• Веб-ресурсы: <a href=\"https://imister.kz\" style=\"color: #0078D4;\">imister.kz</a> "
+            "• Веб-ресурсы: <a href=\"https://imister.tech\" style=\"color: #0078D4;\">imister.tech</a> "
             "и <a href=\"https://adskiller.imister.tech\" style=\"color: #0078D4;\">adskiller.imister.tech</a>."),
-        QStringLiteral("imister.kz • Казахстан • Издатель и инфраструктура")
+        QStringLiteral("imister.tech • Казахстан • Издатель и инфраструктура")
     );
     layout->addWidget(leadProjectCard);
 
@@ -565,6 +573,425 @@ QWidget *AboutDialog::createGplTab()
     layout->addLayout(btnRow);
 
     return widget;
+}
+
+QWidget *AboutDialog::createChangelogTab()
+{
+    auto *scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    auto *container = new QWidget(scrollArea);
+    auto *layout = new QVBoxLayout(container);
+    layout->setContentsMargins(12, 12, 12, 12);
+    layout->setSpacing(10);
+
+    // Top Card with Title, Source & Buttons
+    auto *topCard = new QFrame(container);
+    topCard->setProperty("card", true);
+    auto *topLayout = new QHBoxLayout(topCard);
+    topLayout->setContentsMargins(14, 12, 14, 12);
+    topLayout->setSpacing(12);
+
+    auto *topInfoLayout = new QVBoxLayout();
+    topInfoLayout->setSpacing(3);
+
+    auto *topTitle = new QLabel(QStringLiteral("✦ Журнал версий и обновлений"), topCard);
+    topTitle->setObjectName(QStringLiteral("cardTitle"));
+    topInfoLayout->addWidget(topTitle);
+
+    auto *topSub = new QLabel(
+        QStringLiteral("История выпусков • Сервер: <a href=\"https://adskiller.imister.tech/changelog\" style=\"color:#0078D4; text-decoration:none;\">adskiller.imister.tech/changelog</a>"),
+        topCard);
+    topSub->setTextFormat(Qt::RichText);
+    topSub->setOpenExternalLinks(true);
+    topSub->setStyleSheet(QStringLiteral("color: rgba(127,127,127,0.9); font-size: 11px;"));
+    topInfoLayout->addWidget(topSub);
+
+    topLayout->addLayout(topInfoLayout, 1);
+
+    m_changelogRefreshBtn = new QPushButton(QStringLiteral("🔄 Обновить"), topCard);
+    m_changelogRefreshBtn->setCursor(Qt::PointingHandCursor);
+    m_changelogRefreshBtn->setStyleSheet(QStringLiteral(
+        "QPushButton {"
+        "    background-color: rgba(127, 127, 127, 0.12);"
+        "    border: 1px solid rgba(127, 127, 127, 0.25);"
+        "    border-radius: 7px;"
+        "    padding: 5px 12px;"
+        "    font-size: 11.5px;"
+        "    font-weight: 500;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: rgba(0, 120, 212, 0.2);"
+        "    border-color: #0078D4;"
+        "    color: #0078D4;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: rgba(0, 120, 212, 0.35);"
+        "}"
+    ));
+    connect(m_changelogRefreshBtn, &QPushButton::clicked, this, &AboutDialog::fetchChangelog);
+    topLayout->addWidget(m_changelogRefreshBtn);
+
+    auto *webBtn = new QPushButton(QStringLiteral("🌐 В браузере"), topCard);
+    webBtn->setCursor(Qt::PointingHandCursor);
+    webBtn->setStyleSheet(QStringLiteral(
+        "QPushButton {"
+        "    background-color: rgba(127, 127, 127, 0.12);"
+        "    border: 1px solid rgba(127, 127, 127, 0.25);"
+        "    border-radius: 7px;"
+        "    padding: 5px 12px;"
+        "    font-size: 11.5px;"
+        "    font-weight: 500;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: rgba(0, 120, 212, 0.2);"
+        "    border-color: #0078D4;"
+        "    color: #0078D4;"
+        "}"
+    ));
+    connect(webBtn, &QPushButton::clicked, this, &AboutDialog::openChangelogWebsite);
+    topLayout->addWidget(webBtn);
+
+    layout->addWidget(topCard);
+
+    // Status Banner Widget (for Loading / Error notifications)
+    m_changelogStatusWidget = new QFrame(container);
+    m_changelogStatusWidget->setProperty("card", true);
+    auto *statusLayout = new QHBoxLayout(m_changelogStatusWidget);
+    statusLayout->setContentsMargins(14, 10, 14, 10);
+    statusLayout->setSpacing(10);
+
+    m_changelogStatusLabel = new QLabel(m_changelogStatusWidget);
+    m_changelogStatusLabel->setTextFormat(Qt::RichText);
+    m_changelogStatusLabel->setWordWrap(true);
+    statusLayout->addWidget(m_changelogStatusLabel, 1);
+
+    m_changelogRetryBtn = new QPushButton(QStringLiteral("Повторить"), m_changelogStatusWidget);
+    m_changelogRetryBtn->setCursor(Qt::PointingHandCursor);
+    m_changelogRetryBtn->setStyleSheet(QStringLiteral(
+        "QPushButton {"
+        "    background-color: #0078D4;"
+        "    color: #FFFFFF;"
+        "    border: none;"
+        "    border-radius: 6px;"
+        "    padding: 4px 12px;"
+        "    font-size: 11px;"
+        "    font-weight: 600;"
+        "}"
+        "QPushButton:hover { background-color: #1084E3; }"
+    ));
+    connect(m_changelogRetryBtn, &QPushButton::clicked, this, &AboutDialog::fetchChangelog);
+    statusLayout->addWidget(m_changelogRetryBtn);
+
+    m_changelogStatusWidget->hide();
+    layout->addWidget(m_changelogStatusWidget);
+
+    // Container for list of version cards
+    auto *listContainer = new QWidget(container);
+    listContainer->setStyleSheet(QStringLiteral("background: transparent;"));
+    m_changelogListLayout = new QVBoxLayout(listContainer);
+    m_changelogListLayout->setContentsMargins(0, 0, 0, 0);
+    m_changelogListLayout->setSpacing(10);
+
+    layout->addWidget(listContainer);
+    layout->addStretch();
+
+    scrollArea->setWidget(container);
+
+    // Trigger asynchronous fetch
+    QTimer::singleShot(50, this, &AboutDialog::fetchChangelog);
+
+    return scrollArea;
+}
+
+void AboutDialog::openChangelogWebsite()
+{
+    QDesktopServices::openUrl(QUrl(QStringLiteral("https://adskiller.imister.tech/changelog")));
+}
+
+void AboutDialog::fetchChangelog()
+{
+    if(!m_netManager)
+    {
+        m_netManager = new QNetworkAccessManager(this);
+    }
+
+    showChangelogLoading();
+
+    QNetworkRequest request(QUrl(QStringLiteral("https://adskiller.imister.tech/changelog")));
+    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("AdsKiller-Desktop/%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch));
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    request.setTransferTimeout(6000);
+
+    QNetworkReply *reply = m_netManager->get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]()
+    {
+        reply->deleteLater();
+        if(m_changelogRefreshBtn)
+            m_changelogRefreshBtn->setEnabled(true);
+
+        if(reply->error() == QNetworkReply::NoError)
+        {
+            QByteArray data = reply->readAll();
+            QJsonParseError parseErr;
+            QJsonDocument doc = QJsonDocument::fromJson(data, &parseErr);
+            if(parseErr.error == QJsonParseError::NoError)
+            {
+                QJsonArray arr;
+                if(doc.isArray())
+                {
+                    arr = doc.array();
+                }
+                else if(doc.isObject())
+                {
+                    QJsonObject root = doc.object();
+                    if(root.contains(QStringLiteral("changelog")) && root[QStringLiteral("changelog")].isArray())
+                        arr = root[QStringLiteral("changelog")].toArray();
+                    else if(root.contains(QStringLiteral("data")) && root[QStringLiteral("data")].isArray())
+                        arr = root[QStringLiteral("data")].toArray();
+                    else if(root.contains(QStringLiteral("releases")) && root[QStringLiteral("releases")].isArray())
+                        arr = root[QStringLiteral("releases")].toArray();
+                }
+
+                if(!arr.isEmpty())
+                {
+                    if(m_changelogStatusWidget)
+                        m_changelogStatusWidget->hide();
+                    renderChangelog(arr);
+                    return;
+                }
+            }
+            showChangelogError(QStringLiteral("Сервер вернул пустой или некорректный формат списка изменений."));
+        }
+        else
+        {
+            showChangelogError(QStringLiteral("Не удалось связаться с сервером обновлений (%1).").arg(reply->errorString()));
+        }
+
+        // Render offline fallback releases so tab is never empty
+        renderChangelog(getFallbackChangelog());
+    });
+}
+
+void AboutDialog::showChangelogLoading()
+{
+    if(m_changelogRefreshBtn)
+        m_changelogRefreshBtn->setEnabled(false);
+
+    if(m_changelogStatusWidget && m_changelogStatusLabel)
+    {
+        m_changelogStatusLabel->setText(QStringLiteral(
+            "<span style=\"color:#0078D4; font-weight:600;\">⏳ Загрузка...</span> "
+            "Получение актуального списка изменений с adskiller.imister.tech/changelog"));
+        if(m_changelogRetryBtn)
+            m_changelogRetryBtn->hide();
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral(
+            "QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); border-radius: 8px; }"
+        ));
+        m_changelogStatusWidget->show();
+    }
+}
+
+void AboutDialog::showChangelogError(const QString &errorMsg)
+{
+    if(m_changelogStatusWidget && m_changelogStatusLabel)
+    {
+        m_changelogStatusLabel->setText(QStringLiteral(
+            "<span style=\"color:#EF4444; font-weight:bold;\">⚠️ Ошибка соединения:</span> %1<br>"
+            "<span style=\"color:rgba(127,127,127,0.9); font-size:11px;\">Ниже показаны встроенные сведения о релизе (автономный режим).</span>"
+        ).arg(errorMsg));
+        if(m_changelogRetryBtn)
+            m_changelogRetryBtn->show();
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral(
+            "QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; }"
+        ));
+        m_changelogStatusWidget->show();
+    }
+}
+
+QString AboutDialog::formatChangelogText(const QString &raw)
+{
+    if(raw.isEmpty())
+        return QStringLiteral("<i>Нет описания изменений.</i>");
+
+    if(raw.contains(QStringLiteral("<p>")) || raw.contains(QStringLiteral("<br>")) || raw.contains(QStringLiteral("<div>")))
+        return raw;
+
+    QString s = raw.toHtmlEscaped();
+    s.replace(QStringLiteral("\r\n"), QStringLiteral("\n"));
+
+    // Bold **text**
+    static QRegularExpression boldRe(QStringLiteral(R"(\*\*(.+?)\*\*)"));
+    s.replace(boldRe, QStringLiteral("<b style=\"color:#FFFFFF;\">\\1</b>"));
+
+    // Code `code`
+    static QRegularExpression codeRe(QStringLiteral(R"(`([^`]+)`)"));
+    s.replace(codeRe, QStringLiteral("<code style=\"background:rgba(127,127,127,0.15); padding:1px 5px; border-radius:3px; font-family:monospace;\">\\1</code>"));
+
+    // Tag pills
+    static QRegularExpression tagNew(QStringLiteral(R"(\[(New|Новое|Добавлено)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(tagNew, QStringLiteral("<span style=\"background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">НОВОЕ</span>"));
+
+    static QRegularExpression tagFix(QStringLiteral(R"(\[(Fix|Исправлено|Исправление)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(tagFix, QStringLiteral("<span style=\"background:rgba(59,130,246,0.2); color:#3B82F6; border:1px solid rgba(59,130,246,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">ИСПРАВЛЕНО</span>"));
+
+    static QRegularExpression tagOpt(QStringLiteral(R"(\[(Opt|Optimized|Improvement|Улучшено|Улучшение)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(tagOpt, QStringLiteral("<span style=\"background:rgba(245,158,11,0.2); color:#F59E0B; border:1px solid rgba(245,158,11,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">УЛУЧШЕНИЕ</span>"));
+
+    static QRegularExpression tagUi(QStringLiteral(R"(\[(UI|Дизайн|Интерфейс)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(tagUi, QStringLiteral("<span style=\"background:rgba(168,85,247,0.2); color:#A855F7; border:1px solid rgba(168,85,247,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">ДИЗАЙН</span>"));
+
+    static QRegularExpression tagSec(QStringLiteral(R"(\[(Sec|Security|Безопасность)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(tagSec, QStringLiteral("<span style=\"background:rgba(239,68,68,0.2); color:#EF4444; border:1px solid rgba(239,68,68,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">БЕЗОПАСНОСТЬ</span>"));
+
+    // Bullets (- or * at start of line)
+    static QRegularExpression bulletRe(QStringLiteral(R"((?:^|\n)[-*•]\s+(.+))"));
+    s.replace(bulletRe, QStringLiteral("<div style=\"margin: 2px 0 2px 10px;\"><span style=\"color:#0078D4;\">•</span> &nbsp;\\1</div>"));
+
+    s.replace(QStringLiteral("\n\n"), QStringLiteral("<div style=\"height:6px;\"></div>"));
+    s.replace(QStringLiteral("\n"), QStringLiteral("<br/>"));
+
+    return QStringLiteral("<div style=\"line-height: 1.5; font-size: 11.5px;\">%1</div>").arg(s);
+}
+
+void AboutDialog::renderChangelog(const QJsonArray &entries)
+{
+    if(!m_changelogListLayout)
+        return;
+
+    // Clear old items
+    QLayoutItem *item;
+    while((item = m_changelogListLayout->takeAt(0)) != nullptr)
+    {
+        if(item->widget())
+            delete item->widget();
+        delete item;
+    }
+
+    const QString currentVerStr = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+
+    for(int i = 0; i < entries.size(); ++i)
+    {
+        QJsonValue val = entries[i];
+        if(!val.isObject())
+            continue;
+
+        QJsonObject obj = val.toObject();
+
+        QString version = obj.value(QStringLiteral("version")).toString();
+        if(version.isEmpty())
+            version = obj.value(QStringLiteral("ver")).toString();
+        if(version.isEmpty())
+            version = obj.value(QStringLiteral("tag")).toString();
+        if(version.isEmpty())
+            version = QStringLiteral("1.0.0");
+
+        QString changelog = obj.value(QStringLiteral("changelog")).toString();
+        if(changelog.isEmpty())
+            changelog = obj.value(QStringLiteral("changes")).toString();
+        if(changelog.isEmpty())
+            changelog = obj.value(QStringLiteral("notes")).toString();
+        if(changelog.isEmpty())
+            changelog = obj.value(QStringLiteral("description")).toString();
+        if(changelog.isEmpty())
+            changelog = obj.value(QStringLiteral("body")).toString();
+
+        QString date = obj.value(QStringLiteral("date")).toString();
+        if(date.isEmpty())
+            date = obj.value(QStringLiteral("released_at")).toString();
+        if(date.isEmpty())
+            date = obj.value(QStringLiteral("created_at")).toString();
+
+        auto *card = new QFrame();
+        card->setProperty("card", true);
+        auto *cardLayout = new QVBoxLayout(card);
+        cardLayout->setContentsMargins(14, 12, 14, 12);
+        cardLayout->setSpacing(8);
+
+        // Header row
+        auto *headerLayout = new QHBoxLayout();
+        headerLayout->setSpacing(8);
+
+        QString verDisplay = version.startsWith(QLatin1Char('v')) ? version : QStringLiteral("v%1").arg(version);
+        auto *verBadge = new QLabel(verDisplay, card);
+        verBadge->setStyleSheet(QStringLiteral(
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0078D4, stop:1 #005A9E);"
+            "color: #FFFFFF;"
+            "font-weight: bold;"
+            "font-size: 11.5px;"
+            "border-radius: 6px;"
+            "padding: 3px 9px;"
+        ));
+        headerLayout->addWidget(verBadge);
+
+        QString cleanVer = version;
+        if(cleanVer.startsWith(QLatin1Char('v')))
+            cleanVer = cleanVer.mid(1);
+
+        if(cleanVer == currentVerStr)
+        {
+            auto *curBadge = new QLabel(QStringLiteral("● Текущая версия"), card);
+            curBadge->setStyleSheet(QStringLiteral(
+                "background-color: rgba(16, 185, 129, 0.18);"
+                "color: #10B981;"
+                "border: 1px solid rgba(16, 185, 129, 0.40);"
+                "border-radius: 6px;"
+                "padding: 2px 8px;"
+                "font-size: 10px;"
+                "font-weight: 600;"
+            ));
+            headerLayout->addWidget(curBadge);
+        }
+
+        if(!date.isEmpty())
+        {
+            auto *dateLabel = new QLabel(QStringLiteral("📅 %1").arg(date), card);
+            dateLabel->setStyleSheet(QStringLiteral("color: rgba(127, 127, 127, 0.85); font-size: 11px;"));
+            headerLayout->addWidget(dateLabel);
+        }
+
+        headerLayout->addStretch();
+        cardLayout->addLayout(headerLayout);
+
+        // Subtle separator
+        auto *sep = new QFrame(card);
+        sep->setFrameShape(QFrame::HLine);
+        sep->setStyleSheet(QStringLiteral("border: none; border-top: 1px solid rgba(127, 127, 127, 0.15); margin: 2px 0;"));
+        cardLayout->addWidget(sep);
+
+        // Body content
+        auto *contentLabel = new QLabel(card);
+        contentLabel->setTextFormat(Qt::RichText);
+        contentLabel->setText(formatChangelogText(changelog));
+        contentLabel->setWordWrap(true);
+        contentLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
+        contentLabel->setOpenExternalLinks(true);
+        cardLayout->addWidget(contentLabel);
+
+        m_changelogListLayout->addWidget(card);
+    }
+}
+
+QJsonArray AboutDialog::getFallbackChangelog()
+{
+    QJsonArray arr;
+    QJsonObject v1;
+    v1[QStringLiteral("version")] = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+    v1[QStringLiteral("date")] = QStringLiteral("2026-09-01");
+    v1[QStringLiteral("changelog")] = QStringLiteral(
+        "[New] Официальный стабильный релиз утилиты AdsKiller для десктопа.\n"
+        "[New] Модуль удаления рекламы и трекеров (AdMob, UnityAds, Xiaomi MSA) без Root-прав.\n"
+        "[New] Оптимизация оперативной памяти (Boost RAM) и принудительная выгрузка фоновых демонов.\n"
+        "[New] Глубокая очистка остаточных файлов, миниатюр галереи и логов сбоев.\n"
+        "[New] Интеллектуальный ИИ-ассистент с динамической ротацией вопросов и подсказок.\n"
+        "[UI] Полностью обновленный современный интерфейс в стиле Fluent Dark Design.\n"
+        "[Security] Авторизация и валидация устройств с криптографическими md-ключами.\n"
+        "[Fix] Повышена стабильность передачи команд через ADB на смартфонах Xiaomi и Tecno."
+    );
+    arr.append(v1);
+    return arr;
 }
 
 QWidget *AboutDialog::createFooterWidget()

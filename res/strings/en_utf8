@@ -20,7 +20,7 @@
 #define LOCALE_STRING_020 "Partially."
 #define LOCALE_STRING_021 "Completed."
 #define LOCALE_STRING_022 "Error while sending"
-#define LOCALE_STRING_023 "Sending samples to imister.kz server and obtaining md-key"
+#define LOCALE_STRING_023 "Sending samples to imister.tech server and obtaining md-key"
 #define LOCALE_STRING_024 "Error during upload"
 #define LOCALE_STRING_025 "Key verification error"
 #define LOCALE_STRING_026 "Server processing in progress. Please wait. If it takes too long, try again later."

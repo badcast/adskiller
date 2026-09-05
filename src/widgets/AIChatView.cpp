@@ -5,12 +5,33 @@
 static QString formatMarkdown(const QString &raw)
 {
     QString s = raw.toHtmlEscaped();
-    s.replace("\r\n", "<br/>");
-    s.replace("\n", "<br/>");
+    s.replace("\r\n", "\n");
+
+    // Code blocks ```...```
+    static QRegularExpression blockCodeRe(R"(```(?:\w+)?\n?([\s\S]*?)```)");
+    s.replace(blockCodeRe, "<pre style='background:#14161A; color:#4CC2FF; padding:6px 8px; border-radius:6px; border:1px solid #282B32; font-family:Consolas, monospace; font-size:10.5px; margin:4px 0;'>\\1</pre>");
+
+    // Inline code `...`
+    static QRegularExpression codeRe(R"(`([^`]+)`)");
+    s.replace(codeRe, "<code style='background:rgba(0,0,0,0.35); color:#4CC2FF; padding:1px 5px; border-radius:3px; font-family:Consolas, monospace; font-size:11px;'>\\1</code>");
+
+    // Bold **...**
     static QRegularExpression boldRe(R"(\*\*(.+?)\*\*)");
     s.replace(boldRe, "<b style='color:#FFFFFF;'>\\1</b>");
-    static QRegularExpression codeRe(R"(`([^`]+)`)");
-    s.replace(codeRe, "<code style='background:rgba(0,0,0,0.35); color:#4CC2FF; padding:1px 4px; border-radius:3px; font-family:Consolas, monospace;'>\\1</code>");
+
+    // Italic *...*
+    static QRegularExpression italicRe(R"((?<!\*)\*([^*]+?)\*(?!\*))");
+    s.replace(italicRe, "<i style='color:#BAC0CB;'>\\1</i>");
+
+    // Bullet points (- or * at start of line)
+    static QRegularExpression bulletRe(R"((?:^|\n)[-*]\s+(.+))");
+    s.replace(bulletRe, "<br/>&nbsp;&nbsp;<span style='color:#4CC2FF;'>•</span> \\1");
+
+    // Numbered lists (1. , 2. at start of line)
+    static QRegularExpression numRe(R"((?:^|\n)(\d+)\.\s+(.+))");
+    s.replace(numRe, "<br/>&nbsp;&nbsp;<b style='color:#4CC2FF;'>\\1.</b> \\2");
+
+    s.replace("\n", "<br/>");
     return s;
 }
 
@@ -30,21 +51,21 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         m_cardFrame->setStyleSheet(
             "QFrame {"
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0078D4, stop:1 #005A9E);"
-            "   border: 1px solid #1084E3;"
-            "   border-radius: 13px;"
-            "   border-bottom-right-radius: 2px;"
+            "   border: 1px solid #1A8CE6;"
+            "   border-radius: 14px;"
+            "   border-bottom-right-radius: 3px;"
             "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
-        cardLayout->setContentsMargins(12, 9, 12, 7);
-        cardLayout->setSpacing(4);
+        cardLayout->setContentsMargins(12, 8, 12, 7);
+        cardLayout->setSpacing(3);
 
         m_textLabel = new QLabel(this);
         m_textLabel->setTextFormat(Qt::RichText);
         QString esc = text.toHtmlEscaped();
         esc.replace("\r\n", "<br/>");
         esc.replace("\n", "<br/>");
-        m_textLabel->setText(QString("<span style='color:#FFFFFF; font-size:11.5px; line-height:1.4;'>%1</span>").arg(esc));
+        m_textLabel->setText(QString("<span style='color:#FFFFFF; font-size:11.5px; line-height:1.45;'>%1</span>").arg(esc));
         m_textLabel->setWordWrap(true);
         m_textLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
         m_textLabel->setStyleSheet("background: transparent; border: none;");
@@ -53,7 +74,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         QString time = timeStr.isEmpty() ? QDateTime::currentDateTime().toString("HH:mm") : timeStr;
         m_timeLabel = new QLabel(time, this);
-        m_timeLabel->setStyleSheet("color: rgba(255,255,255,0.65); font-size: 8.5px; background: transparent; border: none;");
+        m_timeLabel->setStyleSheet("color: rgba(255,255,255,0.7); font-size: 8.5px; font-weight: 500; background: transparent; border: none;");
         m_timeLabel->setAlignment(Qt::AlignRight);
         cardLayout->addWidget(m_timeLabel);
 
@@ -64,14 +85,14 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
-            "   background-color: #26282D;"
-            "   border: 1px solid #383A40;"
-            "   border-radius: 13px;"
-            "   border-bottom-left-radius: 2px;"
+            "   background-color: #1F2228;"
+            "   border: 1px solid #2F333D;"
+            "   border-radius: 14px;"
+            "   border-bottom-left-radius: 3px;"
             "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
-        cardLayout->setContentsMargins(12, 10, 12, 8);
+        cardLayout->setContentsMargins(12, 9, 12, 8);
         cardLayout->setSpacing(5);
 
         // Header with AI avatar badge and Copy button
@@ -79,28 +100,31 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         headerLayout->setContentsMargins(0, 0, 0, 0);
         headerLayout->setSpacing(4);
 
-        QLabel *badge = new QLabel("✦ AdsKiller AI", this);
-        badge->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 10.5px; background: transparent; border: none;");
+        QLabel *badge = new QLabel(this);
+        badge->setText("<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 8px; font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>✦ AdsKiller AI</span>");
+        badge->setTextFormat(Qt::RichText);
+        badge->setStyleSheet("background: transparent; border: none;");
         headerLayout->addWidget(badge);
 
         headerLayout->addStretch();
 
         m_copyButton = new QPushButton("📋", this);
         m_copyButton->setToolTip("Скопировать ответ");
-        m_copyButton->setFixedSize(22, 19);
+        m_copyButton->setFixedSize(24, 20);
         m_copyButton->setCursor(Qt::PointingHandCursor);
         m_copyButton->setStyleSheet(
             "QPushButton {"
-            "   background: transparent;"
+            "   background: rgba(255,255,255,0.05);"
             "   color: #8E9297;"
-            "   border: none;"
-            "   font-size: 10.5px;"
+            "   border: 1px solid #363940;"
+            "   border-radius: 4px;"
+            "   font-size: 11px;"
             "   padding: 1px;"
             "}"
             "QPushButton:hover {"
             "   color: #4CC2FF;"
-            "   background: rgba(255,255,255,0.08);"
-            "   border-radius: 3px;"
+            "   background: rgba(76,194,255,0.15);"
+            "   border-color: #4CC2FF;"
             "}");
 
         connect(
@@ -128,11 +152,11 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         m_textLabel = new QLabel(this);
         m_textLabel->setTextFormat(Qt::RichText);
-        m_textLabel->setText(QString("<div style='color:#E3E5E8; font-size:11.5px; line-height:1.45;'>%1</div>").arg(formatMarkdown(text)));
+        m_textLabel->setText(QString("<div style='color:#E5E7EB; font-size:11.5px; line-height:1.5;'>%1</div>").arg(formatMarkdown(text)));
         m_textLabel->setWordWrap(true);
         m_textLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
         m_textLabel->setStyleSheet("background: transparent; border: none;");
-        m_textLabel->setMaximumWidth(230);
+        m_textLabel->setMaximumWidth(235);
         cardLayout->addWidget(m_textLabel);
 
         QString time = timeStr.isEmpty() ? QDateTime::currentDateTime().toString("HH:mm") : timeStr;
@@ -148,28 +172,28 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
-            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(76,194,255,0.1), stop:1 rgba(76,194,255,0.02));"
-            "   border: 1px dashed rgba(76,194,255,0.3);"
-            "   border-radius: 10px;"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E2530, stop:1 #171A20);"
+            "   border: 1px solid #2B3A4E;"
+            "   border-radius: 12px;"
             "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
-        cardLayout->setContentsMargins(14, 12, 14, 12);
-        cardLayout->setSpacing(3);
+        cardLayout->setContentsMargins(14, 14, 14, 14);
+        cardLayout->setSpacing(4);
 
-        QLabel *iconLabel = new QLabel("✨", this);
+        QLabel *iconLabel = new QLabel("🤖", this);
         iconLabel->setAlignment(Qt::AlignCenter);
-        iconLabel->setStyleSheet("font-size: 18px; background: transparent; border: none;");
+        iconLabel->setStyleSheet("font-size: 22px; background: transparent; border: none;");
         cardLayout->addWidget(iconLabel);
 
         QLabel *titleLabel = new QLabel("AdsKiller AI Assistant", this);
         titleLabel->setAlignment(Qt::AlignCenter);
-        titleLabel->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 12px; background: transparent; border: none;");
+        titleLabel->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 13px; background: transparent; border: none;");
         cardLayout->addWidget(titleLabel);
 
-        QLabel *descLabel = new QLabel("Задайте вопрос или выберите быструю команду ниже", this);
+        QLabel *descLabel = new QLabel("Задайте вопрос или нажмите любую кнопку-подсказку ниже", this);
         descLabel->setAlignment(Qt::AlignCenter);
-        descLabel->setStyleSheet("color: #8E9297; font-size: 10px; background: transparent; border: none;");
+        descLabel->setStyleSheet("color: #9CA3AF; font-size: 11px; background: transparent; border: none;");
         descLabel->setWordWrap(true);
         cardLayout->addWidget(descLabel);
 
@@ -179,7 +203,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
-            "   background: rgba(0,0,0,0.15);"
+            "   background: rgba(0,0,0,0.2);"
             "   border: 1px solid #33363D;"
             "   border-radius: 10px;"
             "}");
@@ -214,10 +238,10 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
     m_cardFrame = new QFrame(this);
     m_cardFrame->setStyleSheet(
         "QFrame {"
-        "   background-color: #26282D;"
-        "   border: 1px solid #383A40;"
+        "   background-color: #1F2228;"
+        "   border: 1px solid #2F333D;"
         "   border-radius: 12px;"
-        "   border-bottom-left-radius: 2px;"
+        "   border-bottom-left-radius: 3px;"
         "}");
 
     QHBoxLayout *cardLayout = new QHBoxLayout(m_cardFrame);
@@ -228,8 +252,10 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
     badge->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 10.5px; background: transparent; border: none;");
     cardLayout->addWidget(badge);
 
-    m_dotsLabel = new QLabel("думает ● • •", this);
-    m_dotsLabel->setStyleSheet("color: #8E9297; font-size: 10px; background: transparent; border: none;");
+    m_dotsLabel = new QLabel(this);
+    m_dotsLabel->setTextFormat(Qt::RichText);
+    m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> • •</span>");
+    m_dotsLabel->setStyleSheet("background: transparent; border: none;");
     cardLayout->addWidget(m_dotsLabel);
 
     rootLayout->addWidget(m_cardFrame);
@@ -267,11 +293,11 @@ void AITypingIndicator::onTick()
 {
     m_step = (m_step + 1) % 3;
     if(m_step == 0)
-        m_dotsLabel->setText("думает ● • •");
+        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> • •</span>");
     else if(m_step == 1)
-        m_dotsLabel->setText("думает • ● •");
+        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает • <b style='color:#4CC2FF;'>●</b> •</span>");
     else
-        m_dotsLabel->setText("думает • • ●");
+        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает • • <b style='color:#4CC2FF;'>●</b></span>");
 }
 
 // -------------------------------------------------------------------
@@ -287,9 +313,9 @@ AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
 
     setStyleSheet(
         "QScrollArea#aiChatMessagesArea {"
-        "   background-color: #1A1B1E;"
-        "   border: 1px solid #2E3035;"
-        "   border-radius: 8px;"
+        "   background-color: #131417;"
+        "   border: 1px solid #262930;"
+        "   border-radius: 10px;"
         "}"
         "QScrollArea#aiChatMessagesArea QScrollBar:vertical {"
         "   width: 4px;"
@@ -297,12 +323,12 @@ AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
         "   margin: 0px;"
         "}"
         "QScrollArea#aiChatMessagesArea QScrollBar::handle:vertical {"
-        "   background: #484B52;"
+        "   background: #363940;"
         "   border-radius: 2px;"
-        "   min-height: 16px;"
+        "   min-height: 18px;"
         "}"
         "QScrollArea#aiChatMessagesArea QScrollBar::handle:vertical:hover {"
-        "   background: #6D7179;"
+        "   background: #4CC2FF;"
         "}"
         "QScrollArea#aiChatMessagesArea QScrollBar::add-line:vertical, "
         "QScrollArea#aiChatMessagesArea QScrollBar::sub-line:vertical {"

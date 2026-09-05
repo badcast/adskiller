@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cctype>
 #include <list>
+#include <memory>
 
 #include <QCloseEvent>
 #include <QDesktopServices>
@@ -262,467 +263,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Init tray
     tray = new AdsAppSystemTray(this);
 
-    // Modernize Auth Page (Login Window)
-    if(ui->frame_4)
-    {
-        ui->frame_4->setStyleSheet(
-            "QFrame#frame_4 {"
-            "   "
-            "   border: 1px solid #363942;"
-            "   border-radius: 16px;"
-            "}");
+    // Apply convenient modern design for all pages
+    setupPagesDesign();
 
-        ui->label_4->setStyleSheet("color: #8E9297; font-size: 11px; font-weight: normal; background: transparent;");
-        ui->label_4->setText("Войдите для доступа к функциям AdsKiller");
-
-        ui->label_12->setStyleSheet("color: #A0A5AF; font-size: 10px; font-weight: bold; background: transparent; letter-spacing: 0.5px;");
-        ui->label_14->setStyleSheet("color: #A0A5AF; font-size: 10px; font-weight: bold; background: transparent; letter-spacing: 0.5px;");
-
-        ui->lineLoginEdit->setStyleSheet(
-            "QLineEdit#lineLoginEdit {"
-            "   background-color: #1E2026;"
-            "   color: #FFFFFF;"
-            "   border: 1px solid #383A42;"
-            "   border-radius: 8px;"
-            "   padding: 4px 10px;"
-            "   font-size: 12px;"
-            "   selection-background-color: #0078D4;"
-            "}"
-            "QLineEdit#lineLoginEdit:focus {"
-            "   border: 1px solid #4CC2FF;"
-            "   background-color: #18191E;"
-            "}");
-        ui->lineLoginEdit->setPlaceholderText("Введите логин или токен...");
-
-        ui->linePassEdit->setStyleSheet(
-            "QLineEdit#linePassEdit {"
-            "   background-color: #1E2026;"
-            "   color: #FFFFFF;"
-            "   border: 1px solid #383A42;"
-            "   border-radius: 8px;"
-            "   padding: 4px 10px;"
-            "   font-size: 12px;"
-            "   selection-background-color: #0078D4;"
-            "}"
-            "QLineEdit#linePassEdit:focus {"
-            "   border: 1px solid #4CC2FF;"
-            "   background-color: #18191E;"
-            "}");
-        ui->linePassEdit->setPlaceholderText("Введите пароль...");
-
-        ui->butShowPass->setText("👁");
-        ui->butShowPass->setToolTip("Показать/Скрыть пароль");
-        ui->butShowPass->setCursor(Qt::PointingHandCursor);
-        ui->butShowPass->setStyleSheet(
-            "QPushButton#butShowPass {"
-            "   background: #282B33;"
-            "   color: #8E9297;"
-            "   border: 1px solid #383A42;"
-            "   border-radius: 8px;"
-            "   font-size: 13px;"
-            "}"
-            "QPushButton#butShowPass:hover {"
-            "   background: #333640;"
-            "   border-color: #4CC2FF;"
-            "   color: #FFFFFF;"
-            "}"
-            "QPushButton#butShowPass:pressed {"
-            "   background: #1C1E24;"
-            "}");
-
-        ui->checkAutoLogin->setStyleSheet(
-            "QCheckBox#checkAutoLogin {"
-            "   color: #C8CDD5;"
-            "   font-size: 11px;"
-            "   spacing: 6px;"
-            "   background: transparent;"
-            "}"
-            "QCheckBox#checkAutoLogin::indicator {"
-            "   width: 15px;"
-            "   height: 15px;"
-            "   border: 1px solid #444750;"
-            "   border-radius: 4px;"
-            "   background: #1E2026;"
-            "}"
-            "QCheckBox#checkAutoLogin::indicator:checked {"
-            "   background: #0078D4;"
-            "   border-color: #4CC2FF;"
-            "}");
-
-        ui->label_2->setStyleSheet("QLabel#label_2 a { color: #4CC2FF; text-decoration: none; font-size: 11px; } QLabel#label_2 a:hover { text-decoration: underline; }");
-
-        ui->authButton->setStyleSheet(
-            "QPushButton#authButton {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0078D4, stop:1 #005A9E);"
-            "   color: #FFFFFF;"
-            "   border: none;"
-            "   border-radius: 8px;"
-            "   padding: 5px 18px;"
-            "   font-weight: bold;"
-            "   font-size: 12px;"
-            "}"
-            "QPushButton#authButton:hover {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1084E3, stop:1 #0066BA);"
-            "}"
-            "QPushButton#authButton:pressed {"
-            "   background: #004D80;"
-            "}"
-            "QPushButton#authButton:disabled {"
-            "   background: #2D2F34;"
-            "   color: #5C6067;"
-            "}");
-        ui->authButton->setCursor(Qt::PointingHandCursor);
-
-        ui->statusAuthText->setStyleSheet("color: #FF6B6B; font-size: 11px; font-weight: bold; background: transparent;");
-
-        ui->label_auth_ver->setText("версия:" + runtimeVersion.mVersion.toString());
-
-    }
-
-    // 1. Top Header Bar (Remove red banner, use sleek dark slate design)
-    if(ui->toplevel_up)
-    {
-        ui->toplevel_up->setStyleSheet(
-            "QFrame#toplevel_up {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1C1E24, stop:1 #242730);"
-            "   border-bottom: 1px solid #30333D;"
-            "   min-height: 42px;"
-            "   max-height: 42px;"
-            "}");
-        ui->label_6->setStyleSheet("color: #E3E5E8; font-size: 13px; font-weight: bold; font-style: normal; background: transparent;");
-        ui->label_6->setText("AdsKiller  |  Личный кабинет");
-
-        ui->logoutButton->setStyleSheet(
-            "QPushButton#logoutButton {"
-            "   background: rgba(255, 75, 75, 0.12);"
-            "   color: #FF7B7B;"
-            "   border: 1px solid rgba(255, 75, 75, 0.35);"
-            "   border-radius: 6px;"
-            "   padding: 4px 12px;"
-            "   font-weight: bold;"
-            "   font-size: 11px;"
-            "}"
-            "QPushButton#logoutButton:hover {"
-            "   background: rgba(255, 75, 75, 0.28);"
-            "   border-color: #FF5252;"
-            "   color: #FFFFFF;"
-            "}"
-            "QPushButton#logoutButton:pressed {"
-            "   background: #801818;"
-            "}");
-        ui->logoutButton->setCursor(Qt::PointingHandCursor);
-    }
-
-    if(ui->toplevel_backpage)
-    {
-        ui->toplevel_backpage->setStyleSheet(
-            "QFrame#toplevel_backpage {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1C1E24, stop:1 #242730);"
-            "   border-bottom: 1px solid #30333D;"
-            "   min-height: 42px;"
-            "   max-height: 42px;"
-            "}");
-        ui->label_10->setStyleSheet("color: #E3E5E8; font-size: 13px; font-weight: bold; font-style: normal; background: transparent;");
-        ui->buttonBackTo->setStyleSheet(
-            "QPushButton#buttonBackTo {"
-            "   background: rgba(0, 120, 212, 0.15);"
-            "   color: #4CC2FF;"
-            "   border: 1px solid rgba(76, 194, 255, 0.35);"
-            "   border-radius: 6px;"
-            "   padding: 4px 12px;"
-            "   font-weight: bold;"
-            "   font-size: 11px;"
-            "}"
-            "QPushButton#buttonBackTo:hover {"
-            "   background: #0078D4;"
-            "   color: #FFFFFF;"
-            "}"
-            "QPushButton#buttonBackTo:pressed {"
-            "   background: #005A9E;"
-            "}");
-        ui->buttonBackTo->setCursor(Qt::PointingHandCursor);
-    }
-
-    // 2. Account Information Card (frame_7) with clean spacious layout & padding
-    if(ui->frame_7)
-    {
-        ui->horizontalLayout->setContentsMargins(14, 14, 14, 10);
-        ui->horizontalLayout->setSpacing(0);
-
-        ui->frame_7->setMinimumWidth(560);
-        ui->frame_7->setMaximumWidth(780);
-        ui->frame_7->setFixedHeight(125);
-        ui->frame_7->setStyleSheet(
-            "QFrame#frame_7 {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1C1E24);"
-            "   border: 1px solid #363942;"
-            "   border-radius: 14px;"
-            "}");
-
-        // Install QHBoxLayout to dynamically place VIP, Avatar/Login, and Credits without overlaps
-        QHBoxLayout *accountLayout = new QHBoxLayout(ui->frame_7);
-        accountLayout->setContentsMargins(18, 12, 18, 12);
-        accountLayout->setSpacing(14);
-
-        // 1. VIP Pill (Left)
-        ui->frame_6->setFixedSize(150, 85);
-        ui->frame_6->setStyleSheet(
-            "QFrame#frame_6 {"
-            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 185, 0, 0.15), stop:1 rgba(255, 185, 0, 0.04));"
-            "   border: 1px solid rgba(255, 185, 0, 0.35);"
-            "   border-radius: 12px;"
-            "   padding: 6px;"
-            "}");
-        ui->labelVipDays->setStyleSheet("color: #FFD700; font-weight: bold; font-size: 11px; text-decoration: none; background: transparent;");
-
-        // 2. User Avatar + Name (Center)
-        ui->authedMainWin->setFixedSize(170, 95);
-        ui->authedMainWin->setStyleSheet("background: transparent; border: none;");
-        ui->frame_3->setStyleSheet("image: url(:/resources/no-avatar); min-width: 50px; min-height: 50px; max-width: 50px; max-height: 50px; border-radius: 25px; background: rgba(255,255,255,0.06); border: 2px solid #0078D4;");
-        ui->labelLoginAuthed->setStyleSheet("color: #FFFFFF; font-size: 14px; font-weight: bold; text-decoration: none; background: transparent; margin-top: 2px;");
-
-        // 3. Credits Pill (Right)
-        ui->frame_5->setFixedSize(150, 85);
-        ui->frame_5->setStyleSheet(
-            "QFrame#frame_5 {"
-            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0, 120, 212, 0.16), stop:1 rgba(0, 120, 212, 0.04));"
-            "   border: 1px solid rgba(76, 194, 255, 0.35);"
-            "   border-radius: 12px;"
-            "   padding: 6px;"
-            "}");
-        ui->labelCredits->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 11px; text-decoration: none; background: transparent;");
-
-        accountLayout->addWidget(ui->frame_6, 0, Qt::AlignCenter);
-        accountLayout->addStretch(1);
-        accountLayout->addWidget(ui->authedMainWin, 0, Qt::AlignCenter);
-        accountLayout->addStretch(1);
-        accountLayout->addWidget(ui->frame_5, 0, Qt::AlignCenter);
-    }
-
-    // 3. Section Divider Bar above services
-    if(ui->toplevel_up_2)
-    {
-        ui->toplevel_up_2->setStyleSheet(
-            "QFrame#toplevel_up_2 {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1E2026, stop:1 #252830);"
-            "   border-left: 4px solid #0078D4;"
-            "   border-radius: 4px;"
-            "   margin: 12px 14px 4px 14px;"
-            "   min-height: 32px;"
-            "   max-height: 32px;"
-            "}");
-        ui->label_7->setStyleSheet("color: #C8CDD5; font-weight: bold; font-size: 11.5px; font-style: normal; background: transparent; letter-spacing: 0.5px;");
-        ui->label_7->setText("ДОСТУПНЫЕ УСЛУГИ И ИНСТРУМЕНТЫ");
-    }
-
-    if(ui->scrollArea_3)
-    {
-        ui->scrollArea_3->setStyleSheet(
-            "QScrollArea#scrollArea_3 {"
-            "   background: transparent;"
-            "   border: none;"
-            "}"
-            "QScrollArea#scrollArea_3 QScrollBar:vertical {"
-            "   width: 5px;"
-            "   background: transparent;"
-            "   margin: 0px;"
-            "}"
-            "QScrollArea#scrollArea_3 QScrollBar::handle:vertical {"
-            "   background: #484B52;"
-            "   border-radius: 2px;"
-            "   min-height: 20px;"
-            "}"
-            "QScrollArea#scrollArea_3 QScrollBar::handle:vertical:hover {"
-            "   background: #6D7179;"
-            "}"
-            "QScrollArea#scrollArea_3 QScrollBar::add-line:vertical, "
-            "QScrollArea#scrollArea_3 QScrollBar::sub-line:vertical {"
-            "   height: 0px;"
-            "}");
-    }
-
-    // 4. Modernize page_adsmalware (Ad Removal & RAM Optimization Page)
-    if(ui->deviceLabelName)
-    {
-        ui->deviceLabelName->setStyleSheet(
-            "QLabel#deviceLabelName {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1C1E24);"
-            "   border: 1px solid #363942;"
-            "   border-radius: 12px;"
-            "   padding: 10px 14px;"
-            "   color: #FFFFFF;"
-            "}");
-        ui->deviceLabelName->setMinimumHeight(80);
-    }
-    if(ui->processLogStatus)
-    {
-        ui->processLogStatus->setStyleSheet(
-            "QListView#processLogStatus {"
-            "   background-color: #17181D;"
-            "   border: 1px solid #2F323A;"
-            "   border-radius: 10px;"
-            "   color: #D6DAE0;"
-            "   font-family: 'Consolas', 'Courier New', monospace;"
-            "   font-size: 11px;"
-            "   padding: 8px;"
-            "   selection-background-color: #0078D4;"
-            "}"
-            "QListView#processLogStatus QScrollBar:vertical {"
-            "   width: 5px;"
-            "   background: transparent;"
-            "   margin: 0px;"
-            "}"
-            "QListView#processLogStatus QScrollBar::handle:vertical {"
-            "   background: #484B52;"
-            "   border-radius: 2px;"
-            "}");
-    }
-    if(ui->processBarStatus)
-    {
-        ui->processBarStatus->setStyleSheet(
-            "QProgressBar#processBarStatus {"
-            "   background-color: #1C1E24;"
-            "   border: 1px solid #30333D;"
-            "   border-radius: 6px;"
-            "   text-align: center;"
-            "   color: #FFFFFF;"
-            "   font-weight: bold;"
-            "   font-size: 10px;"
-            "   min-height: 18px;"
-            "   max-height: 18px;"
-            "}"
-            "QProgressBar#processBarStatus::chunk {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0078D4, stop:1 #00E5FF);"
-            "   border-radius: 5px;"
-            "}");
-    }
-    if(ui->malwareStatusText0)
-    {
-        ui->malwareStatusText0->setStyleSheet("color: #4CC2FF; font-size: 12px; font-weight: bold; background: transparent; padding: 4px;");
-    }
-    if(ui->malwareReRun)
-    {
-        ui->malwareReRun->setStyleSheet(
-            "QPushButton#malwareReRun {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0078D4, stop:1 #005A9E);"
-            "   color: #FFFFFF;"
-            "   border: none;"
-            "   border-radius: 10px;"
-            "   padding: 8px 16px;"
-            "   font-weight: bold;"
-            "   font-size: 12px;"
-            "   min-height: 36px;"
-            "}"
-            "QPushButton#malwareReRun:hover {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1084E3, stop:1 #0066BA);"
-            "}"
-            "QPushButton#malwareReRun:pressed {"
-            "   background: #004D80;"
-            "}"
-            "QPushButton#malwareReRun:disabled {"
-            "   background: #282A30;"
-            "   color: #555860;"
-            "}");
-        ui->malwareReRun->setCursor(Qt::PointingHandCursor);
-    }
-
-    // 5. Modernize page_devices (Device Connecting & USB Guide Page)
-    if(ui->device_left_group)
-    {
-        ui->device_left_group->setStyleSheet(
-            "QFrame#device_left_group {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1C1E24);"
-            "   border: 1px solid #363942;"
-            "   border-radius: 14px;"
-            "   padding: 8px;"
-            "}");
-    }
-    if(ui->scrollArea_2)
-    {
-        ui->scrollArea_2->setStyleSheet("background: transparent; border: none;");
-    }
-    if(ui->label_5)
-    {
-        ui->label_5->setStyleSheet("color: #4CC2FF; font-size: 12px; font-weight: bold; background: transparent;");
-    }
-
-    // 6. Modernize page_mydevices (My Devices & Warranty Page)
-    if(ui->page_mydevices)
-    {
-        ui->myDeviceFilterDateStart->setStyleSheet("background-color: #1E2026; color: #FFFFFF; border: 1px solid #383A42; border-radius: 6px; padding: 4px 8px; font-size: 11px;");
-        ui->myDeviceFilterDateEnd->setStyleSheet("background-color: #1E2026; color: #FFFFFF; border: 1px solid #383A42; border-radius: 6px; padding: 4px 8px; font-size: 11px;");
-        ui->myDeviceQuaranteeFilter->setStyleSheet("color: #C8CDD5; font-size: 11px;");
-        ui->myDeviceSend->setStyleSheet(
-            "QPushButton#myDeviceSend {"
-            "   background: #0078D4;"
-            "   color: #FFFFFF;"
-            "   border: none;"
-            "   border-radius: 6px;"
-            "   padding: 5px 14px;"
-            "   font-weight: bold;"
-            "   font-size: 11px;"
-            "}"
-            "QPushButton#myDeviceSend:hover { background: #1084E3; }"
-            "QPushButton#myDeviceSend:pressed { background: #005A9E; }");
-        ui->myDeviceSend->setCursor(Qt::PointingHandCursor);
-
-        ui->myDeviceActual->setStyleSheet(
-            "QTableView#myDeviceActual {"
-            "   background-color: #17181D;"
-            "   border: 1px solid #2F323A;"
-            "   border-radius: 10px;"
-            "   color: #E3E5E8;"
-            "   gridline-color: #26282E;"
-            "   selection-background-color: #0078D4;"
-            "   selection-color: #FFFFFF;"
-            "   font-size: 11.5px;"
-            "}"
-            "QHeaderView::section {"
-            "   background-color: #1F2128;"
-            "   color: #A0A5AF;"
-            "   padding: 6px;"
-            "   border: 1px solid #2B2D35;"
-            "   font-weight: bold;"
-            "   font-size: 11px;"
-            "}");
-        ui->myDevicePageLabel->setStyleSheet("color: #8E9297; font-size: 11px; background: transparent;");
-    }
-
-    // 7. Modernize page_buyvip (Buy VIP Page)
-    if(ui->groupBox)
-    {
-        ui->groupBox->setStyleSheet(
-            "QGroupBox#groupBox {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1C1E24);"
-            "   border: 1px solid #363942;"
-            "   border-radius: 14px;"
-            "   margin-top: 10px;"
-            "   padding: 16px;"
-            "   color: #FFFFFF;"
-            "   font-weight: bold;"
-            "   font-size: 12px;"
-            "}");
-        ui->labelVipBalance->setStyleSheet("color: #00E5FF; font-size: 13px; font-weight: bold; background: transparent;");
-        ui->comboBoxSelectVIPDays->setStyleSheet("background-color: #1E2026; color: #FFFFFF; border: 1px solid #383A42; border-radius: 8px; padding: 6px 12px; font-size: 12px;");
-        ui->labelInfoVip->setStyleSheet("color: #C8CDD5; font-size: 11px; background: transparent;");
-        ui->buttonBuyVip->setStyleSheet(
-            "QPushButton#buttonBuyVip {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFB900, stop:1 #D48800);"
-            "   color: #000000;"
-            "   border: none;"
-            "   border-radius: 8px;"
-            "   padding: 8px 18px;"
-            "   font-weight: bold;"
-            "   font-size: 12px;"
-            "}"
-            "QPushButton#buttonBuyVip:hover {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFC833, stop:1 #E69500);"
-            "}"
-            "QPushButton#buttonBuyVip:pressed { background: #B27000; }");
-        ui->buttonBuyVip->setCursor(Qt::PointingHandCursor);
-    }
-
-    // AI toolbox toggle button behavior
+    // AI toolbox toggle button and panel configuration
     if(ui->aiToolBoxToggle)
     {
         ui->aiToolBoxToggle->setText(QString::fromUtf8("›"));
@@ -730,23 +274,94 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->aiToolBoxToggle->setCursor(Qt::PointingHandCursor);
         ui->aiToolBoxToggle->setStyleSheet(
             "QPushButton#aiToolBoxToggle {"
-            "   background-color: #26282E;"
+            "   background-color: #1A1C21;"
             "   color: #8E9297;"
-            "   border: 1px solid #363940;"
+            "   border: 1px solid #2D313A;"
             "   border-radius: 4px;"
             "   font-size: 13px;"
             "   font-weight: bold;"
             "   padding: 0px;"
             "}"
             "QPushButton#aiToolBoxToggle:hover {"
-            "   background-color: #32353D;"
+            "   background-color: #262932;"
             "   border-color: #4CC2FF;"
             "   color: #4CC2FF;"
             "}"
             "QPushButton#aiToolBoxToggle:pressed {"
-            "   background-color: #1A1B1E;"
+            "   background-color: #141518;"
             "}");
         ui->aiToolBoxContainer->setMaximumWidth(324);
+        ui->aiToolBoxContainer->setStyleSheet(
+            "QFrame#aiToolBoxContainer {"
+            "   background-color: #141518;"
+            "   border: none;"
+            "}");
+
+        if(ui->aiToolBox)
+        {
+            ui->aiToolBox->setItemText(0, "✦ ИИ Ассистент - AdsKiller");
+            ui->aiToolBox->setItemText(1, "ℹ О модуле ИИ");
+            ui->aiToolBox->setStyleSheet(
+                "QToolBox#aiToolBox {"
+                "   background-color: #141518;"
+                "   border: 1px solid #252830;"
+                "   border-radius: 10px;"
+                "}"
+                "QToolBox#aiToolBox::tab {"
+                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #22252C, stop:1 #1A1C21);"
+                "   color: #9CA3AF;"
+                "   border: 1px solid #2F333E;"
+                "   border-radius: 7px;"
+                "   padding: 5px 12px;"
+                "   font-size: 11px;"
+                "   font-weight: 600;"
+                "   margin: 2px 2px;"
+                "}"
+                "QToolBox#aiToolBox::tab:selected {"
+                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #252D3B, stop:1 #1C2330);"
+                "   color: #4CC2FF;"
+                "   border: 1px solid #0078D4;"
+                "   font-weight: bold;"
+                "}"
+                "QToolBox#aiToolBox::tab:hover {"
+                "   background: #282D38;"
+                "   color: #FFFFFF;"
+                "   border-color: #4CC2FF;"
+                "}");
+        }
+
+        if(ui->aboutAi_edit)
+        {
+            ui->aboutAi_edit->setStyleSheet(
+                "QTextEdit#aboutAi_edit {"
+                "   background-color: #16181D;"
+                "   color: #D1D5DB;"
+                "   border: 1px solid #262930;"
+                "   border-radius: 8px;"
+                "   padding: 10px;"
+                "   font-size: 11px;"
+                "}");
+            ui->aboutAi_edit->setHtml(
+                "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
+                "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" />"
+                "<style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head>"
+                "<body style=\"font-family:'Segoe UI', 'Noto Sans', sans-serif; font-size:10pt; color:#D1D5DB;\">"
+                "<div style=\"text-align:center; padding-bottom:8px;\">"
+                "<span style=\"font-size:20px;\">🤖</span><br/>"
+                "<b style=\"color:#4CC2FF; font-size:12pt;\">AdsKiller AI Assistant</b><br/>"
+                "<span style=\"color:#8E9297; font-size:9pt;\">Интеллектуальный помощник</span>"
+                "</div>"
+                "<hr style=\"border:none; border-top:1px solid #2B2F38; margin:8px 0;\"/>"
+                "<p style=\"line-height:1.6; font-size:9.5pt;\">"
+                "<b style=\"color:#FFFFFF;\">Автор модуля ИИ:</b><br/>"
+                "&nbsp;&nbsp;Команда <span style=\"color:#4CC2FF;\">imister.tech</span><br/><br/>"
+                "<b style=\"color:#FFFFFF;\">Разработчик:</b><br/>"
+                "&nbsp;&nbsp;Нурсеит К. (<span style=\"color:#4CC2FF;\">badcast</span>)<br/><br/>"
+                "<b style=\"color:#FFFFFF;\">Дизайн:</b><br/>"
+                "&nbsp;&nbsp;Владимир (<span style=\"color:#4CC2FF;\">LeoJames</span>)"
+                "</p>"
+                "</body></html>");
+        }
 
         QObject::connect(
             ui->aiToolBoxToggle,
@@ -774,12 +389,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         AIChatView *chatView = new AIChatView(ui->aiToolBoxPage1);
         chatView->setObjectName("aiChatView");
         ui->aiChatMessages->hide();
+        chatView->showLocked();
 
-        // Add comfortable horizontally scrollable quick action buttons for AI in 2 rows
-        QScrollArea *scrollArea = new QScrollArea(ui->aiChatEdit->parentWidget());
+        // Quick buttons scroll area + shuffle button bar
+        QWidget *quickBarWidget = new QWidget(ui->aiToolBoxPage1);
+        quickBarWidget->setStyleSheet("background: transparent;");
+        QHBoxLayout *quickBarLayout = new QHBoxLayout(quickBarWidget);
+        quickBarLayout->setContentsMargins(0, 0, 0, 0);
+        quickBarLayout->setSpacing(4);
+
+        QScrollArea *scrollArea = new QScrollArea(quickBarWidget);
         scrollArea->setObjectName("aiQuickScrollArea");
         scrollArea->setWidgetResizable(true);
-        scrollArea->setFixedHeight(58);
+        scrollArea->setFixedHeight(56);
         scrollArea->setFrameShape(QFrame::NoFrame);
         scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -790,17 +412,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             "}"
             "QScrollArea#aiQuickScrollArea QScrollBar:horizontal {"
             "   height: 3px;"
-            "   background: rgba(0, 0, 0, 20);"
+            "   background: rgba(0, 0, 0, 25);"
             "   margin: 0px;"
             "   border-radius: 1px;"
             "}"
             "QScrollArea#aiQuickScrollArea QScrollBar::handle:horizontal {"
-            "   background: #555555;"
+            "   background: #44474F;"
             "   min-width: 16px;"
             "   border-radius: 1px;"
             "}"
             "QScrollArea#aiQuickScrollArea QScrollBar::handle:horizontal:hover {"
-            "   background: #888888;"
+            "   background: #4CC2FF;"
             "}"
             "QScrollArea#aiQuickScrollArea QScrollBar::add-line:horizontal, "
             "QScrollArea#aiQuickScrollArea QScrollBar::sub-line:horizontal {"
@@ -818,8 +440,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         QWidget *quickButtonsWidget = new QWidget(scrollArea);
         quickButtonsWidget->setStyleSheet("background: transparent;");
         QGridLayout *quickButtonsLayout = new QGridLayout(quickButtonsWidget);
-        quickButtonsLayout->setContentsMargins(4, 3, 4, 3);
-        quickButtonsLayout->setSpacing(5);
+        quickButtonsLayout->setContentsMargins(2, 2, 2, 2);
+        quickButtonsLayout->setSpacing(4);
 
         struct QuickQuestion
         {
@@ -829,106 +451,162 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         QList<QuickQuestion> quickQuestions = {
             {"💳", {"Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс"}},
-            {"📧", {"Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты"}},
-            {"📱", {"Запусти удаление рекламы", "Какие есть сервисы?", "Какой сервис не активен?", "Открой окно покупки VIP"}},
-            {"📱", {"Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства"}},
             {"👑", {"VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?"}},
-            {"💡", {"Что ты умеешь?", "Как удалить рекламу?", "Возможности AdsKiller", "Справка по функциям"}},
-            {"🚀", {"Как ускорить телефон?", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу"}},
-            {"🛡️", {"Безопасно ли это?", "Как включить отладку?", "Проверка безопасности", "Как подключить телефон?"}},
-            {"⚡", {"Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?"}}};
+            {"📱", {"Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства"}},
+            {"🛡️", {"Удаление рекламы", "Запусти удаление рекламы", "Какие есть сервисы?", "Открой окно покупки VIP"}},
+            {"⚡", {"Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?"}},
+            {"🚀", {"Ускорить телефон", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу"}},
+            {"💡", {"Что ты умеешь?", "Возможности AdsKiller", "Справка по функциям", "Чем можешь помочь?"}},
+            {"📧", {"Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты"}},
+            {"🛒", {"Купить кредиты", "Как купить VIP?", "Пополнение баланса", "Тарифы и цены"}},
+            {"🔒", {"Безопасность", "Безопасно ли это?", "Как включить отладку?", "Как подключить телефон?"}},
+            {"📊", {"Статистика", "Заблокированная реклама", "Отчет блокировки", "Сколько рекламы скрыто?"}},
+            {"❓", {"Как пользоваться?", "Инструкция для новичка", "Быстрый старт", "Помощь по приложению"}}};
 
-        for(int i = 0; i < quickQuestions.size(); ++i)
+        auto questionsPtr = std::make_shared<QList<QuickQuestion>>(quickQuestions);
+
+        auto populateRandomButtons = [this, quickButtonsWidget, quickButtonsLayout, questionsPtr]()
         {
-            const auto &qData = quickQuestions[i];
-            QPushButton *btn = new QPushButton(QString("%1  %2").arg(qData.icon, qData.variations.first()), quickButtonsWidget);
-            btn->setStyleSheet(
-                "QPushButton { "
-                "   background-color: #26272B; "
-                "   color: #D1D5DB; "
-                "   border-radius: 7px; "
-                "   padding: 3px 8px; "
-                "   font-size: 10.5px; "
-                "   border: 1px solid #36383E; "
-                "   white-space: nowrap; "
-                "}"
-                "QPushButton:hover { "
-                "   background-color: #32353B; "
-                "   border-color: #4CC2FF; "
-                "   color: #4CC2FF; "
-                "}"
-                "QPushButton:pressed { "
-                "   background-color: #1A1B1E; "
-                "   color: #FFFFFF; "
-                "}");
-            btn->setCursor(Qt::PointingHandCursor);
-            quickButtonsLayout->addWidget(btn, i % 2, i / 2);
+            // Clear existing buttons from layout
+            QLayoutItem *child;
+            while((child = quickButtonsLayout->takeAt(0)) != nullptr)
+            {
+                if(child->widget())
+                    delete child->widget();
+                delete child;
+            }
 
-            QObject::connect(
-                btn,
-                &QPushButton::clicked,
-                this,
-                [this, btn, icon = qData.icon, variations = qData.variations, lastIdx = 0]() mutable
-                {
-                    QString textToSend = variations[lastIdx];
-                    ui->aiChatEdit->setText(textToSend);
-                    ui->aiChatSend->click();
+            // Shuffle questions randomly across the grid
+            std::shuffle(questionsPtr->begin(), questionsPtr->end(), *QRandomGenerator::global());
 
-                    if(variations.size() > 1)
+            for(int i = 0; i < questionsPtr->size(); ++i)
+            {
+                const auto &qData = (*questionsPtr)[i];
+                int initialIdx = QRandomGenerator::global()->bounded(qData.variations.size());
+                QString initialText = qData.variations[initialIdx];
+
+                QPushButton *btn = new QPushButton(QString("%1  %2").arg(qData.icon, initialText), quickButtonsWidget);
+                btn->setStyleSheet(
+                    "QPushButton {"
+                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #252830, stop:1 #1D2026);"
+                    "   color: #D1D5DB;"
+                    "   border: 1px solid #333742;"
+                    "   border-radius: 8px;"
+                    "   padding: 3px 9px;"
+                    "   font-size: 10.5px;"
+                    "   font-weight: 500;"
+                    "   white-space: nowrap;"
+                    "}"
+                    "QPushButton:hover {"
+                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2D3340, stop:1 #232934);"
+                    "   border: 1px solid #4CC2FF;"
+                    "   color: #4CC2FF;"
+                    "}"
+                    "QPushButton:pressed {"
+                    "   background-color: #16181C;"
+                    "   color: #FFFFFF;"
+                    "}");
+                btn->setCursor(Qt::PointingHandCursor);
+                quickButtonsLayout->addWidget(btn, i % 2, i / 2);
+
+                QObject::connect(
+                    btn,
+                    &QPushButton::clicked,
+                    this,
+                    [this, btn, icon = qData.icon, variations = qData.variations, lastIdx = initialIdx]() mutable
                     {
-                        int r;
-                        do
-                        {
-                            r = QRandomGenerator::global()->bounded(variations.size());
-                        } while(r == lastIdx);
-                        lastIdx = r;
-                        btn->setText(QString("%1  %2").arg(icon, variations[r]));
-                    }
-                });
-        }
+                        QString textToSend = variations[lastIdx];
+                        ui->aiChatEdit->setText(textToSend);
+                        ui->aiChatSend->click();
 
+                        if(variations.size() > 1)
+                        {
+                            int r;
+                            do
+                            {
+                                r = QRandomGenerator::global()->bounded(variations.size());
+                            } while(r == lastIdx);
+                            lastIdx = r;
+                            btn->setText(QString("%1  %2").arg(icon, variations[r]));
+                        }
+                    });
+            }
+        };
+
+        // Populate buttons with initial random arrangement
+        populateRandomButtons();
         scrollArea->setWidget(quickButtonsWidget);
+
+        QPushButton *shuffleBtn = new QPushButton("🔀", quickBarWidget);
+        shuffleBtn->setToolTip("Перемешать подсказки (случайный порядок)");
+        shuffleBtn->setFixedSize(26, 54);
+        shuffleBtn->setCursor(Qt::PointingHandCursor);
+        shuffleBtn->setStyleSheet(
+            "QPushButton {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #22252C, stop:1 #1A1C22);"
+            "   color: #8E9297;"
+            "   border: 1px solid #2D313A;"
+            "   border-radius: 8px;"
+            "   font-size: 11px;"
+            "   padding: 0px;"
+            "}"
+            "QPushButton:hover {"
+            "   background: #282D36;"
+            "   border-color: #4CC2FF;"
+            "   color: #4CC2FF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background: #141518;"
+            "}");
+
+        QObject::connect(shuffleBtn, &QPushButton::clicked, this, populateRandomButtons);
+
+        quickBarLayout->addWidget(scrollArea, 1);
+        quickBarLayout->addWidget(shuffleBtn, 0);
 
         ui->aiChatEdit->setStyleSheet(
             "QTextEdit#aiChatEdit {"
-            "   background-color: #232428;"
+            "   background-color: #1A1C22;"
             "   color: #FFFFFF;"
-            "   border: 1px solid #383A40;"
-            "   border-radius: 8px;"
-            "   padding: 6px 9px;"
-            "   font-size: 11px;"
+            "   border: 1px solid #2E333D;"
+            "   border-radius: 9px;"
+            "   padding: 6px 10px;"
+            "   font-size: 11.5px;"
             "   selection-background-color: #0078D4;"
             "}"
             "QTextEdit#aiChatEdit:focus {"
             "   border: 1px solid #4CC2FF;"
-            "   background-color: #1E1F22;"
+            "   background-color: #16181D;"
             "}");
         ui->aiChatEdit->setPlaceholderText("Задайте вопрос ИИ...");
-        ui->aiChatEdit->setMaximumHeight(38);
+        ui->aiChatEdit->setMinimumHeight(40);
+        ui->aiChatEdit->setMaximumHeight(40);
 
         ui->aiChatSend->setStyleSheet(
             "QPushButton#aiChatSend {"
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0078D4, stop:1 #005A9E);"
             "   color: #FFFFFF;"
-            "   border: none;"
-            "   border-radius: 8px;"
+            "   border: 1px solid #1A8CE6;"
+            "   border-radius: 9px;"
             "   padding: 6px 12px;"
             "   font-weight: bold;"
-            "   font-size: 11px;"
+            "   font-size: 11.5px;"
             "}"
             "QPushButton#aiChatSend:hover {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1084E3, stop:1 #0066BA);"
+            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1088E8, stop:1 #0066BA);"
+            "   border-color: #4CC2FF;"
             "}"
             "QPushButton#aiChatSend:pressed {"
             "   background: #004D80;"
             "}"
             "QPushButton#aiChatSend:disabled {"
-            "   background: #2D2F34;"
-            "   color: #5C6067;"
+            "   background: #252830;"
+            "   color: #555A64;"
+            "   border-color: #2D313A;"
             "}");
         ui->aiChatSend->setCursor(Qt::PointingHandCursor);
-        ui->aiChatSend->setMinimumHeight(38);
-        ui->aiChatSend->setMaximumHeight(38);
+        ui->aiChatSend->setMinimumHeight(40);
+        ui->aiChatSend->setMaximumHeight(40);
 
         QGridLayout *aiLayout = qobject_cast<QGridLayout *>(ui->aiChatMessages->parentWidget()->layout());
         if(aiLayout)
@@ -939,7 +617,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             aiLayout->removeWidget(ui->aiChatEdit);
             aiLayout->removeWidget(ui->aiChatSend);
             aiLayout->addWidget(chatView, 0, 0, 1, 2);
-            aiLayout->addWidget(scrollArea, 1, 0, 1, 2);
+            aiLayout->addWidget(quickBarWidget, 1, 0, 1, 2);
             aiLayout->addWidget(ui->aiChatEdit, 2, 0);
             aiLayout->addWidget(ui->aiChatSend, 2, 1);
         }
@@ -952,6 +630,865 @@ MainWindow::~MainWindow()
     Adb::killServer();
     AppSetting::save();
     delete ui;
+}
+
+void MainWindow::setupPagesDesign()
+{
+    // ==========================================
+    // 0. Global Window and Controls Styling
+    // ==========================================
+    this->setStyleSheet(
+        "QMainWindow {"
+        "   background-color: #141517;"
+        "}"
+        "QWidget#centralwidget {"
+        "   background-color: #141517;"
+        "}"
+        "QScrollBar:vertical {"
+        "   background: transparent;"
+        "   width: 8px;"
+        "   margin: 0px;"
+        "}"
+        "QScrollBar::handle:vertical {"
+        "   background: #363940;"
+        "   border-radius: 4px;"
+        "   min-height: 24px;"
+        "}"
+        "QScrollBar::handle:vertical:hover {"
+        "   background: #4E525C;"
+        "}"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
+        "   height: 0px;"
+        "}"
+        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {"
+        "   background: transparent;"
+        "}"
+        "QScrollBar:horizontal {"
+        "   background: transparent;"
+        "   height: 8px;"
+        "   margin: 0px;"
+        "}"
+        "QScrollBar::handle:horizontal {"
+        "   background: #363940;"
+        "   border-radius: 4px;"
+        "   min-width: 24px;"
+        "}"
+        "QScrollBar::handle:horizontal:hover {"
+        "   background: #4E525C;"
+        "}"
+        "QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {"
+        "   width: 0px;"
+        "}"
+        "QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {"
+        "   background: transparent;"
+        "}"
+    );
+
+    // ==========================================
+    // 1. Auth Page (page_auth)
+    // ==========================================
+    if(ui->frame_4)
+    {
+        ui->frame_4->setStyleSheet(
+            "QFrame#frame_4 {"
+            "   background-color: #1E2024;"
+            "   border: 1px solid #2D3139;"
+            "   border-radius: 12px;"
+            "}"
+        );
+    }
+    if(ui->label_4)
+    {
+        ui->label_4->setStyleSheet("color: #9CA3AF; font-size: 13px; font-weight: 500;");
+        ui->label_4->setText("Введите логин и пароль для авторизации");
+    }
+    if(ui->label_12)
+    {
+        ui->label_12->setStyleSheet("color: #8E9297; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;");
+    }
+    if(ui->label_14)
+    {
+        ui->label_14->setStyleSheet("color: #8E9297; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;");
+    }
+    if(ui->lineLoginEdit)
+    {
+        ui->lineLoginEdit->setPlaceholderText("Логин или имя пользователя");
+        ui->lineLoginEdit->setStyleSheet(
+            "QLineEdit {"
+            "   background-color: #141518;"
+            "   color: #F3F4F6;"
+            "   border: 1px solid #363A44;"
+            "   border-radius: 6px;"
+            "   padding: 5px 10px;"
+            "   font-size: 13px;"
+            "}"
+            "QLineEdit:focus {"
+            "   border: 1px solid #4CC2FF;"
+            "   background-color: #16181C;"
+            "}"
+        );
+    }
+    if(ui->linePassEdit)
+    {
+        ui->linePassEdit->setPlaceholderText("Пароль или токен");
+        ui->linePassEdit->setStyleSheet(
+            "QLineEdit {"
+            "   background-color: #141518;"
+            "   color: #F3F4F6;"
+            "   border: 1px solid #363A44;"
+            "   border-radius: 6px;"
+            "   padding: 5px 10px;"
+            "   font-size: 13px;"
+            "}"
+            "QLineEdit:focus {"
+            "   border: 1px solid #4CC2FF;"
+            "   background-color: #16181C;"
+            "}"
+        );
+    }
+    if(ui->butShowPass)
+    {
+        ui->butShowPass->setText("👁");
+        ui->butShowPass->setToolTip("Показать / скрыть пароль");
+        ui->butShowPass->setCursor(Qt::PointingHandCursor);
+        ui->butShowPass->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #26292F;"
+            "   color: #D1D5DB;"
+            "   border: 1px solid #363A44;"
+            "   border-radius: 6px;"
+            "   font-size: 13px;"
+            "   padding: 2px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #32363E;"
+            "   border-color: #4CC2FF;"
+            "   color: #4CC2FF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #1A1B1E;"
+            "}"
+        );
+    }
+    if(ui->checkAutoLogin)
+    {
+        ui->checkAutoLogin->setCursor(Qt::PointingHandCursor);
+        ui->checkAutoLogin->setStyleSheet(
+            "QCheckBox {"
+            "   color: #C9CCD1;"
+            "   font-size: 12px;"
+            "   spacing: 6px;"
+            "}"
+            "QCheckBox::indicator {"
+            "   width: 16px;"
+            "   height: 16px;"
+            "   border: 1px solid #3E434D;"
+            "   border-radius: 4px;"
+            "   background-color: #1E2024;"
+            "}"
+            "QCheckBox::indicator:hover {"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QCheckBox::indicator:checked {"
+            "   background-color: #0078D4;"
+            "   border-color: #0078D4;"
+            "}"
+        );
+    }
+    if(ui->label_2)
+    {
+        ui->label_2->setStyleSheet(
+            "QLabel {"
+            "   color: #4CC2FF;"
+            "   font-size: 12px;"
+            "}"
+            "QLabel a {"
+            "   color: #4CC2FF;"
+            "   text-decoration: none;"
+            "}"
+            "QLabel a:hover {"
+            "   color: #70D0FF;"
+            "   text-decoration: underline;"
+            "}"
+        );
+    }
+    if(ui->authButton)
+    {
+        ui->authButton->setCursor(Qt::PointingHandCursor);
+        ui->authButton->setStyleSheet(
+            "QPushButton {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #007ACC, stop:1 #005A9E);"
+            "   color: #FFFFFF;"
+            "   border: 1px solid #005A9E;"
+            "   border-radius: 6px;"
+            "   font-size: 13px;"
+            "   font-weight: bold;"
+            "   padding: 5px 16px;"
+            "}"
+            "QPushButton:hover {"
+            "   background: #1084D9;"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background: #004C87;"
+            "}"
+            "QPushButton:disabled {"
+            "   background-color: #2D3139;"
+            "   border-color: #363A44;"
+            "   color: #6B7280;"
+            "}"
+        );
+    }
+    if(ui->statusAuthText)
+    {
+        ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500;");
+    }
+    if(ui->label_auth_ver)
+    {
+        ui->label_auth_ver->setStyleSheet("color: #5C6067; font-size: 11px;");
+        ui->label_auth_ver->setText("версия: " + runtimeVersion.mVersion.toString());
+    }
+
+    // ==========================================
+    // 2. Cabinet Page (page_cabinet)
+    // ==========================================
+    if(ui->toplevel_up)
+    {
+        ui->toplevel_up->setStyleSheet(
+            "QFrame#toplevel_up {"
+            "   background-color: #1A1D21;"
+            "   border-bottom: 1px solid #282B30;"
+            "}"
+        );
+    }
+    if(ui->label_6)
+    {
+        ui->label_6->setStyleSheet(
+            "color: #FFFFFF;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            "letter-spacing: 0.5px;"
+            "font-style: normal;"
+            "background: transparent;"
+        );
+    }
+    if(ui->logoutButton)
+    {
+        ui->logoutButton->setCursor(Qt::PointingHandCursor);
+        ui->logoutButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: rgba(239, 68, 68, 0.12);"
+            "   color: #F87171;"
+            "   border: 1px solid rgba(239, 68, 68, 0.3);"
+            "   border-radius: 6px;"
+            "   font-size: 12px;"
+            "   font-weight: 600;"
+            "   padding: 4px 12px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: rgba(239, 68, 68, 0.22);"
+            "   color: #FFA3A3;"
+            "   border-color: rgba(239, 68, 68, 0.5);"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: rgba(239, 68, 68, 0.35);"
+            "}"
+        );
+    }
+    if(ui->frame_7)
+    {
+        ui->frame_7->setMaximumSize(16777215, 16777215);
+        ui->frame_7->setMinimumHeight(164);
+        ui->frame_7->setStyleSheet(
+            "QFrame#frame_7 {"
+            "   background-color: #1E2024;"
+            "   border: 1px solid #2D3139;"
+            "   border-radius: 12px;"
+            "}"
+        );
+    }
+    if(ui->frame_3)
+    {
+        ui->frame_3->setStyleSheet(
+            "QFrame#frame_3 {"
+            "   border: 2px solid #363940;"
+            "   border-radius: 8px;"
+            "   background-color: #141517;"
+            "}"
+        );
+    }
+    if(ui->labelLoginAuthed)
+    {
+        ui->labelLoginAuthed->setStyleSheet(
+            "color: #FFFFFF;"
+            "font-size: 18px;"
+            "font-weight: bold;"
+            "text-decoration: none;"
+        );
+    }
+    if(ui->frame_6)
+    {
+        ui->frame_6->setStyleSheet(
+            "QFrame#frame_6 {"
+            "   background-color: #26292F;"
+            "   border: 1px solid #363940;"
+            "   border-radius: 8px;"
+            "}"
+        );
+    }
+    if(ui->labelVipDays)
+    {
+        ui->labelVipDays->setStyleSheet(
+            "color: #FBBF24;"
+            "font-size: 13px;"
+            "font-weight: bold;"
+            "text-decoration: none;"
+        );
+    }
+    if(ui->frame_5)
+    {
+        ui->frame_5->setStyleSheet(
+            "QFrame#frame_5 {"
+            "   background-color: #26292F;"
+            "   border: 1px solid #363940;"
+            "   border-radius: 8px;"
+            "}"
+        );
+    }
+    if(ui->labelCredits)
+    {
+        ui->labelCredits->setStyleSheet(
+            "color: #34D399;"
+            "font-size: 13px;"
+            "font-weight: bold;"
+            "text-decoration: none;"
+        );
+    }
+    if(ui->toplevel_up_2)
+    {
+        ui->toplevel_up_2->setStyleSheet(
+            "QFrame#toplevel_up_2 {"
+            "   background-color: #18191C;"
+            "   border-top: 1px solid #26282E;"
+            "   border-bottom: 1px solid #26282E;"
+            "}"
+        );
+    }
+    if(ui->label_7)
+    {
+        ui->label_7->setStyleSheet(
+            "color: #9CA3AF;"
+            "font-size: 11px;"
+            "font-weight: 700;"
+            "letter-spacing: 1.5px;"
+            "font-style: normal;"
+            "background: transparent;"
+        );
+    }
+    if(ui->serviceContents)
+    {
+        ui->serviceContents->setStyleSheet(
+            "QFrame#serviceContents QPushButton {"
+            "   background-color: #22252B;"
+            "   color: #FFFFFF;"
+            "   border: 1px solid #32363E;"
+            "   border-radius: 10px;"
+            "   padding: 12px 8px 12px 8px;"
+            "   font-weight: bold;"
+            "   font-size: 12px;"
+            "   text-align: bottom center;"
+            "}"
+            "QFrame#serviceContents QPushButton:hover {"
+            "   background-color: #2A2E36;"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QFrame#serviceContents QPushButton:pressed {"
+            "   background-color: #1B1D22;"
+            "   border-color: #007ACC;"
+            "}"
+        );
+    }
+    if(ui->authInfo)
+    {
+        ui->authInfo->setMinimumHeight(130);
+        ui->authInfo->setMaximumHeight(230);
+        ui->authInfo->horizontalHeader()->setStretchLastSection(true);
+        ui->authInfo->setStyleSheet(
+            "QTableView {"
+            "   background-color: #1A1C20;"
+            "   alternate-background-color: #16181B;"
+            "   gridline-color: #282A2E;"
+            "   border: 1px solid #282A2E;"
+            "   border-radius: 8px;"
+            "   color: #D1D5DB;"
+            "   font-size: 12px;"
+            "   selection-background-color: #0078D4;"
+            "   selection-color: #FFFFFF;"
+            "}"
+            "QHeaderView::section {"
+            "   background-color: #22252B;"
+            "   color: #9CA3AF;"
+            "   font-size: 12px;"
+            "   font-weight: bold;"
+            "   border: none;"
+            "   border-bottom: 1px solid #2E3238;"
+            "   border-right: 1px solid #282A2E;"
+            "   padding: 6px 8px;"
+            "}"
+        );
+    }
+
+    // ==========================================
+    // 3. Devices Connection Page (page_devices)
+    // ==========================================
+    if(ui->scrollArea_2)
+    {
+        ui->scrollArea_2->setFrameShape(QFrame::NoFrame);
+        ui->scrollArea_2->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        ui->scrollArea_2->setStyleSheet("QScrollArea { background: transparent; border: none; } QWidget#scrollAreaWidgetContents_2 { background: transparent; }");
+    }
+    if(ui->label)
+    {
+        ui->label->setText(
+            "<html><head/><body>"
+            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #D1D5DB; padding: 4px;\">"
+            "  <h2 style=\"color: #FFFFFF; font-size: 17px; margin-top: 8px; margin-bottom: 16px; font-weight: 700;\">"
+            "    Как включить отладку по USB на Android"
+            "  </h2>"
+            "  <div style=\"background-color: #21242A; border: 1px solid #2F333B; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;\">"
+            "    <span style=\"background: #0078D4; color: white; border-radius: 12px; padding: 2px 9px; font-weight: bold; font-size: 12px;\">1</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 13px; margin-left: 6px;\">Включите режим разработчика</strong>"
+            "    <p style=\"margin: 6px 0 0 26px; color: #9CA3AF; font-size: 12px; line-height: 1.4;\">"
+            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> и нажмите на него <b>7 раз</b> подряд до появления уведомления."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #21242A; border: 1px solid #2F333B; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;\">"
+            "    <span style=\"background: #0078D4; color: white; border-radius: 12px; padding: 2px 9px; font-weight: bold; font-size: 12px;\">2</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 13px; margin-left: 6px;\">Включите отладку по USB</strong>"
+            "    <p style=\"margin: 6px 0 0 26px; color: #9CA3AF; font-size: 12px; line-height: 1.4;\">"
+            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте переключатель <b>Отладка по USB</b>."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #21242A; border: 1px solid #2F333B; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;\">"
+            "    <span style=\"background: #0078D4; color: white; border-radius: 12px; padding: 2px 9px; font-weight: bold; font-size: 12px;\">3</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 13px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
+            "    <p style=\"margin: 6px 0 0 26px; color: #9CA3AF; font-size: 12px; line-height: 1.4;\">"
+            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; подтвердите <b>«Всегда разрешать с этого компьютера»</b>."
+            "    </p>"
+            "  </div>"
+            "</div>"
+            "</body></html>"
+        );
+    }
+    if(ui->label_3)
+    {
+        ui->label_3->setText("<a style=\"color: #4CC2FF; text-decoration: none; font-size: 12px;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\">📖 Подробная пошаговая инструкция с иллюстрациями</a>");
+    }
+    if(ui->label_5)
+    {
+        ui->label_5->setStyleSheet(
+            "background-color: #172338;"
+            "border: 1px solid #1E3A5F;"
+            "border-radius: 8px;"
+            "color: #38BDF8;"
+            "font-size: 13px;"
+            "font-weight: 600;"
+            "padding: 12px;"
+        );
+        ui->label_5->setText("⏳ Ожидание подключения Android-устройства по USB...");
+    }
+
+    // ==========================================
+    // 4. Procedures & Scan Execution Page (page_adsmalware)
+    // ==========================================
+    if(ui->deviceLabelName)
+    {
+        ui->deviceLabelName->setStyleSheet(
+            "background-color: #1E2229;"
+            "border: 1px solid #2E333D;"
+            "border-radius: 8px;"
+            "color: #4CC2FF;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            "font-style: normal;"
+            "padding: 8px 16px;"
+        );
+    }
+    if(ui->processLogStatus)
+    {
+        ui->processLogStatus->setStyleSheet(
+            "QListView {"
+            "   background-color: #121316;"
+            "   border: 1px solid #282A2E;"
+            "   border-radius: 8px;"
+            "   color: #9CA3AF;"
+            "   font-family: 'Consolas', 'DejaVu Sans Mono', 'Courier New', monospace;"
+            "   font-size: 11px;"
+            "   padding: 8px;"
+            "}"
+            "QListView::item:selected {"
+            "   background-color: #26292F;"
+            "   color: #4CC2FF;"
+            "}"
+        );
+    }
+    if(ui->processBarStatus)
+    {
+        ui->processBarStatus->setStyleSheet(
+            "QProgressBar {"
+            "   background-color: #1A1C20;"
+            "   border: 1px solid #2E3238;"
+            "   border-radius: 5px;"
+            "   height: 16px;"
+            "   text-align: center;"
+            "   color: #FFFFFF;"
+            "   font-size: 11px;"
+            "   font-weight: bold;"
+            "}"
+            "QProgressBar::chunk {"
+            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0078D4, stop:1 #4CC2FF);"
+            "   border-radius: 4px;"
+            "}"
+        );
+    }
+    if(ui->malwareStatusText0)
+    {
+        ui->malwareStatusText0->setStyleSheet(
+            "color: #E5E7EB;"
+            "font-size: 14px;"
+            "font-weight: 600;"
+            "padding: 6px;"
+            "font-style: normal;"
+            "text-decoration: none;"
+        );
+    }
+    if(ui->malwareReRun)
+    {
+        ui->malwareReRun->setCursor(Qt::PointingHandCursor);
+        ui->malwareReRun->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #0078D4;"
+            "   border: 1px solid #005A9E;"
+            "   border-radius: 8px;"
+            "   color: #FFFFFF;"
+            "   font-size: 13px;"
+            "   font-weight: bold;"
+            "   padding: 10px 20px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #1084D9;"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #004C87;"
+            "}"
+        );
+    }
+
+    // ==========================================
+    // 5. Loader Page (page_loader)
+    // ==========================================
+    if(ui->frame_loader)
+    {
+        ui->frame_loader->setStyleSheet(
+            "QFrame#frame_loader {"
+            "   background-color: #1E2024;"
+            "   border: 1px solid #2D3139;"
+            "   border-radius: 12px;"
+            "}"
+        );
+    }
+    if(ui->loaderPageText)
+    {
+        ui->loaderPageText->setStyleSheet(
+            "color: #9CA3AF;"
+            "font-size: 14px;"
+            "font-weight: 600;"
+            "letter-spacing: 0.5px;"
+        );
+    }
+
+    // ==========================================
+    // 6. My Devices & Warranty Page (page_mydevices)
+    // ==========================================
+    if(ui->label_9)
+    {
+        ui->label_9->setStyleSheet("color: #9CA3AF; font-size: 12px; font-weight: 600;");
+    }
+    if(ui->label_10)
+    {
+        ui->label_10->setStyleSheet("color: #9CA3AF; font-size: 12px; font-weight: 600;");
+    }
+    if(ui->myDeviceFilterDateStart)
+    {
+        ui->myDeviceFilterDateStart->setStyleSheet(
+            "QDateEdit {"
+            "   background-color: #1E2228;"
+            "   border: 1px solid #363A42;"
+            "   border-radius: 6px;"
+            "   color: #FFFFFF;"
+            "   font-size: 12px;"
+            "   padding: 4px 8px;"
+            "}"
+            "QDateEdit:focus {"
+            "   border: 1px solid #4CC2FF;"
+            "}"
+        );
+    }
+    if(ui->myDeviceFilterDateEnd)
+    {
+        ui->myDeviceFilterDateEnd->setStyleSheet(
+            "QDateEdit {"
+            "   background-color: #1E2228;"
+            "   border: 1px solid #363A42;"
+            "   border-radius: 6px;"
+            "   color: #FFFFFF;"
+            "   font-size: 12px;"
+            "   padding: 4px 8px;"
+            "}"
+            "QDateEdit:focus {"
+            "   border: 1px solid #4CC2FF;"
+            "}"
+        );
+    }
+    if(ui->myDeviceQuaranteeFilter)
+    {
+        ui->myDeviceQuaranteeFilter->setCursor(Qt::PointingHandCursor);
+        ui->myDeviceQuaranteeFilter->setStyleSheet(
+            "QCheckBox {"
+            "   color: #D1D5DB;"
+            "   font-size: 12px;"
+            "   font-weight: 500;"
+            "   spacing: 6px;"
+            "}"
+            "QCheckBox::indicator {"
+            "   width: 16px;"
+            "   height: 16px;"
+            "   border: 1px solid #3E434D;"
+            "   border-radius: 4px;"
+            "   background-color: #1E2024;"
+            "}"
+            "QCheckBox::indicator:hover {"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QCheckBox::indicator:checked {"
+            "   background-color: #0078D4;"
+            "   border-color: #0078D4;"
+            "}"
+        );
+    }
+    if(ui->myDeviceSend)
+    {
+        ui->myDeviceSend->setCursor(Qt::PointingHandCursor);
+        ui->myDeviceSend->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #0078D4;"
+            "   border: 1px solid #005A9E;"
+            "   border-radius: 6px;"
+            "   color: #FFFFFF;"
+            "   font-size: 12px;"
+            "   font-weight: 600;"
+            "   padding: 5px 16px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #1084D9;"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #004C87;"
+            "}"
+        );
+    }
+    if(ui->myDeviceActual)
+    {
+        ui->myDeviceActual->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        ui->myDeviceActual->horizontalHeader()->setStretchLastSection(true);
+        ui->myDeviceActual->setStyleSheet(
+            "QTableView {"
+            "   background-color: #1A1C20;"
+            "   alternate-background-color: #16181B;"
+            "   gridline-color: #282A2E;"
+            "   border: 1px solid #282A2E;"
+            "   border-radius: 8px;"
+            "   color: #D1D5DB;"
+            "   font-size: 12px;"
+            "   selection-background-color: #0078D4;"
+            "   selection-color: #FFFFFF;"
+            "}"
+            "QHeaderView::section {"
+            "   background-color: #22252B;"
+            "   color: #9CA3AF;"
+            "   font-size: 12px;"
+            "   font-weight: bold;"
+            "   border: none;"
+            "   border-bottom: 1px solid #2E3238;"
+            "   border-right: 1px solid #282A2E;"
+            "   padding: 6px 8px;"
+            "}"
+        );
+    }
+    if(ui->myDevicePageLabel)
+    {
+        ui->myDevicePageLabel->setStyleSheet("color: #6B7280; font-size: 11px; padding: 4px;");
+    }
+
+    // ==========================================
+    // 7. VIP Subscription Page (page_buyvip)
+    // ==========================================
+    if(ui->groupBox)
+    {
+        ui->groupBox->setStyleSheet(
+            "QGroupBox {"
+            "   background-color: #1E2024;"
+            "   border: 1px solid #2D3139;"
+            "   border-radius: 12px;"
+            "   margin-top: 24px;"
+            "   padding: 24px 20px 20px 20px;"
+            "   font-size: 15px;"
+            "   font-weight: bold;"
+            "   color: #FFFFFF;"
+            "}"
+            "QGroupBox::title {"
+            "   subcontrol-origin: margin;"
+            "   subcontrol-position: top center;"
+            "   padding: 4px 16px;"
+            "   background-color: #26292F;"
+            "   border: 1px solid #363940;"
+            "   border-radius: 6px;"
+            "   color: #FFFFFF;"
+            "}"
+        );
+    }
+    if(ui->label_13)
+    {
+        ui->label_13->setStyleSheet("color: #9CA3AF; font-size: 13px; font-weight: 500; margin-bottom: 4px;");
+    }
+    if(ui->labelVipBalance)
+    {
+        ui->labelVipBalance->setStyleSheet(
+            "background-color: #13271D;"
+            "border: 1px solid #16532E;"
+            "border-radius: 8px;"
+            "color: #4ADE80;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            "padding: 10px 14px;"
+        );
+    }
+    if(ui->comboBoxSelectVIPDays)
+    {
+        ui->comboBoxSelectVIPDays->setStyleSheet(
+            "QComboBox {"
+            "   background-color: #18191C;"
+            "   border: 1px solid #32353B;"
+            "   border-radius: 6px;"
+            "   color: #FFFFFF;"
+            "   font-size: 13px;"
+            "   padding: 6px 12px;"
+            "   min-height: 24px;"
+            "}"
+            "QComboBox:hover {"
+            "   border-color: #4CC2FF;"
+            "}"
+            "QComboBox::drop-down {"
+            "   border: none;"
+            "   width: 24px;"
+            "}"
+            "QComboBox QAbstractItemView {"
+            "   background-color: #1E2024;"
+            "   border: 1px solid #32353B;"
+            "   selection-background-color: #0078D4;"
+            "   selection-color: #FFFFFF;"
+            "   color: #FFFFFF;"
+            "   padding: 4px;"
+            "}"
+        );
+    }
+    if(ui->frame)
+    {
+        ui->frame->setStyleSheet(
+            "QFrame#frame {"
+            "   background-color: #18191C;"
+            "   border: 1px solid #2A2D33;"
+            "   border-radius: 8px;"
+            "   padding: 10px;"
+            "}"
+        );
+    }
+    if(ui->labelInfoVip)
+    {
+        ui->labelInfoVip->setStyleSheet("color: #F3F4F6; font-size: 13px; font-weight: 600;");
+    }
+    if(ui->buttonBuyVip)
+    {
+        ui->buttonBuyVip->setCursor(Qt::PointingHandCursor);
+        ui->buttonBuyVip->setStyleSheet(
+            "QPushButton {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #10B981, stop:1 #059669);"
+            "   border: 1px solid #059669;"
+            "   border-radius: 6px;"
+            "   color: #FFFFFF;"
+            "   font-size: 13px;"
+            "   font-weight: bold;"
+            "   padding: 8px 20px;"
+            "}"
+            "QPushButton:hover {"
+            "   background: #10B981;"
+            "   border-color: #34D399;"
+            "}"
+            "QPushButton:pressed {"
+            "   background: #047857;"
+            "}"
+        );
+    }
+
+    // ==========================================
+    // 8. Top Back Bar (toplevel_backpage)
+    // ==========================================
+    if(ui->toplevel_backpage)
+    {
+        ui->toplevel_backpage->setStyleSheet(
+            "QFrame#toplevel_backpage {"
+            "   background-color: #1A1D21;"
+            "   border-bottom: 1px solid #282B30;"
+            "}"
+        );
+    }
+    if(ui->buttonBackTo)
+    {
+        ui->buttonBackTo->setText("‹ Назад");
+        ui->buttonBackTo->setCursor(Qt::PointingHandCursor);
+        ui->buttonBackTo->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #26292F;"
+            "   border: 1px solid #363940;"
+            "   border-radius: 6px;"
+            "   color: #E5E7EB;"
+            "   font-size: 12px;"
+            "   font-weight: 600;"
+            "   padding: 5px 14px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #32363E;"
+            "   border-color: #4CC2FF;"
+            "   color: #4CC2FF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #1A1B1E;"
+            "}"
+        );
+    }
+    if(ui->label_8)
+    {
+        ui->label_8->setStyleSheet(
+            "color: #FFFFFF;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            "letter-spacing: 0.5px;"
+            "font-style: normal;"
+            "background: transparent;"
+        );
+    }
 }
 
 void MainWindow::initServiceModules()
@@ -1254,6 +1791,27 @@ void MainWindow::showPage(PageIndex pageNum)
     contentOpacityAnimator->start();
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
+    if(ui->toplevel_backpage->isVisible())
+    {
+        switch(pageNum)
+        {
+            case DevicesPage:
+                ui->label_8->setText("Подключение Android-устройства (ADB)");
+                break;
+            case LongInfoPage:
+                ui->label_8->setText(ServiceProvider::currentService() ? ServiceProvider::currentService()->title : "Выполнение процедуры");
+                break;
+            case MyDevicesPage:
+                ui->label_8->setText("История устройств и гарантия");
+                break;
+            case BuyVIPPage:
+                ui->label_8->setText("Оформление VIP-подписки");
+                break;
+            default:
+                ui->label_8->setText("Назад в личный кабинет");
+                break;
+        }
+    }
     pageShownPreStart(curPage);
 }
 

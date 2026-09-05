@@ -20,7 +20,7 @@
 #define LOCALE_STRING_020 "Частично."
 #define LOCALE_STRING_021 "Выполнено."
 #define LOCALE_STRING_022 "Ошибка при отправке"
-#define LOCALE_STRING_023 "Отправка образцов на сервер imister.kz и получение md-ключа"
+#define LOCALE_STRING_023 "Отправка образцов на сервер imister.tech и получение md-ключа"
 #define LOCALE_STRING_024 "Ошибка во время загрузки"
 #define LOCALE_STRING_025 "Ошибка проверки ключа"
 #define LOCALE_STRING_026 "Выполняется серверная обработка. Ожидаем. Если пройдет больше времени, то можно попробовать позже."
