@@ -107,7 +107,20 @@ void BuyVIPService::click_buy_vip()
     if(i == -1 || i == 0)
         error_msg = "Выберите вариант из списка.";
     else if(network->authedId.credits == 0 || network->authedId.credits < std::get<int>(mPresets[i - 1]) * dailyRate)
-        error_msg = "Недостаточна средств на вашем балансе, для начало пополните ее через Поддержка->связаться.";
+    {
+        int required = std::get<int>(mPresets[i - 1]) * dailyRate;
+        int shortage = required - static_cast<int>(network->authedId.credits);
+        error_msg = QString::fromUtf8(
+            "Недостаточно средств на вашем балансе для приобретения VIP.\n\n"
+            "Стоимость: %1 %2\n"
+            "На балансе: %3 %2\n"
+            "Не хватает: %4 %2\n\n"
+            "Пожалуйста, пополните баланс через меню Справка -> Связаться с поддержкой."
+        ).arg(required)
+         .arg(network->authedId.currencyType)
+         .arg(network->authedId.credits)
+         .arg(shortage > 0 ? shortage : 0);
+    }
     if(!error_msg.isEmpty())
     {
         QMessageBox::warning(MainWindow::current, "Попытка покупки не удалась", error_msg);

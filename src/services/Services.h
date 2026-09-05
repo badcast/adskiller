@@ -342,6 +342,8 @@ public:
     bool start() override;
     void stop() override;
 
+    static void resetHistory();
+
 public slots:
     void sendCurrentMessage();
 

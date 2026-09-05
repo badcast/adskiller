@@ -244,14 +244,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
             <widget class="QFrame" name="frame_4">
              <property name="minimumSize">
               <size>
-               <width>631</width>
-               <height>411</height>
+               <width>440</width>
+               <height>560</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
-               <width>631</width>
-               <height>411</height>
+               <width>440</width>
+               <height>560</height>
               </size>
              </property>
              <property name="frameShape">
@@ -661,7 +661,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                         <font>
                          <pointsize>16</pointsize>
                          <bold>true</bold>
-                         <underline>true</underline>
+                         <underline>false</underline>
                         </font>
                        </property>
                        <property name="lineWidth">
@@ -729,7 +729,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                         <font>
                          <pointsize>10</pointsize>
                          <bold>true</bold>
-                         <underline>true</underline>
+                         <underline>false</underline>
                         </font>
                        </property>
                        <property name="autoFillBackground">
@@ -800,7 +800,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                         <font>
                          <pointsize>10</pointsize>
                          <bold>true</bold>
-                         <underline>true</underline>
+                         <underline>false</underline>
                         </font>
                        </property>
                        <property name="lineWidth">

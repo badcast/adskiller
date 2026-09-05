@@ -204,7 +204,7 @@ QWidget *AboutDialog::createAboutTab()
     descLayout->setContentsMargins(14, 12, 14, 12);
     descLayout->setSpacing(8);
 
-    auto *descTitle = new QLabel(QStringLiteral("✦ О проекте"), descCard);
+    auto *descTitle = new QLabel(QStringLiteral("О проекте"), descCard);
     descTitle->setObjectName(QStringLiteral("cardTitle"));
     descLayout->addWidget(descTitle);
 
@@ -231,7 +231,7 @@ QWidget *AboutDialog::createAboutTab()
     featLayout->setContentsMargins(14, 12, 14, 12);
     featLayout->setSpacing(8);
 
-    auto *featTitle = new QLabel(QStringLiteral("✦ Ключевые возможности"), featCard);
+    auto *featTitle = new QLabel(QStringLiteral("Ключевые возможности"), featCard);
     featTitle->setObjectName(QStringLiteral("cardTitle"));
     featLayout->addWidget(featTitle);
 
@@ -262,7 +262,7 @@ QWidget *AboutDialog::createAboutTab()
     techLayout->setContentsMargins(14, 12, 14, 12);
     techLayout->setSpacing(8);
 
-    auto *techTitle = new QLabel(QStringLiteral("✦ Архитектура и технологии"), techCard);
+    auto *techTitle = new QLabel(QStringLiteral("Архитектура и технологии"), techCard);
     techTitle->setObjectName(QStringLiteral("cardTitle"));
     techLayout->addWidget(techTitle);
 
@@ -397,7 +397,7 @@ QWidget *AboutDialog::createAuthorsTab()
     thanksLayout->setContentsMargins(14, 12, 14, 12);
     thanksLayout->setSpacing(8);
 
-    auto *thanksTitle = new QLabel(QStringLiteral("✦ Благодарности сообществу"), thanksCard);
+    auto *thanksTitle = new QLabel(QStringLiteral("Благодарности сообществу"), thanksCard);
     thanksTitle->setObjectName(QStringLiteral("cardTitle"));
     thanksLayout->addWidget(thanksTitle);
 
@@ -502,7 +502,7 @@ QWidget *AboutDialog::createGplTab()
     summaryLayout->setContentsMargins(14, 12, 14, 12);
     summaryLayout->setSpacing(8);
 
-    auto *summaryTitle = new QLabel(QStringLiteral("✦ GNU General Public License, Version 3 (GPL v3)"), summaryCard);
+    auto *summaryTitle = new QLabel(QStringLiteral("GNU General Public License, Version 3 (GPL v3)"), summaryCard);
     summaryTitle->setObjectName(QStringLiteral("cardTitle"));
     summaryLayout->addWidget(summaryTitle);
 
@@ -597,7 +597,7 @@ QWidget *AboutDialog::createChangelogTab()
     auto *topInfoLayout = new QVBoxLayout();
     topInfoLayout->setSpacing(3);
 
-    auto *topTitle = new QLabel(QStringLiteral("✦ Журнал версий и обновлений"), topCard);
+    auto *topTitle = new QLabel(QStringLiteral("Журнал версий и обновлений"), topCard);
     topTitle->setObjectName(QStringLiteral("cardTitle"));
     topInfoLayout->addWidget(topTitle);
 

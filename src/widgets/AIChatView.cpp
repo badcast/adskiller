@@ -106,7 +106,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         headerLayout->setSpacing(4);
 
         QLabel *badge = new QLabel(this);
-        badge->setText("<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 8px; font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>✦ AdsKiller AI</span>");
+        badge->setText("<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 8px; font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>AdsKiller AI</span>");
         badge->setTextFormat(Qt::RichText);
         badge->setStyleSheet("background: transparent; border: none;");
         headerLayout->addWidget(badge);
@@ -265,7 +265,7 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
     cardLayout->setContentsMargins(12, 7, 14, 7);
     cardLayout->setSpacing(6);
 
-    QLabel *badge = new QLabel("✦ AI", this);
+    QLabel *badge = new QLabel("AI", this);
     badge->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 10.5px; background: transparent; border: none;");
     cardLayout->addWidget(badge);
 

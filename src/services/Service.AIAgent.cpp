@@ -56,6 +56,15 @@ bool AIAgentService::eventFilter(QObject *obj, QEvent *ev)
 
 #include "AIChatView.h"
 
+static QStringList s_persistedAiMessages;
+static int s_persistedAiSessionId = -1;
+
+void AIAgentService::resetHistory()
+{
+    s_persistedAiMessages.clear();
+    s_persistedAiSessionId = -1;
+}
+
 void AIAgentService::sendCurrentMessage()
 {
     if(!MainWindow::current)
@@ -78,6 +87,8 @@ void AIAgentService::sendCurrentMessage()
     userObj["content"] = text;
     QString serialized = QString::fromUtf8(QJsonDocument(userObj).toJson(QJsonDocument::Compact));
     aiMessages.append(serialized);
+    s_persistedAiMessages = aiMessages;
+    s_persistedAiSessionId = aiSessionId;
 
     // Add user message bubble widget
     if(chatView)
@@ -120,8 +131,6 @@ bool AIAgentService::start()
     auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
     auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
 
-    aiMessages.clear();
-
     if(!btn || !edit)
         return false;
 
@@ -132,7 +141,12 @@ bool AIAgentService::start()
     btn->setEnabled(true);
     edit->setEnabled(true);
 
-    if(chatView)
+    // Restore conversation state across page refreshes
+    aiMessages = s_persistedAiMessages;
+    aiSessionId = s_persistedAiSessionId;
+
+    // Only show welcome card if there are no messages yet
+    if(chatView && aiMessages.isEmpty())
         chatView->showWelcome();
 
     // Connect button click directly to slot with 'this' receiver context (auto-disconnected when this is destroyed)
@@ -207,6 +221,8 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     aiObj["content"] = text;
     QString serializedAi = QString::fromUtf8(QJsonDocument(aiObj).toJson(QJsonDocument::Compact));
     aiMessages.append(serializedAi);
+    s_persistedAiMessages = aiMessages;
+    s_persistedAiSessionId = aiSessionId;
 
     // Append AI message bubble widget
     if(chatView)

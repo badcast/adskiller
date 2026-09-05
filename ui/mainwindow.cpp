@@ -1,19 +1,25 @@
 #include <functional>
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <list>
 #include <memory>
 
 #include <QCloseEvent>
 #include <QDesktopServices>
+#include <QEasingCurve>
 #include <QEventLoop>
 #include <QFontDatabase>
 #include <QFuture>
 #include <QGraphicsOpacityEffect>
+#include <QHBoxLayout>
 #include <QHash>
 #include <QHeaderView>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QStackedWidget>
@@ -114,6 +120,445 @@ namespace
     private:
         QWidget *m_capsule;
     };
+
+    class AdbDeviceVisualizer;
+    static AdbDeviceVisualizer *s_adbVisualizer = nullptr;
+
+    class AdbDeviceVisualizer : public QWidget
+    {
+    public:
+        explicit AdbDeviceVisualizer(QWidget *parent = nullptr)
+            : QWidget(parent), m_status(UNKNOWN), m_time(0.0f), m_connectedTime(0.0f)
+        {
+            s_adbVisualizer = this;
+            setAttribute(Qt::WA_OpaquePaintEvent, false);
+            setMinimumSize(280, 420);
+            setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+            m_animTimer = new QTimer(this);
+            connect(m_animTimer, &QTimer::timeout, this, [this]() {
+                m_time += 0.035f;
+                if(m_status == DEVICE)
+                    m_connectedTime += 0.035f;
+                update();
+            });
+            m_animTimer->start(25); // ~40 FPS
+        }
+
+        ~AdbDeviceVisualizer() override
+        {
+            if(s_adbVisualizer == this)
+                s_adbVisualizer = nullptr;
+        }
+
+        void setStatus(AdbConStatus s, const QString &name = QString(), const QString &sub = QString())
+        {
+            if(m_status != s || m_devName != name || m_devSub != sub)
+            {
+                if(m_status != DEVICE && s == DEVICE)
+                    m_connectedTime = 0.0f;
+                m_status = s;
+                m_devName = name;
+                m_devSub = sub;
+                update();
+            }
+        }
+
+        AdbConStatus status() const { return m_status; }
+
+        void startAnimation()
+        {
+            if(!m_animTimer->isActive())
+                m_animTimer->start(25);
+        }
+
+        void stopAnimation()
+        {
+            m_animTimer->stop();
+        }
+
+    protected:
+        void paintEvent(QPaintEvent *event) override
+        {
+            Q_UNUSED(event);
+            QPainter p(this);
+            p.setRenderHint(QPainter::Antialiasing, true);
+            p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+            p.setRenderHint(QPainter::TextAntialiasing, true);
+
+            const int w = width();
+            const int h = height();
+            const float cx = w * 0.5f;
+            const float cy = h * 0.44f;
+
+            // Palette per status
+            QColor primaryColor;
+            QColor glowColor;
+            QColor accentColor;
+
+            if(m_status == DEVICE)
+            {
+                primaryColor = QColor(16, 185, 129); // Emerald #10B981
+                glowColor = QColor(52, 211, 153, 90);
+                accentColor = QColor(110, 231, 183);
+            }
+            else if(m_status == UNAUTH)
+            {
+                primaryColor = QColor(245, 158, 11); // Amber #F59E0B
+                glowColor = QColor(251, 191, 36, 100);
+                accentColor = QColor(253, 230, 138);
+            }
+            else
+            {
+                primaryColor = QColor(56, 189, 248); // Sky Cyan #38BDF8
+                glowColor = QColor(14, 165, 233, 70);
+                accentColor = QColor(186, 230, 253);
+            }
+
+            // 1. Ambient Background Glow
+            QRadialGradient ambientGlow(cx, cy, qMax(w, h) * 0.55);
+            ambientGlow.setColorAt(0.0, QColor(glowColor.red(), glowColor.green(), glowColor.blue(), 30));
+            ambientGlow.setColorAt(0.65, QColor(glowColor.red(), glowColor.green(), glowColor.blue(), 5));
+            ambientGlow.setColorAt(1.0, QColor(11, 15, 25, 0));
+            p.fillRect(rect(), ambientGlow);
+
+            // 2. Tech Orbit Ring & Crosshairs
+            const float orbitR = qMin(w, h) * 0.46f;
+            p.setPen(QPen(QColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(), 30), 1.0f));
+            p.setBrush(Qt::NoBrush);
+            p.drawEllipse(QPointF(cx, cy), orbitR, orbitR);
+
+            // Rotating tech tick marks on orbit
+            p.save();
+            p.translate(cx, cy);
+            p.rotate(std::fmod(m_time * 25.0f, 360.0f));
+            p.setPen(QPen(QColor(accentColor.red(), accentColor.green(), accentColor.blue(), 80), 2.0f));
+            for(int a = 0; a < 4; ++a)
+            {
+                p.drawLine(QPointF(orbitR - 6.0f, 0), QPointF(orbitR + 6.0f, 0));
+                p.rotate(90.0);
+            }
+            p.restore();
+
+            // 3. Animated Concentric Radar Waves (Expanding)
+            const float maxRadarR = qMin(w, h) * 0.44f;
+            const int ringCount = 3;
+            for(int i = 0; i < ringCount; ++i)
+            {
+                float waveT = std::fmod(m_time * 0.75f + (float)i / (float)ringCount, 1.0f);
+                float ringR = waveT * maxRadarR;
+                int ringAlpha = static_cast<int>((1.0f - waveT) * (m_status == DEVICE ? 160 : 110));
+                if(ringAlpha > 0)
+                {
+                    QPen wavePen(QColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(), ringAlpha));
+                    wavePen.setWidthF(1.2f);
+                    if(i % 2 == 1)
+                        wavePen.setStyle(Qt::DashLine);
+                    p.setPen(wavePen);
+                    p.setBrush(Qt::NoBrush);
+                    p.drawEllipse(QPointF(cx, cy), ringR, ringR);
+                }
+            }
+
+            // 4. Rotating Scan Beam (when searching)
+            if(m_status == UNKNOWN)
+            {
+                p.save();
+                p.translate(cx, cy);
+                p.rotate(std::fmod(m_time * 100.0f, 360.0f));
+                QConicalGradient sweep(0, 0, 0);
+                sweep.setColorAt(0.0, QColor(56, 189, 248, 50));
+                sweep.setColorAt(0.15, QColor(56, 189, 248, 10));
+                sweep.setColorAt(0.3, QColor(56, 189, 248, 0));
+                sweep.setColorAt(1.0, QColor(56, 189, 248, 0));
+                p.setBrush(sweep);
+                p.setPen(Qt::NoPen);
+                p.drawEllipse(QPointF(0, 0), maxRadarR * 0.9f, maxRadarR * 0.9f);
+                p.restore();
+            }
+
+            // 5. Phone Dimensions & Floating Motion
+            const float phoneW = 184.0f;
+            const float phoneH = 326.0f;
+            float floatY = (m_status == DEVICE) ? 0.0f : (std::sin(m_time * 2.2f) * 5.0f);
+            const float px = cx - phoneW * 0.5f;
+            const float py = cy - phoneH * 0.5f + floatY;
+
+            // 6. USB Cable & Data Stream
+            const float cableStartX = cx;
+            const float cableStartY = h;
+            const float cableEndY = py + phoneH;
+
+            // Cable Base line
+            p.setPen(QPen(QColor(30, 41, 59, 220), 6.0f, Qt::SolidLine, Qt::RoundCap));
+            p.drawLine(QPointF(cableStartX, cableStartY), QPointF(cableStartX, cableEndY));
+
+            // Cable Core Glow line
+            p.setPen(QPen(QColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(), 180), 2.5f, Qt::SolidLine, Qt::RoundCap));
+            p.drawLine(QPointF(cableStartX, cableStartY), QPointF(cableStartX, cableEndY));
+
+            // Animated light pulses traveling upward into USB port
+            const int pulseCount = 4;
+            for(int i = 0; i < pulseCount; ++i)
+            {
+                float speedMult = (m_status == DEVICE) ? 2.5f : 1.2f;
+                float pulseT = std::fmod(m_time * speedMult + (float)i / (float)pulseCount, 1.0f);
+                float pulseY = cableStartY - pulseT * (cableStartY - cableEndY);
+                float pulseAlpha = (pulseT < 0.15f) ? (pulseT / 0.15f) : (pulseT > 0.85f ? (1.0f - pulseT) / 0.15f : 1.0f);
+                p.setPen(Qt::NoPen);
+                p.setBrush(QColor(accentColor.red(), accentColor.green(), accentColor.blue(), static_cast<int>(pulseAlpha * 255)));
+                p.drawEllipse(QPointF(cableStartX, pulseY), 3.5f, 6.0f);
+            }
+
+            // USB-C Plug Head
+            QRectF usbPlugRect(cx - 11.0f, cableEndY - 1.0f, 22.0f, 15.0f);
+            QLinearGradient plugGrad(usbPlugRect.topLeft(), usbPlugRect.bottomRight());
+            plugGrad.setColorAt(0.0, QColor(71, 85, 105));
+            plugGrad.setColorAt(1.0, QColor(30, 41, 59));
+            p.setPen(QPen(primaryColor, 1.2f));
+            p.setBrush(plugGrad);
+            p.drawRoundedRect(usbPlugRect, 3.0f, 3.0f);
+
+            // 7. Outer Phone Chassis (Metallic bevel & breathing neon glow)
+            QRectF phoneRect(px, py, phoneW, phoneH);
+            float glowBreathing = 0.7f + 0.3f * std::sin(m_time * 3.0f);
+            QPen neonPen(QColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(), static_cast<int>(160 * glowBreathing)));
+            neonPen.setWidthF(2.5f);
+
+            QLinearGradient chassisGrad(phoneRect.topLeft(), phoneRect.bottomRight());
+            chassisGrad.setColorAt(0.0, QColor(30, 41, 59));
+            chassisGrad.setColorAt(0.5, QColor(15, 23, 42));
+            chassisGrad.setColorAt(1.0, QColor(2, 6, 23));
+
+            p.setPen(neonPen);
+            p.setBrush(chassisGrad);
+            p.drawRoundedRect(phoneRect, 26.0f, 26.0f);
+
+            // 8. Phone Screen (AMOLED Glass)
+            const float screenMargin = 7.0f;
+            QRectF screenRect(px + screenMargin, py + screenMargin, phoneW - screenMargin * 2.0f, phoneH - screenMargin * 2.0f);
+            p.setPen(QPen(QColor(51, 65, 85, 160), 1.0f));
+            p.setBrush(QColor(8, 12, 20));
+            p.drawRoundedRect(screenRect, 20.0f, 20.0f);
+
+            // Speaker slit & front camera punch-hole
+            p.setPen(Qt::NoPen);
+            p.setBrush(QColor(51, 65, 85));
+            p.drawRoundedRect(QRectF(cx - 16.0f, py + 12.0f, 32.0f, 3.5f), 1.5f, 1.5f);
+            p.setBrush(QColor(30, 41, 59));
+            p.drawEllipse(QPointF(cx + 25.0f, py + 13.5f), 3.0f, 3.0f);
+
+            // Mini Status Bar inside Phone
+            p.setPen(QColor(148, 163, 184));
+            QFont statusFont = p.font();
+            statusFont.setPointSize(8);
+            statusFont.setBold(true);
+            p.setFont(statusFont);
+            p.drawText(QRectF(screenRect.left() + 10.0f, screenRect.top() + 8.0f, 50.0f, 14.0f), Qt::AlignLeft | Qt::AlignVCenter, "ADB 3.0");
+
+            // Battery icon
+            QRectF battRect(screenRect.right() - 24.0f, screenRect.top() + 10.0f, 14.0f, 8.0f);
+            p.setPen(QPen(QColor(148, 163, 184), 1.0f));
+            p.setBrush(Qt::NoBrush);
+            p.drawRoundedRect(battRect, 1.5f, 1.5f);
+            p.fillRect(QRectF(battRect.left() + 2.0f, battRect.top() + 2.0f, 7.0f, 4.0f), primaryColor);
+
+            // 9. Screen Contents by State
+            p.save();
+            p.setClipRect(screenRect);
+
+            if(m_status == DEVICE)
+            {
+                // --- CONNECTED STATE ---
+                float successPulse = qMin(1.0f, m_connectedTime * 2.0f);
+                float checkCenterY = py + phoneH * 0.38f;
+                float checkR = 34.0f * successPulse;
+
+                QRadialGradient succGrad(cx, checkCenterY, checkR * 1.5f);
+                succGrad.setColorAt(0.0, QColor(16, 185, 129, 70));
+                succGrad.setColorAt(1.0, QColor(16, 185, 129, 0));
+                p.setBrush(succGrad);
+                p.setPen(Qt::NoPen);
+                p.drawEllipse(QPointF(cx, checkCenterY), checkR * 1.5f, checkR * 1.5f);
+
+                p.setPen(QPen(QColor(16, 185, 129), 2.5f));
+                p.setBrush(QColor(6, 78, 59, 180));
+                p.drawEllipse(QPointF(cx, checkCenterY), checkR, checkR);
+
+                // Checkmark path
+                QPainterPath checkPath;
+                checkPath.moveTo(cx - 12.0f, checkCenterY);
+                checkPath.lineTo(cx - 3.0f, checkCenterY + 9.0f);
+                checkPath.lineTo(cx + 14.0f, checkCenterY - 8.0f);
+                QPen checkPen(QColor(240, 253, 244), 3.0f, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+                p.strokePath(checkPath, checkPen);
+
+                // Device Title
+                QFont titleFont = p.font();
+                titleFont.setPointSize(11);
+                titleFont.setBold(true);
+                p.setFont(titleFont);
+                p.setPen(QColor(240, 253, 244));
+                QString displayName = m_devName.isEmpty() ? QString::fromUtf8("Android Устройство") : m_devName;
+                p.drawText(QRectF(screenRect.left() + 6.0f, checkCenterY + 44.0f, screenRect.width() - 12.0f, 22.0f),
+                           Qt::AlignCenter | Qt::AlignVCenter, displayName);
+
+                // Subtitle (Model / Vendor)
+                QFont subFont = p.font();
+                subFont.setPointSize(8);
+                subFont.setBold(false);
+                p.setFont(subFont);
+                p.setPen(QColor(110, 231, 183));
+                QString subText = m_devSub.isEmpty() ? QString::fromUtf8("USB Подключен") : m_devSub;
+                p.drawText(QRectF(screenRect.left() + 6.0f, checkCenterY + 66.0f, screenRect.width() - 12.0f, 18.0f),
+                           Qt::AlignCenter | Qt::AlignVCenter, subText);
+
+                // Ready Badge
+                QRectF badgeRect(cx - 58.0f, checkCenterY + 92.0f, 116.0f, 22.0f);
+                p.setPen(QPen(QColor(16, 185, 129), 1.0f));
+                p.setBrush(QColor(16, 185, 129, 45));
+                p.drawRoundedRect(badgeRect, 11.0f, 11.0f);
+
+                QFont badgeFont = p.font();
+                badgeFont.setPointSize(8);
+                badgeFont.setBold(true);
+                p.setFont(badgeFont);
+                p.setPen(QColor(52, 211, 153));
+                p.drawText(badgeRect, Qt::AlignCenter, QString::fromUtf8("● АВТОРИЗОВАНО"));
+            }
+            else if(m_status == UNAUTH)
+            {
+                // --- UNAUTHORIZED / PERMISSION REQUIRED ---
+                float alertY = py + phoneH * 0.32f;
+
+                // Warning Icon
+                p.setPen(QPen(QColor(245, 158, 11), 2.2f));
+                p.setBrush(QColor(120, 53, 15, 160));
+                p.drawEllipse(QPointF(cx, alertY), 22.0f, 22.0f);
+
+                QFont warnIconFont = p.font();
+                warnIconFont.setPointSize(13);
+                warnIconFont.setBold(true);
+                p.setFont(warnIconFont);
+                p.setPen(QColor(253, 230, 138));
+                p.drawText(QRectF(cx - 15.0f, alertY - 15.0f, 30.0f, 30.0f), Qt::AlignCenter, "!");
+
+                // Simulated Prompt Dialog
+                QRectF promptCard(screenRect.left() + 8.0f, alertY + 30.0f, screenRect.width() - 16.0f, 116.0f);
+                p.setPen(QPen(QColor(245, 158, 11, 160), 1.0f));
+                p.setBrush(QColor(30, 25, 18, 230));
+                p.drawRoundedRect(promptCard, 8.0f, 8.0f);
+
+                QFont pTitle = p.font();
+                pTitle.setPointSize(8);
+                pTitle.setBold(true);
+                p.setFont(pTitle);
+                p.setPen(QColor(251, 191, 36));
+                p.drawText(QRectF(promptCard.left() + 4.0f, promptCard.top() + 6.0f, promptCard.width() - 8.0f, 28.0f),
+                           Qt::AlignCenter | Qt::TextWordWrap, QString::fromUtf8("Разрешить отладку\nпо USB?"));
+
+                QFont pDesc = p.font();
+                pDesc.setPointSize(7);
+                pDesc.setBold(false);
+                p.setFont(pDesc);
+                p.setPen(QColor(209, 213, 219));
+                p.drawText(QRectF(promptCard.left() + 6.0f, promptCard.top() + 38.0f, promptCard.width() - 12.0f, 28.0f),
+                           Qt::AlignCenter | Qt::TextWordWrap, QString::fromUtf8("Всегда разрешать с этого компьютера"));
+
+                // Pulsing button with touch ripple
+                float btnPulse = 0.8f + 0.2f * std::sin(m_time * 4.0f);
+                QRectF okBtnRect(cx - 46.0f, promptCard.bottom() - 32.0f, 92.0f, 24.0f);
+
+                // Touch ripple expanding from button
+                float ripT = std::fmod(m_time * 1.5f, 1.0f);
+                p.setPen(QPen(QColor(245, 158, 11, static_cast<int>((1.0f - ripT) * 160)), 1.5f));
+                p.setBrush(Qt::NoBrush);
+                p.drawRoundedRect(okBtnRect.adjusted(-ripT * 8.0f, -ripT * 5.0f, ripT * 8.0f, ripT * 5.0f), 6.0f, 6.0f);
+
+                p.setPen(QPen(QColor(245, 158, 11), 1.2f));
+                p.setBrush(QColor(217, 119, 6, static_cast<int>(200 * btnPulse)));
+                p.drawRoundedRect(okBtnRect, 5.0f, 5.0f);
+
+                QFont btnFont = p.font();
+                btnFont.setPointSize(8);
+                btnFont.setBold(true);
+                p.setFont(btnFont);
+                p.setPen(QColor(255, 255, 255));
+                p.drawText(okBtnRect, Qt::AlignCenter, QString::fromUtf8("✓ РАЗРЕШИТЬ"));
+            }
+            else
+            {
+                // --- SEARCHING / SCANNING STATE ---
+                float iconCenterY = py + phoneH * 0.40f;
+
+                // Radar scan circles inside screen
+                float inRadius = 45.0f;
+                p.setPen(QPen(QColor(56, 189, 248, 60), 1.0f, Qt::DashLine));
+                p.setBrush(Qt::NoBrush);
+                p.drawEllipse(QPointF(cx, iconCenterY), inRadius, inRadius);
+
+                float innerPulseR = 24.0f + 12.0f * std::sin(m_time * 2.5f);
+                p.setPen(QPen(QColor(56, 189, 248, 90), 1.2f));
+                p.drawEllipse(QPointF(cx, iconCenterY), innerPulseR, innerPulseR);
+
+                // Center Icon Glyph
+                p.setPen(Qt::NoPen);
+                p.setBrush(QColor(14, 165, 233, 50));
+                p.drawEllipse(QPointF(cx, iconCenterY), 20.0f, 20.0f);
+
+                QFont symbolFont = p.font();
+                symbolFont.setPointSize(15);
+                p.setFont(symbolFont);
+                p.setPen(QColor(56, 189, 248));
+                p.drawText(QRectF(cx - 15.0f, iconCenterY - 15.0f, 30.0f, 30.0f), Qt::AlignCenter, "⚡");
+
+                // Text: ПОИСК УСТРОЙСТВА
+                QFont sTitle = p.font();
+                sTitle.setPointSize(9);
+                sTitle.setBold(true);
+                p.setFont(sTitle);
+                p.setPen(QColor(240, 249, 255));
+                p.drawText(QRectF(screenRect.left() + 6.0f, iconCenterY + 42.0f, screenRect.width() - 12.0f, 20.0f),
+                           Qt::AlignCenter, QString::fromUtf8("ПОИСК УСТРОЙСТВА"));
+
+                // Subtitle
+                QFont sDesc = p.font();
+                sDesc.setPointSize(8);
+                sDesc.setBold(false);
+                p.setFont(sDesc);
+                p.setPen(QColor(148, 163, 184));
+                p.drawText(QRectF(screenRect.left() + 6.0f, iconCenterY + 62.0f, screenRect.width() - 12.0f, 18.0f),
+                           Qt::AlignCenter, QString::fromUtf8("Подключите USB-кабель"));
+
+                // Animated Dots: ● ● ○
+                int dotIdx = static_cast<int>(m_time * 2.5f) % 4;
+                QString dots;
+                for(int d = 0; d < 3; ++d)
+                {
+                    if(d < dotIdx)
+                        dots += "● ";
+                    else
+                        dots += "○ ";
+                }
+                QFont dotsFont = p.font();
+                dotsFont.setPointSize(9);
+                p.setFont(dotsFont);
+                p.setPen(QColor(56, 189, 248));
+                p.drawText(QRectF(screenRect.left() + 6.0f, iconCenterY + 84.0f, screenRect.width() - 12.0f, 18.0f),
+                           Qt::AlignCenter, dots.trimmed());
+            }
+
+            p.restore();
+        }
+
+    private:
+        QTimer *m_animTimer;
+        AdbConStatus m_status;
+        QString m_devName;
+        QString m_devSub;
+        float m_time;
+        float m_connectedTime;
+    };
 } // namespace
 
 MainWindow *MainWindow::current;
@@ -199,6 +644,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     deviceLeftAnimator->setDuration(1000);
     deviceLeftAnimator->setStartValue(1000);
     deviceLeftAnimator->setEndValue(0);
+    deviceLeftAnimator->setEasingCurve(QEasingCurve::InOutCubic);
 
     // Top header back to main page.
     ui->contentLayout->layout()->addWidget(ui->toplevel_backpage);
@@ -353,7 +799,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             }
             else
             {
-                ui->aiToolBoxToggle->setText(QString::fromUtf8("✦\n\nИ\nИ\n\n‹"));
+                ui->aiToolBoxToggle->setText(QString::fromUtf8("И\nИ\n\n‹"));
                 ui->aiToolBoxToggle->setToolTip("Развернуть панель AdsKiller AI");
                 ui->aiToolBoxToggle->setFixedWidth(32);
                 ui->aiToolBoxToggle->setStyleSheet(
@@ -439,7 +885,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         headerLayout->setSpacing(6);
 
         QLabel *aiTitle = new QLabel(aiHeaderBar);
-        aiTitle->setText("✦ <b>AdsKiller AI</b>");
+        aiTitle->setText("<b>AdsKiller AI</b>");
         aiTitle->setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: 600;");
 
         QLabel *aiStatus = new QLabel(aiHeaderBar);
@@ -944,166 +1390,336 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 1. Auth Page (page_auth)
     // ==========================================
-    if(ui->frame_4)
+    if(ui->page_auth)
     {
-        ui->frame_4->setStyleSheet(
-            "QFrame#frame_4 {"
-            "   background-color: #1E2024;"
-            "   border: 1px solid #2D3139;"
-            "   border-radius: 12px;"
+        ui->page_auth->setAttribute(Qt::WA_StyledBackground, true);
+        ui->page_auth->setStyleSheet(
+            "QWidget#page_auth {"
+            "   background: qradialgradient(cx:0.5, cy:0.45, radius:0.8, fx:0.5, fy:0.4, "
+            "       stop:0 #111A2E, stop:0.55 #0A0E1A, stop:1 #04060A);"
             "}"
         );
     }
+    if(ui->gridLayout_asd2)
+    {
+        ui->gridLayout_asd2->setAlignment(Qt::AlignCenter);
+    }
+
+    if(ui->frame_4)
+    {
+        ui->frame_4->setAttribute(Qt::WA_StyledBackground, true);
+        ui->frame_4->setFixedSize(440, 560);
+        ui->frame_4->setStyleSheet(
+            "QFrame#frame_4 {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #141B2D, stop:1 #0B0F19);"
+            "   border: 1px solid rgba(56, 189, 248, 0.28);"
+            "   border-radius: 20px;"
+            "}"
+        );
+    }
+
+    if(ui->mainapplogo)
+    {
+        ui->mainapplogo->setFixedSize(68, 68);
+        QString logoUrl = (QDate::currentDate().month() == 12 || QDate::currentDate().month() == 1)
+            ? ":/resources/app-logo-merry" : ":/resources/app-logo";
+        ui->mainapplogo->setStyleSheet(QString(
+            "QFrame#mainapplogo {"
+            "   image: url(%1);"
+            "   background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E293B, stop:1 #0F172A);"
+            "   border: 1.5px solid rgba(56, 189, 248, 0.35);"
+            "   border-radius: 20px;"
+            "   padding: 10px;"
+            "}"
+        ).arg(logoUrl));
+    }
+
     if(ui->label_4)
     {
-        ui->label_4->setStyleSheet("color: #9CA3AF; font-size: 13px; font-weight: 500;");
-        ui->label_4->setText("Введите логин и пароль для авторизации");
+        ui->label_4->setTextFormat(Qt::RichText);
+        ui->label_4->setAlignment(Qt::AlignCenter);
+        ui->label_4->setStyleSheet("background: transparent;");
+        ui->label_4->setText(
+            "<div align='center'>"
+            "<span style='font-size: 20px; font-weight: 700; color: #F8FAFC; letter-spacing: 0.5px;'>AdsKiller Desktop</span><br>"
+            "<span style='font-size: 13px; font-weight: 400; color: #94A3B8;'>Авторизуйтесь для доступа к сервисам</span>"
+            "</div>"
+        );
     }
+
     if(ui->label_12)
     {
-        ui->label_12->setStyleSheet("color: #8E9297; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;");
+        ui->label_12->setText("ЛОГИН ИЛИ СЕРИЙНЫЙ НОМЕР");
+        ui->label_12->setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent;");
     }
-    if(ui->label_14)
-    {
-        ui->label_14->setStyleSheet("color: #8E9297; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;");
-    }
+
     if(ui->lineLoginEdit)
     {
+        ui->lineLoginEdit->setFixedHeight(42);
         ui->lineLoginEdit->setPlaceholderText("Логин или имя пользователя");
         ui->lineLoginEdit->setStyleSheet(
             "QLineEdit {"
-            "   background-color: #141518;"
-            "   color: #F3F4F6;"
-            "   border: 1px solid #363A44;"
-            "   border-radius: 6px;"
-            "   padding: 5px 10px;"
+            "   background-color: #0F172A;"
+            "   color: #F8FAFC;"
+            "   border: 1.5px solid #1E293B;"
+            "   border-radius: 10px;"
+            "   padding: 0 14px;"
             "   font-size: 13px;"
+            "   selection-background-color: #0284C7;"
+            "}"
+            "QLineEdit:hover {"
+            "   border: 1.5px solid #334155;"
+            "   background-color: #131E35;"
             "}"
             "QLineEdit:focus {"
-            "   border: 1px solid #4CC2FF;"
-            "   background-color: #16181C;"
+            "   border: 1.5px solid #38BDF8;"
+            "   background-color: #0F172A;"
+            "}"
+            "QLineEdit:disabled {"
+            "   background-color: #0B101D;"
+            "   color: #475569;"
+            "   border-color: #1E293B;"
             "}"
         );
     }
+
+    if(ui->label_14)
+    {
+        ui->label_14->setText("ПАРОЛЬ ИЛИ ТОКЕН ДОСТУПА");
+        ui->label_14->setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent;");
+    }
+
     if(ui->linePassEdit)
     {
+        ui->linePassEdit->setFixedHeight(42);
         ui->linePassEdit->setPlaceholderText("Пароль или токен");
         ui->linePassEdit->setStyleSheet(
             "QLineEdit {"
-            "   background-color: #141518;"
-            "   color: #F3F4F6;"
-            "   border: 1px solid #363A44;"
-            "   border-radius: 6px;"
-            "   padding: 5px 10px;"
+            "   background-color: #0F172A;"
+            "   color: #F8FAFC;"
+            "   border: 1.5px solid #1E293B;"
+            "   border-radius: 10px;"
+            "   padding: 0 14px;"
             "   font-size: 13px;"
+            "   selection-background-color: #0284C7;"
+            "}"
+            "QLineEdit:hover {"
+            "   border: 1.5px solid #334155;"
+            "   background-color: #131E35;"
             "}"
             "QLineEdit:focus {"
-            "   border: 1px solid #4CC2FF;"
-            "   background-color: #16181C;"
+            "   border: 1.5px solid #38BDF8;"
+            "   background-color: #0F172A;"
+            "}"
+            "QLineEdit:disabled {"
+            "   background-color: #0B101D;"
+            "   color: #475569;"
+            "   border-color: #1E293B;"
             "}"
         );
     }
+
     if(ui->butShowPass)
     {
         ui->butShowPass->setText("👁");
         ui->butShowPass->setToolTip("Показать / скрыть пароль");
         ui->butShowPass->setCursor(Qt::PointingHandCursor);
+        ui->butShowPass->setFixedSize(42, 42);
         ui->butShowPass->setStyleSheet(
             "QPushButton {"
-            "   background-color: #26292F;"
-            "   color: #D1D5DB;"
-            "   border: 1px solid #363A44;"
-            "   border-radius: 6px;"
-            "   font-size: 13px;"
-            "   padding: 2px;"
+            "   background-color: #0F172A;"
+            "   color: #94A3B8;"
+            "   border: 1.5px solid #1E293B;"
+            "   border-radius: 10px;"
+            "   font-size: 15px;"
             "}"
             "QPushButton:hover {"
-            "   background-color: #32363E;"
-            "   border-color: #4CC2FF;"
-            "   color: #4CC2FF;"
+            "   background-color: #1E293B;"
+            "   border-color: #38BDF8;"
+            "   color: #38BDF8;"
             "}"
             "QPushButton:pressed {"
-            "   background-color: #1A1B1E;"
+            "   background-color: #0B101D;"
+            "   border-color: #0284C7;"
             "}"
         );
     }
+
     if(ui->checkAutoLogin)
     {
         ui->checkAutoLogin->setCursor(Qt::PointingHandCursor);
+        ui->checkAutoLogin->setText("Войти при запуске");
         ui->checkAutoLogin->setStyleSheet(
             "QCheckBox {"
-            "   color: #C9CCD1;"
+            "   color: #94A3B8;"
             "   font-size: 12px;"
-            "   spacing: 6px;"
+            "   font-weight: 500;"
+            "   spacing: 8px;"
+            "   background: transparent;"
+            "}"
+            "QCheckBox:hover {"
+            "   color: #E2E8F0;"
             "}"
             "QCheckBox::indicator {"
-            "   width: 16px;"
-            "   height: 16px;"
-            "   border: 1px solid #3E434D;"
-            "   border-radius: 4px;"
-            "   background-color: #1E2024;"
+            "   width: 17px;"
+            "   height: 17px;"
+            "   border: 1.5px solid #334155;"
+            "   border-radius: 5px;"
+            "   background-color: #0F172A;"
             "}"
             "QCheckBox::indicator:hover {"
-            "   border-color: #4CC2FF;"
+            "   border-color: #38BDF8;"
+            "   background-color: #131E35;"
             "}"
             "QCheckBox::indicator:checked {"
-            "   background-color: #0078D4;"
-            "   border-color: #0078D4;"
+            "   background-color: #0284C7;"
+            "   border-color: #38BDF8;"
             "}"
         );
     }
+
     if(ui->label_2)
     {
-        ui->label_2->setStyleSheet(
-            "QLabel {"
-            "   color: #4CC2FF;"
-            "   font-size: 12px;"
-            "}"
-            "QLabel a {"
-            "   color: #4CC2FF;"
-            "   text-decoration: none;"
-            "}"
-            "QLabel a:hover {"
-            "   color: #70D0FF;"
-            "   text-decoration: underline;"
-            "}"
-        );
+        ui->label_2->setCursor(Qt::PointingHandCursor);
+        ui->label_2->setText("<a href=\"index\" style=\"color: #38BDF8; text-decoration: none;\">Забыли свой токен?</a>");
+        ui->label_2->setStyleSheet("QLabel#label_2 { color: #38BDF8; font-size: 12px; font-weight: 500; background: transparent; }");
     }
+
     if(ui->authButton)
     {
+        ui->authButton->setText("Войти в систему");
+        ui->authButton->setFixedHeight(44);
         ui->authButton->setCursor(Qt::PointingHandCursor);
         ui->authButton->setStyleSheet(
             "QPushButton {"
-            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #007ACC, stop:1 #005A9E);"
+            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #0EA5E9);"
             "   color: #FFFFFF;"
-            "   border: 1px solid #005A9E;"
-            "   border-radius: 6px;"
-            "   font-size: 13px;"
-            "   font-weight: bold;"
-            "   padding: 5px 16px;"
+            "   border: 1px solid rgba(56, 189, 248, 0.4);"
+            "   border-radius: 10px;"
+            "   font-size: 14px;"
+            "   font-weight: 700;"
+            "   letter-spacing: 0.5px;"
             "}"
             "QPushButton:hover {"
-            "   background: #1084D9;"
-            "   border-color: #4CC2FF;"
+            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0369A1, stop:1 #38BDF8);"
+            "   border-color: #7DD3FC;"
             "}"
             "QPushButton:pressed {"
-            "   background: #004C87;"
+            "   background: #0284C7;"
+            "   border-color: #0284C7;"
             "}"
             "QPushButton:disabled {"
-            "   background-color: #2D3139;"
-            "   border-color: #363A44;"
-            "   color: #6B7280;"
+            "   background-color: #1E293B;"
+            "   border-color: #334155;"
+            "   color: #64748B;"
             "}"
         );
     }
+
     if(ui->statusAuthText)
     {
-        ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500;");
+        ui->statusAuthText->setAlignment(Qt::AlignCenter);
+        ui->statusAuthText->setWordWrap(true);
+        ui->statusAuthText->setStyleSheet(
+            "QLabel#statusAuthText {"
+            "   color: #38BDF8;"
+            "   font-size: 12px;"
+            "   font-weight: 500;"
+            "   background: transparent;"
+            "   padding: 2px 8px;"
+            "}"
+        );
     }
+
     if(ui->label_auth_ver)
     {
-        ui->label_auth_ver->setStyleSheet("color: #5C6067; font-size: 11px;");
-        ui->label_auth_ver->setText("версия: " + runtimeVersion.mVersion.toString());
+        ui->label_auth_ver->setAlignment(Qt::AlignCenter);
+        ui->label_auth_ver->setStyleSheet("color: #475569; font-size: 11px; font-weight: 500; letter-spacing: 0.3px; background: transparent;");
+        ui->label_auth_ver->setText("Версия: " + runtimeVersion.mVersion.toString());
+    }
+
+    // Assemble modern responsive layout for frame_4
+    if(ui->frame_4 && !ui->frame_4->layout())
+    {
+        QVBoxLayout *cardLayout = new QVBoxLayout(ui->frame_4);
+        cardLayout->setContentsMargins(36, 32, 36, 26);
+        cardLayout->setSpacing(0);
+
+        // 1. App logo badge
+        if(ui->mainapplogo)
+            cardLayout->addWidget(ui->mainapplogo, 0, Qt::AlignHCenter);
+
+        cardLayout->addSpacing(14);
+
+        // 2. Title and Subtitle
+        if(ui->label_4)
+            cardLayout->addWidget(ui->label_4);
+
+        cardLayout->addSpacing(22);
+
+        // 3. Login label
+        if(ui->label_12)
+            cardLayout->addWidget(ui->label_12);
+
+        cardLayout->addSpacing(6);
+
+        // 4. Login input
+        if(ui->lineLoginEdit)
+            cardLayout->addWidget(ui->lineLoginEdit);
+
+        cardLayout->addSpacing(14);
+
+        // 5. Password label
+        if(ui->label_14)
+            cardLayout->addWidget(ui->label_14);
+
+        cardLayout->addSpacing(6);
+
+        // 6. Password row (input + show pass button)
+        QHBoxLayout *passRow = new QHBoxLayout();
+        passRow->setContentsMargins(0, 0, 0, 0);
+        passRow->setSpacing(8);
+        if(ui->linePassEdit)
+            passRow->addWidget(ui->linePassEdit, 1);
+        if(ui->butShowPass)
+            passRow->addWidget(ui->butShowPass, 0);
+        cardLayout->addLayout(passRow);
+
+        cardLayout->addSpacing(14);
+
+        // 7. Options row (Auto login + Forgot token)
+        QHBoxLayout *optRow = new QHBoxLayout();
+        optRow->setContentsMargins(0, 0, 0, 0);
+        if(ui->checkAutoLogin)
+            optRow->addWidget(ui->checkAutoLogin, 0, Qt::AlignVCenter);
+        optRow->addStretch(1);
+        if(ui->label_2)
+            optRow->addWidget(ui->label_2, 0, Qt::AlignVCenter);
+        cardLayout->addLayout(optRow);
+
+        cardLayout->addSpacing(20);
+
+        // 8. Sign In CTA button
+        if(ui->authButton)
+            cardLayout->addWidget(ui->authButton);
+
+        cardLayout->addSpacing(10);
+
+        // 9. Status text banner
+        if(ui->statusAuthText)
+            cardLayout->addWidget(ui->statusAuthText);
+
+        cardLayout->addStretch(1);
+
+        // 10. Version footer
+        if(ui->label_auth_ver)
+            cardLayout->addWidget(ui->label_auth_ver);
+
+        // Connect Enter key navigation
+        if(ui->lineLoginEdit && ui->linePassEdit)
+            connect(ui->lineLoginEdit, &QLineEdit::returnPressed, [this]() { ui->linePassEdit->setFocus(); });
+        if(ui->linePassEdit && ui->authButton)
+            connect(ui->linePassEdit, &QLineEdit::returnPressed, ui->authButton, &QPushButton::click);
     }
 
     // ==========================================
@@ -1152,185 +1768,416 @@ void MainWindow::setupPagesDesign()
             "}"
         );
     }
-    if(ui->frame_7)
+    if(ui->authpageUpdate)
     {
-        ui->frame_7->setMaximumSize(16777215, 16777215);
-        ui->frame_7->setMinimumHeight(164);
-        ui->frame_7->setStyleSheet(
-            "QFrame#frame_7 {"
-            "   background-color: #1E2024;"
-            "   border: 1px solid #2D3139;"
-            "   border-radius: 12px;"
+        ui->authpageUpdate->setText(QString::fromUtf8("🔄 Обновить"));
+        ui->authpageUpdate->setMinimumSize(105, 30);
+        ui->authpageUpdate->setMaximumSize(125, 30);
+        ui->authpageUpdate->setCursor(Qt::PointingHandCursor);
+        ui->authpageUpdate->setToolTip(QString::fromUtf8("Обновить данные кабинета и доступность сервисов"));
+        ui->authpageUpdate->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #222630;"
+            "   border: 1px solid #363D4E;"
+            "   border-radius: 6px;"
+            "   color: #38BDF8;"
+            "   font-size: 12px;"
+            "   font-weight: 600;"
+            "   padding: 4px 12px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #2D3342;"
+            "   border-color: #38BDF8;"
+            "   color: #FFFFFF;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #171A21;"
+            "   border-color: #0284C7;"
             "}"
         );
     }
+    if(ui->frame_7)
+    {
+        ui->frame_7->setMaximumSize(16777215, 16777215);
+        ui->frame_7->setMinimumHeight(140);
+        ui->frame_7->setStyleSheet(
+            "QFrame#frame_7 {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1C1E24, stop:1 #131519);"
+            "   border: 1px solid #2B2E36;"
+            "   border-radius: 14px;"
+            "}"
+        );
+
+        if(!ui->frame_7->layout() && ui->frame_6 && ui->authedMainWin && ui->frame_5)
+        {
+            QHBoxLayout *f7Layout = new QHBoxLayout(ui->frame_7);
+            f7Layout->setContentsMargins(16, 12, 16, 12);
+            f7Layout->setSpacing(14);
+            f7Layout->addWidget(ui->frame_6, 1);
+            f7Layout->addWidget(ui->authedMainWin, 1);
+            f7Layout->addWidget(ui->frame_5, 1);
+        }
+    }
+    if(ui->authedMainWin)
+    {
+        ui->authedMainWin->setMaximumSize(16777215, 16777215);
+        ui->authedMainWin->setMinimumHeight(110);
+        ui->authedMainWin->setStyleSheet(
+            "QFrame#authedMainWin {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #222630, stop:1 #171A21);"
+            "   border: 1px solid #2F3543;"
+            "   border-radius: 12px;"
+            "}"
+        );
+        if(ui->authedMainWin->layout())
+        {
+            ui->authedMainWin->layout()->setContentsMargins(10, 8, 10, 8);
+            ui->authedMainWin->layout()->setSpacing(4);
+            if(ui->frame_3)
+                ui->authedMainWin->layout()->setAlignment(ui->frame_3, Qt::AlignCenter);
+            if(ui->labelLoginAuthed)
+                ui->authedMainWin->layout()->setAlignment(ui->labelLoginAuthed, Qt::AlignCenter);
+        }
+    }
     if(ui->frame_3)
     {
+        ui->frame_3->setFixedSize(58, 58);
         ui->frame_3->setStyleSheet(
             "QFrame#frame_3 {"
-            "   border: 2px solid #363940;"
-            "   border-radius: 8px;"
-            "   background-color: #141517;"
+            "   image: url(:/resources/no-avatar);"
+            "   border: 2px solid #38BDF8;"
+            "   border-radius: 29px;"
+            "   background-color: #0F1216;"
+            "   padding: 3px;"
             "}"
         );
     }
     if(ui->labelLoginAuthed)
     {
+        QFont font = ui->labelLoginAuthed->font();
+        font.setUnderline(false);
+        ui->labelLoginAuthed->setFont(font);
         ui->labelLoginAuthed->setStyleSheet(
             "color: #FFFFFF;"
-            "font-size: 18px;"
+            "font-size: 15px;"
             "font-weight: bold;"
             "text-decoration: none;"
+            "background: transparent;"
         );
+        ui->labelLoginAuthed->setAlignment(Qt::AlignCenter);
     }
     if(ui->frame_6)
     {
+        ui->frame_6->setMaximumSize(16777215, 16777215);
+        ui->frame_6->setMinimumHeight(110);
         ui->frame_6->setStyleSheet(
             "QFrame#frame_6 {"
-            "   background-color: #26292F;"
-            "   border: 1px solid #363940;"
-            "   border-radius: 8px;"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2A2113, stop:1 #1A150D);"
+            "   border: 1px solid rgba(245, 158, 11, 0.4);"
+            "   border-radius: 12px;"
             "}"
         );
+
+        if(!ui->frame_6->findChild<QPushButton *>("buttonAddVip"))
+        {
+            if(ui->frame_6->layout())
+            {
+                if(ui->labelVipDays)
+                    ui->frame_6->layout()->removeWidget(ui->labelVipDays);
+                delete ui->frame_6->layout();
+            }
+
+            QVBoxLayout *f6Layout = new QVBoxLayout(ui->frame_6);
+            f6Layout->setContentsMargins(10, 8, 10, 8);
+            f6Layout->setSpacing(6);
+            f6Layout->setAlignment(Qt::AlignCenter);
+
+            if(ui->labelVipDays)
+            {
+                f6Layout->addWidget(ui->labelVipDays, 0, Qt::AlignCenter);
+            }
+
+            QPushButton *btnAddVip = new QPushButton(QString::fromUtf8("+ Добавить"), ui->frame_6);
+            btnAddVip->setObjectName("buttonAddVip");
+            btnAddVip->setCursor(Qt::PointingHandCursor);
+            btnAddVip->setFixedSize(115, 25);
+            btnAddVip->setToolTip(QString::fromUtf8("Пополнить или продлить VIP-статус"));
+            btnAddVip->setStyleSheet(
+                "QPushButton {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #D97706, stop:1 #F59E0B);"
+                "   color: #FFFFFF;"
+                "   font-size: 11px;"
+                "   font-weight: bold;"
+                "   border: none;"
+                "   border-radius: 6px;"
+                "   padding: 2px 8px;"
+                "}"
+                "QPushButton:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #F59E0B, stop:1 #FBBF24);"
+                "}"
+                "QPushButton:pressed {"
+                "   background: #B45309;"
+                "}"
+            );
+            f6Layout->addWidget(btnAddVip, 0, Qt::AlignCenter);
+
+            QObject::connect(btnAddVip, &QPushButton::clicked, this, [this]() {
+                for(const auto &s : std::as_const(services))
+                {
+                    if(s && s->uuid() == IDServiceVIPBuyString)
+                    {
+                        if(s->active)
+                        {
+                            this->runService(s);
+                        }
+                        else
+                        {
+                            QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP временно недоступен."));
+                        }
+                        return;
+                    }
+                }
+                QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP недоступен."));
+            });
+        }
     }
     if(ui->labelVipDays)
     {
+        QFont font = ui->labelVipDays->font();
+        font.setUnderline(false);
+        ui->labelVipDays->setFont(font);
         ui->labelVipDays->setStyleSheet(
             "color: #FBBF24;"
-            "font-size: 13px;"
+            "font-size: 13.5px;"
             "font-weight: bold;"
             "text-decoration: none;"
+            "line-height: 1.4;"
+            "background: transparent;"
         );
+        ui->labelVipDays->setAlignment(Qt::AlignCenter);
     }
     if(ui->frame_5)
     {
+        ui->frame_5->setMaximumSize(16777215, 16777215);
+        ui->frame_5->setMinimumHeight(110);
         ui->frame_5->setStyleSheet(
             "QFrame#frame_5 {"
-            "   background-color: #26292F;"
-            "   border: 1px solid #363940;"
-            "   border-radius: 8px;"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #14241B, stop:1 #0E1A13);"
+            "   border: 1px solid rgba(52, 211, 153, 0.4);"
+            "   border-radius: 12px;"
             "}"
         );
     }
     if(ui->labelCredits)
     {
+        QFont font = ui->labelCredits->font();
+        font.setUnderline(false);
+        ui->labelCredits->setFont(font);
         ui->labelCredits->setStyleSheet(
             "color: #34D399;"
-            "font-size: 13px;"
+            "font-size: 13.5px;"
             "font-weight: bold;"
             "text-decoration: none;"
+            "line-height: 1.4;"
+            "background: transparent;"
         );
+        ui->labelCredits->setAlignment(Qt::AlignCenter);
     }
     if(ui->toplevel_up_2)
     {
         ui->toplevel_up_2->setStyleSheet(
             "QFrame#toplevel_up_2 {"
-            "   background-color: #18191C;"
-            "   border-top: 1px solid #26282E;"
-            "   border-bottom: 1px solid #26282E;"
+            "   background-color: #17191E;"
+            "   border-top: 1px solid #262930;"
+            "   border-bottom: 1px solid #262930;"
+            "   border-radius: 6px;"
             "}"
         );
     }
     if(ui->label_7)
     {
+        ui->label_7->setText(QString::fromUtf8("ДОСТУПНЫЕ СЕРВИСЫ"));
         ui->label_7->setStyleSheet(
-            "color: #9CA3AF;"
-            "font-size: 11px;"
-            "font-weight: 700;"
-            "letter-spacing: 1.5px;"
-            "font-style: normal;"
+            "color: #38BDF8;"
+            "font-size: 12px;"
+            "font-weight: bold;"
+            "letter-spacing: 1.2px;"
             "background: transparent;"
         );
     }
     if(ui->serviceContents)
     {
-        ui->serviceContents->setStyleSheet(
-            "QFrame#serviceContents QPushButton {"
-            "   background-color: #22252B;"
-            "   color: #FFFFFF;"
-            "   border: 1px solid #32363E;"
-            "   border-radius: 10px;"
-            "   padding: 12px 8px 12px 8px;"
-            "   font-weight: bold;"
-            "   font-size: 12px;"
-            "   text-align: bottom center;"
-            "}"
-            "QFrame#serviceContents QPushButton:hover {"
-            "   background-color: #2A2E36;"
-            "   border-color: #4CC2FF;"
-            "}"
-            "QFrame#serviceContents QPushButton:pressed {"
-            "   background-color: #1B1D22;"
-            "   border-color: #007ACC;"
-            "}"
-        );
+        ui->serviceContents->setStyleSheet("QFrame#serviceContents { background: transparent; border: none; }");
     }
     if(ui->authInfo)
     {
-        ui->authInfo->setMinimumHeight(130);
-        ui->authInfo->setMaximumHeight(230);
-        ui->authInfo->horizontalHeader()->setStretchLastSection(true);
-        ui->authInfo->setStyleSheet(
-            "QTableView {"
-            "   background-color: #1A1C20;"
-            "   alternate-background-color: #16181B;"
-            "   gridline-color: #282A2E;"
-            "   border: 1px solid #282A2E;"
-            "   border-radius: 8px;"
-            "   color: #D1D5DB;"
-            "   font-size: 12px;"
-            "   selection-background-color: #0078D4;"
-            "   selection-color: #FFFFFF;"
-            "}"
-            "QHeaderView::section {"
-            "   background-color: #22252B;"
-            "   color: #9CA3AF;"
-            "   font-size: 12px;"
-            "   font-weight: bold;"
-            "   border: none;"
-            "   border-bottom: 1px solid #2E3238;"
-            "   border-right: 1px solid #282A2E;"
-            "   padding: 6px 8px;"
+        ui->authInfo->setVisible(false);
+    }
+    if(ui->sss && ui->serviceContents && !ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetSideInfoPanel"))
+    {
+        for(int i = ui->sss->count() - 1; i >= 0; --i)
+        {
+            QLayoutItem *item = ui->sss->itemAt(i);
+            if(item && item->widget() != ui->serviceContents)
+            {
+                ui->sss->takeAt(i);
+                delete item;
+            }
+        }
+
+        // Side reference card / Справочник аккаунта
+        QFrame *sidePanel = new QFrame(ui->scrollAreaWidgetContents_3);
+        sidePanel->setObjectName("cabinetSideInfoPanel");
+        sidePanel->setFixedWidth(290);
+        sidePanel->setStyleSheet(
+            "QFrame#cabinetSideInfoPanel {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1D2028, stop:1 #13151B);"
+            "   border: 1px solid #2C313E;"
+            "   border-radius: 14px;"
             "}"
         );
+
+        QVBoxLayout *sideLayout = new QVBoxLayout(sidePanel);
+        sideLayout->setContentsMargins(14, 14, 14, 14);
+        sideLayout->setSpacing(7);
+
+        QLabel *sideTitle = new QLabel(QString::fromUtf8("📋 СПРАВОЧНИК АККАУНТА"), sidePanel);
+        sideTitle->setStyleSheet(
+            "color: #38BDF8;"
+            "font-size: 11px;"
+            "font-weight: bold;"
+            "letter-spacing: 1.1px;"
+            "background: transparent;"
+            "padding-bottom: 6px;"
+            "border-bottom: 1px solid #282C38;"
+        );
+        sideLayout->addWidget(sideTitle);
+
+        auto createRow = [sidePanel, sideLayout](const QString &icon, const QString &caption, const QString &valObjName) {
+            QFrame *row = new QFrame(sidePanel);
+            row->setStyleSheet(
+                "QFrame {"
+                "   background-color: #171922;"
+                "   border: 1px solid #242836;"
+                "   border-radius: 8px;"
+                "}"
+            );
+            QHBoxLayout *rl = new QHBoxLayout(row);
+            rl->setContentsMargins(8, 5, 10, 5);
+            rl->setSpacing(8);
+
+            QLabel *iconLbl = new QLabel(icon, row);
+            iconLbl->setFixedSize(26, 26);
+            iconLbl->setAlignment(Qt::AlignCenter);
+            iconLbl->setStyleSheet(
+                "background-color: #212635;"
+                "border-radius: 6px;"
+                "font-size: 13px;"
+            );
+            rl->addWidget(iconLbl);
+
+            QVBoxLayout *col = new QVBoxLayout();
+            col->setContentsMargins(0, 0, 0, 0);
+            col->setSpacing(1);
+
+            QLabel *capLbl = new QLabel(caption, row);
+            capLbl->setStyleSheet("color: #64748B; font-size: 10px; font-weight: 500; background: transparent; border: none;");
+            col->addWidget(capLbl);
+
+            QLabel *valLbl = new QLabel("-", row);
+            valLbl->setObjectName(valObjName);
+            valLbl->setStyleSheet("color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+            col->addWidget(valLbl);
+
+            rl->addLayout(col, 1);
+            sideLayout->addWidget(row);
+        };
+
+        createRow("👤", QString::fromUtf8("Логин аккаунта"), "cabinetVal_login");
+        createRow("🕒", QString::fromUtf8("Время входа"), "cabinetVal_loginTime");
+        createRow("💳", QString::fromUtf8("Баланс кредитов"), "cabinetVal_credits");
+        createRow("👑", QString::fromUtf8("VIP-статус"), "cabinetVal_vip");
+        createRow("📱", QString::fromUtf8("Подключено устройств"), "cabinetVal_devices");
+        createRow("🌐", QString::fromUtf8("Локация"), "cabinetVal_location");
+        createRow("🛡️", QString::fromUtf8("Статус безопасности"), "cabinetVal_status");
+
+        sideLayout->addStretch(1);
+
+        ui->sss->setContentsMargins(10, 8, 10, 14);
+        ui->sss->setSpacing(16);
+        ui->sss->setAlignment(ui->serviceContents, Qt::AlignTop);
+        ui->sss->insertStretch(0, 1);
+        ui->sss->addWidget(sidePanel, 0, Qt::AlignTop);
+        ui->sss->addStretch(1);
     }
 
     // ==========================================
     // 3. Devices Connection Page (page_devices)
     // ==========================================
+    if(auto *hLayout = qobject_cast<QHBoxLayout *>(ui->page_devices->layout()))
+    {
+        hLayout->setContentsMargins(18, 14, 18, 14);
+        hLayout->setSpacing(20);
+        hLayout->setStretch(0, 0); // horizontalSpacer_2
+        hLayout->setStretch(1, 5); // device_left_group
+        hLayout->setStretch(2, 6); // device_right_group
+        hLayout->setStretch(3, 0); // horizontalSpacer
+    }
+
     if(ui->scrollArea_2)
     {
         ui->scrollArea_2->setFrameShape(QFrame::NoFrame);
         ui->scrollArea_2->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui->scrollArea_2->setStyleSheet("QScrollArea { background: transparent; border: none; } QWidget#scrollAreaWidgetContents_2 { background: transparent; }");
     }
+
+    if(ui->device_left_group)
+    {
+        ui->device_left_group->setStyleSheet(
+            "QFrame#device_left_group {"
+            "   background-color: #0F172A;"
+            "   border: 1px solid #1E293B;"
+            "   border-radius: 16px;"
+            "}"
+        );
+    }
+
     if(ui->label)
     {
         ui->label->setText(
             "<html><head/><body>"
-            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #D1D5DB; padding: 4px;\">"
-            "  <h2 style=\"color: #FFFFFF; font-size: 17px; margin-top: 8px; margin-bottom: 16px; font-weight: 700;\">"
-            "    Как включить отладку по USB на Android"
-            "  </h2>"
-            "  <div style=\"background-color: #21242A; border: 1px solid #2F333B; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;\">"
-            "    <span style=\"background: #0078D4; color: white; border-radius: 12px; padding: 2px 9px; font-weight: bold; font-size: 12px;\">1</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 13px; margin-left: 6px;\">Включите режим разработчика</strong>"
-            "    <p style=\"margin: 6px 0 0 26px; color: #9CA3AF; font-size: 12px; line-height: 1.4;\">"
-            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> и нажмите на него <b>7 раз</b> подряд до появления уведомления."
+            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #E2E8F0; padding: 2px;\">"
+            "  <div style=\"margin-bottom: 12px;\">"
+            "    <span style=\"font-size: 16px; font-weight: 700; color: #F8FAFC;\">Подключение устройства (ADB)</span>"
+            "  </div>"
+            "  <p style=\"color: #94A3B8; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.4;\">"
+            "    Для выполнения процедур активируйте <b>Отладку по USB</b> на вашем Android-смартфоне:"
+            "  </p>"
+            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 10px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">1</span>"
+            "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Режим разработчика</strong>"
+            "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
+            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> (или версию MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #21242A; border: 1px solid #2F333B; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;\">"
-            "    <span style=\"background: #0078D4; color: white; border-radius: 12px; padding: 2px 9px; font-weight: bold; font-size: 12px;\">2</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 13px; margin-left: 6px;\">Включите отладку по USB</strong>"
-            "    <p style=\"margin: 6px 0 0 26px; color: #9CA3AF; font-size: 12px; line-height: 1.4;\">"
-            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте переключатель <b>Отладка по USB</b>."
+            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 10px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">2</span>"
+            "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Включите отладку по USB</strong>"
+            "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
+            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте тумблер <b>Отладка по USB</b> (для Xiaomi также «Установка через USB»)."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #21242A; border: 1px solid #2F333B; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;\">"
-            "    <span style=\"background: #0078D4; color: white; border-radius: 12px; padding: 2px 9px; font-weight: bold; font-size: 12px;\">3</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 13px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
-            "    <p style=\"margin: 6px 0 0 26px; color: #9CA3AF; font-size: 12px; line-height: 1.4;\">"
-            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; подтвердите <b>«Всегда разрешать с этого компьютера»</b>."
+            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 10px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">3</span>"
+            "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
+            "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
+            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; отметьте <b>«Всегда разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background: rgba(30, 41, 59, 0.4); border: 1px dashed #334155; border-radius: 8px; padding: 8px 12px; margin-top: 6px;\">"
+            "    <span style=\"color: #38BDF8; font-size: 11.5px; font-weight: 600;\">💡 Телефон не определяется?</span>"
+            "    <p style=\"margin: 3px 0 0 0; color: #64748B; font-size: 11px; line-height: 1.35;\">"
+            "      Смените режим подключения USB на <b>«Передача файлов (MTP)»</b> либо подключите кабель в другой USB-порт на ПК."
             "    </p>"
             "  </div>"
             "</div>"
@@ -1339,20 +2186,37 @@ void MainWindow::setupPagesDesign()
     }
     if(ui->label_3)
     {
-        ui->label_3->setText("<a style=\"color: #4CC2FF; text-decoration: none; font-size: 12px;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\">📖 Подробная пошаговая инструкция с иллюстрациями</a>");
+        ui->label_3->setText("<a style=\"color: #38BDF8; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\">📖 Подробная пошаговая инструкция с иллюстрациями &rarr;</a>");
     }
     if(ui->label_5)
     {
         ui->label_5->setStyleSheet(
-            "background-color: #172338;"
+            "background-color: #0B1120;"
             "border: 1px solid #1E3A5F;"
-            "border-radius: 8px;"
+            "border-radius: 10px;"
             "color: #38BDF8;"
-            "font-size: 13px;"
+            "font-size: 12.5px;"
             "font-weight: 600;"
-            "padding: 12px;"
+            "padding: 10px;"
         );
-        ui->label_5->setText("⏳ Ожидание подключения Android-устройства по USB...");
+        ui->label_5->setText(QString::fromUtf8("📡 Поиск подключенного Android-устройства..."));
+    }
+
+    if(ui->device_right_group && !s_adbVisualizer)
+    {
+        while(auto item = ui->device_right_group->takeAt(0))
+        {
+            if(item->widget())
+            {
+                item->widget()->hide();
+                item->widget()->deleteLater();
+            }
+            delete item;
+        }
+
+        AdbDeviceVisualizer *visualizer = new AdbDeviceVisualizer(ui->page_devices);
+        visualizer->setObjectName("adbDeviceVisualizer");
+        ui->device_right_group->addWidget(visualizer);
     }
 
     // ==========================================
@@ -1785,68 +2649,366 @@ void MainWindow::initServiceModules()
         instance->active = remoteService->active && instance->isAvailable();
 #endif
 
-        tmp0 = remoteService->name + '\n';
-        if(instance->active)
+        QString badgeText;
+        QString styleSheet;
+        uint32_t effectivePrice = (x == 0 && network.authedId.basePrice > 0 ? network.authedId.basePrice : remoteService->price);
+        bool hasVIP = network.authedId.hasVipAccount();
+        bool isDynamic = (remoteService->price == static_cast<std::uint32_t>(-1));
+        bool isFree = (effectivePrice == 0);
+        bool canBypassWithVip = (remoteService->needVIP && hasVIP);
+
+        if(!instance->active)
         {
-            if(network.authedId.hasVipAccount() && remoteService->needVIP)
-                tmp0 += "(безлимит)";
-            else if(remoteService->price == 0)
-                tmp0 += "(бесплатно)";
-            else if(remoteService->price == static_cast<std::uint32_t>(-1))
-                tmp0 += "(на выбор)";
+            if(!instance->isAvailable())
+                badgeText = QString::fromUtf8("🔧 В разработке");
+            else if(!remoteService->active)
+                badgeText = QString::fromUtf8("⛔ Не доступен");
             else
-                tmp0 += QString("%1 (%2)").arg(x == 0 ? network.authedId.basePrice : remoteService->price).arg(network.authedId.currencyType);
+                badgeText = QString::fromUtf8("⛔ Отключен");
+
+            styleSheet =
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px 14px 10px 12px;"
+                "   font-size: 12px;"
+                "   font-weight: 500;"
+                "   background-color: #17181C;"
+                "   color: #64748B;"
+                "   border-radius: 12px;"
+                "   border: 1px solid #282A30;"
+                "   border-left: 5px solid #475569;"
+                "}";
+        }
+        else if(canBypassWithVip)
+        {
+            // Service supports VIP and user HAS VIP account -> Unlimited access
+            badgeText = QString::fromUtf8("👑 VIP • БЕЗЛИМИТ");
+
+            styleSheet =
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px 14px 10px 12px;"
+                "   font-size: 12px;"
+                "   font-weight: bold;"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2C2213, stop:0.5 #231B0E, stop:1 #1A140A);"
+                "   color: #FEF3C7;"
+                "   border-radius: 12px;"
+                "   border: 1px solid rgba(245, 158, 11, 0.45);"
+                "   border-left: 5px solid #F59E0B;"
+                "}"
+                "QPushButton:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3D2E17, stop:0.5 #312411, stop:1 #241A0B);"
+                "   border-color: #FBBF24;"
+                "   border-left: 5px solid #FCD34D;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton:pressed {"
+                "   background: #140E05;"
+                "   border-color: #D97706;"
+                "}";
+        }
+        else if(isFree)
+        {
+            // Completely free service for everyone
+            badgeText = QString::fromUtf8("БЕСПЛАТНО");
+
+            styleSheet =
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px 14px 10px 12px;"
+                "   font-size: 12px;"
+                "   font-weight: bold;"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #15271D, stop:0.5 #112017, stop:1 #0D1912);"
+                "   color: #D1FAE5;"
+                "   border-radius: 12px;"
+                "   border: 1px solid rgba(52, 211, 153, 0.4);"
+                "   border-left: 5px solid #10B981;"
+                "}"
+                "QPushButton:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1E382A, stop:0.5 #182D21, stop:1 #122219);"
+                "   border-color: #34D399;"
+                "   border-left: 5px solid #6EE7B7;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton:pressed {"
+                "   background: #09120D;"
+                "   border-color: #059669;"
+                "}";
+        }
+        else if(isDynamic)
+        {
+            badgeText = remoteService->needVIP ? QString::fromUtf8("⚙ ТАРИФ НА ВЫБОР (или 👑 VIP)") : QString::fromUtf8("⚙ ТАРИФ НА ВЫБОР");
+
+            styleSheet =
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px 14px 10px 12px;"
+                "   font-size: 12px;"
+                "   font-weight: bold;"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1A2232, stop:0.5 #141B28, stop:1 #0F141F);"
+                "   color: #E0F2FE;"
+                "   border-radius: 12px;"
+                "   border: 1px solid rgba(56, 189, 248, 0.4);"
+                "   border-left: 5px solid #38BDF8;"
+                "}"
+                "QPushButton:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #233047, stop:0.5 #1C2638, stop:1 #151D2C);"
+                "   border-color: #38BDF8;"
+                "   border-left: 5px solid #7DD3FC;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton:pressed {"
+                "   background: #0B0E16;"
+                "   border-color: #0284C7;"
+                "}";
+        }
+        else if(remoteService->needVIP)
+        {
+            // Service supports VIP, but user has NO VIP -> Show price in credits with VIP alternative
+            badgeText = QString::fromUtf8("💳 %1 %2  (или 👑 VIP)").arg(effectivePrice).arg(network.authedId.currencyType);
+
+            styleSheet =
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px 14px 10px 12px;"
+                "   font-size: 12px;"
+                "   font-weight: bold;"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1C2333, stop:0.5 #161C2A, stop:1 #111520);"
+                "   color: #F0F9FF;"
+                "   border-radius: 12px;"
+                "   border: 1px solid rgba(245, 158, 11, 0.4);"
+                "   border-left: 5px solid #F59E0B;"
+                "}"
+                "QPushButton:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #253147, stop:0.5 #1D2638, stop:1 #161D2B);"
+                "   border-color: #FBBF24;"
+                "   border-left: 5px solid #FCD34D;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton:pressed {"
+                "   background: #0D121B;"
+                "   border-color: #D97706;"
+                "}";
         }
         else
         {
-            if(!instance->isAvailable())
-                tmp0 += "(Не реализован)";
-            else if(!remoteService->active)
-                tmp0 += "(Не доступен)";
+            // Service does NOT require/support VIP -> Standard credit price for all users
+            badgeText = QString::fromUtf8("💳 %1 %2").arg(effectivePrice).arg(network.authedId.currencyType);
+
+            styleSheet =
+                "QPushButton {"
+                "   text-align: left;"
+                "   padding: 10px 14px 10px 12px;"
+                "   font-size: 12px;"
+                "   font-weight: bold;"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1A2232, stop:0.5 #141B28, stop:1 #0F141F);"
+                "   color: #E0F2FE;"
+                "   border-radius: 12px;"
+                "   border: 1px solid rgba(56, 189, 248, 0.4);"
+                "   border-left: 5px solid #0284C7;"
+                "}"
+                "QPushButton:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #233047, stop:0.5 #1C2638, stop:1 #151D2C);"
+                "   border-color: #38BDF8;"
+                "   border-left: 5px solid #38BDF8;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton:pressed {"
+                "   background: #0B0E16;"
+                "   border-color: #0284C7;"
+                "}";
         }
+
+        tmp0 = remoteService->name + "\n" + badgeText;
 
         if(instance->uuid() != IDServiceAIAgentString)
         {
             QPushButton *button = new QPushButton(QIcon(":/service-icons/" + instance->widgetIconName()), tmp0, ui->serviceContents);
-            button->setCursor(Qt::PointingHandCursor);
-            button->setStyleSheet(
-                "QPushButton {"
-                "   text-align: left;"
-                "   padding: 10px 14px 10px 12px;"
-                "   font-size: 12.5px;"
-                "   font-weight: bold;"
-                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2A2D35, stop:1 #1F2127);"
-                "   color: #F2F4F7;"
-                "   border-radius: 13px;"
-                "   border: 1px solid #383B44;"
-                "}"
-                "QPushButton:hover {"
-                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #333742, stop:1 #252830);"
-                "   border-color: #4CC2FF;"
-                "   color: #FFFFFF;"
-                "}"
-                "QPushButton:pressed {"
-                "   background: #17181D;"
-                "   border-color: #0078D4;"
-                "}"
-                "QPushButton:disabled {"
-                "   background: #1C1D22;"
-                "   color: #555860;"
-                "   border: 1px solid #282A30;"
-                "}");
+            button->setCursor(instance->active ? Qt::PointingHandCursor : Qt::ForbiddenCursor);
+            button->setStyleSheet(styleSheet);
+            button->setIconSize({52, 52});
+            button->setFixedSize(260, 80);
+            button->setEnabled(instance->active);
 
-            if(!instance->active)
-                button->setEnabled(false);
+            QString tip = remoteService->name;
+            if(!remoteService->description.isEmpty())
+                tip += "\n" + remoteService->description;
+            if(instance->active)
+            {
+                if(canBypassWithVip)
+                {
+                    tip += "\n\n• Включено в VIP-подписку (безлимитно, без списания кредитов)";
+                }
+                else if(isFree)
+                {
+                    tip += "\n\n• Бесплатная услуга (0 кредитов)";
+                }
+                else if(remoteService->needVIP)
+                {
+                    tip += QString("\n\n• Стоимость: %1 %2 (или бесплатно с активным VIP-аккаунтом)").arg(effectivePrice).arg(network.authedId.currencyType);
+                }
+                else if(!isDynamic)
+                {
+                    tip += QString("\n\n• Стоимость: %1 %2 (оплата кредитами)").arg(effectivePrice).arg(network.authedId.currencyType);
+                }
+            }
+            button->setToolTip(tip);
 
-            // Target service by slot
-            QObject::connect(button, &QPushButton::clicked, this, std::bind(&MainWindow::runService, this, instance));
+            // Target service by slot with credit verification
+            QObject::connect(
+                button,
+                &QPushButton::clicked,
+                this,
+                [this, instance, effectivePrice, isDynamic, needVIP = remoteService->needVIP, name = remoteService->name]()
+                {
+                    bool bypass = (needVIP && network.authedId.hasVipAccount());
+                    if(!bypass && effectivePrice > 0 && !isDynamic && network.authedId.credits < effectivePrice)
+                    {
+                        QMessageBox msgBox(this);
+                        msgBox.setWindowTitle(QString::fromUtf8("Недостаточно кредитов"));
+                        msgBox.setIcon(QMessageBox::Warning);
+
+                        const int shortage = effectivePrice - static_cast<int>(network.authedId.credits);
+                        const QString &currency = network.authedId.currencyType;
+
+                        QString infoHtml = QString::fromUtf8(
+                            "<div style='min-width: 330px; font-family: Segoe UI, sans-serif; font-size: 13px; color: #E2E8F0;'>"
+                            "<p style='font-size: 15px; font-weight: bold; color: #F87171; margin-bottom: 8px;'>Недостаточно кредитов для запуска</p>"
+                            "<p style='margin-bottom: 10px;'>Для запуска сервиса <b style='color: #38BDF8;'>«%1»</b> на вашем балансе не хватает средств.</p>"
+                            "<table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 6px;'>"
+                            "<tr><td style='padding: 6px 10px; color: #94A3B8;'>Стоимость услуги:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #F8FAFC;'>%2 %3</td></tr>"
+                            "<tr><td style='padding: 6px 10px; color: #94A3B8;'>На вашем балансе:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #FBBF24;'>%4 %3</td></tr>"
+                            "<tr style='border-top: 1px solid rgba(148, 163, 184, 0.2);'><td style='padding: 6px 10px; color: #EF4444; font-weight: bold;'>Не хватает:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #EF4444;'>%5 %3</td></tr>"
+                            "</table>"
+                            "%6"
+                            "</div>"
+                        ).arg(name)
+                         .arg(effectivePrice)
+                         .arg(currency)
+                         .arg(network.authedId.credits)
+                         .arg(shortage > 0 ? shortage : 0)
+                         .arg(needVIP
+                              ? QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'>💡 <i>Вы можете активировать <b>VIP-статус</b> для безлимитного доступа без списания кредитов, либо пополнить баланс через службу поддержки.</i></p>")
+                              : QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'>💳 <i>Данная услуга оплачивается только кредитами (VIP-статус не поддерживается). Пополните баланс через раздел Поддержка.</i></p>"));
+
+                        msgBox.setText(infoHtml);
+
+                        msgBox.setStyleSheet(
+                            "QMessageBox {"
+                            "   background-color: #0F172A;"
+                            "   color: #F8FAFC;"
+                            "   border: 1px solid #334155;"
+                            "   border-radius: 12px;"
+                            "}"
+                            "QLabel {"
+                            "   color: #F8FAFC;"
+                            "   background: transparent;"
+                            "}"
+                            "QPushButton {"
+                            "   background-color: #334155;"
+                            "   color: #F8FAFC;"
+                            "   border: 1px solid #475569;"
+                            "   border-radius: 6px;"
+                            "   padding: 6px 16px;"
+                            "   font-size: 12px;"
+                            "   font-weight: bold;"
+                            "   min-width: 85px;"
+                            "}"
+                            "QPushButton:hover {"
+                            "   background-color: #475569;"
+                            "   border-color: #64748B;"
+                            "}"
+                            "QPushButton:pressed {"
+                            "   background-color: #1E293B;"
+                            "}"
+                        );
+
+                        QPushButton *btnVip = nullptr;
+                        QPushButton *btnSupport = nullptr;
+
+                        if(needVIP)
+                        {
+                            btnVip = msgBox.addButton(QString::fromUtf8("👑 Оформить VIP"), QMessageBox::ActionRole);
+                            btnVip->setCursor(Qt::PointingHandCursor);
+                            btnVip->setStyleSheet(
+                                "QPushButton {"
+                                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #D97706, stop:1 #F59E0B);"
+                                "   color: #FFFFFF;"
+                                "   font-size: 12px;"
+                                "   font-weight: bold;"
+                                "   border: none;"
+                                "   border-radius: 6px;"
+                                "   padding: 6px 16px;"
+                                "   min-width: 125px;"
+                                "}"
+                                "QPushButton:hover {"
+                                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #F59E0B, stop:1 #FBBF24);"
+                                "}"
+                                "QPushButton:pressed {"
+                                "   background: #B45309;"
+                                "}"
+                            );
+                        }
+                        else
+                        {
+                            btnSupport = msgBox.addButton(QString::fromUtf8("💬 Поддержка"), QMessageBox::ActionRole);
+                            btnSupport->setCursor(Qt::PointingHandCursor);
+                            btnSupport->setStyleSheet(
+                                "QPushButton {"
+                                "   background-color: #0284C7;"
+                                "   color: #FFFFFF;"
+                                "   font-size: 12px;"
+                                "   font-weight: bold;"
+                                "   border: none;"
+                                "   border-radius: 6px;"
+                                "   padding: 6px 16px;"
+                                "   min-width: 110px;"
+                                "}"
+                                "QPushButton:hover {"
+                                "   background-color: #0EA5E9;"
+                                "}"
+                                "QPushButton:pressed {"
+                                "   background-color: #0369A1;"
+                                "}"
+                            );
+                        }
+
+                        QPushButton *btnClose = msgBox.addButton(needVIP ? QString::fromUtf8("Закрыть") : QString::fromUtf8("Понятно"), QMessageBox::RejectRole);
+                        btnClose->setCursor(Qt::PointingHandCursor);
+                        msgBox.setDefaultButton(btnVip ? btnVip : (btnSupport ? btnSupport : btnClose));
+
+                        msgBox.exec();
+
+                        if(needVIP && msgBox.clickedButton() == btnVip)
+                        {
+                            for(const auto &s : std::as_const(services))
+                            {
+                                if(s && s->uuid() == IDServiceVIPBuyString)
+                                {
+                                    if(s->active)
+                                    {
+                                        this->runService(s);
+                                    }
+                                    else
+                                    {
+                                        QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP временно недоступен."));
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        else if(btnSupport && msgBox.clickedButton() == btnSupport)
+                        {
+                            this->on_action_WhatsApp_triggered();
+                        }
+                        return;
+                    }
+                    this->runService(instance);
+                }
+            );
 
             instance->title = remoteService->name;
             instance->ownerWidget = button;
-
-            button->setIconSize({56, 56});
-            button->setFixedSize(260, 78);
-            button->setEnabled(instance->active);
         }
         else
         {
@@ -1893,8 +3055,8 @@ void MainWindow::initServiceModules()
     QGridLayout *layoutSpace = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
     if(layoutSpace)
     {
-        layoutSpace->setSpacing(12);
-        layoutSpace->setContentsMargins(8, 8, 8, 8);
+        layoutSpace->setSpacing(14);
+        layoutSpace->setContentsMargins(10, 10, 10, 10);
     }
 
     x = 0;
@@ -1903,7 +3065,7 @@ void MainWindow::initServiceModules()
         // Adds widget to a grid
         if(item->uuid() != IDServiceAIAgentString)
         {
-            static_cast<QGridLayout *>(ui->serviceContents->layout())->addWidget(item->ownerWidget, x / 3, x % 3);
+            static_cast<QGridLayout *>(ui->serviceContents->layout())->addWidget(item->ownerWidget, x / 2, x % 2);
             ++x;
         }
     }
@@ -2098,24 +3260,108 @@ void MainWindow::pageShownPreStart(int page)
             deviceSelectSwitched = false;
             deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
 
-            delayUI(1000);
+            if(s_adbVisualizer)
+            {
+                s_adbVisualizer->setStatus(UNKNOWN);
+                s_adbVisualizer->startAnimation();
+            }
+
+            delayUI(500);
 
             delayUICallLoop(
                 300,
                 [this]() -> bool
                 {
+                    auto *vis = s_adbVisualizer;
                     if(!deviceSelectSwitched)
                     {
                         QList<AdbDevice> devices = Adb::getDevices();
-                        for(const AdbDevice &device : std::as_const(devices))
+                        if(devices.isEmpty())
                         {
-                            AdbConStatus status = Adb::deviceStatus(device.devId);
-                            if(status == DEVICE)
+                            if(vis && vis->status() != UNKNOWN)
                             {
-                                connectPhone.isAuthed = status == DEVICE;
-                                connectPhone.adbDevice = device;
-                                ServiceProvider::currentService()->setArgs(device);
-                                break;
+                                vis->setStatus(UNKNOWN);
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #0B1120;"
+                                    "border: 1px solid #1E3A5F;"
+                                    "border-radius: 10px;"
+                                    "color: #38BDF8;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;"
+                                );
+                                ui->label_5->setText(QString::fromUtf8("📡 Поиск подключенного Android-устройства..."));
+                            }
+                        }
+                        else
+                        {
+                            bool hasAuth = false;
+                            bool hasUnauth = false;
+                            AdbDevice authDev;
+                            AdbDevice unauthDev;
+
+                            for(const AdbDevice &device : std::as_const(devices))
+                            {
+                                AdbConStatus status = Adb::deviceStatus(device.devId);
+                                if(status == DEVICE)
+                                {
+                                    hasAuth = true;
+                                    authDev = device;
+                                    break;
+                                }
+                                else if(status == UNAUTH)
+                                {
+                                    hasUnauth = true;
+                                    unauthDev = device;
+                                }
+                            }
+
+                            if(hasAuth)
+                            {
+                                connectPhone.isAuthed = true;
+                                connectPhone.adbDevice = authDev;
+                                ServiceProvider::currentService()->setArgs(authDev);
+
+                                QString devName = !authDev.marketingName.isEmpty() ? authDev.marketingName :
+                                                  (!authDev.displayName.isEmpty() ? authDev.displayName :
+                                                  (!authDev.model.isEmpty() ? authDev.model : authDev.devId));
+                                QString devSub = !authDev.vendor.isEmpty() ? (authDev.vendor + " (" + authDev.model + ")") : authDev.devId;
+
+                                if(vis && vis->status() != DEVICE)
+                                {
+                                    vis->setStatus(DEVICE, devName, devSub);
+                                }
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #064E3B;"
+                                    "border: 1px solid #059669;"
+                                    "border-radius: 10px;"
+                                    "color: #34D399;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;"
+                                );
+                                ui->label_5->setText(QString::fromUtf8("✅ Устройство подключено: %1! Запуск...").arg(devName));
+                            }
+                            else if(hasUnauth)
+                            {
+                                QString devName = !unauthDev.marketingName.isEmpty() ? unauthDev.marketingName :
+                                                  (!unauthDev.displayName.isEmpty() ? unauthDev.displayName :
+                                                  (!unauthDev.model.isEmpty() ? unauthDev.model : unauthDev.devId));
+
+                                if(vis && vis->status() != UNAUTH)
+                                {
+                                    vis->setStatus(UNAUTH, devName);
+                                }
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #451A03;"
+                                    "border: 1px solid #D97706;"
+                                    "border-radius: 10px;"
+                                    "color: #FBBF24;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;"
+                                );
+                                ui->label_5->setText(QString::fromUtf8("⚠️ Нажмите «Разрешить отладку по USB» на экране телефона"));
                             }
                         }
                     }
@@ -2123,13 +3369,15 @@ void MainWindow::pageShownPreStart(int page)
                     {
                         deviceSelectSwitched = true;
                         deviceLeftAnimator->start();
-                        delayUI(2000);
+                        delayUI(1800);
                         showPageLoader(ServiceProvider::currentService()->targetPage());
                     }
                     if(curPage != DevicesPage)
                     {
                         deviceLeftAnimator->stop();
                         ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
+                        if(vis)
+                            vis->stopAnimation();
                     }
                     return curPage == DevicesPage;
                 });
@@ -2242,6 +3490,30 @@ void MainWindow::clearAuthInfoPage()
     ui->aiChatEdit->clear();
     ui->aiChatSend->setText(QString::fromUtf8("➤"));
 
+    ui->labelLoginAuthed->setText("-");
+    ui->labelCredits->setText(QString::fromUtf8("💳 0\nБаланс"));
+    ui->labelVipDays->setText(QString::fromUtf8("👑 0 ДНЕЙ\nVIP статус"));
+
+    // Reset Side Reference Panel labels
+    QLabel *lbl = nullptr;
+    if((lbl = findChild<QLabel *>("cabinetVal_login"))) lbl->setText("-");
+    if((lbl = findChild<QLabel *>("cabinetVal_loginTime"))) lbl->setText("-");
+    if((lbl = findChild<QLabel *>("cabinetVal_credits"))) lbl->setText("-");
+    if((lbl = findChild<QLabel *>("cabinetVal_vip"))) {
+        lbl->setText("-");
+        lbl->setStyleSheet("color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+    }
+    if((lbl = findChild<QLabel *>("cabinetVal_devices"))) lbl->setText("-");
+    if((lbl = findChild<QLabel *>("cabinetVal_location"))) lbl->setText("-");
+    if((lbl = findChild<QLabel *>("cabinetVal_status"))) {
+        lbl->setText("-");
+        lbl->setStyleSheet("color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+    }
+
+    AIAgentService::resetHistory();
+    ui->aiChatEdit->clear();
+    ui->aiChatSend->setText(QString::fromUtf8("➤"));
+
     ui->aiChatEdit->setDisabled(true);
     ui->aiChatSend->setDisabled(true);
 
@@ -2255,30 +3527,81 @@ void MainWindow::fillAuthInfoPage()
     QString value;
     int x, y;
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
-    value = network.authedId.idName;
-    model->item(0, 1)->setText(value);
+    if(model)
+    {
+        value = network.authedId.idName;
+        model->item(0, 1)->setText(value);
 
-    value = QDateTime::currentDateTime().toString(Qt::TextDate);
-    model->item(1, 1)->setText(value);
+        value = QDateTime::currentDateTime().toString(Qt::TextDate);
+        model->item(1, 1)->setText(value);
 
-    value = QString::number(network.authedId.credits) + " кредитов";
-    model->item(2, 1)->setText(value);
+        value = QString::number(network.authedId.credits) + " кредитов";
+        model->item(2, 1)->setText(value);
 
-    value = QString::number(network.authedId.vipDays);
-    model->item(3, 1)->setText(value);
+        value = QString::number(network.authedId.vipDays);
+        model->item(3, 1)->setText(value);
 
-    value = QString::number(network.authedId.connectedDevices);
-    model->item(4, 1)->setText(value);
+        value = QString::number(network.authedId.connectedDevices);
+        model->item(4, 1)->setText(value);
 
-    value = network.authedId.location;
-    model->item(5, 1)->setText(value);
+        value = network.authedId.location;
+        model->item(5, 1)->setText(value);
 
-    value = network.authedId.blocked ? "Да" : "Нет";
-    model->item(6, 1)->setText(value);
+        value = network.authedId.blocked ? "Да" : "Нет";
+        model->item(6, 1)->setText(value);
+    }
 
     ui->labelLoginAuthed->setText(network.authedId.idName);
     ui->labelCredits->setText(QString("💳 %1 %2\nБаланс").arg(network.authedId.credits).arg(network.authedId.currencyType));
-    ui->labelVipDays->setText(QString("👑 %1 ДНЕЙ\nVIP статус").arg(network.authedId.vipDays));
+    if(network.authedId.hasVipAccount())
+        ui->labelVipDays->setText(QString("👑 %1 ДНЕЙ\nVIP активен").arg(network.authedId.vipDays));
+    else
+        ui->labelVipDays->setText(QString("👑 Нет VIP\nVIP статус"));
+
+    // Populate Side Reference Panel (Справочник аккаунта)
+    QLabel *sLbl = nullptr;
+    if((sLbl = findChild<QLabel *>("cabinetVal_login")))
+        sLbl->setText(network.authedId.idName.isEmpty() ? "-" : network.authedId.idName);
+
+    if((sLbl = findChild<QLabel *>("cabinetVal_loginTime")))
+        sLbl->setText(QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm"));
+
+    if((sLbl = findChild<QLabel *>("cabinetVal_credits")))
+        sLbl->setText(QString("%1 %2").arg(network.authedId.credits).arg(network.authedId.currencyType));
+
+    if((sLbl = findChild<QLabel *>("cabinetVal_vip")))
+    {
+        if(network.authedId.hasVipAccount())
+        {
+            sLbl->setText(QString("👑 %1 дн.").arg(network.authedId.vipDays));
+            sLbl->setStyleSheet("color: #FBBF24; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+        }
+        else
+        {
+            sLbl->setText(QString::fromUtf8("Не активен"));
+            sLbl->setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 500; background: transparent; border: none;");
+        }
+    }
+
+    if((sLbl = findChild<QLabel *>("cabinetVal_devices")))
+        sLbl->setText(QString("%1 шт.").arg(network.authedId.connectedDevices));
+
+    if((sLbl = findChild<QLabel *>("cabinetVal_location")))
+        sLbl->setText(network.authedId.location.isEmpty() ? QString::fromUtf8("Не определено") : network.authedId.location);
+
+    if((sLbl = findChild<QLabel *>("cabinetVal_status")))
+    {
+        if(network.authedId.blocked)
+        {
+            sLbl->setText(QString::fromUtf8("⛔ Заблокирован"));
+            sLbl->setStyleSheet("color: #F87171; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+        }
+        else
+        {
+            sLbl->setText(QString::fromUtf8("✅ Активен"));
+            sLbl->setStyleSheet("color: #34D399; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+        }
+    }
 
     initServiceModules();
 }
@@ -2385,9 +3708,11 @@ void MainWindow::on_authButton_clicked()
     }
 
     network.pushLoginPass(ui->lineLoginEdit->text(), ui->linePassEdit->text());
+    ui->statusAuthText->setStyleSheet("color: #38BDF8; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
     ui->statusAuthText->setText("Авторизация");
 
-    qobject_cast<QWidget *>(sender())->setEnabled(false);
+    if(ui->authButton)
+        ui->authButton->setEnabled(false);
     ui->lineLoginEdit->setEnabled(false);
     ui->linePassEdit->setEnabled(false);
 
@@ -2482,18 +3807,20 @@ void MainWindow::slotAuthFinish(int status, bool ok)
 
                     if(network.authedId.isNotValidBalance())
                     {
+                        ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
                         ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
                         showMessageFromStatus(NetworkStatus::NoEnoughMoney);
                     }
-                    else
+                    else if(network.authedId.blocked)
                     {
-                        ui->statusAuthText->setText("Аутентификация прошла успешно.");
-                    }
-
-                    if(network.authedId.blocked)
-                    {
+                        ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
                         ui->statusAuthText->setText("Аккаунт заблокирован");
                         showMessageFromStatus(NetworkStatus::AccountBlocked);
+                    }
+                    else
+                    {
+                        ui->statusAuthText->setStyleSheet("color: #34D399; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
+                        ui->statusAuthText->setText("Аутентификация прошла успешно.");
                     }
 
                     break;
@@ -2511,7 +3838,11 @@ void MainWindow::slotAuthFinish(int status, bool ok)
             ui->lineLoginEdit->setEnabled(true);
             ui->linePassEdit->setEnabled(true);
             ui->authButton->setEnabled(true);
-            ui->statusAuthText->setText(resText);
+            if(_status != 0)
+            {
+                ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
+                ui->statusAuthText->setText(resText);
+            }
         });
 }
 
@@ -2668,6 +3999,21 @@ void MainWindow::updateCabinet()
     }
 
     network.pushAuthToken();
+
+    for(int i = 0; i < services.count(); ++i)
+        if(services[i]->ownerWidget != nullptr)
+            services[i]->ownerWidget->deleteLater();
+
+    if(ui->serviceContents->layout())
+    {
+        while(ui->serviceContents->layout()->count() > 0)
+        {
+            QLayoutItem *item = ui->serviceContents->layout()->takeAt(0);
+            if(item->widget())
+                item->widget()->deleteLater();
+            delete item;
+        }
+    }
 
     services.clear();
     serverServices.reset();
