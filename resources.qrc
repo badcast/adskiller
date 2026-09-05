@@ -16,6 +16,7 @@
         <file alias="kz-flag">res/kz-flag.png</file>
         <file alias="banner">res/banner-low.png</file>
         <file alias="app-logo">res/icon_std.png</file>
+        <file alias="license-gplv3">LICENSE</file>
     </qresource>
     <qresource prefix="/service-icons">
         <file alias="dark-ads-remove">res/icons/dark-ads-remove.png</file>

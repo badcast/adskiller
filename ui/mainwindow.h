@@ -90,6 +90,7 @@ public:
 
 private slots:
     void on_actionAboutUs_triggered();
+    void on_actionUsLic_triggered();
     void on_action_WhatsApp_triggered();
     void on_action_Qt_triggered();
     void on_authButton_clicked();

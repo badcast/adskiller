@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
+        ui/about_dialog.h
+        ui/about_dialog.cpp
         ui/icontextbutton.cpp
         ui/icontextbutton.h
         include/begin.h

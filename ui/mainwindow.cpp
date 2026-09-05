@@ -32,6 +32,7 @@
 #include "mainwindow.h"
 #include "network.h"
 #include "AIChatView.h"
+#include "about_dialog.h"
 #include "ui_mainwindow.h"
 
 constexpr struct
@@ -266,7 +267,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         ui->frame_4->setStyleSheet(
             "QFrame#frame_4 {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #252830, stop:1 #1B1D23);"
+            "   "
             "   border: 1px solid #363942;"
             "   border-radius: 16px;"
             "}");
@@ -373,6 +374,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->authButton->setCursor(Qt::PointingHandCursor);
 
         ui->statusAuthText->setStyleSheet("color: #FF6B6B; font-size: 11px; font-weight: bold; background: transparent;");
+
+        ui->label_auth_ver->setText("версия:" + runtimeVersion.mVersion.toString());
+
     }
 
     // 1. Top Header Bar (Remove red banner, use sleek dark slate design)
@@ -1114,14 +1118,16 @@ void MainWindow::initServiceModules()
 
 void MainWindow::on_actionAboutUs_triggered()
 {
-    QString text;
-    QMessageBox msg(this);
-    text = QString("Версия программного обеспечения: %1.%2.%3\n\n").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
-    text += infoMessage;
-    msg.setWindowTitle("О программе");
-    msg.setText(text);
-    msg.setStandardButtons(QMessageBox::Ok);
-    msg.exec();
+    AboutDialog dlg(this);
+    dlg.setCurrentTab(AboutDialog::TabAbout);
+    dlg.exec();
+}
+
+void MainWindow::on_actionUsLic_triggered()
+{
+    AboutDialog dlg(this);
+    dlg.setCurrentTab(AboutDialog::TabGplV3);
+    dlg.exec();
 }
 
 void MainWindow::on_action_WhatsApp_triggered()
