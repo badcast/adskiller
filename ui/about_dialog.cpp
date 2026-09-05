@@ -722,6 +722,7 @@ void AboutDialog::fetchChangelog()
 
     QNetworkRequest request(QUrl(QStringLiteral("https://adskiller.imister.tech/changelog")));
     request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("AdsKiller-Desktop/%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch));
+    request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(6000);
 
@@ -981,14 +982,7 @@ QJsonArray AboutDialog::getFallbackChangelog()
     v1[QStringLiteral("version")] = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     v1[QStringLiteral("date")] = QStringLiteral("2026-09-01");
     v1[QStringLiteral("changelog")] = QStringLiteral(
-        "[New] Официальный стабильный релиз утилиты AdsKiller для десктопа.\n"
-        "[New] Модуль удаления рекламы и трекеров (AdMob, UnityAds, Xiaomi MSA) без Root-прав.\n"
-        "[New] Оптимизация оперативной памяти (Boost RAM) и принудительная выгрузка фоновых демонов.\n"
-        "[New] Глубокая очистка остаточных файлов, миниатюр галереи и логов сбоев.\n"
-        "[New] Интеллектуальный ИИ-ассистент с динамической ротацией вопросов и подсказок.\n"
-        "[UI] Полностью обновленный современный интерфейс в стиле Fluent Dark Design.\n"
-        "[Security] Авторизация и валидация устройств с криптографическими md-ключами.\n"
-        "[Fix] Повышена стабильность передачи команд через ADB на смартфонах Xiaomi и Tecno."
+        "[New] Официальный стабильный релиз утилиты AdsKiller для десктопа."
     );
     arr.append(v1);
     return arr;

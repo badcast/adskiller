@@ -12,9 +12,11 @@
 #include <QGraphicsOpacityEffect>
 #include <QHash>
 #include <QHeaderView>
+#include <QLabel>
 #include <QMessageBox>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QStackedWidget>
 #include <QStandardItemModel>
 #include <QStringListModel>
 #include <QTableView>
@@ -74,6 +76,44 @@ namespace
     private:
         QScrollArea *m_scrollArea;
     };
+
+    class CapsuleFocusFilter : public QObject
+    {
+    public:
+        explicit CapsuleFocusFilter(QWidget *capsule) : QObject(capsule), m_capsule(capsule)
+        {
+        }
+
+    protected:
+        bool eventFilter(QObject *obj, QEvent *event) override
+        {
+            if(!m_capsule)
+                return QObject::eventFilter(obj, event);
+
+            if(event->type() == QEvent::FocusIn)
+            {
+                m_capsule->setStyleSheet(
+                    "QFrame#aiInputCapsule {"
+                    "   background-color: #191B21;"
+                    "   border: 1px solid #38BDF8;"
+                    "   border-radius: 12px;"
+                    "}");
+            }
+            else if(event->type() == QEvent::FocusOut)
+            {
+                m_capsule->setStyleSheet(
+                    "QFrame#aiInputCapsule {"
+                    "   background-color: #16181D;"
+                    "   border: 1px solid #2B2F38;"
+                    "   border-radius: 12px;"
+                    "}");
+            }
+            return QObject::eventFilter(obj, event);
+        }
+
+    private:
+        QWidget *m_capsule;
+    };
 } // namespace
 
 MainWindow *MainWindow::current;
@@ -83,6 +123,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     int x;
     QStringListModel *model;
     ui->setupUi(this);
+
+    this->setMinimumSize(1060, 600);
+    this->resize(1180, 680);
 
     // Load settings
     AppSetting::load();
@@ -266,172 +309,391 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Apply convenient modern design for all pages
     setupPagesDesign();
 
-    // AI toolbox toggle button and panel configuration
-    if(ui->aiToolBoxToggle)
+    // Modern AI Panel configuration
+    if(ui->aiToolBoxToggle && ui->aiToolBoxContainer)
     {
-        ui->aiToolBoxToggle->setText(QString::fromUtf8("›"));
-        ui->aiToolBoxToggle->setToolTip("Свернуть панель ИИ");
-        ui->aiToolBoxToggle->setCursor(Qt::PointingHandCursor);
-        ui->aiToolBoxToggle->setStyleSheet(
-            "QPushButton#aiToolBoxToggle {"
-            "   background-color: #1A1C21;"
-            "   color: #8E9297;"
-            "   border: 1px solid #2D313A;"
-            "   border-radius: 4px;"
-            "   font-size: 13px;"
-            "   font-weight: bold;"
-            "   padding: 0px;"
-            "}"
-            "QPushButton#aiToolBoxToggle:hover {"
-            "   background-color: #262932;"
-            "   border-color: #4CC2FF;"
-            "   color: #4CC2FF;"
-            "}"
-            "QPushButton#aiToolBoxToggle:pressed {"
-            "   background-color: #141518;"
-            "}");
-        ui->aiToolBoxContainer->setMaximumWidth(324);
+        if(ui->horizontalLayout_ai)
+        {
+            ui->horizontalLayout_ai->setContentsMargins(0, 0, 0, 0);
+            ui->horizontalLayout_ai->setSpacing(2);
+        }
+
         ui->aiToolBoxContainer->setStyleSheet(
             "QFrame#aiToolBoxContainer {"
             "   background-color: #141518;"
             "   border: none;"
             "}");
 
+        // Dynamic toggle button styling lambda
+        auto updateToggleButtonStyle = [this](bool expanded)
+        {
+            if(expanded)
+            {
+                ui->aiToolBoxToggle->setText(QString::fromUtf8("›"));
+                ui->aiToolBoxToggle->setToolTip("Свернуть панель ИИ");
+                ui->aiToolBoxToggle->setFixedWidth(18);
+                ui->aiToolBoxToggle->setStyleSheet(
+                    "QPushButton#aiToolBoxToggle {"
+                    "   background: #181A20;"
+                    "   color: #64748B;"
+                    "   border: 1px solid #232730;"
+                    "   border-radius: 4px;"
+                    "   font-size: 14px;"
+                    "   font-weight: bold;"
+                    "   padding: 0px;"
+                    "}"
+                    "QPushButton#aiToolBoxToggle:hover {"
+                    "   background: #222631;"
+                    "   border-color: #38BDF8;"
+                    "   color: #38BDF8;"
+                    "}"
+                    "QPushButton#aiToolBoxToggle:pressed {"
+                    "   background: #121418;"
+                    "}");
+            }
+            else
+            {
+                ui->aiToolBoxToggle->setText(QString::fromUtf8("✦\n\nИ\nИ\n\n‹"));
+                ui->aiToolBoxToggle->setToolTip("Развернуть панель AdsKiller AI");
+                ui->aiToolBoxToggle->setFixedWidth(32);
+                ui->aiToolBoxToggle->setStyleSheet(
+                    "QPushButton#aiToolBoxToggle {"
+                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E2330, stop:1 #141720);"
+                    "   color: #38BDF8;"
+                    "   border: 1px solid #2B3950;"
+                    "   border-top-left-radius: 8px;"
+                    "   border-bottom-left-radius: 8px;"
+                    "   border-top-right-radius: 0px;"
+                    "   border-bottom-right-radius: 0px;"
+                    "   font-size: 11px;"
+                    "   font-weight: bold;"
+                    "   padding: 6px 0px;"
+                    "}"
+                    "QPushButton#aiToolBoxToggle:hover {"
+                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #26334A, stop:1 #1A2233);"
+                    "   border: 1px solid #38BDF8;"
+                    "   color: #FFFFFF;"
+                    "}"
+                    "QPushButton#aiToolBoxToggle:pressed {"
+                    "   background: #0F172A;"
+                    "}");
+            }
+        };
+
+        ui->aiToolBoxToggle->setCursor(Qt::PointingHandCursor);
+        ui->aiToolBoxContainer->setFixedWidth(350);
+        updateToggleButtonStyle(true);
+
+        // Detach pages from legacy QToolBox and embed modern aiPanel into horizontalLayout_ai
         if(ui->aiToolBox)
         {
-            ui->aiToolBox->setItemText(0, "✦ ИИ Ассистент - AdsKiller");
-            ui->aiToolBox->setItemText(1, "ℹ О модуле ИИ");
-            ui->aiToolBox->setStyleSheet(
-                "QToolBox#aiToolBox {"
-                "   background-color: #141518;"
-                "   border: 1px solid #252830;"
-                "   border-radius: 10px;"
-                "}"
-                "QToolBox#aiToolBox::tab {"
-                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #22252C, stop:1 #1A1C21);"
-                "   color: #9CA3AF;"
-                "   border: 1px solid #2F333E;"
-                "   border-radius: 7px;"
-                "   padding: 5px 12px;"
-                "   font-size: 11px;"
-                "   font-weight: 600;"
-                "   margin: 2px 2px;"
-                "}"
-                "QToolBox#aiToolBox::tab:selected {"
-                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #252D3B, stop:1 #1C2330);"
-                "   color: #4CC2FF;"
-                "   border: 1px solid #0078D4;"
-                "   font-weight: bold;"
-                "}"
-                "QToolBox#aiToolBox::tab:hover {"
-                "   background: #282D38;"
-                "   color: #FFFFFF;"
-                "   border-color: #4CC2FF;"
-                "}");
+            while(ui->aiToolBox->count() > 0)
+            {
+                ui->aiToolBox->removeItem(0);
+            }
+            if(ui->horizontalLayout_ai)
+            {
+                ui->horizontalLayout_ai->removeWidget(ui->aiToolBox);
+                ui->aiToolBox->hide();
+            }
         }
 
+        // Modern unified panel wrapper (replaces clunky QToolBox accordion)
+        QWidget *aiPanel = new QWidget(ui->aiToolBoxContainer);
+        aiPanel->setObjectName("aiMainPanel");
+        aiPanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        aiPanel->setMinimumHeight(520);
+        aiPanel->setStyleSheet(
+            "QWidget#aiMainPanel {"
+            "   background-color: #141518;"
+            "   border: 1px solid #23262E;"
+            "   border-radius: 10px;"
+            "}");
+
+        if(ui->horizontalLayout_ai)
+        {
+            ui->horizontalLayout_ai->insertWidget(0, aiPanel, 1);
+            ui->horizontalLayout_ai->setStretch(0, 1);
+            ui->horizontalLayout_ai->setStretch(1, 0);
+        }
+
+        QVBoxLayout *aiPanelLayout = new QVBoxLayout(aiPanel);
+        aiPanelLayout->setContentsMargins(0, 0, 0, 0);
+        aiPanelLayout->setSpacing(0);
+
+        // Top Header Bar with title, online indicator, and segmented tab pill switcher
+        QWidget *aiHeaderBar = new QWidget(aiPanel);
+        aiHeaderBar->setObjectName("aiHeaderBar");
+        aiHeaderBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        aiHeaderBar->setFixedHeight(40);
+        aiHeaderBar->setStyleSheet(
+            "QWidget#aiHeaderBar {"
+            "   background-color: #17191E;"
+            "   border-top-left-radius: 9px;"
+            "   border-top-right-radius: 9px;"
+            "   border-bottom: 1px solid #23262E;"
+            "}");
+
+        QHBoxLayout *headerLayout = new QHBoxLayout(aiHeaderBar);
+        headerLayout->setContentsMargins(10, 0, 6, 0);
+        headerLayout->setSpacing(6);
+
+        QLabel *aiTitle = new QLabel(aiHeaderBar);
+        aiTitle->setText("✦ <b>AdsKiller AI</b>");
+        aiTitle->setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: 600;");
+
+        QLabel *aiStatus = new QLabel(aiHeaderBar);
+        aiStatus->setText(QString::fromUtf8("●"));
+        aiStatus->setToolTip("Ассистент активен");
+        aiStatus->setStyleSheet("color: #10B981; font-size: 8px; margin-top: 1px;");
+
+        headerLayout->addWidget(aiTitle);
+        headerLayout->addWidget(aiStatus);
+        headerLayout->addStretch(1);
+
+        QFrame *segmentedBar = new QFrame(aiHeaderBar);
+        segmentedBar->setObjectName("aiSegmentedBar");
+        segmentedBar->setFixedHeight(26);
+        segmentedBar->setStyleSheet(
+            "QFrame#aiSegmentedBar {"
+            "   background-color: #1E2128;"
+            "   border: 1px solid #2B2F38;"
+            "   border-radius: 6px;"
+            "}");
+        QHBoxLayout *segLayout = new QHBoxLayout(segmentedBar);
+        segLayout->setContentsMargins(2, 2, 2, 2);
+        segLayout->setSpacing(2);
+
+        QPushButton *tabChatBtn = new QPushButton("💬 Чат", segmentedBar);
+        QPushButton *tabInfoBtn = new QPushButton("ℹ Инфо", segmentedBar);
+
+        const QString segBtnStyle =
+            "QPushButton {"
+            "   background: transparent;"
+            "   color: #8E9297;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "   padding: 2px 7px;"
+            "   font-size: 10.5px;"
+            "   font-weight: 500;"
+            "}"
+            "QPushButton:hover {"
+            "   color: #FFFFFF;"
+            "   background: rgba(255, 255, 255, 0.05);"
+            "}"
+            "QPushButton:checked {"
+            "   background: #2D3340;"
+            "   color: #38BDF8;"
+            "   font-weight: bold;"
+            "}";
+
+        tabChatBtn->setStyleSheet(segBtnStyle);
+        tabInfoBtn->setStyleSheet(segBtnStyle);
+        tabChatBtn->setCheckable(true);
+        tabInfoBtn->setCheckable(true);
+        tabChatBtn->setChecked(true);
+        tabChatBtn->setCursor(Qt::PointingHandCursor);
+        tabInfoBtn->setCursor(Qt::PointingHandCursor);
+
+        segLayout->addWidget(tabChatBtn);
+        segLayout->addWidget(tabInfoBtn);
+        headerLayout->addWidget(segmentedBar);
+
+        QPushButton *headerCollapseBtn = new QPushButton(QString::fromUtf8("✕"), aiHeaderBar);
+        headerCollapseBtn->setToolTip("Свернуть панель ИИ");
+        headerCollapseBtn->setFixedSize(22, 22);
+        headerCollapseBtn->setCursor(Qt::PointingHandCursor);
+        headerCollapseBtn->setStyleSheet(
+            "QPushButton {"
+            "   background: transparent;"
+            "   color: #64748B;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "   font-size: 11px;"
+            "   font-weight: bold;"
+            "}"
+            "QPushButton:hover {"
+            "   background: rgba(239, 68, 68, 0.15);"
+            "   color: #F87171;"
+            "}"
+            "QPushButton:pressed {"
+            "   background: rgba(239, 68, 68, 0.25);"
+            "}");
+        headerLayout->addWidget(headerCollapseBtn);
+        QObject::connect(headerCollapseBtn, &QPushButton::clicked, ui->aiToolBoxToggle, &QPushButton::click);
+
+        aiPanelLayout->addWidget(aiHeaderBar);
+
+        // QStackedWidget for switching between Chat and Info
+        QStackedWidget *aiStack = new QStackedWidget(aiPanel);
+        aiStack->setObjectName("aiStack");
+        aiStack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        aiStack->setStyleSheet("QStackedWidget#aiStack { background: transparent; border: none; }");
+
+        aiStack->addWidget(ui->aiToolBoxPage1);
+        aiStack->addWidget(ui->aiToolBoxPage2);
+        aiPanelLayout->addWidget(aiStack, 1);
+
+        QObject::connect(
+            tabChatBtn,
+            &QPushButton::clicked,
+            this,
+            [aiStack, tabChatBtn, tabInfoBtn]()
+            {
+                aiStack->setCurrentIndex(0);
+                tabChatBtn->setChecked(true);
+                tabInfoBtn->setChecked(false);
+            });
+        QObject::connect(
+            tabInfoBtn,
+            &QPushButton::clicked,
+            this,
+            [aiStack, tabChatBtn, tabInfoBtn]()
+            {
+                aiStack->setCurrentIndex(1);
+                tabChatBtn->setChecked(false);
+                tabInfoBtn->setChecked(true);
+            });
+
+        // Collapse / Expand toggle logic
+        QObject::connect(
+            ui->aiToolBoxToggle,
+            &QPushButton::clicked,
+            this,
+            [this, aiPanel, updateToggleButtonStyle]()
+            {
+                if(aiPanel->isVisible())
+                {
+                    aiPanel->setVisible(false);
+                    updateToggleButtonStyle(false);
+                    ui->aiToolBoxContainer->setFixedWidth(36);
+                }
+                else
+                {
+                    aiPanel->setVisible(true);
+                    updateToggleButtonStyle(true);
+                    ui->aiToolBoxContainer->setFixedWidth(350);
+                }
+            });
+
+        // Setup Page 2: About AI info
+        ui->aiToolBoxPage2->setStyleSheet("QWidget#aiToolBoxPage2 { background-color: #141518; border: none; }");
         if(ui->aboutAi_edit)
         {
             ui->aboutAi_edit->setStyleSheet(
                 "QTextEdit#aboutAi_edit {"
-                "   background-color: #16181D;"
+                "   background-color: #141518;"
                 "   color: #D1D5DB;"
-                "   border: 1px solid #262930;"
-                "   border-radius: 8px;"
-                "   padding: 10px;"
+                "   border: none;"
+                "   padding: 14px 14px;"
                 "   font-size: 11px;"
                 "}");
             ui->aboutAi_edit->setHtml(
                 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
                 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" />"
-                "<style type=\"text/css\">p, li { white-space: pre-wrap; }</style></head>"
+                "<style type=\"text/css\">p, li { white-space: pre-wrap; line-height: 1.5; }</style></head>"
                 "<body style=\"font-family:'Segoe UI', 'Noto Sans', sans-serif; font-size:10pt; color:#D1D5DB;\">"
-                "<div style=\"text-align:center; padding-bottom:8px;\">"
-                "<span style=\"font-size:20px;\">🤖</span><br/>"
-                "<b style=\"color:#4CC2FF; font-size:12pt;\">AdsKiller AI Assistant</b><br/>"
-                "<span style=\"color:#8E9297; font-size:9pt;\">Интеллектуальный помощник</span>"
+                "<div style=\"text-align:center; padding:12px 0 8px 0;\">"
+                "<span style=\"font-size:30px;\">🤖</span><br/>"
+                "<b style=\"color:#38BDF8; font-size:13pt;\">AdsKiller AI Assistant</b><br/>"
+                "<span style=\"color:#8E9297; font-size:9pt;\">Интеллектуальный помощник</span><br/>"
+                "<span style=\"display:inline-block; margin-top:6px; background-color:#1E293B; color:#38BDF8; font-size:8.5pt; font-weight:600; padding:2px 8px; border-radius:10px;\">● В сети</span>"
                 "</div>"
-                "<hr style=\"border:none; border-top:1px solid #2B2F38; margin:8px 0;\"/>"
-                "<p style=\"line-height:1.6; font-size:9.5pt;\">"
+                "<hr style=\"border:none; border-top:1px solid #252830; margin:10px 0;\"/>"
+                "<p style=\"font-size:9.5pt;\">"
+                "<b style=\"color:#FFFFFF;\">Возможности модуля:</b><br/>"
+                "&nbsp;• Диагностика и блокировка рекламы<br/>"
+                "&nbsp;• Управление подключенными устройствами<br/>"
+                "&nbsp;• Проверка статуса подписки и кредитов<br/>"
+                "&nbsp;• Быстрые ответы и оптимизация ОС"
+                "</p>"
+                "<hr style=\"border:none; border-top:1px solid #252830; margin:10px 0;\"/>"
+                "<p style=\"font-size:9.5pt;\">"
                 "<b style=\"color:#FFFFFF;\">Автор модуля ИИ:</b><br/>"
-                "&nbsp;&nbsp;Команда <span style=\"color:#4CC2FF;\">imister.tech</span><br/><br/>"
+                "&nbsp;&nbsp;Команда <span style=\"color:#38BDF8;\">imister.tech</span><br/><br/>"
                 "<b style=\"color:#FFFFFF;\">Разработчик:</b><br/>"
-                "&nbsp;&nbsp;Нурсеит К. (<span style=\"color:#4CC2FF;\">badcast</span>)<br/><br/>"
+                "&nbsp;&nbsp;Нурсеит К. (<span style=\"color:#38BDF8;\">badcast</span>)<br/><br/>"
                 "<b style=\"color:#FFFFFF;\">Дизайн:</b><br/>"
-                "&nbsp;&nbsp;Владимир (<span style=\"color:#4CC2FF;\">LeoJames</span>)"
+                "&nbsp;&nbsp;Владимир (<span style=\"color:#38BDF8;\">LeoJames</span>)"
                 "</p>"
                 "</body></html>");
         }
 
-        QObject::connect(
-            ui->aiToolBoxToggle,
-            &QPushButton::clicked,
-            this,
-            [this]()
+        // Setup Page 1: Chat interface
+        ui->aiToolBoxPage1->setStyleSheet("QWidget#aiToolBoxPage1 { background-color: #141518; border: none; }");
+        ui->aiToolBoxPage1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+        // Clean out legacy designer layout immediately before creating Page 1 widgets
+        QLayout *oldPage1Layout = ui->aiToolBoxPage1->layout();
+        if(oldPage1Layout)
+        {
+            QLayoutItem *item;
+            while((item = oldPage1Layout->takeAt(0)) != nullptr)
             {
-                if(ui->aiToolBox->isVisible())
-                {
-                    ui->aiToolBox->setVisible(false);
-                    ui->aiToolBoxToggle->setText(QString::fromUtf8("‹"));
-                    ui->aiToolBoxToggle->setToolTip("Развернуть панель ИИ");
-                    ui->aiToolBoxContainer->setMaximumWidth(24);
-                }
-                else
-                {
-                    ui->aiToolBox->setVisible(true);
-                    ui->aiToolBoxToggle->setText(QString::fromUtf8("›"));
-                    ui->aiToolBoxToggle->setToolTip("Свернуть панель ИИ");
-                    ui->aiToolBoxContainer->setMaximumWidth(324);
-                }
-            });
+                delete item;
+            }
+            delete oldPage1Layout;
+        }
+
+        QVBoxLayout *page1Layout = new QVBoxLayout(ui->aiToolBoxPage1);
+        page1Layout->setContentsMargins(6, 6, 6, 6);
+        page1Layout->setSpacing(6);
 
         // Create custom widget-based AIChatView
         AIChatView *chatView = new AIChatView(ui->aiToolBoxPage1);
         chatView->setObjectName("aiChatView");
+        chatView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        chatView->setMinimumWidth(0);
+        chatView->setMaximumWidth(16777215);
+        chatView->setMinimumHeight(300);
+        chatView->setMaximumHeight(16777215);
+        page1Layout->addWidget(chatView, 1);
         ui->aiChatMessages->hide();
         chatView->showLocked();
 
-        // Quick buttons scroll area + shuffle button bar
+        // Quick suggestions single-row carousel + shuffle button
         QWidget *quickBarWidget = new QWidget(ui->aiToolBoxPage1);
         quickBarWidget->setStyleSheet("background: transparent;");
+        quickBarWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        quickBarWidget->setFixedHeight(38);
+        page1Layout->addWidget(quickBarWidget, 0);
         QHBoxLayout *quickBarLayout = new QHBoxLayout(quickBarWidget);
-        quickBarLayout->setContentsMargins(0, 0, 0, 0);
+        quickBarLayout->setContentsMargins(0, 2, 0, 2);
         quickBarLayout->setSpacing(4);
+
+        QPushButton *shuffleBtn = new QPushButton(QString::fromUtf8("🔀"), quickBarWidget);
+        shuffleBtn->setToolTip("Перемешать подсказки");
+        shuffleBtn->setFixedSize(26, 26);
+        shuffleBtn->setCursor(Qt::PointingHandCursor);
+        shuffleBtn->setStyleSheet(
+            "QPushButton {"
+            "   background: #1C1E24;"
+            "   color: #8E9297;"
+            "   border: 1px solid #2B2F38;"
+            "   border-radius: 13px;"
+            "   font-size: 11px;"
+            "   padding: 0px;"
+            "}"
+            "QPushButton:hover {"
+            "   background: #252A34;"
+            "   border-color: #38BDF8;"
+            "   color: #38BDF8;"
+            "}"
+            "QPushButton:pressed {"
+            "   background: #131417;"
+            "}");
 
         QScrollArea *scrollArea = new QScrollArea(quickBarWidget);
         scrollArea->setObjectName("aiQuickScrollArea");
         scrollArea->setWidgetResizable(true);
-        scrollArea->setFixedHeight(56);
+        scrollArea->setFixedHeight(34);
         scrollArea->setFrameShape(QFrame::NoFrame);
         scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scrollArea->setStyleSheet(
             "QScrollArea#aiQuickScrollArea {"
             "   border: none;"
             "   background: transparent;"
-            "}"
-            "QScrollArea#aiQuickScrollArea QScrollBar:horizontal {"
-            "   height: 3px;"
-            "   background: rgba(0, 0, 0, 25);"
-            "   margin: 0px;"
-            "   border-radius: 1px;"
-            "}"
-            "QScrollArea#aiQuickScrollArea QScrollBar::handle:horizontal {"
-            "   background: #44474F;"
-            "   min-width: 16px;"
-            "   border-radius: 1px;"
-            "}"
-            "QScrollArea#aiQuickScrollArea QScrollBar::handle:horizontal:hover {"
-            "   background: #4CC2FF;"
-            "}"
-            "QScrollArea#aiQuickScrollArea QScrollBar::add-line:horizontal, "
-            "QScrollArea#aiQuickScrollArea QScrollBar::sub-line:horizontal {"
-            "   width: 0px;"
-            "   background: none;"
-            "}"
-            "QScrollArea#aiQuickScrollArea QScrollBar::add-page:horizontal, "
-            "QScrollArea#aiQuickScrollArea QScrollBar::sub-page:horizontal {"
-            "   background: none;"
             "}");
 
         scrollArea->viewport()->installEventFilter(new HorizontalWheelFilter(scrollArea));
@@ -439,9 +701,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         QWidget *quickButtonsWidget = new QWidget(scrollArea);
         quickButtonsWidget->setStyleSheet("background: transparent;");
-        QGridLayout *quickButtonsLayout = new QGridLayout(quickButtonsWidget);
-        quickButtonsLayout->setContentsMargins(2, 2, 2, 2);
-        quickButtonsLayout->setSpacing(4);
+        QHBoxLayout *quickButtonsLayout = new QHBoxLayout(quickButtonsWidget);
+        quickButtonsLayout->setContentsMargins(0, 2, 0, 2);
+        quickButtonsLayout->setSpacing(5);
 
         struct QuickQuestion
         {
@@ -465,7 +727,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         auto questionsPtr = std::make_shared<QList<QuickQuestion>>(quickQuestions);
 
-        auto populateRandomButtons = [this, quickButtonsWidget, quickButtonsLayout, questionsPtr]()
+        auto populateRandomButtons = [this, quickButtonsWidget, quickButtonsLayout, scrollArea, questionsPtr]()
         {
             // Clear existing buttons from layout
             QLayoutItem *child;
@@ -476,7 +738,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                 delete child;
             }
 
-            // Shuffle questions randomly across the grid
+            // Shuffle questions randomly
             std::shuffle(questionsPtr->begin(), questionsPtr->end(), *QRandomGenerator::global());
 
             for(int i = 0; i < questionsPtr->size(); ++i)
@@ -485,29 +747,29 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                 int initialIdx = QRandomGenerator::global()->bounded(qData.variations.size());
                 QString initialText = qData.variations[initialIdx];
 
-                QPushButton *btn = new QPushButton(QString("%1  %2").arg(qData.icon, initialText), quickButtonsWidget);
+                QPushButton *btn = new QPushButton(QString("%1 %2").arg(qData.icon, initialText), quickButtonsWidget);
+                btn->setFixedHeight(26);
                 btn->setStyleSheet(
                     "QPushButton {"
-                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #252830, stop:1 #1D2026);"
+                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #22252C, stop:1 #1A1C22);"
                     "   color: #D1D5DB;"
-                    "   border: 1px solid #333742;"
-                    "   border-radius: 8px;"
-                    "   padding: 3px 9px;"
-                    "   font-size: 10.5px;"
+                    "   border: 1px solid #2F333E;"
+                    "   border-radius: 13px;"
+                    "   padding: 2px 10px;"
+                    "   font-size: 11px;"
                     "   font-weight: 500;"
-                    "   white-space: nowrap;"
                     "}"
                     "QPushButton:hover {"
-                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2D3340, stop:1 #232934);"
-                    "   border: 1px solid #4CC2FF;"
-                    "   color: #4CC2FF;"
+                    "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2A303C, stop:1 #202630);"
+                    "   border: 1px solid #38BDF8;"
+                    "   color: #38BDF8;"
                     "}"
                     "QPushButton:pressed {"
-                    "   background-color: #16181C;"
+                    "   background-color: #141518;"
                     "   color: #FFFFFF;"
                     "}");
                 btn->setCursor(Qt::PointingHandCursor);
-                quickButtonsLayout->addWidget(btn, i % 2, i / 2);
+                quickButtonsLayout->addWidget(btn);
 
                 QObject::connect(
                     btn,
@@ -515,6 +777,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                     this,
                     [this, btn, icon = qData.icon, variations = qData.variations, lastIdx = initialIdx]() mutable
                     {
+                        if(!ui->aiChatSend->isEnabled())
+                            return;
                         QString textToSend = variations[lastIdx];
                         ui->aiChatEdit->setText(textToSend);
                         ui->aiChatSend->click();
@@ -527,100 +791,93 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                                 r = QRandomGenerator::global()->bounded(variations.size());
                             } while(r == lastIdx);
                             lastIdx = r;
-                            btn->setText(QString("%1  %2").arg(icon, variations[r]));
+                            btn->setText(QString("%1 %2").arg(icon, variations[r]));
                         }
                     });
             }
+            if(scrollArea->horizontalScrollBar())
+                scrollArea->horizontalScrollBar()->setValue(0);
         };
 
-        // Populate buttons with initial random arrangement
         populateRandomButtons();
         scrollArea->setWidget(quickButtonsWidget);
 
-        QPushButton *shuffleBtn = new QPushButton("🔀", quickBarWidget);
-        shuffleBtn->setToolTip("Перемешать подсказки (случайный порядок)");
-        shuffleBtn->setFixedSize(26, 54);
-        shuffleBtn->setCursor(Qt::PointingHandCursor);
-        shuffleBtn->setStyleSheet(
-            "QPushButton {"
-            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #22252C, stop:1 #1A1C22);"
-            "   color: #8E9297;"
-            "   border: 1px solid #2D313A;"
-            "   border-radius: 8px;"
-            "   font-size: 11px;"
-            "   padding: 0px;"
-            "}"
-            "QPushButton:hover {"
-            "   background: #282D36;"
-            "   border-color: #4CC2FF;"
-            "   color: #4CC2FF;"
-            "}"
-            "QPushButton:pressed {"
-            "   background: #141518;"
-            "}");
-
         QObject::connect(shuffleBtn, &QPushButton::clicked, this, populateRandomButtons);
 
-        quickBarLayout->addWidget(scrollArea, 1);
         quickBarLayout->addWidget(shuffleBtn, 0);
+        quickBarLayout->addWidget(scrollArea, 1);
+
+        // Integrated modern input capsule
+        QFrame *inputCapsule = new QFrame(ui->aiToolBoxPage1);
+        inputCapsule->setObjectName("aiInputCapsule");
+        inputCapsule->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        inputCapsule->setMinimumHeight(44);
+        inputCapsule->setMaximumHeight(56);
+        inputCapsule->setStyleSheet(
+            "QFrame#aiInputCapsule {"
+            "   background-color: #16181D;"
+            "   border: 1px solid #2B2F38;"
+            "   border-radius: 12px;"
+            "}");
+
+        QHBoxLayout *capsuleLayout = new QHBoxLayout(inputCapsule);
+        capsuleLayout->setContentsMargins(10, 4, 6, 4);
+        capsuleLayout->setSpacing(6);
 
         ui->aiChatEdit->setStyleSheet(
             "QTextEdit#aiChatEdit {"
-            "   background-color: #1A1C22;"
-            "   color: #FFFFFF;"
-            "   border: 1px solid #2E333D;"
-            "   border-radius: 9px;"
-            "   padding: 6px 10px;"
+            "   background: transparent;"
+            "   color: #F3F4F6;"
+            "   border: none;"
+            "   padding: 4px 2px;"
             "   font-size: 11.5px;"
             "   selection-background-color: #0078D4;"
-            "}"
-            "QTextEdit#aiChatEdit:focus {"
-            "   border: 1px solid #4CC2FF;"
-            "   background-color: #16181D;"
             "}");
-        ui->aiChatEdit->setPlaceholderText("Задайте вопрос ИИ...");
-        ui->aiChatEdit->setMinimumHeight(40);
-        ui->aiChatEdit->setMaximumHeight(40);
+        ui->aiChatEdit->setPlaceholderText("Спросите у AdsKiller AI...");
+        ui->aiChatEdit->setMinimumHeight(32);
+        ui->aiChatEdit->setMaximumHeight(48);
+        ui->aiChatEdit->installEventFilter(new CapsuleFocusFilter(inputCapsule));
 
         ui->aiChatSend->setStyleSheet(
             "QPushButton#aiChatSend {"
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0078D4, stop:1 #005A9E);"
             "   color: #FFFFFF;"
-            "   border: 1px solid #1A8CE6;"
-            "   border-radius: 9px;"
-            "   padding: 6px 12px;"
+            "   border: none;"
+            "   border-radius: 15px;"
+            "   font-size: 13px;"
             "   font-weight: bold;"
-            "   font-size: 11.5px;"
             "}"
             "QPushButton#aiChatSend:hover {"
             "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1088E8, stop:1 #0066BA);"
-            "   border-color: #4CC2FF;"
             "}"
             "QPushButton#aiChatSend:pressed {"
             "   background: #004D80;"
             "}"
             "QPushButton#aiChatSend:disabled {"
-            "   background: #252830;"
-            "   color: #555A64;"
-            "   border-color: #2D313A;"
+            "   background: #23262E;"
+            "   color: #4B515D;"
             "}");
+        ui->aiChatSend->setFixedSize(30, 30);
         ui->aiChatSend->setCursor(Qt::PointingHandCursor);
-        ui->aiChatSend->setMinimumHeight(40);
-        ui->aiChatSend->setMaximumHeight(40);
+        ui->aiChatSend->setText(QString::fromUtf8("➤"));
+        ui->aiChatSend->setToolTip("Отправить сообщение (Enter)");
 
-        QGridLayout *aiLayout = qobject_cast<QGridLayout *>(ui->aiChatMessages->parentWidget()->layout());
-        if(aiLayout)
-        {
-            aiLayout->setContentsMargins(4, 4, 4, 4);
-            aiLayout->setSpacing(6);
-            aiLayout->removeWidget(ui->aiChatMessages);
-            aiLayout->removeWidget(ui->aiChatEdit);
-            aiLayout->removeWidget(ui->aiChatSend);
-            aiLayout->addWidget(chatView, 0, 0, 1, 2);
-            aiLayout->addWidget(quickBarWidget, 1, 0, 1, 2);
-            aiLayout->addWidget(ui->aiChatEdit, 2, 0);
-            aiLayout->addWidget(ui->aiChatSend, 2, 1);
-        }
+        capsuleLayout->addWidget(ui->aiChatEdit, 1);
+        capsuleLayout->addWidget(ui->aiChatSend, 0, Qt::AlignVCenter);
+
+        page1Layout->addWidget(inputCapsule, 0);
+
+        // Activate container layout and ensure all components are visible
+        if(ui->aiToolBoxContainer->layout())
+            ui->aiToolBoxContainer->layout()->activate();
+
+        // Explicitly show all components to ensure nothing remains hidden
+        chatView->show();
+        quickBarWidget->show();
+        inputCapsule->show();
+        ui->aiToolBoxPage1->show();
+        aiStack->show();
+        aiPanel->show();
     }
 }
 
@@ -1983,7 +2240,7 @@ void MainWindow::clearAuthInfoPage()
     services.clear();
 
     ui->aiChatEdit->clear();
-    ui->aiChatSend->setText("Отправить");
+    ui->aiChatSend->setText(QString::fromUtf8("➤"));
 
     ui->aiChatEdit->setDisabled(true);
     ui->aiChatSend->setDisabled(true);

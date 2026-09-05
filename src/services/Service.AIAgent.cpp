@@ -179,7 +179,7 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
             if(!prev.isEmpty())
                 btn->setText(prev);
             else
-                btn->setText("Отправить");
+                btn->setText(QString::fromUtf8("➤"));
             btn->setEnabled(true);
         }
         return;
@@ -222,7 +222,7 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
         if(!prev.isEmpty())
             btn->setText(prev);
         else
-            btn->setText("Отправить");
+            btn->setText(QString::fromUtf8("➤"));
         btn->setEnabled(true);
     }
 
