@@ -8,6 +8,8 @@
 #include <thread>
 #include <utility>
 
+#include <QByteArray>
+#include <QFileInfo>
 #include <QList>
 #include <QProcess>
 #include <QTimer>
@@ -53,11 +55,23 @@ class AdbShell;
 class AdbFileIO;
 class AdbSysInfo;
 
+struct AdbFileInfo
+{
+    QString name;
+    QString fullPath;
+    qint64 size = 0;
+    bool isDir = false;
+    QString permissions;
+    QString modifyTime;
+};
+
 class AdbShell
 {
 public:
     AdbShell(const QString &deviceId = {});
     AdbShell(const AdbShell &) = delete;
+    AdbShell(AdbShell &&other) noexcept;
+    AdbShell &operator=(AdbShell &&other) noexcept;
     virtual ~AdbShell();
 
     bool connect(const QString &deviceId);
@@ -84,6 +98,7 @@ public:
     void exit();
     std::shared_ptr<AdbSysInfo> getInfo();
     AdbFileIO getFileIO();
+    QString deviceId() const;
 
 private:
     bool hasReqID(int requestId);
@@ -122,12 +137,20 @@ class AdbFileIO : public AdbShell
 public:
     AdbFileIO(const QString &deviceId = {});
     AdbFileIO(const AdbFileIO &) = delete;
+    AdbFileIO(AdbFileIO &&other) noexcept;
+    AdbFileIO &operator=(AdbFileIO &&other) noexcept;
+    ~AdbFileIO() override = default;
 
     bool exists(const QString &filePath);
     bool write(const QString &filePath, const QByteArray &buffer);
     QByteArray read(const QString &filePath);
     bool deleteFile(const QString &filePath);
     QStringList getFiles(const QString &dirPath, bool includeDirs = true);
+
+    QList<AdbFileInfo> getFileList(const QString &dirPath);
+    bool pullFile(const QString &remotePath, const QString &localPath);
+    bool pushFile(const QString &localPath, const QString &remotePath);
+    bool makeDir(const QString &dirPath);
 };
 
 class Adb : public QObject
@@ -171,6 +194,9 @@ public:
 private:
     QTimer *deviceWatchTimer;
 };
+
+std::pair<bool, QString> adb_send_cmd(int &exitCode, const QStringList &arguments);
+std::pair<bool, QString> adb_send_cmd(const QStringList &arguments);
 
 bool operator==(const AdbDevice &lhs, const AdbDevice &rhs);
 

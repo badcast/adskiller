@@ -37,9 +37,12 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo()
         if(at.startsWith("Filesystem", Qt::CaseInsensitive))
             continue;
         tmp0 = std::move(at.split(' ', Qt::SkipEmptyParts));
-        sysi->diskTotal = tmp0[1].toULongLong() * 1024;
-        sysi->diskUsed = tmp0[2].toULongLong() * 1024;
-        break;
+        if(tmp0.size() >= 3)
+        {
+            sysi->diskTotal = tmp0[1].toULongLong() * 1024;
+            sysi->diskUsed = tmp0[2].toULongLong() * 1024;
+            break;
+        }
     }
 
     txt.setString(&freeDataChars);
@@ -48,12 +51,12 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo()
         QString at = txt.readLine();
 
         tmp0 = std::move(at.split(' ', Qt::SkipEmptyParts));
-        if(at.startsWith("mem", Qt::CaseInsensitive))
+        if(at.startsWith("mem", Qt::CaseInsensitive) && tmp0.size() >= 3)
         {
             sysi->ramTotal = tmp0[1].toULongLong();
             sysi->ramUsed = tmp0[2].toULongLong();
         }
-        else if(at.startsWith("swap", Qt::CaseInsensitive))
+        else if(at.startsWith("swap", Qt::CaseInsensitive) && tmp0.size() >= 3)
         {
             sysi->swapTotal = tmp0[1].toULongLong();
             sysi->swapUsed = tmp0[2].toULongLong();
@@ -62,10 +65,10 @@ std::shared_ptr<AdbSysInfo> AdbShell::getInfo()
     }
 
     sysi->osVersion = getprop(PropAndroidVersion).toInt();
-    sysi->systemName = commandQueueWaits("uname -s").second;
-    sysi->machine = commandQueueWaits("uname -m").second;
-    sysi->kernelReleaseVersion = commandQueueWaits("uname -r").second;
-    sysi->kernelVersion = commandQueueWaits("uname -v").second;
+    sysi->systemName = commandQueueWaits("uname -s").second.trimmed();
+    sysi->machine = commandQueueWaits("uname -m").second.trimmed();
+    sysi->kernelReleaseVersion = commandQueueWaits("uname -r").second.trimmed();
+    sysi->kernelVersion = commandQueueWaits("uname -v").second.trimmed();
     sysi->isAndroid = commandQueueWaits("getprop | grep -i android").second.length() > 0;
 
     if(!isConnect())

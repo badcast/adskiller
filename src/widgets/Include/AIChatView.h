@@ -69,6 +69,7 @@ public:
 
     void addUserMessage(const QString &text, const QString &time = QString());
     void addAIMessage(const QString &text, const QString &time = QString());
+    int messageCount();
     void showTyping(bool show);
     void showWelcome();
     void showLocked();

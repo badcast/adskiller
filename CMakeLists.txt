@@ -13,14 +13,16 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
 
 set(PROJECT_SOURCES
         ui/mainwindow.h
         ui/mainwindow.ui
         ui/mainwindow.cpp
         ui/MainPages.cpp
+        ui/RadioPlayerWidget.h
+        ui/RadioPlayerWidget.cpp
         ui/AdbDeviceVisualizer.h
         ui/about_dialog.h
         ui/about_dialog.cpp
@@ -90,7 +92,7 @@ target_include_directories(application PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMA
 target_include_directories(update PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
 
 target_link_libraries(services PRIVATE adbfront widgets)
-target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network adbfront services widgets)
+target_link_libraries(application PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Multimedia adbfront services widgets)
 target_link_libraries(update PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.env")

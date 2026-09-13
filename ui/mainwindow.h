@@ -50,6 +50,14 @@ namespace Ui
 QT_END_NAMESPACE
 
 class AdbDeviceVisualizer;
+class FileManagerWidget;
+class ApkManagerWidget;
+class FileManagerService;
+class ApkManagerService;
+class ContactFixerWidget;
+class ContactFixerService;
+class RadioPlayerWidget;
+class QToolBar;
 
 class MainWindow : public QMainWindow
 {
@@ -58,6 +66,12 @@ class MainWindow : public QMainWindow
     friend class AdsKillerService;
     friend class BoostRamService;
     friend class ServiceProvider;
+    friend class FileManagerWidget;
+    friend class ApkManagerWidget;
+    friend class FileManagerService;
+    friend class ApkManagerService;
+    friend class ContactFixerWidget;
+    friend class ContactFixerService;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -88,8 +102,13 @@ public:
     bool accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter);
     bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton);
 
+    AdbDevice currentAdbDevice() const;
+    QWidget *pageWidget(PageIndex page) const;
+
     static MainWindow *current;
     AdbDeviceVisualizer *adbVisualizer = nullptr;
+    QToolBar *radioToolBar = nullptr;
+    RadioPlayerWidget *radioPlayer = nullptr;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -148,6 +167,7 @@ private:
 
     void setupWindowLayoutAndAnim();
     void setupAiPanel();
+    void setupRadioPlayer();
     void setupPagesDesign();
     void initServiceModules();
     void checkVersion(bool firstRun);

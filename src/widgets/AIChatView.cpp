@@ -384,6 +384,13 @@ void AIChatView::addAIMessage(const QString &text, const QString &time)
     scrollToBottom();
 }
 
+int AIChatView::messageCount()
+{
+    if(m_layout )
+        return m_layout->count();
+    return -1;
+}
+
 void AIChatView::showTyping(bool show)
 {
     if(m_typingIndicator)
@@ -403,6 +410,9 @@ void AIChatView::showWelcome()
     int insertIndex = qMax(0, m_layout->count() - 2);
     m_layout->insertWidget(insertIndex, welcome);
     scrollToBottom();
+
+    if(messageCount() == 3)
+        addAIMessage("Салам алейкум 👋");
 }
 
 void AIChatView::showLocked()

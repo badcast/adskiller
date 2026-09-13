@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/resources">
         <file alias="update-list">res/update-list.png</file>
-        <file alias="app-style-light">res/style/metro-blue.qss</file>
         <file alias="app-logo-merry">res/icon.png</file>
         <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
+        <file alias="ApplicationStyle.qss">res/style/ApplicationStyle.qss</file>
         <file alias="icon-hello">res/icon-hello.png</file>
         <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
         <file alias="icon-authlogin">res/icon-authlogin.png</file>

@@ -137,8 +137,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>98</width>
-            <height>88</height>
+            <width>408</width>
+            <height>573</height>
            </rect>
           </property>
           <attribute name="label">
@@ -505,7 +505,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>510</width>
+                <width>704</width>
                 <height>572</height>
                </rect>
               </property>
@@ -1233,8 +1233,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>164</width>
-                   <height>1024</height>
+                   <width>566</width>
+                   <height>437</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_2">

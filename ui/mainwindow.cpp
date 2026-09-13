@@ -43,6 +43,9 @@
 #include "AIChatView.h"
 #include "about_dialog.h"
 #include "ui_mainwindow.h"
+#include "FileManagerWidget.h"
+#include "ApkManagerWidget.h"
+#include "ContactFixerWidget.h"
 #include "AdbDeviceVisualizer.h"
 
 MainWindow *MainWindow::current;
@@ -159,6 +162,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Modern AI Panel configuration
     setupAiPanel();
+
+    // Top Radio Station Player
+    setupRadioPlayer();
 }
 
 MainWindow::~MainWindow()
@@ -773,6 +779,15 @@ void MainWindow::showPage(PageIndex pageNum)
             case BuyVIPPage:
                 ui->label_8->setText("Оформление VIP-подписки");
                 break;
+            case FileManagerPage:
+                ui->label_8->setText("Файловый менеджер ADB");
+                break;
+            case ApkManagerPage:
+                ui->label_8->setText("APK Менеджер");
+                break;
+            case ContactFixerPage:
+                ui->label_8->setText("Исправление контактов");
+                break;
             default:
                 ui->label_8->setText("Назад в личный кабинет");
                 break;
@@ -957,6 +972,47 @@ void MainWindow::pageShownPreStart(int page)
             }
 
             model->setStringList(place);
+            break;
+        }
+        case FileManagerPage:
+        {
+            if(pages.contains(FileManagerPage))
+            {
+                auto *widget = static_cast<FileManagerWidget *>(pages.value(FileManagerPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
+                    widget->refreshList();
+                }
+            }
+            break;
+        }
+        case ApkManagerPage:
+        {
+            if(pages.contains(ApkManagerPage))
+            {
+                auto *widget = static_cast<ApkManagerWidget *>(pages.value(ApkManagerPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
+                    widget->loadPackages();
+                }
+            }
+            break;
+        }
+        case ContactFixerPage:
+        {
+            if(pages.contains(ContactFixerPage))
+            {
+                auto *widget = static_cast<ContactFixerWidget *>(pages.value(ContactFixerPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
+                }
+            }
             break;
         }
         default:
@@ -1242,6 +1298,16 @@ bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balance
     return true;
 }
 
+AdbDevice MainWindow::currentAdbDevice() const
+{
+    return connectPhone.adbDevice;
+}
+
+QWidget *MainWindow::pageWidget(PageIndex page) const
+{
+    return pages.value(page, nullptr);
+}
+
 void MainWindow::on_authButton_clicked()
 {
     network.forclyExit = false;
@@ -1489,7 +1555,7 @@ void MainWindow::setTheme(ThemeScheme theme)
             resourceName = nullptr;
             break;
         case Dark:
-            resourceName = ":/resources/app-style-dark";
+            resourceName = ":/resources/ApplicationStyle.qss";
             break;
         case Light:
         default:
@@ -1504,13 +1570,22 @@ void MainWindow::setTheme(ThemeScheme theme)
         styleRes.setFileName(resourceName);
         if(!styleRes.open(QFile::ReadOnly | QFile::Text))
         {
-            QMessageBox::warning(this, "FAIL", "Set theme failed. Default to SYSTEM theme");
+            if(theme == Dark)
+            {
+                styleRes.setFileName(QCoreApplication::applicationDirPath() + "/ApplicationStyle.qss");
+                if(!styleRes.open(QFile::ReadOnly | QFile::Text))
+                {
+                    styleRes.setFileName("res/style/ApplicationStyle.qss");
+                    if(!styleRes.open(QFile::ReadOnly | QFile::Text))
+                        styleRes.setFileName("ApplicationStyle.qss");
+                }
+            }
         }
-        else
+        if(styleRes.isOpen() || styleRes.open(QFile::ReadOnly | QFile::Text))
         {
             styleSheet = styleRes.readAll();
+            styleRes.close();
         }
-        styleRes.close();
     }
 
     // Set application Design
