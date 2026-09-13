@@ -1,6 +1,8 @@
 set(INCL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 
 add_library(widgets STATIC
+    Include/PurchaseConfirmDialog.h
+    PurchaseConfirmDialog.cpp
     AIChatView.cpp
     Include/AIChatView.h
     ProgressCircle.cpp

@@ -1449,14 +1449,14 @@ void MainWindow::setupPagesDesign()
 
     if(ui->label_12)
     {
-        ui->label_12->setText("ЛОГИН ИЛИ СЕРИЙНЫЙ НОМЕР");
+        ui->label_12->setText("ЛОГИН или EMAIL");
         ui->label_12->setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent;");
     }
 
     if(ui->lineLoginEdit)
     {
         ui->lineLoginEdit->setFixedHeight(42);
-        ui->lineLoginEdit->setPlaceholderText("Логин или имя пользователя");
+        ui->lineLoginEdit->setPlaceholderText("Логин или электронная почта");
         ui->lineLoginEdit->setStyleSheet(
             "QLineEdit {"
             "   background-color: #0F172A;"
@@ -1485,14 +1485,14 @@ void MainWindow::setupPagesDesign()
 
     if(ui->label_14)
     {
-        ui->label_14->setText("ПАРОЛЬ ИЛИ ТОКЕН ДОСТУПА");
+        ui->label_14->setText("ПАРОЛЬ");
         ui->label_14->setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent;");
     }
 
     if(ui->linePassEdit)
     {
         ui->linePassEdit->setFixedHeight(42);
-        ui->linePassEdit->setPlaceholderText("Пароль или токен");
+        ui->linePassEdit->setPlaceholderText("Пароль");
         ui->linePassEdit->setStyleSheet(
             "QLineEdit {"
             "   background-color: #0F172A;"
@@ -1770,7 +1770,7 @@ void MainWindow::setupPagesDesign()
     }
     if(ui->authpageUpdate)
     {
-        ui->authpageUpdate->setText(QString::fromUtf8("🔄 Обновить"));
+        ui->authpageUpdate->setText(QString::fromUtf8("Обновить"));
         ui->authpageUpdate->setMinimumSize(105, 30);
         ui->authpageUpdate->setMaximumSize(125, 30);
         ui->authpageUpdate->setCursor(Qt::PointingHandCursor);
