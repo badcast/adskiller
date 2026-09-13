@@ -47,7 +47,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev libgl-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-cursor0
+          sudo apt-get install -y libgl1-mesa-dev libgl-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-cursor0 \
+            libasound2-dev libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
@@ -62,6 +63,7 @@ jobs:
           version: ${{ matrix.qt_version }}
           arch: ${{ matrix.qt_arch }}
           tools: ${{ matrix.qt_tools }}
+          modules: 'qtmultimedia qtshadertools'
           cache: true
 
       - name: Configure CMake
@@ -80,7 +82,7 @@ jobs:
           Copy-Item 'build/update.exe' $deployDir -Force
 
           Get-Command windeployqt -ErrorAction Stop | Out-Null
-          windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'adskiller.exe')
+          windeployqt --release --no-translations --compiler-runtime --multimedia (Join-Path $deployDir 'adskiller.exe')
           windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'update.exe')
 
           if (Test-Path (Join-Path $deployDir 'networkinformation')) {
