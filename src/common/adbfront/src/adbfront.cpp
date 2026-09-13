@@ -596,11 +596,15 @@ QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
         }
     }
 
-    std::sort(list.begin(), list.end(), [](const AdbFileInfo &a, const AdbFileInfo &b) {
-        if(a.isDir != b.isDir)
-            return a.isDir > b.isDir;
-        return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
-    });
+    std::sort(
+        list.begin(),
+        list.end(),
+        [](const AdbFileInfo &a, const AdbFileInfo &b)
+        {
+            if(a.isDir != b.isDir)
+                return a.isDir > b.isDir;
+            return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+        });
 
     return list;
 }

@@ -35,8 +35,7 @@ struct ContactFixerPrivate
     std::vector<vCard> vcards;
 };
 
-ContactFixerWidget::ContactFixerWidget(QWidget *parent)
-    : QWidget(parent), d(new ContactFixerPrivate)
+ContactFixerWidget::ContactFixerWidget(QWidget *parent) : QWidget(parent), d(new ContactFixerPrivate)
 {
     setupUi();
 }
@@ -72,16 +71,14 @@ void ContactFixerWidget::updateDeviceUi()
     {
         QString name = !m_device.marketingName.isEmpty() ? m_device.marketingName : (!m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.model.isEmpty() ? m_device.model : m_device.devId));
         m_lblDeviceStatus->setText("📱 " + name + " (Подключен)");
-        m_lblDeviceStatus->setStyleSheet(
-            "background-color: #064E3B; color: #34D399; font-size: 12px; font-weight: bold; border: 1px solid #059669; border-radius: 6px; padding: 6px 12px;");
+        m_lblDeviceStatus->setStyleSheet("background-color: #064E3B; color: #34D399; font-size: 12px; font-weight: bold; border: 1px solid #059669; border-radius: 6px; padding: 6px 12px;");
         if(m_btnConnectDevice)
             m_btnConnectDevice->setText("🔄 Сменить устройство");
     }
     else
     {
         m_lblDeviceStatus->setText("📱 Телефон не подключен");
-        m_lblDeviceStatus->setStyleSheet(
-            "background-color: #1E293B; color: #94A3B8; font-size: 12px; font-weight: 500; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px;");
+        m_lblDeviceStatus->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 12px; font-weight: 500; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px;");
         if(m_btnConnectDevice)
             m_btnConnectDevice->setText("🔗 Подключить ADB");
     }
@@ -114,11 +111,7 @@ void ContactFixerWidget::requestDeviceConnect()
     {
         MainWindow::current->connectPhone = {};
         MainWindow::current->connectPhone.connectionType = DeviceConnectType::ADB;
-        MainWindow::current->showPageLoader(
-            DevicesPage,
-            1200,
-            []() { return true; },
-            "Подключение к устройству через ADB...");
+        MainWindow::current->showPageLoader(DevicesPage, 1200, []() { return true; }, "Подключение к устройству через ADB...");
     }
     else
     {
@@ -135,8 +128,7 @@ void ContactFixerWidget::setupUi()
     // ================= 1. TOP HEADER & DEVICE BAR =================
     QFrame *headerFrame = new QFrame(this);
     headerFrame->setObjectName("cf_header");
-    headerFrame->setStyleSheet(
-        "#cf_header { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 10px; }");
+    headerFrame->setStyleSheet("#cf_header { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 10px; }");
     QVBoxLayout *headerVBox = new QVBoxLayout(headerFrame);
     headerVBox->setContentsMargins(12, 8, 12, 8);
     headerVBox->setSpacing(6);
@@ -180,8 +172,7 @@ void ContactFixerWidget::setupUi()
     m_loadedPathEdit = new QLineEdit(headerFrame);
     m_loadedPathEdit->setReadOnly(true);
     m_loadedPathEdit->setPlaceholderText("Файл или устройство ещё не загружены. Откройте .vcf с ПК или нажмите «Считать с телефона»...");
-    m_loadedPathEdit->setStyleSheet(
-        "QLineEdit { background-color: #070A12; color: #38BDF8; border: 1px solid #1E293B; border-radius: 5px; padding: 3px 8px; font-family: monospace; font-size: 11.5px; min-height: 26px; }");
+    m_loadedPathEdit->setStyleSheet("QLineEdit { background-color: #070A12; color: #38BDF8; border: 1px solid #1E293B; border-radius: 5px; padding: 3px 8px; font-family: monospace; font-size: 11.5px; min-height: 26px; }");
     sourceRow->addWidget(m_loadedPathEdit, 1);
 
     headerVBox->addLayout(sourceRow);
@@ -190,8 +181,7 @@ void ContactFixerWidget::setupUi()
     // ================= 2. ACTIONS & TOOLBAR CARD =================
     QFrame *actionFrame = new QFrame(this);
     actionFrame->setObjectName("cf_actions");
-    actionFrame->setStyleSheet(
-        "#cf_actions { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; }");
+    actionFrame->setStyleSheet("#cf_actions { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; }");
     QVBoxLayout *actionVBox = new QVBoxLayout(actionFrame);
     actionVBox->setContentsMargins(12, 8, 12, 8);
     actionVBox->setSpacing(6);
@@ -369,8 +359,7 @@ void ContactFixerWidget::setupUi()
 
     QFrame *testerCard = new QFrame(rightContainer);
     testerCard->setObjectName("testerCard");
-    testerCard->setStyleSheet(
-        "#testerCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 6px; }");
+    testerCard->setStyleSheet("#testerCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 6px; }");
 
     QVBoxLayout *cardLayout = new QVBoxLayout(testerCard);
     cardLayout->setContentsMargins(10, 10, 10, 10);
@@ -390,13 +379,18 @@ void ContactFixerWidget::setupUi()
     m_testNumberInput->setStyleSheet(
         "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 4px 8px; font-family: monospace; font-size: 12px; font-weight: bold; min-height: 28px; } "
         "QLineEdit:focus { border-color: #38BDF8; }");
-    connect(m_testNumberInput, &QLineEdit::textChanged, this, [this](const QString &text) {
-        onTestNumberInputChanged(text);
-        if(m_quickNumberEdit && m_quickNumberEdit->text().isEmpty())
+    connect(
+        m_testNumberInput,
+        &QLineEdit::textChanged,
+        this,
+        [this](const QString &text)
         {
-            m_quickNumberEdit->setPlaceholderText(text.trimmed());
-        }
-    });
+            onTestNumberInputChanged(text);
+            if(m_quickNumberEdit && m_quickNumberEdit->text().isEmpty())
+            {
+                m_quickNumberEdit->setPlaceholderText(text.trimmed());
+            }
+        });
     cardLayout->addWidget(m_testNumberInput);
 
     // Meta details: Country & Code
@@ -454,9 +448,7 @@ void ContactFixerWidget::setupUi()
         btnCopy->setStyleSheet(
             "QPushButton { background-color: #1E293B; border: 1px solid #334155; border-radius: 4px; color: #38BDF8; font-size: 11px; } "
             "QPushButton:hover { background-color: #0284C7; color: white; }");
-        connect(btnCopy, &QPushButton::clicked, [labelPtr]() {
-            QApplication::clipboard()->setText(labelPtr->text());
-        });
+        connect(btnCopy, &QPushButton::clicked, [labelPtr]() { QApplication::clipboard()->setText(labelPtr->text()); });
         h->addWidget(btnCopy);
 
         v->addLayout(h);
@@ -747,7 +739,7 @@ void ContactFixerWidget::loadFromDevice()
     QString loadedPath;
 
     // A. Check remote path specified in field
-    QString preferredPath = m_remotePathEdit ? m_remotePathEdit->text().trimmed() : QString{};
+    QString preferredPath = m_remotePathEdit ? m_remotePathEdit->text().trimmed() : QString {};
     if(!preferredPath.isEmpty())
     {
         QByteArray data = m_fileIO.read(preferredPath);
@@ -904,7 +896,7 @@ void ContactFixerWidget::parseVcards()
         }
     }
 
-    onSearchFilterChanged(m_searchEdit ? m_searchEdit->text() : QString{});
+    onSearchFilterChanged(m_searchEdit ? m_searchEdit->text() : QString {});
 }
 
 void ContactFixerWidget::populateTable()
@@ -988,7 +980,7 @@ void ContactFixerWidget::applyFixToAll()
         item.fixedNumber = computeFixedNumber(item.originalNumber);
     }
 
-    onSearchFilterChanged(m_searchEdit ? m_searchEdit->text() : QString{});
+    onSearchFilterChanged(m_searchEdit ? m_searchEdit->text() : QString {});
     m_statusMsg->setText("Форматы пересчитаны для всех номеров.");
 }
 
@@ -1026,8 +1018,7 @@ void ContactFixerWidget::onTableItemChanged(QTableWidgetItem *item)
             // Update master list
             for(auto &masterItem : m_items)
             {
-                if(masterItem.vcardIndex == m_filteredItems[filteredRow].vcardIndex &&
-                   masterItem.propIndex == m_filteredItems[filteredRow].propIndex)
+                if(masterItem.vcardIndex == m_filteredItems[filteredRow].vcardIndex && masterItem.propIndex == m_filteredItems[filteredRow].propIndex)
                 {
                     masterItem.isSelected = checked;
                     break;
@@ -1104,13 +1095,7 @@ void ContactFixerWidget::saveVcfFile()
     ofs.close();
 
     m_statusMsg->setText("Сохранено: " + QFileInfo(savePath).fileName());
-    QMessageBox::information(
-        this,
-        "Успех",
-        QString("Файл контактов успешно сохранён:\n%1\n\nВсего контактов: %2\nОбработано номеров: %3")
-            .arg(savePath)
-            .arg(d->vcards.size())
-            .arg(m_items.size()));
+    QMessageBox::information(this, "Успех", QString("Файл контактов успешно сохранён:\n%1\n\nВсего контактов: %2\nОбработано номеров: %3").arg(savePath).arg(d->vcards.size()).arg(m_items.size()));
 }
 
 void ContactFixerWidget::pushToDevice()
@@ -1158,7 +1143,7 @@ void ContactFixerWidget::pushToDevice()
     std::string str = oss.str();
     QByteArray data(str.data(), static_cast<int>(str.size()));
 
-    QString remotePath = m_remotePathEdit ? m_remotePathEdit->text().trimmed() : QString{};
+    QString remotePath = m_remotePathEdit ? m_remotePathEdit->text().trimmed() : QString {};
     if(remotePath.isEmpty())
         remotePath = "/sdcard/Download/contacts_fixed.vcf";
     else if(!remotePath.endsWith(".vcf", Qt::CaseInsensitive) && !remotePath.endsWith(".vcard", Qt::CaseInsensitive))
@@ -1167,11 +1152,7 @@ void ContactFixerWidget::pushToDevice()
     if(m_fileIO.write(remotePath, data))
     {
         m_statusMsg->setText("Отправлено на устройство: " + remotePath);
-        QMessageBox::information(
-            this,
-            "Готово",
-            QString("Файл контактов успешно записан на телефон:\n%1\n\nВы можете открыть его через приложение «Контакты» на телефоне для объединения.")
-                .arg(remotePath));
+        QMessageBox::information(this, "Готово", QString("Файл контактов успешно записан на телефон:\n%1\n\nВы можете открыть его через приложение «Контакты» на телефоне для объединения.").arg(remotePath));
     }
     else
     {
@@ -1202,12 +1183,7 @@ void ContactFixerWidget::exportCsv()
     out << "Имя;Исходный номер;Исправленный номер;Страна;Код;Тип\n";
     for(const auto &item : m_items)
     {
-        out << "\"" << item.name << "\";\""
-            << item.originalNumber << "\";\""
-            << item.fixedNumber << "\";\""
-            << item.country << "\";\""
-            << item.dialCode << "\";\""
-            << item.phoneType << "\"\n";
+        out << "\"" << item.name << "\";\"" << item.originalNumber << "\";\"" << item.fixedNumber << "\";\"" << item.country << "\";\"" << item.dialCode << "\";\"" << item.phoneType << "\"\n";
     }
     file.close();
 
@@ -1220,8 +1196,8 @@ void ContactFixerWidget::onQuickAddContact()
     if(!d)
         return;
 
-    QString name = m_quickNameEdit ? m_quickNameEdit->text().trimmed() : QString{};
-    QString number = m_quickNumberEdit ? m_quickNumberEdit->text().trimmed() : QString{};
+    QString name = m_quickNameEdit ? m_quickNameEdit->text().trimmed() : QString {};
+    QString number = m_quickNumberEdit ? m_quickNumberEdit->text().trimmed() : QString {};
 
     if(name.isEmpty())
     {
@@ -1235,7 +1211,7 @@ void ContactFixerWidget::onQuickAddContact()
     if(number.isEmpty())
     {
         bool ok = false;
-        QString defaultNum = m_testNumberInput ? m_testNumberInput->text().trimmed() : QString{};
+        QString defaultNum = m_testNumberInput ? m_testNumberInput->text().trimmed() : QString {};
         number = QInputDialog::getText(this, "Новый контакт", "Введите телефонный номер:", QLineEdit::Normal, defaultNum, &ok);
         if(!ok || number.trimmed().isEmpty())
             return;
@@ -1269,7 +1245,7 @@ void ContactFixerWidget::onQuickAddContact()
     if(m_quickNumberEdit)
         m_quickNumberEdit->clear();
 
-    onSearchFilterChanged(m_searchEdit ? m_searchEdit->text() : QString{});
+    onSearchFilterChanged(m_searchEdit ? m_searchEdit->text() : QString {});
     m_statusMsg->setText("Контакт добавлен: " + name);
 }
 
@@ -1281,8 +1257,7 @@ struct CFSInternalData
     bool finished = false;
 };
 
-ContactFixerService::ContactFixerService(QObject *parent)
-    : Service(DeviceConnectType::None, parent), mInternal(new CFSInternalData)
+ContactFixerService::ContactFixerService(QObject *parent) : Service(DeviceConnectType::None, parent), mInternal(new CFSInternalData)
 {
     title = "Исправление контактов";
     active = true;

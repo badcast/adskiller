@@ -32,7 +32,10 @@ public:
     bool isPlaying() const;
     int volume() const;
     QString currentStationName() const;
-    const QList<RadioStation>& stations() const { return m_stations; }
+    const QList<RadioStation> &stations() const
+    {
+        return m_stations;
+    }
     int currentStationIndex() const;
 
 public slots:

@@ -46,6 +46,7 @@
 #include "FileManagerWidget.h"
 #include "ApkManagerWidget.h"
 #include "ContactFixerWidget.h"
+#include "AITranslaterWidget.h"
 #include <QToolBar>
 #include "RadioPlayerWidget.h"
 
@@ -180,6 +181,12 @@ void MainWindow::setupWindowLayoutAndAnim()
     cfWidget->setVisible(false);
     ui->contentLayout->layout()->addWidget(cfWidget);
     pages.insert(ContactFixerPage, cfWidget);
+
+    AITranslaterWidget *atWidget = new AITranslaterWidget(this);
+    atWidget->setObjectName("page_aitranslater");
+    atWidget->setVisible(false);
+    ui->contentLayout->layout()->addWidget(atWidget);
+    pages.insert(AITranslaterPage, atWidget);
 
     ui->tabWidget->deleteLater();
 
@@ -617,8 +624,7 @@ void MainWindow::setupRadioPlayer()
         "   border-bottom: 1px solid #1E293B;"
         "   margin: 0px;"
         "   padding: 0px;"
-        "}"
-    );
+        "}");
 
     radioPlayer = new RadioPlayerWidget(radioToolBar);
     radioToolBar->addWidget(radioPlayer);
@@ -627,12 +633,17 @@ void MainWindow::setupRadioPlayer()
     addToolBar(Qt::TopToolBarArea, radioToolBar);
 
     // Hide toolbar when close button is clicked
-    connect(radioPlayer, &RadioPlayerWidget::requestClose, this, [this]() {
-        if(radioToolBar)
+    connect(
+        radioPlayer,
+        &RadioPlayerWidget::requestClose,
+        this,
+        [this]()
         {
-            radioToolBar->setVisible(false);
-        }
-    });
+            if(radioToolBar)
+            {
+                radioToolBar->setVisible(false);
+            }
+        });
 
     // Add "Радио" menu to QMenuBar
     if(ui->menubar)
@@ -663,13 +674,18 @@ void MainWindow::setupRadioPlayer()
         {
             const auto &st = stations[i];
             QAction *stAct = stationsSubMenu->addAction(QStringLiteral("%1 (%2)").arg(st.name, st.genre));
-            connect(stAct, &QAction::triggered, radioPlayer, [this, i]() {
-                radioPlayer->setStationIndex(i);
-                if(!radioPlayer->isPlaying())
+            connect(
+                stAct,
+                &QAction::triggered,
+                radioPlayer,
+                [this, i]()
                 {
-                    radioPlayer->play();
-                }
-            });
+                    radioPlayer->setStationIndex(i);
+                    if(!radioPlayer->isPlaying())
+                    {
+                        radioPlayer->play();
+                    }
+                });
         }
 
         radioMenu->addSeparator();

@@ -6,8 +6,7 @@
 #include <QStyle>
 #include <QFontMetrics>
 
-RadioPlayerWidget::RadioPlayerWidget(QWidget *parent)
-    : QFrame(parent)
+RadioPlayerWidget::RadioPlayerWidget(QWidget *parent) : QFrame(parent)
 {
     setObjectName("RadioPlayerWidget");
 
@@ -176,8 +175,7 @@ void RadioPlayerWidget::initUi()
         "QSlider::handle:horizontal:hover {"
         "   background: #38BDF8;"
         "   border-color: #BAE6FD;"
-        "}"
-    );
+        "}");
 
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setContentsMargins(6, 1, 6, 1);
@@ -195,8 +193,7 @@ void RadioPlayerWidget::initUi()
     {
         m_comboStations->addItem(QStringLiteral("%1 (%2)").arg(station.name, station.genre));
     }
-    connect(m_comboStations, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &RadioPlayerWidget::onStationComboChanged);
+    connect(m_comboStations, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &RadioPlayerWidget::onStationComboChanged);
     layout->addWidget(m_comboStations);
 
     // 3. Add Custom Station Button
@@ -630,22 +627,12 @@ void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
 void RadioPlayerWidget::showAddStationDialog()
 {
     bool okName = false;
-    QString name = QInputDialog::getText(this,
-                                         QString::fromUtf8("Новая радиостанция"),
-                                         QString::fromUtf8("Введите название станции:"),
-                                         QLineEdit::Normal,
-                                         QString(),
-                                         &okName);
+    QString name = QInputDialog::getText(this, QString::fromUtf8("Новая радиостанция"), QString::fromUtf8("Введите название станции:"), QLineEdit::Normal, QString(), &okName);
     if(!okName || name.trimmed().isEmpty())
         return;
 
     bool okUrl = false;
-    QString url = QInputDialog::getText(this,
-                                        QString::fromUtf8("Адрес потока"),
-                                        QString::fromUtf8("Введите URL интернет-потока (http/https):"),
-                                        QLineEdit::Normal,
-                                        QStringLiteral("http://"),
-                                        &okUrl);
+    QString url = QInputDialog::getText(this, QString::fromUtf8("Адрес потока"), QString::fromUtf8("Введите URL интернет-потока (http/https):"), QLineEdit::Normal, QStringLiteral("http://"), &okUrl);
     if(!okUrl || url.trimmed().isEmpty())
         return;
 

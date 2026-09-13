@@ -56,6 +56,8 @@ class FileManagerService;
 class ApkManagerService;
 class ContactFixerWidget;
 class ContactFixerService;
+class AITranslaterWidget;
+class AITranslaterService;
 class RadioPlayerWidget;
 class QToolBar;
 
@@ -72,6 +74,8 @@ class MainWindow : public QMainWindow
     friend class ApkManagerService;
     friend class ContactFixerWidget;
     friend class ContactFixerService;
+    friend class AITranslaterWidget;
+    friend class AITranslaterService;
 
 public:
     MainWindow(QWidget *parent = nullptr);

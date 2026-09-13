@@ -29,10 +29,10 @@ struct AdbGlobal
     std::unordered_map<int, AdbCmdResult> responces;
     std::thread *thread = nullptr;
     std::mutex mutex;
-    std::pair<std::uint32_t, std::uint32_t> dataRxTx{0, 0};
+    std::pair<std::uint32_t, std::uint32_t> dataRxTx {0, 0};
     QString devId;
-    std::atomic<int> data{0};
-    int ref{0};
+    std::atomic<int> data {0};
+    int ref {0};
 };
 
 static std::mutex s_globalsMutex;
@@ -268,7 +268,7 @@ AdbShell::~AdbShell()
 
 QString AdbShell::deviceId() const
 {
-    return ref ? ref->devId : QString{};
+    return ref ? ref->devId : QString {};
 }
 
 AdbFileIO AdbShell::getFileIO()
@@ -299,7 +299,7 @@ bool AdbShell::isConnect()
 std::pair<bool, QString> AdbShell::commandQueueWait(const QStringList &args)
 {
     int reqId = commandQueueAsync(args);
-    std::pair<bool, QString> result{false, {}};
+    std::pair<bool, QString> result {false, {}};
     if(reqId != -1)
         result = commandResult(reqId, true);
     return result;
@@ -311,9 +311,11 @@ int AdbShell::commandQueueAsync(const QStringList &args)
     if(args.empty() || !isConnect())
         return -1;
     std::lock_guard<std::mutex> lock(ref->mutex);
-    auto inRequests = [&]() {
+    auto inRequests = [&]()
+    {
         for(const auto &r : ref->requests)
-            if(r.first == reqId) return true;
+            if(r.first == reqId)
+                return true;
         return false;
     };
     do
@@ -328,7 +330,7 @@ std::pair<bool, QString> AdbShell::commandResult(int requestId, bool waitResult)
 {
     bool found = false;
     bool success = false;
-    QString output{};
+    QString output {};
 
     if(!ref || !hasReqID(requestId))
         return {false, {}};

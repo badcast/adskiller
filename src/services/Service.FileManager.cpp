@@ -40,8 +40,7 @@ QString FileManagerWidget::formatBytes(qint64 bytes)
 class FilePreviewDialog : public QDialog
 {
 public:
-    FilePreviewDialog(const QString &fileName, const QByteArray &content, QWidget *parent = nullptr)
-        : QDialog(parent)
+    FilePreviewDialog(const QString &fileName, const QByteArray &content, QWidget *parent = nullptr) : QDialog(parent)
     {
         setWindowTitle("Просмотр — " + fileName);
         resize(720, 480);
@@ -106,8 +105,7 @@ public:
     }
 };
 
-FileManagerWidget::FileManagerWidget(QWidget *parent)
-    : QWidget(parent)
+FileManagerWidget::FileManagerWidget(QWidget *parent) : QWidget(parent)
 {
     m_currentPath = "/sdcard";
     setupUi();
@@ -164,19 +162,29 @@ void FileManagerWidget::setupUi()
     m_pathEdit = new QLineEdit(this);
     m_pathEdit->setText(m_currentPath);
     m_pathEdit->setClearButtonEnabled(true);
-    connect(m_pathEdit, &QLineEdit::returnPressed, this, [this]() {
-        QString p = m_pathEdit->text().trimmed();
-        if(!p.isEmpty())
-            navigateTo(p);
-    });
+    connect(
+        m_pathEdit,
+        &QLineEdit::returnPressed,
+        this,
+        [this]()
+        {
+            QString p = m_pathEdit->text().trimmed();
+            if(!p.isEmpty())
+                navigateTo(p);
+        });
 
     m_btnCopyPath = new QPushButton("📋", this);
     m_btnCopyPath->setToolTip("Скопировать путь");
     m_btnCopyPath->setFixedWidth(32);
-    connect(m_btnCopyPath, &QPushButton::clicked, this, [this]() {
-        QApplication::clipboard()->setText(m_currentPath);
-        m_statusMsg->setText("Путь скопирован в буфер");
-    });
+    connect(
+        m_btnCopyPath,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            QApplication::clipboard()->setText(m_currentPath);
+            m_statusMsg->setText("Путь скопирован в буфер");
+        });
 
     m_searchEdit = new QLineEdit(this);
     m_searchEdit->setPlaceholderText("🔍 Поиск файлов...");
@@ -227,7 +235,8 @@ void FileManagerWidget::setupUi()
     sidebarLayout->addWidget(sidebarTitle);
 
     m_quickAccessList = new QListWidget(sidebarWidget);
-    auto addShortcut = [this](const QString &label, const QString &path) {
+    auto addShortcut = [this](const QString &label, const QString &path)
+    {
         QListWidgetItem *it = new QListWidgetItem(label, m_quickAccessList);
         it->setData(Qt::UserRole, path);
     };
@@ -327,7 +336,8 @@ void FileManagerWidget::setupUi()
     m_inspPathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     cardLayout->addWidget(m_inspPathLabel);
 
-    auto makeDetailRow = [card, cardLayout](const QString &title, QLabel *&valLabel) {
+    auto makeDetailRow = [card, cardLayout](const QString &title, QLabel *&valLabel)
+    {
         QHBoxLayout *row = new QHBoxLayout();
         row->setSpacing(6);
         QLabel *titleLbl = new QLabel(title, card);
@@ -444,21 +454,46 @@ QIcon FileManagerWidget::getFileIcon(bool isDir, const QString &fileName)
     {
         QColor badgeBg = QColor("#334155");
         QString badge = "DOC";
-        if(ext == "apk") { badgeBg = QColor("#059669"); badge = "APK"; }
+        if(ext == "apk")
+        {
+            badgeBg = QColor("#059669");
+            badge = "APK";
+        }
         else if(ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp")
-        { badgeBg = QColor("#0284C7"); badge = "IMG"; }
+        {
+            badgeBg = QColor("#0284C7");
+            badge = "IMG";
+        }
         else if(ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov")
-        { badgeBg = QColor("#7C3AED"); badge = "VID"; }
+        {
+            badgeBg = QColor("#7C3AED");
+            badge = "VID";
+        }
         else if(ext == "mp3" || ext == "wav" || ext == "flac" || ext == "ogg")
-        { badgeBg = QColor("#DB2777"); badge = "AUD"; }
+        {
+            badgeBg = QColor("#DB2777");
+            badge = "AUD";
+        }
         else if(ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar" || ext == "gz")
-        { badgeBg = QColor("#D97706"); badge = "ZIP"; }
+        {
+            badgeBg = QColor("#D97706");
+            badge = "ZIP";
+        }
         else if(ext == "pdf")
-        { badgeBg = QColor("#DC2626"); badge = "PDF"; }
+        {
+            badgeBg = QColor("#DC2626");
+            badge = "PDF";
+        }
         else if(ext == "txt" || ext == "log" || ext == "md")
-        { badgeBg = QColor("#475569"); badge = "TXT"; }
+        {
+            badgeBg = QColor("#475569");
+            badge = "TXT";
+        }
         else if(ext == "json" || ext == "xml" || ext == "prop" || ext == "conf")
-        { badgeBg = QColor("#0891B2"); badge = "CFG"; }
+        {
+            badgeBg = QColor("#0891B2");
+            badge = "CFG";
+        }
 
         p.setPen(Qt::NoPen);
         p.setBrush(QColor("#1E293B"));
@@ -492,7 +527,8 @@ QString FileManagerWidget::getFileType(bool isDir, const QString &fileName)
         return (fileName == "..") ? "Родительская папка" : "Папка с файлами";
 
     QString ext = QFileInfo(fileName).suffix().toLower();
-    if(ext == "apk") return "Пакет Android (APK)";
+    if(ext == "apk")
+        return "Пакет Android (APK)";
     if(ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp")
         return "Изображение " + ext.toUpper();
     if(ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov")
@@ -501,12 +537,18 @@ QString FileManagerWidget::getFileType(bool isDir, const QString &fileName)
         return "Аудиозапись " + ext.toUpper();
     if(ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar" || ext == "gz")
         return "Архив " + ext.toUpper();
-    if(ext == "pdf") return "Документ PDF";
-    if(ext == "txt" || ext == "log" || ext == "md") return "Текстовый документ";
-    if(ext == "json" || ext == "xml") return "Файл разметки (" + ext.toUpper() + ")";
-    if(ext == "sh") return "Shell-скрипт";
-    if(ext == "prop") return "Свойства Android (build.prop)";
-    if(ext.isEmpty()) return "Файл";
+    if(ext == "pdf")
+        return "Документ PDF";
+    if(ext == "txt" || ext == "log" || ext == "md")
+        return "Текстовый документ";
+    if(ext == "json" || ext == "xml")
+        return "Файл разметки (" + ext.toUpper() + ")";
+    if(ext == "sh")
+        return "Shell-скрипт";
+    if(ext == "prop")
+        return "Свойства Android (build.prop)";
+    if(ext.isEmpty())
+        return "Файл";
     return "Файл " + ext.toUpper();
 }
 
@@ -584,11 +626,15 @@ void FileManagerWidget::refreshList()
     m_currentItems = m_fileIO.getFileList(m_currentPath);
 
     // Sort: directories first, then files alphabetically
-    std::sort(m_currentItems.begin(), m_currentItems.end(), [](const AdbFileInfo &a, const AdbFileInfo &b) {
-        if(a.isDir != b.isDir)
-            return a.isDir > b.isDir;
-        return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
-    });
+    std::sort(
+        m_currentItems.begin(),
+        m_currentItems.end(),
+        [](const AdbFileInfo &a, const AdbFileInfo &b)
+        {
+            if(a.isDir != b.isDir)
+                return a.isDir > b.isDir;
+            return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+        });
 
     populateTable();
     m_statusMsg->setText("Готово");
@@ -826,9 +872,7 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
                 menu.addAction("👁 Быстрый просмотр", this, &FileManagerWidget::previewSelected);
             }
             menu.addAction("✏ Переименовать", this, &FileManagerWidget::renameSelected);
-            menu.addAction("📋 Копировать путь", [fullPath]() {
-                QApplication::clipboard()->setText(fullPath);
-            });
+            menu.addAction("📋 Копировать путь", [fullPath]() { QApplication::clipboard()->setText(fullPath); });
             menu.addSeparator();
             menu.addAction("🗑 Удалить", this, &FileManagerWidget::deleteSelected);
             menu.addSeparator();
@@ -945,8 +989,7 @@ void FileManagerWidget::renameSelected()
 
     QString oldPath = item->data(Qt::UserRole + 2).toString();
     bool ok = false;
-    QString newName = QInputDialog::getText(
-        this, "Переименование", "Введите новое имя:", QLineEdit::Normal, oldName, &ok);
+    QString newName = QInputDialog::getText(this, "Переименование", "Введите новое имя:", QLineEdit::Normal, oldName, &ok);
 
     if(!ok || newName.trimmed().isEmpty() || newName.trimmed() == oldName)
         return;
@@ -989,11 +1032,7 @@ void FileManagerWidget::deleteSelected()
     QString fullPath = item->data(Qt::UserRole + 2).toString();
     bool isDir = item->data(Qt::UserRole).toBool();
 
-    auto ans = QMessageBox::question(
-        this,
-        "Удаление",
-        QString("Вы уверены, что хотите удалить %1 \"%2\"?").arg(isDir ? "папку" : "файл", name),
-        QMessageBox::Yes | QMessageBox::No);
+    auto ans = QMessageBox::question(this, "Удаление", QString("Вы уверены, что хотите удалить %1 \"%2\"?").arg(isDir ? "папку" : "файл", name), QMessageBox::Yes | QMessageBox::No);
 
     if(ans != QMessageBox::Yes)
         return;
@@ -1048,8 +1087,7 @@ void FileManagerWidget::createDirectory()
     }
 }
 
-FileManagerService::FileManagerService(QObject *parent)
-    : Service(DeviceConnectType::ADB, parent)
+FileManagerService::FileManagerService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
 {
     title = "Проводник ADB";
     active = true;

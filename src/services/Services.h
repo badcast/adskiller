@@ -48,6 +48,7 @@ constexpr auto IDServiceMiUnlockString = "b05da077-dd39-4b70-980b-1b25379ec04a";
 constexpr auto IDServiceVIPBuyString = "3a8b33fa-f2b0-4c09-87fe-84c828565731";
 constexpr auto IDServiceAIAgentString = "039bc49d-6bdc-482b-a55e-1b6e8f73ea64";
 constexpr auto IDServiceFileManagerString = "44b598b1-a969-42fa-8192-d59e2522542b";
+constexpr auto IDServiceAITranslaterString = "92bcdf30-c410-4a0b-88f9-516c29f7ee8a";
 
 enum PageIndex
 {
@@ -61,6 +62,7 @@ enum PageIndex
     FileManagerPage,
     ApkManagerPage,
     ContactFixerPage,
+    AITranslaterPage,
 
     LengthPages
 };
@@ -74,6 +76,7 @@ class ApkManagerService;
 class ContactFixerService;
 class MiDeviceUnlockService;
 class FileManagerService;
+class AITranslaterService;
 class ServiceProvider;
 
 class ServiceProvider
@@ -409,4 +412,25 @@ public:
 private:
     bool m_started = false;
     bool m_finished = false;
+};
+
+class AITranslaterService : public Service
+{
+    Q_OBJECT
+
+private:
+    struct ATSInternalData *mInternal;
+
+public:
+    AITranslaterService(QObject *parent = nullptr);
+    ~AITranslaterService();
+
+    QString uuid() const override;
+    PageIndex targetPage() override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    QString widgetIconName() override;
 };

@@ -59,6 +59,7 @@ std::list<std::shared_ptr<Service>> Service::EnumAppServices(QObject *parent)
     services.emplace_back(std::move(std::make_shared<AIAgentService>(parent)));
     services.emplace_back(std::move(std::make_shared<FileManagerService>(parent)));
     services.emplace_back(std::move(std::make_shared<ApkManagerService>(parent)));
+    services.emplace_back(std::move(std::make_shared<AITranslaterService>(parent)));
     return services;
 }
 

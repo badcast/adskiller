@@ -386,7 +386,7 @@ void AIChatView::addAIMessage(const QString &text, const QString &time)
 
 int AIChatView::messageCount()
 {
-    if(m_layout )
+    if(m_layout)
         return m_layout->count();
     return -1;
 }

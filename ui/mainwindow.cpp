@@ -788,6 +788,9 @@ void MainWindow::showPage(PageIndex pageNum)
             case ContactFixerPage:
                 ui->label_8->setText("Исправление контактов");
                 break;
+            case AITranslaterPage:
+                ui->label_8->setText("ИИ-Переводчик документов");
+                break;
             default:
                 ui->label_8->setText("Назад в личный кабинет");
                 break;

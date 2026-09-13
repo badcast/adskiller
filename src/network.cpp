@@ -57,18 +57,20 @@ inline QString so_strify(ServiceOperation so)
 {
     switch(so)
     {
-    case ServiceOperation::Get:
-        return QStringLiteral("get");
-    case ServiceOperation::Set:
-        return QStringLiteral("set");
-    case ServiceOperation::Open:
-        return QStringLiteral("open");
-    case ServiceOperation::Close:
-        return QStringLiteral("close");
-    case ServiceOperation::Other:
-        return QStringLiteral("other");
-    default:
-        return QStringLiteral("invalid");
+        case ServiceOperation::Get:
+            return QStringLiteral("get");
+        case ServiceOperation::Set:
+            return QStringLiteral("set");
+        case ServiceOperation::Open:
+            return QStringLiteral("open");
+        case ServiceOperation::Close:
+            return QStringLiteral("close");
+        case ServiceOperation::Other:
+            return QStringLiteral("other");
+        case ServiceOperation::Languages:
+            return QStringLiteral("languages");
+        default:
+            return QStringLiteral("invalid");
     }
 }
 
@@ -84,6 +86,8 @@ inline ServiceOperation so_destrify(const QString &so)
         return ServiceOperation::Close;
     if(so == QLatin1String("other"))
         return ServiceOperation::Other;
+    if(so == QLatin1String("languages"))
+        return ServiceOperation::Languages;
     return ServiceOperation::Invalid;
 }
 
@@ -99,8 +103,7 @@ Network::Network(QObject *parent) : QObject(parent), manager(new QNetworkAccessM
 
 QString Network::defaultUserAgent()
 {
-    static const QString userAgent = QStringLiteral("AdsKiller-Desktop/%1.%2.%3")
-        .arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+    static const QString userAgent = QStringLiteral("AdsKiller-Desktop/%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     return userAgent;
 }
 

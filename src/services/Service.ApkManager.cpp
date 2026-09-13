@@ -59,22 +59,38 @@ namespace
     {
         switch(sdk)
         {
-            case 35: return "Android 15";
-            case 34: return "Android 14 (Upside Down Cake)";
-            case 33: return "Android 13 (Tiramisu)";
-            case 32: return "Android 12L";
-            case 31: return "Android 12 (Snow Cone)";
-            case 30: return "Android 11 (Red Velvet Cake)";
-            case 29: return "Android 10 (Quince Tart)";
-            case 28: return "Android 9.0 (Pie)";
-            case 27: return "Android 8.1 (Oreo MR1)";
-            case 26: return "Android 8.0 (Oreo)";
-            case 25: return "Android 7.1 (Nougat MR1)";
-            case 24: return "Android 7.0 (Nougat)";
-            case 23: return "Android 6.0 (Marshmallow)";
-            case 22: return "Android 5.1 (Lollipop MR1)";
-            case 21: return "Android 5.0 (Lollipop)";
-            case 19: return "Android 4.4 (KitKat)";
+            case 35:
+                return "Android 15";
+            case 34:
+                return "Android 14 (Upside Down Cake)";
+            case 33:
+                return "Android 13 (Tiramisu)";
+            case 32:
+                return "Android 12L";
+            case 31:
+                return "Android 12 (Snow Cone)";
+            case 30:
+                return "Android 11 (Red Velvet Cake)";
+            case 29:
+                return "Android 10 (Quince Tart)";
+            case 28:
+                return "Android 9.0 (Pie)";
+            case 27:
+                return "Android 8.1 (Oreo MR1)";
+            case 26:
+                return "Android 8.0 (Oreo)";
+            case 25:
+                return "Android 7.1 (Nougat MR1)";
+            case 24:
+                return "Android 7.0 (Nougat)";
+            case 23:
+                return "Android 6.0 (Marshmallow)";
+            case 22:
+                return "Android 5.1 (Lollipop MR1)";
+            case 21:
+                return "Android 5.0 (Lollipop)";
+            case 19:
+                return "Android 4.4 (KitKat)";
             default:
                 if(sdk > 35)
                     return QString("Android API %1").arg(sdk);
@@ -138,8 +154,7 @@ namespace
             {"com.android.dialer", "Телефон"},
             {"com.android.providers.media", "Хранилище мультимедиа"},
             {"com.android.providers.downloads", "Загрузки"},
-            {"com.android.packageinstaller", "Установщик пакетов"}
-        };
+            {"com.android.packageinstaller", "Установщик пакетов"}};
 
         if(knownApps.contains(pkgName))
             return knownApps.value(pkgName);
@@ -234,8 +249,7 @@ namespace
         if(!apkPath.isEmpty())
         {
             auto listReply = shell.commandQueueWait(
-                QStringList() << "unzip" << "-l" << "\"" + apkPath + "\""
-                              << "res/*ic_launcher*.png" << "res/*launcher*.png"
+                QStringList() << "unzip" << "-l" << "\"" + apkPath + "\"" << "res/*ic_launcher*.png" << "res/*launcher*.png"
                               << "res/*icon*.png" << "res/*logo*.png"
                               << "*.webp" << "2>/dev/null");
 
@@ -257,14 +271,21 @@ namespace
                         continue;
 
                     int score = 0;
-                    if(entry.contains("xxxhdpi")) score += 50;
-                    else if(entry.contains("xxhdpi")) score += 40;
-                    else if(entry.contains("xhdpi")) score += 30;
-                    else if(entry.contains("hdpi")) score += 20;
-                    else if(entry.contains("mdpi")) score += 10;
+                    if(entry.contains("xxxhdpi"))
+                        score += 50;
+                    else if(entry.contains("xxhdpi"))
+                        score += 40;
+                    else if(entry.contains("xhdpi"))
+                        score += 30;
+                    else if(entry.contains("hdpi"))
+                        score += 20;
+                    else if(entry.contains("mdpi"))
+                        score += 10;
 
-                    if(entry.contains("ic_launcher")) score += 15;
-                    else if(entry.contains("icon")) score += 10;
+                    if(entry.contains("ic_launcher"))
+                        score += 15;
+                    else if(entry.contains("icon"))
+                        score += 10;
 
                     if(score > bestScore)
                     {
@@ -275,10 +296,7 @@ namespace
 
                 if(!bestEntry.isEmpty())
                 {
-                    auto dumpReply = shell.commandQueueWait(
-                        QStringList() << "unzip" << "-p" << "\"" + apkPath + "\""
-                                      << "\"" + bestEntry + "\""
-                                      << "2>/dev/null" << "|" << "base64");
+                    auto dumpReply = shell.commandQueueWait(QStringList() << "unzip" << "-p" << "\"" + apkPath + "\"" << "\"" + bestEntry + "\"" << "2>/dev/null" << "|" << "base64");
 
                     if(dumpReply.first && !dumpReply.second.isEmpty())
                     {
@@ -400,7 +418,8 @@ namespace
         if(actIdx != -1)
         {
             int actEnd = dumpsysOutput.indexOf("Receiver Resolver Table:", actIdx);
-            if(actEnd == -1) actEnd = dumpsysOutput.indexOf("Service Resolver Table:", actIdx);
+            if(actEnd == -1)
+                actEnd = dumpsysOutput.indexOf("Service Resolver Table:", actIdx);
             QString actBlock = (actEnd != -1) ? dumpsysOutput.mid(actIdx, actEnd - actIdx) : dumpsysOutput.mid(actIdx, 3000);
             static QRegularExpression reComp(pkgName + "/([a-zA-Z0-9_\\.]+)");
             auto actMatch = reComp.globalMatch(actBlock);
@@ -463,8 +482,7 @@ namespace
     }
 } // namespace
 
-ApkManagerWidget::ApkManagerWidget(QWidget *parent)
-    : QWidget(parent)
+ApkManagerWidget::ApkManagerWidget(QWidget *parent) : QWidget(parent)
 {
     setupUi();
 }
@@ -858,26 +876,30 @@ void ApkManagerWidget::loadPackages()
         m_allPackages.append(info);
     }
 
-    std::sort(m_allPackages.begin(), m_allPackages.end(), [](const AppPackageInfo &a, const AppPackageInfo &b) {
-        if(a.isSystem != b.isSystem)
-            return !a.isSystem;
-        return a.appName.localeAwareCompare(b.appName) < 0;
-    });
+    std::sort(
+        m_allPackages.begin(),
+        m_allPackages.end(),
+        [](const AppPackageInfo &a, const AppPackageInfo &b)
+        {
+            if(a.isSystem != b.isSystem)
+                return !a.isSystem;
+            return a.appName.localeAwareCompare(b.appName) < 0;
+        });
 
     populateTable();
 
     int userCount = 0, sysCount = 0, disCount = 0;
     for(const auto &p : m_allPackages)
     {
-        if(p.isSystem) sysCount++; else userCount++;
-        if(p.isDisabled) disCount++;
+        if(p.isSystem)
+            sysCount++;
+        else
+            userCount++;
+        if(p.isDisabled)
+            disCount++;
     }
 
-    m_statCountLabel->setText(QString("Всего: %1 | 👤 Пользовательских: %2 | ⚙ Системных: %3 | ❄ Отключенных: %4")
-                                  .arg(m_allPackages.size())
-                                  .arg(userCount)
-                                  .arg(sysCount)
-                                  .arg(disCount));
+    m_statCountLabel->setText(QString("Всего: %1 | 👤 Пользовательских: %2 | ⚙ Системных: %3 | ❄ Отключенных: %4").arg(m_allPackages.size()).arg(userCount).arg(sysCount).arg(disCount));
     m_statusLabel->setText("Готово");
 }
 
@@ -1112,18 +1134,28 @@ void ApkManagerWidget::fillPermissionsTab(const AppDetails &d)
         m_permTable->insertRow(r);
 
         QString cat = "🔧 Системное";
-        if(perm.contains("CAMERA")) cat = "📷 Камера";
-        else if(perm.contains("LOCATION")) cat = "📍 Геолокация";
-        else if(perm.contains("AUDIO") || perm.contains("RECORD")) cat = "🎙 Микрофон";
-        else if(perm.contains("STORAGE") || perm.contains("MEDIA")) cat = "📁 Память и файлы";
-        else if(perm.contains("CONTACTS")) cat = "👥 Контакты";
-        else if(perm.contains("SMS") || perm.contains("PHONE") || perm.contains("CALL")) cat = "💬 Связь и SMS";
-        else if(perm.contains("INTERNET") || perm.contains("NETWORK")) cat = "🌐 Интернет";
-        else if(perm.contains("BLUETOOTH")) cat = "📶 Bluetooth";
-        else if(perm.contains("NOTIFICATION")) cat = "🔔 Уведомления";
+        if(perm.contains("CAMERA"))
+            cat = "📷 Камера";
+        else if(perm.contains("LOCATION"))
+            cat = "📍 Геолокация";
+        else if(perm.contains("AUDIO") || perm.contains("RECORD"))
+            cat = "🎙 Микрофон";
+        else if(perm.contains("STORAGE") || perm.contains("MEDIA"))
+            cat = "📁 Память и файлы";
+        else if(perm.contains("CONTACTS"))
+            cat = "👥 Контакты";
+        else if(perm.contains("SMS") || perm.contains("PHONE") || perm.contains("CALL"))
+            cat = "💬 Связь и SMS";
+        else if(perm.contains("INTERNET") || perm.contains("NETWORK"))
+            cat = "🌐 Интернет";
+        else if(perm.contains("BLUETOOTH"))
+            cat = "📶 Bluetooth";
+        else if(perm.contains("NOTIFICATION"))
+            cat = "🔔 Уведомления";
 
         bool granted = d.grantedPermissions.contains(perm);
-        if(granted) grantedCount++;
+        if(granted)
+            grantedCount++;
 
         QTableWidgetItem *catItem = new QTableWidgetItem(cat);
         QTableWidgetItem *permItem = new QTableWidgetItem(perm);
@@ -1135,10 +1167,7 @@ void ApkManagerWidget::fillPermissionsTab(const AppDetails &d)
         m_permTable->setItem(r, 2, statusItem);
     }
 
-    m_permStatLabel->setText(QString("Всего: %1 | 🟢 Разрешено: %2 | 🔴 Запрещено: %3")
-                                 .arg(d.requestedPermissions.size())
-                                 .arg(grantedCount)
-                                 .arg(d.requestedPermissions.size() - grantedCount));
+    m_permStatLabel->setText(QString("Всего: %1 | 🟢 Разрешено: %2 | 🔴 Запрещено: %3").arg(d.requestedPermissions.size()).arg(grantedCount).arg(d.requestedPermissions.size() - grantedCount));
 }
 
 void ApkManagerWidget::filterPermissions(const QString &text)
@@ -1201,9 +1230,7 @@ void ApkManagerWidget::launchApp()
     m_statusLabel->setText("Запуск " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    auto reply = m_shell.commandQueueWait(
-        QStringList() << "monkey" << "-p" << m_currentDetails.packageName
-                      << "-c" << "android.intent.category.LAUNCHER" << "1");
+    auto reply = m_shell.commandQueueWait(QStringList() << "monkey" << "-p" << m_currentDetails.packageName << "-c" << "android.intent.category.LAUNCHER" << "1");
 
     if(reply.first)
         m_statusLabel->setText("[+] Приложение запущено: " + m_currentDetails.packageName);
@@ -1290,11 +1317,7 @@ void ApkManagerWidget::clearAppData()
     if(m_currentDetails.packageName.isEmpty())
         return;
 
-    auto ans = QMessageBox::question(
-        this,
-        "Очистка данных",
-        "Вы действительно хотите сбросить все данные и кэш приложения " + m_currentDetails.appName + " (" + m_currentDetails.packageName + ")?",
-        QMessageBox::Yes | QMessageBox::No);
+    auto ans = QMessageBox::question(this, "Очистка данных", "Вы действительно хотите сбросить все данные и кэш приложения " + m_currentDetails.appName + " (" + m_currentDetails.packageName + ")?", QMessageBox::Yes | QMessageBox::No);
 
     if(ans != QMessageBox::Yes)
         return;
@@ -1367,11 +1390,7 @@ void ApkManagerWidget::uninstallApp()
     if(m_currentDetails.packageName.isEmpty())
         return;
 
-    auto ans = QMessageBox::question(
-        this,
-        "Удаление приложения",
-        "Вы действительно хотите удалить " + m_currentDetails.appName + "\n(" + m_currentDetails.packageName + ") с устройства?",
-        QMessageBox::Yes | QMessageBox::No);
+    auto ans = QMessageBox::question(this, "Удаление приложения", "Вы действительно хотите удалить " + m_currentDetails.appName + "\n(" + m_currentDetails.packageName + ") с устройства?", QMessageBox::Yes | QMessageBox::No);
 
     if(ans != QMessageBox::Yes)
         return;
@@ -1412,8 +1431,7 @@ void ApkManagerWidget::copyRawDumpsys()
     }
 }
 
-ApkManagerService::ApkManagerService(QObject *parent)
-    : Service(DeviceConnectType::ADB, parent)
+ApkManagerService::ApkManagerService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
 {
     title = "APK Менеджер";
 }

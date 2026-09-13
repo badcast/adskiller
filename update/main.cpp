@@ -52,9 +52,7 @@ int main(int argc, char **argv)
 
     if(!parser.isSet(dirOption))
     {
-        if(!QFile::exists(workDir + QDir::separator() + "adskiller.exe") &&
-           !QFile::exists(workDir + QDir::separator() + "adskiller.exe.old") &&
-           !QFile::exists(workDir + QDir::separator() + "adskiller"))
+        if(!QFile::exists(workDir + QDir::separator() + "adskiller.exe") && !QFile::exists(workDir + QDir::separator() + "adskiller.exe.old") && !QFile::exists(workDir + QDir::separator() + "adskiller"))
         {
             qDebug() << "Update manager require adskiller.exe";
             sharedMemory.detach();

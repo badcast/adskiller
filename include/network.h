@@ -103,7 +103,8 @@ enum ServiceOperation
     Set,
     Open,
     Close,
-    Other
+    Other,
+    Languages
 };
 
 enum NetworkStatus
