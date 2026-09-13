@@ -9,11 +9,11 @@ static QString formatMarkdown(const QString &raw)
 
     // Code blocks ```...```
     static QRegularExpression blockCodeRe(R"(```(?:\w+)?\n?([\s\S]*?)```)");
-    s.replace(blockCodeRe, "<pre style='background:#14161A; color:#4CC2FF; padding:6px 8px; border-radius:6px; border:1px solid #282B32; font-family:Consolas, monospace; font-size:10.5px; margin:4px 0;'>\\1</pre>");
+    s.replace(blockCodeRe, "<pre style='background:#14161A; color:#4CC2FF; padding:6px 8px; border-radius: 0px; border:1px solid #282B32; font-family:Consolas, monospace; font-size:10.5px; margin:4px 0;'>\\1</pre>");
 
     // Inline code `...`
     static QRegularExpression codeRe(R"(`([^`]+)`)");
-    s.replace(codeRe, "<code style='background:rgba(0,0,0,0.35); color:#4CC2FF; padding:1px 5px; border-radius:3px; font-family:Consolas, monospace; font-size:11px;'>\\1</code>");
+    s.replace(codeRe, "<code style='background:rgba(0,0,0,0.35); color:#4CC2FF; padding:1px 5px; border-radius: 0px; font-family:Consolas, monospace; font-size:11px;'>\\1</code>");
 
     // Bold **...**
     static QRegularExpression boldRe(R"(\*\*(.+?)\*\*)");
@@ -52,10 +52,10 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
-            "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0078D4, stop:1 #005A9E);"
+            "   background-color: #0284C7;"
             "   border: 1px solid #1A8CE6;"
-            "   border-radius: 14px;"
-            "   border-bottom-right-radius: 3px;"
+            "   border-radius: 0px;"
+            "   border-radius: 0px;"
             "}");
         m_cardFrame->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         m_cardFrame->setMinimumWidth(60);
@@ -91,8 +91,8 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "QFrame {"
             "   background-color: #1D2026;"
             "   border: 1px solid #2B2F38;"
-            "   border-radius: 14px;"
-            "   border-bottom-left-radius: 3px;"
+            "   border-radius: 0px;"
+            "   border-radius: 0px;"
             "}");
         m_cardFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
@@ -106,14 +106,16 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         headerLayout->setSpacing(4);
 
         QLabel *badge = new QLabel(this);
-        badge->setText("<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 8px; font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>AdsKiller AI</span>");
+        badge->setText("<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 0px; font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>AdsKiller AI</span>");
         badge->setTextFormat(Qt::RichText);
         badge->setStyleSheet("background: transparent; border: none;");
         headerLayout->addWidget(badge);
 
         headerLayout->addStretch();
 
-        m_copyButton = new QPushButton("📋", this);
+        m_copyButton = new QPushButton(this);
+        m_copyButton->setIcon(QIcon(":/svg/copy"));
+        m_copyButton->setIconSize(QSize(12, 12));
         m_copyButton->setToolTip("Скопировать ответ");
         m_copyButton->setFixedSize(24, 20);
         m_copyButton->setCursor(Qt::PointingHandCursor);
@@ -122,7 +124,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "   background: rgba(255,255,255,0.05);"
             "   color: #8E9297;"
             "   border: 1px solid #363940;"
-            "   border-radius: 4px;"
+            "   border-radius: 0px;"
             "   font-size: 11px;"
             "   padding: 1px;"
             "}"
@@ -141,14 +143,14 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
                 QClipboard *clipboard = QApplication::clipboard();
                 if(clipboard)
                     clipboard->setText(text);
-                m_copyButton->setText("✓");
+                m_copyButton->setIcon(QIcon(":/svg/check"));
                 QTimer::singleShot(
                     1500,
                     this,
                     [this]()
                     {
                         if(m_copyButton)
-                            m_copyButton->setText("📋");
+                            m_copyButton->setIcon(QIcon(":/svg/copy"));
                     });
             });
         headerLayout->addWidget(m_copyButton);
@@ -177,18 +179,19 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         m_cardFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         m_cardFrame->setStyleSheet(
             "QFrame {"
-            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1C2430, stop:1 #14171E);"
+            "   background-color: #0F172A;"
             "   border: 1px solid #283748;"
-            "   border-radius: 12px;"
+            "   border-radius: 0px;"
             "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
         cardLayout->setContentsMargins(14, 14, 14, 14);
         cardLayout->setSpacing(6);
 
-        QLabel *iconLabel = new QLabel("🤖", this);
+        QLabel *iconLabel = new QLabel(this);
         iconLabel->setAlignment(Qt::AlignCenter);
-        iconLabel->setStyleSheet("font-size: 26px; background: transparent; border: none;");
+        iconLabel->setPixmap(QPixmap(":/svg/bot").scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLabel->setStyleSheet("background: transparent; border: none;");
         cardLayout->addWidget(iconLabel);
 
         QLabel *titleLabel = new QLabel("AdsKiller AI Assistant", this);
@@ -215,16 +218,17 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "QFrame {"
             "   background: rgba(255,255,255,0.03);"
             "   border: 1px dashed rgba(255,255,255,0.15);"
-            "   border-radius: 12px;"
+            "   border-radius: 0px;"
             "}");
 
         QVBoxLayout *cardLayout = new QVBoxLayout(m_cardFrame);
         cardLayout->setContentsMargins(14, 16, 14, 16);
         cardLayout->setSpacing(6);
 
-        QLabel *iconLabel = new QLabel("🔒", this);
+        QLabel *iconLabel = new QLabel(this);
         iconLabel->setAlignment(Qt::AlignCenter);
-        iconLabel->setStyleSheet("font-size: 22px; background: transparent; border: none;");
+        iconLabel->setPixmap(QPixmap(":/svg/lock").scaled(28, 28, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLabel->setStyleSheet("background: transparent; border: none;");
         cardLayout->addWidget(iconLabel);
 
         QLabel *titleLabel = new QLabel("ИИ в режиме ожидания", this);
@@ -257,8 +261,8 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
         "QFrame {"
         "   background-color: #1F2228;"
         "   border: 1px solid #2F333D;"
-        "   border-radius: 12px;"
-        "   border-bottom-left-radius: 3px;"
+        "   border-radius: 0px;"
+        "   border-radius: 0px;"
         "}");
 
     QHBoxLayout *cardLayout = new QHBoxLayout(m_cardFrame);
@@ -333,7 +337,7 @@ AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
         "QScrollArea#aiChatView, QScrollArea#aiChatMessagesArea {"
         "   background-color: #111215;"
         "   border: 1px solid #1E2128;"
-        "   border-radius: 8px;"
+        "   border-radius: 0px;"
         "}"
         "QScrollArea#aiChatView QScrollBar:vertical, QScrollArea#aiChatMessagesArea QScrollBar:vertical {"
         "   width: 4px;"
@@ -342,7 +346,7 @@ AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
         "}"
         "QScrollArea#aiChatView QScrollBar::handle:vertical, QScrollArea#aiChatMessagesArea QScrollBar::handle:vertical {"
         "   background: #363940;"
-        "   border-radius: 2px;"
+        "   border-radius: 0px;"
         "   min-height: 18px;"
         "}"
         "QScrollArea#aiChatView QScrollBar::handle:vertical:hover, QScrollArea#aiChatMessagesArea QScrollBar::handle:vertical:hover {"
@@ -412,7 +416,7 @@ void AIChatView::showWelcome()
     scrollToBottom();
 
     if(messageCount() == 3)
-        addAIMessage("Салам алейкум 👋");
+        addAIMessage("Салам алейкум!");
 }
 
 void AIChatView::showLocked()

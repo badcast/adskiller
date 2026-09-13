@@ -323,7 +323,7 @@ protected:
             badgeFont.setBold(true);
             p.setFont(badgeFont);
             p.setPen(QColor(52, 211, 153));
-            p.drawText(badgeRect, Qt::AlignCenter, QString::fromUtf8("● АВТОРИЗОВАНО"));
+            p.drawText(badgeRect, Qt::AlignCenter, QString::fromUtf8("АВТОРИЗОВАНО"));
         }
         else if(m_status == UNAUTH)
         {
@@ -381,7 +381,7 @@ protected:
             btnFont.setBold(true);
             p.setFont(btnFont);
             p.setPen(QColor(255, 255, 255));
-            p.drawText(okBtnRect, Qt::AlignCenter, QString::fromUtf8("✓ РАЗРЕШИТЬ"));
+            p.drawText(okBtnRect, Qt::AlignCenter, QString::fromUtf8("РАЗРЕШИТЬ"));
         }
         else
         {
@@ -403,11 +403,11 @@ protected:
             p.setBrush(QColor(14, 165, 233, 50));
             p.drawEllipse(QPointF(cx, iconCenterY), 20.0f, 20.0f);
 
-            QFont symbolFont = p.font();
-            symbolFont.setPointSize(15);
-            p.setFont(symbolFont);
-            p.setPen(QColor(56, 189, 248));
-            p.drawText(QRectF(cx - 15.0f, iconCenterY - 15.0f, 30.0f, 30.0f), Qt::AlignCenter, "⚡");
+            QPixmap zapPix(":/svg/zap");
+            if(!zapPix.isNull())
+            {
+                p.drawPixmap(QRect(static_cast<int>(cx - 10.0f), static_cast<int>(iconCenterY - 10.0f), 20, 20), zapPix.scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            }
 
             // Text: ПОИСК УСТРОЙСТВА
             QFont sTitle = p.font();

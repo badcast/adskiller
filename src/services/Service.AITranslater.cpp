@@ -34,54 +34,116 @@
 static constexpr int AT_POLL_INTERVAL_MS = 4000;
 static constexpr int AT_POLL_MAX = 120; // 8 minutes max
 
-static const QString AITT_STYLE_HEADER = "#at_header { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 10px; }";
+static const QString AITT_STYLE_HEADER =
+    "#at_header {"
+    "  background-color: #0B1120;"
+    "  border: 1px solid #1E293B;"
+    "  border-left: 4px solid #38BDF8;"
+    "  border-radius: 0px;"
+    "}";
 
-static const QString AITT_STYLE_CARD = "QFrame#at_card { background-color: #0A0E1A; border: 1px solid #1E293B; border-radius: 10px; }";
+static const QString AITT_STYLE_CARD =
+    "QFrame#at_card {"
+    "  background-color: #0B1120;"
+    "  border: 1px solid #1E293B;"
+    "  border-radius: 0px;"
+    "}";
 
-static const QString AITT_STYLE_BTN_PRIMARY = "QPushButton {"
-                                              "  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #0369A1,stop:1 #0284C7);"
-                                              "  color: #F0F9FF; border: none; border-radius: 8px;"
-                                              "  padding: 0px 16px; font-size: 12px; font-weight: 600; min-height: 30px; max-height: 30px;"
-                                              "}"
-                                              "QPushButton:hover { background: qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #0284C7,stop:1 #38BDF8); }"
-                                              "QPushButton:pressed { background: #075985; }"
-                                              "QPushButton:disabled { background: #1E293B; color: #475569; }";
+static const QString AITT_STYLE_BTN_PRIMARY =
+    "QPushButton {"
+    "  background-color: #0284C7;"
+    "  color: #FFFFFF;"
+    "  border: 1px solid #0284C7;"
+    "  border-radius: 0px;"
+    "  padding: 0px 14px;"
+    "  font-size: 11.5px;"
+    "  font-weight: 700;"
+    "  letter-spacing: 0.5px;"
+    "  min-height: 28px;"
+    "  max-height: 28px;"
+    "}"
+    "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
+    "QPushButton:pressed { background-color: #075985; }"
+    "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
 
-static const QString AITT_STYLE_BTN_SEC = "QPushButton {"
-                                          "  background-color: #0F172A; color: #94A3B8; border: 1px solid #1E293B;"
-                                          "  border-radius: 8px; padding: 0px 12px; font-size: 11.5px; min-height: 28px; max-height: 28px;"
-                                          "}"
-                                          "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #38BDF8; }"
-                                          "QPushButton:pressed { background-color: #0B1120; }";
+static const QString AITT_STYLE_BTN_SEC =
+    "QPushButton {"
+    "  background-color: #0F172A;"
+    "  color: #CBD5E1;"
+    "  border: 1px solid #1E293B;"
+    "  border-radius: 0px;"
+    "  padding: 0px 12px;"
+    "  font-size: 11.5px;"
+    "  font-weight: 600;"
+    "  min-height: 28px;"
+    "  max-height: 28px;"
+    "}"
+    "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #38BDF8; }"
+    "QPushButton:pressed { background-color: #0B1120; }";
 
-static const QString AITT_STYLE_BTN_GREEN = "QPushButton {"
-                                            "  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #065F46,stop:1 #047857);"
-                                            "  color: #D1FAE5; border: none; border-radius: 8px;"
-                                            "  padding: 0px 16px; font-size: 12px; font-weight: 600; min-height: 30px; max-height: 30px;"
-                                            "}"
-                                            "QPushButton:hover { background: qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #047857,stop:1 #10B981); }"
-                                            "QPushButton:pressed { background: #064E3B; }"
-                                            "QPushButton:disabled { background: #1E293B; color: #475569; }";
+static const QString AITT_STYLE_BTN_GREEN =
+    "QPushButton {"
+    "  background-color: #059669;"
+    "  color: #FFFFFF;"
+    "  border: 1px solid #059669;"
+    "  border-radius: 0px;"
+    "  padding: 0px 14px;"
+    "  font-size: 11.5px;"
+    "  font-weight: 700;"
+    "  letter-spacing: 0.5px;"
+    "  min-height: 28px;"
+    "  max-height: 28px;"
+    "}"
+    "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
+    "QPushButton:pressed { background-color: #064E3B; }"
+    "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
 
-static const QString AITT_STYLE_COMBO = "QComboBox {"
-                                        "  background-color: #0B1120; color: #CBD5E1; border: 1px solid #1E293B;"
-                                        "  border-radius: 6px; padding: 3px 8px; font-size: 12px; min-height: 28px; max-height: 28px;"
-                                        "}"
-                                        "QComboBox::drop-down { border: none; }"
-                                        "QComboBox::down-arrow { image: none; }"
-                                        "QComboBox QAbstractItemView { background-color: #0B1120; color: #CBD5E1; selection-background-color: #1E3A5F; border: 1px solid #1E293B; }";
+static const QString AITT_STYLE_COMBO =
+    "QComboBox {"
+    "  background-color: #070A12;"
+    "  color: #CBD5E1;"
+    "  border: 1px solid #1E293B;"
+    "  border-radius: 0px;"
+    "  padding: 3px 8px;"
+    "  font-size: 12px;"
+    "  min-height: 28px;"
+    "  max-height: 28px;"
+    "}"
+    "QComboBox:hover { border-color: #38BDF8; }"
+    "QComboBox::drop-down { border: none; width: 18px; }"
+    "QComboBox::down-arrow { image: none; }"
+    "QComboBox QAbstractItemView {"
+    "  background-color: #0B1120;"
+    "  color: #CBD5E1;"
+    "  selection-background-color: #0284C7;"
+    "  selection-color: #FFFFFF;"
+    "  border: 1px solid #1E293B;"
+    "}";
 
-static const QString AITT_STYLE_TEXTEDIT = "QTextEdit {"
-                                           "  background-color: #070A12; color: #E2E8F0; border: 1px solid #1E293B;"
-                                           "  border-radius: 8px; font-size: 13px; padding: 8px; selection-background-color: #0284C7;"
-                                           "}"
-                                           "QTextEdit:focus { border-color: #38BDF8; }";
+static const QString AITT_STYLE_TEXTEDIT =
+    "QTextEdit {"
+    "  background-color: #070A12;"
+    "  color: #E2E8F0;"
+    "  border: 1px solid #1E293B;"
+    "  border-radius: 0px;"
+    "  font-size: 13px;"
+    "  padding: 8px;"
+    "  selection-background-color: #0284C7;"
+    "}"
+    "QTextEdit:focus { border: 1px solid #38BDF8; }";
 
-static const QString AITT_STYLE_LINEEDIT = "QLineEdit {"
-                                           "  background-color: #070A12; color: #E2E8F0; border: 1px solid #1E293B;"
-                                           "  border-radius: 6px; padding: 3px 8px; font-size: 12px; min-height: 28px; max-height: 28px;"
-                                           "}"
-                                           "QLineEdit:focus { border-color: #38BDF8; }";
+static const QString AITT_STYLE_LINEEDIT =
+    "QLineEdit {"
+    "  background-color: #070A12;"
+    "  color: #E2E8F0;"
+    "  border: 1px solid #1E293B;"
+    "  border-radius: 0px;"
+    "  padding: 3px 8px;"
+    "  font-size: 12px;"
+    "  min-height: 28px;"
+    "  max-height: 28px;"
+    "}"
+    "QLineEdit:focus { border: 1px solid #38BDF8; }";
 
 // Built-in language list – extended via API when connection available
 static const QList<QPair<QString, QString>> kBuiltinLanguages = {
@@ -152,11 +214,11 @@ void AITranslaterWidget::setupUi()
     QTabWidget *tabs = new QTabWidget(this);
     tabs->setObjectName("at_tabs");
     tabs->setStyleSheet(
-        "QTabWidget::pane { border: 1px solid #1E293B; border-radius: 10px; background-color: #0A0E1A; }"
-        "QTabBar::tab { background-color: #0B1120; color: #64748B; border: 1px solid #1E293B;"
-        "               border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 18px; font-size: 12px; font-weight: 600; margin-right: 3px; }"
-        "QTabBar::tab:selected { background-color: #0F172A; color: #38BDF8; border-color: #38BDF8; }"
-        "QTabBar::tab:hover { color: #94A3B8; }");
+        "QTabWidget::pane { border: 1px solid #1E293B; background-color: #0A0E1A; top: -1px; }"
+        "QTabBar::tab { background: transparent; color: #64748B; border: none; border-bottom: 2px solid transparent;"
+        "               padding: 8px 22px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }"
+        "QTabBar::tab:selected { background-color: #0B1120; color: #38BDF8; border-bottom: 2px solid #38BDF8; }"
+        "QTabBar::tab:hover:!selected { color: #CBD5E1; border-bottom: 2px solid #334155; }");
 
     // ── Tab 1: Text translation ──
     QWidget *textTab = new QWidget(this);
@@ -170,7 +232,7 @@ void AITranslaterWidget::setupUi()
         textTabLayout->addWidget(ch);
         break;
     }
-    tabs->addTab(textTab, QString::fromUtf8("🔤 Текст"));
+    tabs->addTab(textTab, QIcon(":/svg/message-circle"), QString::fromUtf8("Текст"));
 
     // ── Tab 2: Document translation ──
     QWidget *docTab = new QWidget(this);
@@ -183,7 +245,7 @@ void AITranslaterWidget::setupUi()
         docTabLayout->addWidget(ch);
         break;
     }
-    tabs->addTab(docTab, QString::fromUtf8("📄 Документ"));
+    tabs->addTab(docTab, QIcon(":/svg/clipboard"), QString::fromUtf8("Документ"));
 
     // ── Tab 3: Async queue ──
     QWidget *queueTab = new QWidget(this);
@@ -196,7 +258,7 @@ void AITranslaterWidget::setupUi()
         queueTabLayout->addWidget(ch);
         break;
     }
-    tabs->addTab(queueTab, QString::fromUtf8("⏳ Очередь"));
+    tabs->addTab(queueTab, QIcon(":/svg/clock"), QString::fromUtf8("Очередь"));
 
     root->addWidget(tabs, 1);
 
@@ -204,8 +266,8 @@ void AITranslaterWidget::setupUi()
     m_lblStatus = new QLabel(this);
     m_lblStatus->setObjectName("at_statusbar");
     m_lblStatus->setStyleSheet(
-        "font-size: 11.5px; color: #64748B; padding: 4px 8px;"
-        "background-color: #0B1120; border: 1px solid #1E293B; border-radius: 6px;");
+        "font-size: 11px; color: #94A3B8; padding: 5px 10px;"
+        "background-color: #0B1120; border: 1px solid #1E293B; border-left: 3px solid #38BDF8; border-radius: 0px;");
     m_lblStatus->setText(QString::fromUtf8("Готово к работе."));
     m_lblStatus->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     root->addWidget(m_lblStatus);
@@ -223,7 +285,8 @@ void AITranslaterWidget::setupHeaderFrame()
     // Left: icon + title + subtitle
     QVBoxLayout *titleBox = new QVBoxLayout();
     titleBox->setSpacing(2);
-    QLabel *titleLbl = new QLabel(QString::fromUtf8("🌐 ИИ-Переводчик документов"), hdr);
+    QLabel *titleLbl = new QLabel(QString::fromUtf8("<img src=\":/svg/globe\" width=\"16\" height=\"16\" style=\"vertical-align: middle;\"/>  ИИ-Переводчик документов"), hdr);
+    titleLbl->setTextFormat(Qt::RichText);
     titleLbl->setStyleSheet("font-size: 15px; font-weight: bold; color: #38BDF8;");
     QLabel *subLbl = new QLabel(QString::fromUtf8("Перевод текстов и файлов с помощью AI (Gemini). Поддерживаются PDF, DOCX, TXT и другие форматы."), hdr);
     subLbl->setStyleSheet("font-size: 11px; color: #64748B;");
@@ -233,7 +296,9 @@ void AITranslaterWidget::setupHeaderFrame()
     hl->addLayout(titleBox, 1);
 
     // Right: refresh languages button
-    QPushButton *btnLangs = new QPushButton(QString::fromUtf8("🔄 Обновить языки"), hdr);
+    QPushButton *btnLangs = new QPushButton(QString::fromUtf8("Обновить языки"), hdr);
+    btnLangs->setIcon(QIcon(":/svg/refresh-cw"));
+    btnLangs->setIconSize(QSize(13, 13));
     btnLangs->setStyleSheet(AITT_STYLE_BTN_SEC);
     btnLangs->setCursor(Qt::PointingHandCursor);
     connect(btnLangs, &QPushButton::clicked, this, &AITranslaterWidget::requestLanguages);
@@ -292,7 +357,9 @@ void AITranslaterWidget::setupTextTranslatePanel()
 
     langRow->addStretch(1);
 
-    m_btnTranslateText = new QPushButton(QString::fromUtf8("▶ Перевести"), inner);
+    m_btnTranslateText = new QPushButton(QString::fromUtf8("Перевести"), inner);
+    m_btnTranslateText->setIcon(QIcon(":/svg/play"));
+    m_btnTranslateText->setIconSize(QSize(14, 14));
     m_btnTranslateText->setStyleSheet(AITT_STYLE_BTN_PRIMARY);
     m_btnTranslateText->setMinimumWidth(130);
     m_btnTranslateText->setCursor(Qt::PointingHandCursor);
@@ -314,7 +381,7 @@ void AITranslaterWidget::setupTextTranslatePanel()
     inputVl->setContentsMargins(8, 8, 8, 8);
     inputVl->setSpacing(6);
     QHBoxLayout *inputHeader = new QHBoxLayout();
-    QLabel *inputTitle = new QLabel(QString::fromUtf8("📝 Исходный текст"), inputCard);
+    QLabel *inputTitle = new QLabel(QString::fromUtf8("Исходный текст"), inputCard);
     inputTitle->setStyleSheet("font-size: 12px; font-weight: 600; color: #94A3B8;");
     inputHeader->addWidget(inputTitle);
     inputHeader->addStretch(1);
@@ -339,11 +406,13 @@ void AITranslaterWidget::setupTextTranslatePanel()
     outputVl->setContentsMargins(8, 8, 8, 8);
     outputVl->setSpacing(6);
     QHBoxLayout *outputHeader = new QHBoxLayout();
-    QLabel *outputTitle = new QLabel(QString::fromUtf8("✅ Перевод"), outputCard);
+    QLabel *outputTitle = new QLabel(QString::fromUtf8("Перевод"), outputCard);
     outputTitle->setStyleSheet("font-size: 12px; font-weight: 600; color: #10B981;");
     outputHeader->addWidget(outputTitle);
     outputHeader->addStretch(1);
-    QPushButton *btnCopyOut = new QPushButton(QString::fromUtf8("📋 Копировать"), outputCard);
+    QPushButton *btnCopyOut = new QPushButton(QString::fromUtf8("Копировать"), outputCard);
+    btnCopyOut->setIcon(QIcon(":/svg/copy"));
+    btnCopyOut->setIconSize(QSize(12, 12));
     btnCopyOut->setStyleSheet(AITT_STYLE_BTN_SEC);
     btnCopyOut->setFixedHeight(24);
     btnCopyOut->setCursor(Qt::PointingHandCursor);
@@ -392,7 +461,7 @@ void AITranslaterWidget::setupDocumentPanel()
     fcVl->setContentsMargins(14, 12, 14, 12);
     fcVl->setSpacing(10);
 
-    QLabel *fcTitle = new QLabel(QString::fromUtf8("📁 Выбор документа"), fileCard);
+    QLabel *fcTitle = new QLabel(QString::fromUtf8("Выбор документа"), fileCard);
     fcTitle->setStyleSheet("font-size: 13px; font-weight: 600; color: #38BDF8;");
     fcVl->addWidget(fcTitle);
 
@@ -403,7 +472,9 @@ void AITranslaterWidget::setupDocumentPanel()
     m_editDocPath->setPlaceholderText(QString::fromUtf8("Путь к файлу (PDF, DOCX, TXT, XLSX, ODT...)"));
     m_editDocPath->setReadOnly(true);
     fileRow->addWidget(m_editDocPath, 1);
-    m_btnChooseDoc = new QPushButton(QString::fromUtf8("📂 Обзор..."), fileCard);
+    m_btnChooseDoc = new QPushButton(QString::fromUtf8("Обзор..."), fileCard);
+    m_btnChooseDoc->setIcon(QIcon(":/svg/folder"));
+    m_btnChooseDoc->setIconSize(QSize(14, 14));
     m_btnChooseDoc->setStyleSheet(AITT_STYLE_BTN_SEC);
     m_btnChooseDoc->setCursor(Qt::PointingHandCursor);
     m_btnChooseDoc->setMinimumWidth(100);
@@ -475,14 +546,18 @@ void AITranslaterWidget::setupDocumentPanel()
     // Action buttons
     QHBoxLayout *actRow = new QHBoxLayout();
     actRow->setSpacing(8);
-    m_btnTranslateDoc = new QPushButton(QString::fromUtf8("▶ Перевести сейчас"), fileCard);
+    m_btnTranslateDoc = new QPushButton(QString::fromUtf8("Перевести сейчас"), fileCard);
+    m_btnTranslateDoc->setIcon(QIcon(":/svg/play"));
+    m_btnTranslateDoc->setIconSize(QSize(14, 14));
     m_btnTranslateDoc->setStyleSheet(AITT_STYLE_BTN_PRIMARY);
     m_btnTranslateDoc->setMinimumWidth(160);
     m_btnTranslateDoc->setCursor(Qt::PointingHandCursor);
     connect(m_btnTranslateDoc, &QPushButton::clicked, this, [this]() { sendDocumentTranslate(false); });
     actRow->addWidget(m_btnTranslateDoc);
 
-    m_btnTranslateDocAsync = new QPushButton(QString::fromUtf8("⏳ В очередь (async)"), fileCard);
+    m_btnTranslateDocAsync = new QPushButton(QString::fromUtf8("В очередь (async)"), fileCard);
+    m_btnTranslateDocAsync->setIcon(QIcon(":/svg/clock"));
+    m_btnTranslateDocAsync->setIconSize(QSize(14, 14));
     m_btnTranslateDocAsync->setStyleSheet(AITT_STYLE_BTN_GREEN);
     m_btnTranslateDocAsync->setMinimumWidth(160);
     m_btnTranslateDocAsync->setCursor(Qt::PointingHandCursor);
@@ -497,17 +572,17 @@ void AITranslaterWidget::setupDocumentPanel()
     // Progress
     m_progressDoc = new QProgressBar(inner);
     m_progressDoc->setStyleSheet(
-        "QProgressBar { background-color: #0B1120; border: 1px solid #1E293B; border-radius: 6px; height: 8px; text-align: center; color: transparent; }"
-        "QProgressBar::chunk { background: qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #0284C7,stop:1 #38BDF8); border-radius: 5px; }");
+        "QProgressBar { background-color: #0B1120; border: 1px solid #1E293B; border-radius: 0px; height: 6px; text-align: center; color: transparent; }"
+        "QProgressBar::chunk { background-color: #38BDF8; }");
     m_progressDoc->setTextVisible(false);
     m_progressDoc->setRange(0, 0);
-    m_progressDoc->setFixedHeight(8);
+    m_progressDoc->setFixedHeight(6);
     m_progressDoc->setVisible(false);
     vl->addWidget(m_progressDoc);
 
     // Info
     m_lblDocInfo = new QLabel(inner);
-    m_lblDocInfo->setStyleSheet("font-size: 11.5px; color: #64748B;");
+    m_lblDocInfo->setStyleSheet("font-size: 11px; color: #64748B;");
     m_lblDocInfo->setAlignment(Qt::AlignLeft);
     m_lblDocInfo->setWordWrap(true);
     vl->addWidget(m_lblDocInfo);
@@ -515,17 +590,18 @@ void AITranslaterWidget::setupDocumentPanel()
     // Hint card
     QFrame *hintCard = new QFrame(inner);
     hintCard->setObjectName("at_card");
-    hintCard->setStyleSheet(AITT_STYLE_CARD);
+    hintCard->setStyleSheet(
+        "QFrame#at_card { background-color: #0B1120; border: 1px solid #1E293B; border-left: 3px solid #F59E0B; border-radius: 0px; }");
     QVBoxLayout *hintVl = new QVBoxLayout(hintCard);
     hintVl->setContentsMargins(14, 10, 14, 10);
     hintVl->setSpacing(4);
-    QLabel *hintTitle = new QLabel(QString::fromUtf8("💡 Рекомендации"), hintCard);
-    hintTitle->setStyleSheet("font-size: 12px; font-weight: 600; color: #F59E0B;");
+    QLabel *hintTitle = new QLabel(QString::fromUtf8("Рекомендации"), hintCard);
+    hintTitle->setStyleSheet("font-size: 11.5px; font-weight: 700; color: #F59E0B; text-transform: uppercase;");
     hintVl->addWidget(hintTitle);
     QLabel *hintText = new QLabel(
         QString::fromUtf8(
-            "• Для документов до 2 МБ используйте синхронный перевод (▶).\n"
-            "• Для больших файлов используйте асинхронный режим (⏳) и отслеживайте прогресс на вкладке «Очередь».\n"
+            "• Для документов до 2 МБ используйте синхронный перевод.\n"
+            "• Для больших файлов используйте асинхронный режим и отслеживайте прогресс на вкладке «Очередь».\n"
             "• Поддерживаемые форматы: PDF, DOCX, DOC, TXT, XLSX, ODS, ODT, PPTX, RTF."),
         hintCard);
     hintText->setStyleSheet("font-size: 11.5px; color: #94A3B8;");
@@ -547,11 +623,13 @@ void AITranslaterWidget::setupQueuePanel()
     // Controls row
     QHBoxLayout *ctrlRow = new QHBoxLayout();
     ctrlRow->setSpacing(8);
-    QLabel *queueTitle = new QLabel(QString::fromUtf8("📋 Задачи перевода документов"), inner);
-    queueTitle->setStyleSheet("font-size: 13px; font-weight: 600; color: #38BDF8;");
+    QLabel *queueTitle = new QLabel(QString::fromUtf8("Задачи перевода документов"), inner);
+    queueTitle->setStyleSheet("font-size: 12px; font-weight: 700; color: #38BDF8; text-transform: uppercase;");
     ctrlRow->addWidget(queueTitle);
     ctrlRow->addStretch(1);
-    m_btnRefreshQueue = new QPushButton(QString::fromUtf8("🔄 Обновить"), inner);
+    m_btnRefreshQueue = new QPushButton(QString::fromUtf8("Обновить"), inner);
+    m_btnRefreshQueue->setIcon(QIcon(":/svg/refresh-cw"));
+    m_btnRefreshQueue->setIconSize(QSize(13, 13));
     m_btnRefreshQueue->setStyleSheet(AITT_STYLE_BTN_SEC);
     m_btnRefreshQueue->setCursor(Qt::PointingHandCursor);
     connect(m_btnRefreshQueue, &QPushButton::clicked, this, &AITranslaterWidget::pollAsyncTask);
@@ -562,22 +640,23 @@ void AITranslaterWidget::setupQueuePanel()
     m_queueTable = new QTableWidget(0, 6, inner);
     m_queueTable->setStyleSheet(
         "QTableWidget { background-color: #070A12; color: #CBD5E1; border: 1px solid #1E293B;"
-        "  border-radius: 8px; gridline-color: #1E293B; font-size: 12px; }"
+        "  border-radius: 0px; gridline-color: #1E293B; font-size: 12px; }"
         "QTableWidget::item { padding: 6px 10px; border-bottom: 1px solid #1E293B; }"
-        "QTableWidget::item:selected { background-color: #0F2744; color: #F0F9FF; }"
-        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; border: none;"
-        "  border-bottom: 1px solid #1E293B; padding: 6px 8px; font-size: 11.5px; font-weight: 600; }");
+        "QTableWidget::item:selected { background-color: #0284C7; color: #FFFFFF; }"
+        "QHeaderView::section { background-color: #0B1120; color: #94A3B8; border: none;"
+        "  border-bottom: 2px solid #1E293B; padding: 6px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }");
     m_queueTable->setHorizontalHeaderLabels({QString::fromUtf8("Task ID"), QString::fromUtf8("Файл"), QString::fromUtf8("Языки"), QString::fromUtf8("Статус"), QString::fromUtf8("Прогресс"), QString::fromUtf8("Действие")});
     m_queueTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_queueTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     m_queueTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
     m_queueTable->verticalHeader()->setVisible(false);
+    m_queueTable->verticalHeader()->setDefaultSectionSize(36);
     m_queueTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_queueTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_queueTable->setAlternatingRowColors(false);
     vl->addWidget(m_queueTable, 1);
 
-    QLabel *queueHint = new QLabel(QString::fromUtf8("💡 Для отслеживания используйте кнопку «Обновить». Когда задача завершится, нажмите «Скачать»."), inner);
+    QLabel *queueHint = new QLabel(QString::fromUtf8("Для отслеживания используйте кнопку «Обновить». Когда задача завершится, нажмите «Скачать»."), inner);
     queueHint->setStyleSheet("font-size: 11px; color: #475569;");
     queueHint->setWordWrap(true);
     vl->addWidget(queueHint);
@@ -635,9 +714,9 @@ void AITranslaterWidget::showStatus(const QString &msg, bool error)
         return;
     m_lblStatus->setText(msg);
     if(error)
-        m_lblStatus->setStyleSheet("font-size: 11.5px; color: #F87171; padding: 4px 8px; background-color: #2D0B0B; border: 1px solid #7F1D1D; border-radius: 6px;");
+        m_lblStatus->setStyleSheet("font-size: 11.5px; color: #F87171; padding: 4px 8px; background-color: #2D0B0B; border: 1px solid #7F1D1D; border-radius: 0px;");
     else
-        m_lblStatus->setStyleSheet("font-size: 11.5px; color: #94A3B8; padding: 4px 8px; background-color: #0B1120; border: 1px solid #1E293B; border-radius: 6px;");
+        m_lblStatus->setStyleSheet("font-size: 11.5px; color: #94A3B8; padding: 4px 8px; background-color: #0B1120; border: 1px solid #1E293B; border-radius: 0px;");
 }
 
 void AITranslaterWidget::clearTextResults()
@@ -774,7 +853,7 @@ void AITranslaterWidget::sendTextTranslate()
             QString dstL = result["target_lang"].toString();
             if(m_lblTextInfo)
                 m_lblTextInfo->setText(QString::fromUtf8("Провайдер: %1 | %2→%3 | %.2f с").arg(provider, srcL, dstL).arg(duration));
-            showStatus(QString::fromUtf8("✅ Текст успешно переведён."));
+            showStatus(QString::fromUtf8("Текст успешно переведён."));
         });
 
     QJsonObject svc;
@@ -847,7 +926,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
 
                 if(m_lblDocInfo)
                     m_lblDocInfo->setText(QString::fromUtf8("Задача принята. ID: %1 | Статус: %2").arg(m_asyncTaskId, status));
-                showStatus(QString::fromUtf8("⏳ Задача #%1 добавлена в очередь. Отслеживайте прогресс на вкладке «Очередь».").arg(m_asyncTaskId));
+                showStatus(QString::fromUtf8("Задача #%1 добавлена в очередь. Отслеживайте прогресс на вкладке «Очередь».").arg(m_asyncTaskId));
 
                 // Add row to queue table
                 if(m_queueTable && !m_asyncTaskId.isEmpty())
@@ -860,7 +939,9 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                     m_queueTable->setItem(row, 3, new QTableWidgetItem(status));
                     m_queueTable->setItem(row, 4, new QTableWidgetItem("—"));
 
-                    QPushButton *dlBtn = new QPushButton(QString::fromUtf8("⬇ Скачать"), m_queueTable);
+                    QPushButton *dlBtn = new QPushButton(QString::fromUtf8("Скачать"), m_queueTable);
+                    dlBtn->setIcon(QIcon(":/svg/download"));
+                    dlBtn->setIconSize(QSize(13, 13));
                     dlBtn->setEnabled(false);
                     dlBtn->setStyleSheet(AITT_STYLE_BTN_PRIMARY);
                     QString capturedTaskId = m_asyncTaskId;
@@ -909,7 +990,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                                     {
                                         out.write(fileData);
                                         out.close();
-                                        showStatus(QString::fromUtf8("✅ Файл сохранён: ") + savePath);
+                                        showStatus(QString::fromUtf8("Файл сохранён: ") + savePath);
                                     }
                                     else
                                         showStatus(QString::fromUtf8("Не удалось сохранить файл."), true);
@@ -921,7 +1002,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                         });
                     m_queueTable->setCellWidget(row, 5, dlBtn);
                     m_queueTable->verticalHeader()->setSectionResizeMode(row, QHeaderView::Fixed);
-                    m_queueTable->verticalHeader()->setDefaultSectionSize(36);
+                    m_queueTable->setRowHeight(row, 36);
                 }
             }
             else
@@ -958,7 +1039,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
 
                 if(m_lblDocInfo)
                     m_lblDocInfo->setText(QString::fromUtf8("Переведено фрагментов: %1 из %2 | Файл: %3 (%4 байт)").arg(unitsOk).arg(units).arg(fname).arg(fileData.size()));
-                showStatus(QString::fromUtf8("✅ Документ переведён и сохранён: ") + savePath);
+                showStatus(QString::fromUtf8("Документ переведён и сохранён: ") + savePath);
             }
         });
 
@@ -1025,7 +1106,7 @@ void AITranslaterWidget::pollAsyncTask()
                             auto *dlBtn = qobject_cast<QPushButton *>(m_queueTable->cellWidget(r, 5));
                             if(dlBtn)
                                 dlBtn->setEnabled(true);
-                            showStatus(QString::fromUtf8("✅ Задача #%1 завершена! Нажмите «Скачать».").arg(m_asyncTaskId));
+                            showStatus(QString::fromUtf8("Задача #%1 завершена! Нажмите «Скачать».").arg(m_asyncTaskId));
                         }
                         break;
                     }
@@ -1037,7 +1118,7 @@ void AITranslaterWidget::pollAsyncTask()
             else if(status == "failed")
             {
                 QString err = result.contains("error") ? result["error"].toString() : taskObj["error"].toString();
-                showStatus(QString::fromUtf8("❌ Задача #%1 завершилась с ошибкой: %2").arg(m_asyncTaskId, err.isEmpty() ? QString::fromUtf8("сбой") : err), true);
+                showStatus(QString::fromUtf8("Ошибка: Задача #%1 завершилась с ошибкой: %2").arg(m_asyncTaskId, err.isEmpty() ? QString::fromUtf8("сбой") : err), true);
             }
         });
 
@@ -1081,7 +1162,7 @@ PageIndex AITranslaterService::targetPage()
 
 QString AITranslaterService::widgetIconName()
 {
-    return "white-transfer";
+    return "ai-translator";
 }
 
 bool AITranslaterService::canStart()

@@ -30,7 +30,7 @@ QString BuyVIPService::uuid() const
 
 QString BuyVIPService::widgetIconName()
 {
-    return "white-transfer";
+    return "vip-buy";
 }
 
 BuyVIPService::BuyVIPService(QObject *parent) : Service(DeviceConnectType::None, parent), network(nullptr), listVariants(nullptr), balanceText(nullptr), buyButton(nullptr), infoAfterPeriod(nullptr)

@@ -66,111 +66,178 @@ void RadioPlayerWidget::populateDefaultStations()
 
 void RadioPlayerWidget::initUi()
 {
-    setFixedHeight(30);
+    setFixedHeight(34);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    // Midnight Obsidian theme styling for the compact top radio player bar
+    // Sleek Cyber/Obsidian styling for the top radio player dock
     setStyleSheet(
         "QFrame#RadioPlayerWidget {"
-        "   background-color: #0B1120;"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0F172A, stop:1 #070B14);"
         "   border-bottom: 1px solid #1E293B;"
         "   border-top: 1px solid #1E293B;"
         "}"
         "QLabel {"
         "   color: #94A3B8;"
-        "   font-size: 10px;"
+        "   font-size: 10.5px;"
         "}"
         "QComboBox {"
         "   background-color: #0F172A;"
         "   color: #F8FAFC;"
         "   border: 1px solid #334155;"
-        "   border-radius: 4px;"
-        "   padding: 1px 6px;"
-        "   font-size: 10.5px;"
-        "   font-weight: 500;"
+        "   border-radius: 0px;"
+        "   padding: 1px 8px;"
+        "   font-size: 11px;"
+        "   font-weight: 600;"
         "   min-width: 140px;"
         "   max-width: 200px;"
-        "   height: 20px;"
+        "   height: 24px;"
         "}"
         "QComboBox:hover {"
         "   border-color: #38BDF8;"
+        "   background-color: #131E35;"
         "}"
         "QComboBox::drop-down {"
         "   subcontrol-origin: padding;"
         "   subcontrol-position: top right;"
-        "   width: 16px;"
+        "   width: 18px;"
         "   border-left: 1px solid #334155;"
-        "   border-top-right-radius: 4px;"
-        "   border-bottom-right-radius: 4px;"
+        "   border-radius: 0px;"
         "}"
         "QComboBox QAbstractItemView {"
         "   background-color: #0F172A;"
         "   color: #F8FAFC;"
         "   selection-background-color: #0284C7;"
         "   selection-color: #FFFFFF;"
-        "   border: 1px solid #334155;"
-        "   padding: 2px;"
+        "   border: 1px solid #38BDF8;"
+        "   padding: 4px;"
         "}"
-        "QPushButton {"
-        "   background-color: #1E293B;"
-        "   color: #F8FAFC;"
-        "   border: 1px solid #334155;"
-        "   border-radius: 4px;"
-        "   font-size: 10px;"
+        "QPushButton#btnAddStation {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #132238, stop:1 #0B1728);"
+        "   color: #38BDF8;"
+        "   border: 1px solid #1E3A5F;"
+        "   border-radius: 0px;"
+        "   font-size: 12px;"
         "   font-weight: bold;"
-        "   padding: 0px 4px;"
-        "   height: 20px;"
-        "   min-height: 20px;"
-        "   max-height: 20px;"
+        "   min-width: 26px;"
+        "   max-width: 26px;"
+        "   min-height: 24px;"
+        "   max-height: 24px;"
+        "   padding: 0px;"
         "}"
-        "QPushButton:hover {"
-        "   background-color: #334155;"
+        "QPushButton#btnAddStation:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E3B63, stop:1 #132845);"
         "   border-color: #38BDF8;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: #0F172A;"
-        "}"
-        "QPushButton#btnPlay {"
-        "   background-color: #10B981;"
-        "   border-color: #059669;"
         "   color: #FFFFFF;"
-        "   font-size: 10px;"
-        "   font-weight: bold;"
         "}"
-        "QPushButton#btnPlay:hover {"
-        "   background-color: #34D399;"
-        "   border-color: #10B981;"
+        "QPushButton#btnAddStation:pressed {"
+        "   background-color: #08111D;"
+        "   border-color: #0284C7;"
         "}"
-        "QPushButton#btnPlay:pressed {"
-        "   background-color: #047857;"
-        "}"
-        "QPushButton#btnClose {"
-        "   background-color: transparent;"
-        "   color: #64748B;"
-        "   border: none;"
+        "QPushButton#btnPrev, QPushButton#btnNext {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E293B, stop:1 #0F172A);"
+        "   color: #E2E8F0;"
+        "   border: 1px solid #334155;"
+        "   border-radius: 0px;"
         "   font-size: 11px;"
         "   font-weight: bold;"
-        "   padding: 0px 2px;"
+        "   min-width: 28px;"
+        "   max-width: 28px;"
+        "   min-height: 24px;"
+        "   max-height: 24px;"
+        "   padding: 0px;"
+        "}"
+        "QPushButton#btnPrev:hover, QPushButton#btnNext:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2C3E55, stop:1 #1A283C);"
+        "   border-color: #38BDF8;"
+        "   color: #38BDF8;"
+        "}"
+        "QPushButton#btnPrev:pressed, QPushButton#btnNext:pressed {"
+        "   background-color: #0A1120;"
+        "   border-color: #0284C7;"
+        "   color: #0284C7;"
+        "}"
+        "QPushButton#btnPlay {"
+        "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #0EA5E9);"
+        "   border: 1px solid #38BDF8;"
+        "   color: #FFFFFF;"
+        "   font-size: 12px;"
+        "   font-weight: 800;"
+        "   border-radius: 0px;"
+        "   min-width: 38px;"
+        "   max-width: 38px;"
+        "   min-height: 24px;"
+        "   max-height: 24px;"
+        "   padding: 0px;"
+        "}"
+        "QPushButton#btnPlay:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0369A1, stop:1 #38BDF8);"
+        "   border-color: #BAE6FD;"
+        "   color: #FFFFFF;"
+        "}"
+        "QPushButton#btnPlay:pressed {"
+        "   background-color: #034E7B;"
+        "   border-color: #0284C7;"
+        "}"
+        "QPushButton#btnMute {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E293B, stop:1 #0F172A);"
+        "   color: #38BDF8;"
+        "   border: 1px solid #334155;"
+        "   border-radius: 0px;"
+        "   font-size: 11px;"
+        "   min-width: 28px;"
+        "   max-width: 28px;"
+        "   min-height: 24px;"
+        "   max-height: 24px;"
+        "   padding: 0px;"
+        "}"
+        "QPushButton#btnMute:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2C3E55, stop:1 #1A283C);"
+        "   border-color: #38BDF8;"
+        "   color: #7DD3FC;"
+        "}"
+        "QPushButton#btnMute:pressed {"
+        "   background-color: #0A1120;"
+        "   border-color: #0284C7;"
+        "}"
+        "QPushButton#btnClose {"
+        "   background: transparent;"
+        "   color: #64748B;"
+        "   border: 1px solid transparent;"
+        "   border-radius: 0px;"
+        "   font-size: 11px;"
+        "   font-weight: bold;"
+        "   min-width: 22px;"
+        "   max-width: 22px;"
+        "   min-height: 24px;"
+        "   max-height: 24px;"
+        "   padding: 0px;"
         "}"
         "QPushButton#btnClose:hover {"
+        "   background-color: #2E1218;"
+        "   border-color: #991B1B;"
         "   color: #EF4444;"
         "}"
+        "QPushButton#btnClose:pressed {"
+        "   background-color: #4C1D24;"
+        "   border-color: #DC2626;"
+        "}"
         "QSlider::groove:horizontal {"
-        "   height: 3px;"
-        "   background: #1E293B;"
-        "   border-radius: 1px;"
+        "   height: 4px;"
+        "   background: #111827;"
+        "   border: 1px solid #1E293B;"
+        "   border-radius: 0px;"
         "}"
         "QSlider::sub-page:horizontal {"
-        "   background: #38BDF8;"
-        "   border-radius: 1px;"
+        "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #38BDF8);"
+        "   border-radius: 0px;"
         "}"
         "QSlider::handle:horizontal {"
         "   background: #F8FAFC;"
         "   border: 1px solid #0284C7;"
-        "   width: 10px;"
-        "   margin-top: -3px;"
-        "   margin-bottom: -3px;"
-        "   border-radius: 5px;"
+        "   width: 8px;"
+        "   margin-top: -5px;"
+        "   margin-bottom: -5px;"
+        "   border-radius: 0px;"
         "}"
         "QSlider::handle:horizontal:hover {"
         "   background: #38BDF8;"
@@ -178,17 +245,18 @@ void RadioPlayerWidget::initUi()
         "}");
 
     QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(6, 1, 6, 1);
-    layout->setSpacing(5);
+    layout->setContentsMargins(8, 2, 8, 2);
+    layout->setSpacing(6);
 
     // 1. Logo / Radio badge
-    m_lblLogo = new QLabel(QString::fromUtf8("📻 <b>РАДИО</b>"), this);
-    m_lblLogo->setStyleSheet("color: #38BDF8; font-size: 11px; font-weight: bold; padding-right: 2px;");
+    m_lblLogo = new QLabel(QString::fromUtf8("<img src=\":/svg/radio\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> <b>FM LIVE</b>"), this);
+    m_lblLogo->setObjectName("lblRadioLogo");
+    m_lblLogo->setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0B1E36, stop:1 #0F2744); color: #38BDF8; border: 1px solid #0284C7; border-radius: 0px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 8px;");
     layout->addWidget(m_lblLogo);
 
     // 2. Station Selector Combo
     m_comboStations = new QComboBox(this);
-    m_comboStations->setFixedHeight(20);
+    m_comboStations->setFixedHeight(24);
     for(const auto &station : m_stations)
     {
         m_comboStations->addItem(QStringLiteral("%1 (%2)").arg(station.name, station.genre));
@@ -197,71 +265,95 @@ void RadioPlayerWidget::initUi()
     layout->addWidget(m_comboStations);
 
     // 3. Add Custom Station Button
-    m_btnAddStation = new QPushButton(QString::fromUtf8("➕"), this);
+    m_btnAddStation = new QPushButton(this);
+    m_btnAddStation->setObjectName("btnAddStation");
+    m_btnAddStation->setIcon(QIcon(":/svg/plus"));
+    m_btnAddStation->setIconSize(QSize(13, 13));
     m_btnAddStation->setToolTip(QString::fromUtf8("Добавить свой поток радио"));
-    m_btnAddStation->setFixedSize(20, 20);
+    m_btnAddStation->setFixedSize(26, 24);
+    m_btnAddStation->setCursor(Qt::PointingHandCursor);
     connect(m_btnAddStation, &QPushButton::clicked, this, &RadioPlayerWidget::showAddStationDialog);
     layout->addWidget(m_btnAddStation);
 
     // 4. Playback Controls (Prev, Play/Pause, Next)
-    m_btnPrev = new QPushButton(QString::fromUtf8("⏮"), this);
+    m_btnPrev = new QPushButton(this);
+    m_btnPrev->setObjectName("btnPrev");
+    m_btnPrev->setIcon(QIcon(":/svg/skip-back"));
+    m_btnPrev->setIconSize(QSize(13, 13));
     m_btnPrev->setToolTip(QString::fromUtf8("Предыдущая станция"));
-    m_btnPrev->setFixedSize(22, 20);
+    m_btnPrev->setFixedSize(28, 24);
+    m_btnPrev->setCursor(Qt::PointingHandCursor);
     connect(m_btnPrev, &QPushButton::clicked, this, &RadioPlayerWidget::previousStation);
     layout->addWidget(m_btnPrev);
 
-    m_btnPlay = new QPushButton(QString::fromUtf8("▶"), this);
+    m_btnPlay = new QPushButton(this);
     m_btnPlay->setObjectName("btnPlay");
-    m_btnPlay->setToolTip(QString::fromUtf8("Слушать / Пауза"));
-    m_btnPlay->setFixedSize(24, 20);
+    m_btnPlay->setIcon(QIcon(":/svg/play"));
+    m_btnPlay->setIconSize(QSize(13, 13));
+    m_btnPlay->setToolTip(QString::fromUtf8("Включить радио (Пробел)"));
+    m_btnPlay->setFixedSize(38, 24);
+    m_btnPlay->setCursor(Qt::PointingHandCursor);
     connect(m_btnPlay, &QPushButton::clicked, this, &RadioPlayerWidget::togglePlay);
     layout->addWidget(m_btnPlay);
 
-    m_btnNext = new QPushButton(QString::fromUtf8("⏭"), this);
+    m_btnNext = new QPushButton(this);
+    m_btnNext->setObjectName("btnNext");
+    m_btnNext->setIcon(QIcon(":/svg/skip-forward"));
+    m_btnNext->setIconSize(QSize(13, 13));
     m_btnNext->setToolTip(QString::fromUtf8("Следующая станция"));
-    m_btnNext->setFixedSize(22, 20);
+    m_btnNext->setFixedSize(28, 24);
+    m_btnNext->setCursor(Qt::PointingHandCursor);
     connect(m_btnNext, &QPushButton::clicked, this, &RadioPlayerWidget::nextStation);
     layout->addWidget(m_btnNext);
 
     // 5. Status indicator badge
-    m_lblStatus = new QLabel(QString::fromUtf8("⚪ Готов"), this);
-    m_lblStatus->setStyleSheet("color: #64748B; font-size: 10px;");
+    m_lblStatus = new QLabel(QString::fromUtf8("СТОП"), this);
+    m_lblStatus->setObjectName("lblRadioStatus");
+    m_lblStatus->setStyleSheet("background-color: #111827; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 0px;");
     m_lblStatus->setMinimumWidth(72);
+    m_lblStatus->setAlignment(Qt::AlignCenter);
     layout->addWidget(m_lblStatus);
 
     // 6. Track / Stream info label (expands)
-    m_lblTrackInfo = new QLabel(QString::fromUtf8("Выберите станцию и нажмите «Слушать»"), this);
-    m_lblTrackInfo->setStyleSheet("color: #E2E8F0; font-size: 10.5px; font-weight: 500;");
+    m_lblTrackInfo = new QLabel(QString::fromUtf8("Выберите станцию и нажмите «Включить радио»"), this);
+    m_lblTrackInfo->setStyleSheet("color: #E2E8F0; font-size: 11px; font-weight: 500; padding-left: 4px;");
     m_lblTrackInfo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_lblTrackInfo->setTextInteractionFlags(Qt::NoTextInteraction);
     layout->addWidget(m_lblTrackInfo, 1);
 
     // 7. Volume controls
-    m_btnMute = new QPushButton(QString::fromUtf8("🔊"), this);
+    m_btnMute = new QPushButton(this);
     m_btnMute->setObjectName("btnMute");
-    m_btnMute->setToolTip(QString::fromUtf8("Без звука"));
-    m_btnMute->setFixedSize(20, 20);
+    m_btnMute->setIcon(QIcon(":/svg/volume"));
+    m_btnMute->setIconSize(QSize(14, 14));
+    m_btnMute->setToolTip(QString::fromUtf8("Выключить звук"));
+    m_btnMute->setFixedSize(28, 24);
+    m_btnMute->setCursor(Qt::PointingHandCursor);
     connect(m_btnMute, &QPushButton::clicked, this, &RadioPlayerWidget::toggleMute);
     layout->addWidget(m_btnMute);
 
     m_sliderVolume = new QSlider(Qt::Horizontal, this);
     m_sliderVolume->setRange(0, 100);
     m_sliderVolume->setValue(70);
-    m_sliderVolume->setFixedSize(60, 16);
+    m_sliderVolume->setFixedSize(70, 18);
+    m_sliderVolume->setCursor(Qt::PointingHandCursor);
     m_sliderVolume->setToolTip(QString::fromUtf8("Громкость радио"));
     connect(m_sliderVolume, &QSlider::valueChanged, this, &RadioPlayerWidget::onVolumeSliderChanged);
     layout->addWidget(m_sliderVolume);
 
     m_lblVolumePercent = new QLabel(QStringLiteral("70%"), this);
-    m_lblVolumePercent->setFixedWidth(26);
-    m_lblVolumePercent->setStyleSheet("color: #94A3B8; font-size: 9.5px; font-weight: bold;");
+    m_lblVolumePercent->setFixedWidth(30);
+    m_lblVolumePercent->setStyleSheet("color: #38BDF8; font-size: 10px; font-weight: bold; padding-left: 2px;");
     layout->addWidget(m_lblVolumePercent);
 
     // 8. Close / Hide button
-    m_btnClose = new QPushButton(QString::fromUtf8("✕"), this);
+    m_btnClose = new QPushButton(this);
     m_btnClose->setObjectName("btnClose");
+    m_btnClose->setIcon(QIcon(":/svg/close"));
+    m_btnClose->setIconSize(QSize(11, 11));
     m_btnClose->setToolTip(QString::fromUtf8("Скрыть панель радио"));
-    m_btnClose->setFixedSize(18, 18);
+    m_btnClose->setFixedSize(22, 24);
+    m_btnClose->setCursor(Qt::PointingHandCursor);
     connect(m_btnClose, &QPushButton::clicked, this, &RadioPlayerWidget::requestClose);
     layout->addWidget(m_btnClose);
 }
@@ -330,8 +422,8 @@ void RadioPlayerWidget::play()
         m_player->setSource(url);
     }
     m_player->play();
-    m_lblStatus->setText(QString::fromUtf8("🟡 Соединение..."));
-    m_lblStatus->setStyleSheet("color: #F59E0B; font-size: 11px;");
+    m_lblStatus->setText(QString::fromUtf8("СОЕДИНЕНИЕ..."));
+    m_lblStatus->setStyleSheet("background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
     m_lblTrackInfo->setText(QStringLiteral("%1 • Подключение к эфиру...").arg(station.name));
     updatePlayButtonState(true);
     emit playbackStateChanged(true);
@@ -344,8 +436,8 @@ void RadioPlayerWidget::pause()
         m_player->pause();
     }
     updatePlayButtonState(false);
-    m_lblStatus->setText(QString::fromUtf8("⏸ Пауза"));
-    m_lblStatus->setStyleSheet("color: #94A3B8; font-size: 11px;");
+    m_lblStatus->setText(QString::fromUtf8("ПАУЗА"));
+    m_lblStatus->setStyleSheet("background-color: #1E293B; border: 1px solid #475569; color: #94A3B8; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
     emit playbackStateChanged(false);
 }
 
@@ -356,8 +448,8 @@ void RadioPlayerWidget::stop()
         m_player->stop();
     }
     updatePlayButtonState(false);
-    m_lblStatus->setText(QString::fromUtf8("⚪ Остановлено"));
-    m_lblStatus->setStyleSheet("color: #64748B; font-size: 11px;");
+    m_lblStatus->setText(QString::fromUtf8("СТОП"));
+    m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
     emit playbackStateChanged(false);
 }
 
@@ -421,13 +513,13 @@ void RadioPlayerWidget::onPlayerPlaybackStateChanged(QMediaPlayer::PlaybackState
     {
         if(state == QMediaPlayer::PausedState)
         {
-            m_lblStatus->setText(QString::fromUtf8("⏸ Пауза"));
-            m_lblStatus->setStyleSheet("color: #94A3B8; font-size: 11px;");
+            m_lblStatus->setText(QString::fromUtf8("ПАУЗА"));
+            m_lblStatus->setStyleSheet("background-color: #1E293B; border: 1px solid #475569; color: #94A3B8; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
         }
         else
         {
-            m_lblStatus->setText(QString::fromUtf8("⚪ Стоп"));
-            m_lblStatus->setStyleSheet("color: #64748B; font-size: 11px;");
+            m_lblStatus->setText(QString::fromUtf8("СТОП"));
+            m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
         }
     }
     emit playbackStateChanged(playing);
@@ -442,28 +534,28 @@ void RadioPlayerWidget::onPlayerMediaStatusChanged(QMediaPlayer::MediaStatus sta
     {
         case QMediaPlayer::LoadingMedia:
         case QMediaPlayer::BufferingMedia:
-            m_lblStatus->setText(QString::fromUtf8("🟡 Буферизация"));
-            m_lblStatus->setStyleSheet("color: #F59E0B; font-size: 11px; font-weight: bold;");
+            m_lblStatus->setText(QString::fromUtf8("БУФЕР..."));
+            m_lblStatus->setStyleSheet("background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
             break;
         case QMediaPlayer::BufferedMedia:
         case QMediaPlayer::LoadedMedia:
             if(isPlaying())
             {
-                m_lblStatus->setText(QString::fromUtf8("🟢 В эфире"));
-                m_lblStatus->setStyleSheet("color: #10B981; font-size: 11px; font-weight: bold;");
+                m_lblStatus->setText(QString::fromUtf8("В ЭФИРЕ"));
+                m_lblStatus->setStyleSheet("background-color: #062B1D; border: 1px solid #059669; color: #34D399; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
             }
             break;
         case QMediaPlayer::StalledMedia:
-            m_lblStatus->setText(QString::fromUtf8("🟠 Медл. сеть"));
-            m_lblStatus->setStyleSheet("color: #F97316; font-size: 11px;");
+            m_lblStatus->setText(QString::fromUtf8("СЕТЬ..."));
+            m_lblStatus->setStyleSheet("background-color: #331A0B; border: 1px solid #EA580C; color: #FDBA74; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
             break;
         case QMediaPlayer::EndOfMedia:
-            m_lblStatus->setText(QString::fromUtf8("⚪ Завершено"));
-            m_lblStatus->setStyleSheet("color: #64748B; font-size: 11px;");
+            m_lblStatus->setText(QString::fromUtf8("КОНЕЦ"));
+            m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
             break;
         case QMediaPlayer::InvalidMedia:
-            m_lblStatus->setText(QString::fromUtf8("🔴 Ошибка"));
-            m_lblStatus->setStyleSheet("color: #EF4444; font-size: 11px; font-weight: bold;");
+            m_lblStatus->setText(QString::fromUtf8("ОШИБКА"));
+            m_lblStatus->setStyleSheet("background-color: #2E1119; border: 1px solid #DC2626; color: #FCA5A5; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
             m_lblTrackInfo->setText(QStringLiteral("%1: Поток недоступен").arg(stationName));
             break;
         default:
@@ -474,8 +566,8 @@ void RadioPlayerWidget::onPlayerMediaStatusChanged(QMediaPlayer::MediaStatus sta
 void RadioPlayerWidget::onPlayerErrorOccurred(QMediaPlayer::Error error, const QString &errorString)
 {
     Q_UNUSED(error);
-    m_lblStatus->setText(QString::fromUtf8("🔴 Ошибка"));
-    m_lblStatus->setStyleSheet("color: #EF4444; font-size: 11px; font-weight: bold;");
+    m_lblStatus->setText(QString::fromUtf8("ОШИБКА"));
+    m_lblStatus->setStyleSheet("background-color: #2E1119; border: 1px solid #DC2626; color: #FCA5A5; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
     m_lblStatus->setToolTip(errorString);
     m_lblTrackInfo->setText(QStringLiteral("Ошибка: %1").arg(errorString));
     updatePlayButtonState(false);
@@ -497,11 +589,11 @@ void RadioPlayerWidget::onPlayerMetaDataChanged()
 
     if(!title.isEmpty() && !artist.isEmpty())
     {
-        m_lblTrackInfo->setText(QStringLiteral("%1 • 🎵 %2 — %3").arg(stationName, artist, title));
+        m_lblTrackInfo->setText(QStringLiteral("%1 • %2 — %3").arg(stationName, artist, title));
     }
     else if(!title.isEmpty())
     {
-        m_lblTrackInfo->setText(QStringLiteral("%1 • 🎵 %2").arg(stationName, title));
+        m_lblTrackInfo->setText(QStringLiteral("%1 • %2").arg(stationName, title));
     }
     else
     {
@@ -551,37 +643,57 @@ void RadioPlayerWidget::updatePlayButtonState(bool isPlaying)
 
     if(isPlaying)
     {
-        m_btnPlay->setText(QString::fromUtf8("⏸"));
-        m_btnPlay->setToolTip(QString::fromUtf8("Пауза"));
+        m_btnPlay->setText(QString());
+        m_btnPlay->setIcon(QIcon(":/svg/pause"));
+        m_btnPlay->setIconSize(QSize(13, 13));
+        m_btnPlay->setToolTip(QString::fromUtf8("Пауза (Пробел)"));
         m_btnPlay->setStyleSheet(
             "QPushButton#btnPlay {"
-            "   background-color: #0284C7;"
-            "   border-color: #0369A1;"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #059669, stop:1 #10B981);"
             "   color: #FFFFFF;"
-            "   font-size: 10px;"
+            "   border: 1px solid #34D399;"
+            "   border-radius: 0px;"
+            "   font-size: 11px;"
             "   font-weight: bold;"
-            "   height: 20px;"
-            "   border-radius: 4px;"
+            "   min-width: 38px; max-width: 38px;"
+            "   min-height: 24px; max-height: 24px;"
             "   padding: 0px;"
             "}"
-            "QPushButton#btnPlay:hover { background-color: #38BDF8; }");
+            "QPushButton#btnPlay:hover {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #047857, stop:1 #34D399);"
+            "   border: 1px solid #6EE7B7;"
+            "}"
+            "QPushButton#btnPlay:pressed {"
+            "   background: #065F46;"
+            "   border: 1px solid #047857;"
+            "}");
     }
     else
     {
-        m_btnPlay->setText(QString::fromUtf8("▶"));
-        m_btnPlay->setToolTip(QString::fromUtf8("Слушать"));
+        m_btnPlay->setText(QString());
+        m_btnPlay->setIcon(QIcon(":/svg/play"));
+        m_btnPlay->setIconSize(QSize(13, 13));
+        m_btnPlay->setToolTip(QString::fromUtf8("Слушать (Пробел)"));
         m_btnPlay->setStyleSheet(
             "QPushButton#btnPlay {"
-            "   background-color: #10B981;"
-            "   border-color: #059669;"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0284C7, stop:1 #0EA5E9);"
             "   color: #FFFFFF;"
-            "   font-size: 10px;"
+            "   border: 1px solid #38BDF8;"
+            "   border-radius: 0px;"
+            "   font-size: 11px;"
             "   font-weight: bold;"
-            "   height: 20px;"
-            "   border-radius: 4px;"
+            "   min-width: 38px; max-width: 38px;"
+            "   min-height: 24px; max-height: 24px;"
             "   padding: 0px;"
             "}"
-            "QPushButton#btnPlay:hover { background-color: #34D399; }");
+            "QPushButton#btnPlay:hover {"
+            "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0369A1, stop:1 #38BDF8);"
+            "   border: 1px solid #7DD3FC;"
+            "}"
+            "QPushButton#btnPlay:pressed {"
+            "   background: #0284C7;"
+            "   border: 1px solid #0369A1;"
+            "}");
     }
 }
 
@@ -590,36 +702,67 @@ void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
     if(m_lblVolumePercent)
     {
         m_lblVolumePercent->setText(QStringLiteral("%1%").arg(muted ? 0 : value));
+        m_lblVolumePercent->setStyleSheet(
+            muted
+                ? "color: #EF4444; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;"
+                : "color: #38BDF8; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;"
+        );
     }
     if(m_btnMute)
     {
         if(muted || value == 0)
         {
-            m_btnMute->setText(QString::fromUtf8("🔇"));
+            m_btnMute->setText(QString());
+            m_btnMute->setIcon(QIcon(":/svg/volume-x"));
+            m_btnMute->setIconSize(QSize(14, 14));
+            m_btnMute->setToolTip(QString::fromUtf8("Включить звук"));
             m_btnMute->setStyleSheet(
                 "QPushButton#btnMute {"
-                "   background-color: #1E293B;"
-                "   color: #EF4444;"
-                "   border: 1px solid #334155;"
-                "   border-radius: 4px;"
-                "   font-size: 10px;"
+                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2E1119, stop:1 #1A0A0F);"
+                "   color: #F87171;"
+                "   border: 1px solid #991B1B;"
+                "   border-radius: 0px;"
+                "   font-size: 11px;"
+                "   min-width: 28px; max-width: 28px;"
+                "   min-height: 24px; max-height: 24px;"
                 "   padding: 0px;"
                 "}"
-                "QPushButton#btnMute:hover { background-color: #334155; }");
+                "QPushButton#btnMute:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #45121E, stop:1 #2E1119);"
+                "   border: 1px solid #EF4444;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton#btnMute:pressed {"
+                "   background: #1A0A0F;"
+                "   border: 1px solid #7F1D1D;"
+                "}");
         }
         else
         {
-            m_btnMute->setText(QString::fromUtf8("🔊"));
+            m_btnMute->setText(QString());
+            m_btnMute->setIcon(QIcon(":/svg/volume"));
+            m_btnMute->setIconSize(QSize(14, 14));
+            m_btnMute->setToolTip(QString::fromUtf8("Отключить звук"));
             m_btnMute->setStyleSheet(
                 "QPushButton#btnMute {"
-                "   background-color: #1E293B;"
-                "   color: #F8FAFC;"
+                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1E293B, stop:1 #0F172A);"
+                "   color: #38BDF8;"
                 "   border: 1px solid #334155;"
-                "   border-radius: 4px;"
-                "   font-size: 10px;"
+                "   border-radius: 0px;"
+                "   font-size: 11px;"
+                "   min-width: 28px; max-width: 28px;"
+                "   min-height: 24px; max-height: 24px;"
                 "   padding: 0px;"
                 "}"
-                "QPushButton#btnMute:hover { background-color: #334155; }");
+                "QPushButton#btnMute:hover {"
+                "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #334155, stop:1 #1E293B);"
+                "   border: 1px solid #38BDF8;"
+                "   color: #FFFFFF;"
+                "}"
+                "QPushButton#btnMute:pressed {"
+                "   background: #0B1120;"
+                "   border: 1px solid #0284C7;"
+                "}");
         }
     }
 }

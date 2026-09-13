@@ -56,9 +56,7 @@ int main(int argc, char **argv)
         3000,
         [&]()
         {
-            banner->close();
-            delete banner;
-            banner = nullptr;
+
             w = new MainWindow;
             w->current = w;
             w->app = &app;
@@ -90,6 +88,9 @@ int main(int argc, char **argv)
                     return true;
                 });
             w->show();
+            banner->close();
+            delete banner;
+            banner = nullptr;
         });
     exitCode = app.exec();
     if(w != nullptr)

@@ -311,10 +311,15 @@ void MainWindow::setupAiPanel()
         segLayout->setContentsMargins(2, 2, 2, 2);
         segLayout->setSpacing(2);
 
-        QPushButton *tabChatBtn = new QPushButton("💬 Чат", segmentedBar);
+        QPushButton *tabChatBtn = new QPushButton("Чат", segmentedBar);
         tabChatBtn->setObjectName("tabChatBtn");
-        QPushButton *tabInfoBtn = new QPushButton("ℹ Инфо", segmentedBar);
+        tabChatBtn->setIcon(QIcon(":/svg/message-circle"));
+        tabChatBtn->setIconSize(QSize(14, 14));
+
+        QPushButton *tabInfoBtn = new QPushButton("Инфо", segmentedBar);
         tabInfoBtn->setObjectName("tabInfoBtn");
+        tabInfoBtn->setIcon(QIcon(":/svg/clipboard"));
+        tabInfoBtn->setIconSize(QSize(14, 14));
 
         tabChatBtn->setCheckable(true);
         tabInfoBtn->setCheckable(true);
@@ -379,7 +384,9 @@ void MainWindow::setupAiPanel()
                 aiPanel->setVisible(false);
                 ui->aiToolBoxToggle->setVisible(true);
                 ui->aiToolBoxToggle->setFixedSize(36, 100);
-                ui->aiToolBoxToggle->setText(QString::fromUtf8("🤖\nAI\n‹"));
+                ui->aiToolBoxToggle->setIcon(QIcon(":/svg/bot"));
+                ui->aiToolBoxToggle->setIconSize(QSize(18, 18));
+                ui->aiToolBoxToggle->setText(QString::fromUtf8("AI\n‹"));
                 ui->aiToolBoxToggle->setToolTip(QString::fromUtf8("Развернуть панель AdsKiller AI"));
                 ui->aiToolBoxContainer->setFixedWidth(36);
             }
@@ -398,10 +405,10 @@ void MainWindow::setupAiPanel()
                 "<style type=\"text/css\">p, li { white-space: pre-wrap; line-height: 1.5; }</style></head>"
                 "<body style=\"font-family:'Segoe UI', 'Noto Sans', sans-serif; font-size:10pt; color:#D1D5DB;\">"
                 "<div style=\"text-align:center; padding:12px 0 8px 0;\">"
-                "<span style=\"font-size:30px;\">🤖</span><br/>"
+                "<img src=\":/svg/bot\" width=\"36\" height=\"36\"/><br/>"
                 "<b style=\"color:#38BDF8; font-size:13pt;\">AdsKiller AI Assistant</b><br/>"
                 "<span style=\"color:#8E9297; font-size:9pt;\">Интеллектуальный помощник</span><br/>"
-                "<span style=\"display:inline-block; margin-top:6px; background-color:#1E293B; color:#38BDF8; font-size:8.5pt; font-weight:600; padding:2px 8px; border-radius:10px;\">● В сети</span>"
+                "<span style=\"display:inline-block; margin-top:6px; background-color:#1E293B; color:#38BDF8; font-size:8.5pt; font-weight:600; padding:2px 8px; border-radius:0px;\">В сети</span>"
                 "</div>"
                 "<hr style=\"border:none; border-top:1px solid #252830; margin:10px 0;\"/>"
                 "<p style=\"font-size:9.5pt;\">"
@@ -464,8 +471,10 @@ void MainWindow::setupAiPanel()
         quickBarLayout->setContentsMargins(0, 2, 0, 2);
         quickBarLayout->setSpacing(4);
 
-        QPushButton *shuffleBtn = new QPushButton(QString::fromUtf8("🔀"), quickBarWidget);
+        QPushButton *shuffleBtn = new QPushButton(quickBarWidget);
         shuffleBtn->setObjectName("aiShuffleBtn");
+        shuffleBtn->setIcon(QIcon(":/svg/shuffle"));
+        shuffleBtn->setIconSize(QSize(14, 14));
         shuffleBtn->setToolTip("Перемешать подсказки");
         shuffleBtn->setFixedSize(26, 26);
         shuffleBtn->setCursor(Qt::PointingHandCursor);
@@ -489,23 +498,23 @@ void MainWindow::setupAiPanel()
 
         struct QuickQuestion
         {
-            QString icon;
+            QString iconRes;
             QStringList variations;
         };
 
         QList<QuickQuestion> quickQuestions = {
-            {"💳", {"Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс"}},
-            {"👑", {"VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?"}},
-            {"📱", {"Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства"}},
-            {"🛡️", {"Удаление рекламы", "Запусти удаление рекламы", "Какие есть сервисы?", "Открой окно покупки VIP"}},
-            {"⚡", {"Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?"}},
-            {"🚀", {"Ускорить телефон", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу"}},
-            {"💡", {"Что ты умеешь?", "Возможности AdsKiller", "Справка по функциям", "Чем можешь помочь?"}},
-            {"📧", {"Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты"}},
-            {"🛒", {"Купить кредиты", "Как купить VIP?", "Пополнение баланса", "Тарифы и цены"}},
-            {"🔒", {"Безопасность", "Безопасно ли это?", "Как включить отладку?", "Как подключить телефон?"}},
-            {"📊", {"Статистика", "Заблокированная реклама", "Отчет блокировки", "Сколько рекламы скрыто?"}},
-            {"❓", {"Как пользоваться?", "Инструкция для новичка", "Быстрый старт", "Помощь по приложению"}}};
+            {":/svg/credit-card", {"Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс"}},
+            {":/svg/crown", {"VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?"}},
+            {":/svg/smartphone", {"Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства"}},
+            {":/svg/shield", {"Удаление рекламы", "Запусти удаление рекламы", "Какие есть сервисы?", "Открой окно покупки VIP"}},
+            {":/svg/zap", {"Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?"}},
+            {":/svg/rocket", {"Ускорить телефон", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу"}},
+            {":/svg/lightbulb", {"Что ты умеешь?", "Возможности AdsKiller", "Справка по функциям", "Чем можешь помочь?"}},
+            {":/svg/mail", {"Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты"}},
+            {":/svg/shopping-cart", {"Купить кредиты", "Как купить VIP?", "Пополнение баланса", "Тарифы и цены"}},
+            {":/svg/lock", {"Безопасность", "Безопасно ли это?", "Как включить отладку?", "Как подключить телефон?"}},
+            {":/svg/bar-chart", {"Статистика", "Заблокированная реклама", "Отчет блокировки", "Сколько рекламы скрыто?"}},
+            {":/svg/clipboard", {"Как пользоваться?", "Инструкция для новичка", "Быстрый старт", "Помощь по приложению"}}};
 
         auto questionsPtr = std::make_shared<QList<QuickQuestion>>(quickQuestions);
 
@@ -529,8 +538,10 @@ void MainWindow::setupAiPanel()
                 int initialIdx = QRandomGenerator::global()->bounded(qData.variations.size());
                 QString initialText = qData.variations[initialIdx];
 
-                QPushButton *btn = new QPushButton(QString("%1 %2").arg(qData.icon, initialText), quickButtonsWidget);
+                QPushButton *btn = new QPushButton(initialText, quickButtonsWidget);
                 btn->setObjectName("aiQuickBtn");
+                btn->setIcon(QIcon(qData.iconRes));
+                btn->setIconSize(QSize(13, 13));
                 btn->setFixedHeight(26);
                 btn->setCursor(Qt::PointingHandCursor);
                 quickButtonsLayout->addWidget(btn);
@@ -539,7 +550,7 @@ void MainWindow::setupAiPanel()
                     btn,
                     &QPushButton::clicked,
                     this,
-                    [this, btn, icon = qData.icon, variations = qData.variations, lastIdx = initialIdx]() mutable
+                    [this, btn, iconRes = qData.iconRes, variations = qData.variations, lastIdx = initialIdx]() mutable
                     {
                         if(!ui->aiChatSend->isEnabled())
                             return;
@@ -555,7 +566,7 @@ void MainWindow::setupAiPanel()
                                 r = QRandomGenerator::global()->bounded(variations.size());
                             } while(r == lastIdx);
                             lastIdx = r;
-                            btn->setText(QString("%1 %2").arg(icon, variations[r]));
+                            btn->setText(variations[r]);
                         }
                     });
             }
@@ -589,7 +600,10 @@ void MainWindow::setupAiPanel()
 
         ui->aiChatSend->setFixedSize(30, 30);
         ui->aiChatSend->setCursor(Qt::PointingHandCursor);
-        ui->aiChatSend->setText(QString::fromUtf8("➤"));
+        ui->aiChatSend->setText(QString());
+        ui->aiChatSend->setIcon(QIcon(":/svg/send"));
+        ui->aiChatSend->setIconSize(QSize(15, 15));
+        ui->aiChatSend->setToolTip("Отправить сообщение (Enter)");
         ui->aiChatSend->setToolTip("Отправить сообщение (Enter)");
 
         capsuleLayout->addWidget(ui->aiChatEdit, 1);
@@ -648,7 +662,8 @@ void MainWindow::setupRadioPlayer()
     // Add "Радио" menu to QMenuBar
     if(ui->menubar)
     {
-        QMenu *radioMenu = ui->menubar->addMenu(QString::fromUtf8("📻 Радио"));
+        QMenu *radioMenu = ui->menubar->addMenu(QString::fromUtf8("Радио"));
+        radioMenu->setIcon(QIcon(":/svg/radio"));
 
         QAction *toggleViewAct = radioToolBar->toggleViewAction();
         toggleViewAct->setText(QString::fromUtf8("Показать/скрыть панель радио"));
@@ -657,13 +672,13 @@ void MainWindow::setupRadioPlayer()
 
         radioMenu->addSeparator();
 
-        QAction *playPauseAct = radioMenu->addAction(QString::fromUtf8("▶ / ⏸ Воспроизведение / Пауза"), radioPlayer, &RadioPlayerWidget::togglePlay);
+        QAction *playPauseAct = radioMenu->addAction(QIcon(":/svg/play"), QString::fromUtf8("Воспроизведение / Пауза"), radioPlayer, &RadioPlayerWidget::togglePlay);
         playPauseAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Space));
 
-        QAction *nextStationAct = radioMenu->addAction(QString::fromUtf8("⏭ Следующая станция"), radioPlayer, &RadioPlayerWidget::nextStation);
+        QAction *nextStationAct = radioMenu->addAction(QIcon(":/svg/skip-forward"), QString::fromUtf8("Следующая станция"), radioPlayer, &RadioPlayerWidget::nextStation);
         nextStationAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Right));
 
-        QAction *prevStationAct = radioMenu->addAction(QString::fromUtf8("⏮ Предыдущая станция"), radioPlayer, &RadioPlayerWidget::previousStation);
+        QAction *prevStationAct = radioMenu->addAction(QIcon(":/svg/skip-back"), QString::fromUtf8("Предыдущая станция"), radioPlayer, &RadioPlayerWidget::previousStation);
         prevStationAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Left));
 
         radioMenu->addSeparator();
@@ -689,7 +704,7 @@ void MainWindow::setupRadioPlayer()
         }
 
         radioMenu->addSeparator();
-        radioMenu->addAction(QString::fromUtf8("➕ Добавить свою радиостанцию..."), radioPlayer, &RadioPlayerWidget::showAddStationDialog);
+        radioMenu->addAction(QIcon(":/svg/plus"), QString::fromUtf8("Добавить свою радиостанцию..."), radioPlayer, &RadioPlayerWidget::showAddStationDialog);
     }
 }
 
@@ -793,7 +808,9 @@ void MainWindow::setupPagesDesign()
 
     if(ui->butShowPass)
     {
-        ui->butShowPass->setText("👁");
+        ui->butShowPass->setText(QString());
+        ui->butShowPass->setIcon(QIcon(":/svg/eye"));
+        ui->butShowPass->setIconSize(QSize(18, 18));
         ui->butShowPass->setToolTip("Показать / скрыть пароль");
         ui->butShowPass->setCursor(Qt::PointingHandCursor);
         ui->butShowPass->setFixedSize(42, 42);
@@ -1108,11 +1125,11 @@ void MainWindow::setupPagesDesign()
         sideLayout->setContentsMargins(14, 14, 14, 14);
         sideLayout->setSpacing(7);
 
-        QLabel *sideTitle = new QLabel(QString::fromUtf8("📋 СПРАВОЧНИК АККАУНТА"), sidePanel);
+        QLabel *sideTitle = new QLabel(QString::fromUtf8("СПРАВОЧНИК АККАУНТА"), sidePanel);
         sideTitle->setObjectName("cabinetSideTitle");
         sideLayout->addWidget(sideTitle);
 
-        auto createRow = [sidePanel, sideLayout](const QString &icon, const QString &caption, const QString &valObjName)
+        auto createRow = [sidePanel, sideLayout](const QString &iconRes, const QString &caption, const QString &valObjName)
         {
             QFrame *row = new QFrame(sidePanel);
             row->setObjectName("cabinetSideRow");
@@ -1120,10 +1137,11 @@ void MainWindow::setupPagesDesign()
             rl->setContentsMargins(8, 5, 10, 5);
             rl->setSpacing(8);
 
-            QLabel *iconLbl = new QLabel(icon, row);
+            QLabel *iconLbl = new QLabel(row);
             iconLbl->setObjectName("cabinetSideIcon");
             iconLbl->setFixedSize(26, 26);
             iconLbl->setAlignment(Qt::AlignCenter);
+            iconLbl->setPixmap(QPixmap(iconRes).scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation));
             rl->addWidget(iconLbl);
 
             QVBoxLayout *col = new QVBoxLayout();
@@ -1143,13 +1161,13 @@ void MainWindow::setupPagesDesign()
             sideLayout->addWidget(row);
         };
 
-        createRow("👤", QString::fromUtf8("Логин аккаунта"), "cabinetVal_login");
-        createRow("🕒", QString::fromUtf8("Время входа"), "cabinetVal_loginTime");
-        createRow("💳", QString::fromUtf8("Баланс кредитов"), "cabinetVal_credits");
-        createRow("👑", QString::fromUtf8("VIP-статус"), "cabinetVal_vip");
-        createRow("📱", QString::fromUtf8("Подключено устройств"), "cabinetVal_devices");
-        createRow("🌐", QString::fromUtf8("Локация"), "cabinetVal_location");
-        createRow("🛡️", QString::fromUtf8("Статус безопасности"), "cabinetVal_status");
+        createRow(":/svg/users", QString::fromUtf8("Логин аккаунта"), "cabinetVal_login");
+        createRow(":/svg/refresh-cw", QString::fromUtf8("Время входа"), "cabinetVal_loginTime");
+        createRow(":/svg/credit-card", QString::fromUtf8("Баланс кредитов"), "cabinetVal_credits");
+        createRow(":/svg/crown", QString::fromUtf8("VIP-статус"), "cabinetVal_vip");
+        createRow(":/svg/smartphone", QString::fromUtf8("Подключено устройств"), "cabinetVal_devices");
+        createRow(":/svg/globe", QString::fromUtf8("Локация"), "cabinetVal_location");
+        createRow(":/svg/shield", QString::fromUtf8("Статус безопасности"), "cabinetVal_status");
 
         sideLayout->addStretch(1);
 
@@ -1191,29 +1209,29 @@ void MainWindow::setupPagesDesign()
             "  <p style=\"color: #94A3B8; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.4;\">"
             "    Для выполнения процедур активируйте <b>Отладку по USB</b> на вашем Android-смартфоне:"
             "  </p>"
-            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px;\">"
-            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 10px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">1</span>"
+            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 0px; padding: 9px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">1</span>"
             "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Режим разработчика</strong>"
             "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
             "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> (или версию MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
             "    </p>"
             "  </div>"
-            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px;\">"
-            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 10px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">2</span>"
+            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 0px; padding: 9px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">2</span>"
             "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Включите отладку по USB</strong>"
             "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
             "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте тумблер <b>Отладка по USB</b> (для Xiaomi также «Установка через USB»)."
             "    </p>"
             "  </div>"
-            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; margin-bottom: 8px;\">"
-            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 10px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">3</span>"
+            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 0px; padding: 9px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">3</span>"
             "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
             "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
             "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; отметьте <b>«Всегда разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
             "    </p>"
             "  </div>"
-            "  <div style=\"background: rgba(30, 41, 59, 0.4); border: 1px dashed #334155; border-radius: 8px; padding: 8px 12px; margin-top: 6px;\">"
-            "    <span style=\"color: #38BDF8; font-size: 11.5px; font-weight: 600;\">💡 Телефон не определяется?</span>"
+            "  <div style=\"background: rgba(30, 41, 59, 0.4); border: 1px dashed #334155; border-radius: 0px; padding: 8px 12px; margin-top: 6px;\">"
+            "    <span style=\"color: #38BDF8; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Телефон не определяется?</span>"
             "    <p style=\"margin: 3px 0 0 0; color: #64748B; font-size: 11px; line-height: 1.35;\">"
             "      Смените режим подключения USB на <b>«Передача файлов (MTP)»</b> либо подключите кабель в другой USB-порт на ПК."
             "    </p>"
@@ -1223,11 +1241,11 @@ void MainWindow::setupPagesDesign()
     }
     if(ui->label_3)
     {
-        ui->label_3->setText("<a style=\"color: #38BDF8; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\">📖 Подробная пошаговая инструкция с иллюстрациями &rarr;</a>");
+        ui->label_3->setText("<a style=\"color: #38BDF8; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\"><img src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Подробная пошаговая инструкция с иллюстрациями &rarr;</a>");
     }
     if(ui->label_5)
     {
-        ui->label_5->setText(QString::fromUtf8("📡 Поиск подключенного Android-устройства..."));
+        ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
     }
 
     if(ui->device_right_group && !adbVisualizer)

@@ -32,3 +32,8 @@ bool MiDeviceUnlockService::start()
 void MiDeviceUnlockService::stop()
 {
 }
+
+QString MiDeviceUnlockService::widgetIconName()
+{
+    return "mi-unlock";
+}

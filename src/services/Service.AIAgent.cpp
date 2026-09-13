@@ -189,11 +189,9 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
         auto *btn = MainWindow::current ? MainWindow::current->findChild<QPushButton *>("aiChatSend") : nullptr;
         if(btn)
         {
-            QString prev = btn->property("__prev_text").toString();
-            if(!prev.isEmpty())
-                btn->setText(prev);
-            else
-                btn->setText(QString::fromUtf8("➤"));
+            btn->setText(QString());
+            btn->setIcon(QIcon(":/svg/send"));
+            btn->setIconSize(QSize(16, 16));
             btn->setEnabled(true);
         }
         return;
@@ -234,11 +232,9 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     auto *btn = MainWindow::current ? MainWindow::current->findChild<QPushButton *>("aiChatSend") : nullptr;
     if(btn)
     {
-        QString prev = btn->property("__prev_text").toString();
-        if(!prev.isEmpty())
-            btn->setText(prev);
-        else
-            btn->setText(QString::fromUtf8("➤"));
+        btn->setText(QString());
+        btn->setIcon(QIcon(":/svg/send"));
+        btn->setIconSize(QSize(16, 16));
         btn->setEnabled(true);
     }
 
@@ -247,4 +243,9 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
         QString serviceRunUuid = responce["run_service"].toString();
         emit onRunService(serviceRunUuid);
     }
+}
+
+QString AIAgentService::widgetIconName()
+{
+    return "ai-agent";
 }

@@ -16,7 +16,7 @@
 static QIcon createBrandBadgeIcon(const QString &vendorRaw)
 {
     QString vendor = vendorRaw.trimmed().toLower();
-    QString letter = "📱";
+    QString letter = "D";
     QColor bgTop, bgBot;
     QColor textColor = Qt::white;
 
@@ -117,7 +117,7 @@ QString MyDeviceService::uuid() const
 
 QString MyDeviceService::widgetIconName()
 {
-    return "white-devices-list";
+    return "my-devices";
 }
 
 PageIndex MyDeviceService::targetPage()
@@ -289,8 +289,10 @@ void MyDeviceService::fillMyDevicesPage()
         connCountItem->setTextAlignment(Qt::AlignCenter);
         connCountItem->setForeground(QBrush(QColor("#E3E5E8")));
 
-        QString payStr = (item.purchasedType == 1) ? "👑 VIP" : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "—");
+        QString payStr = (item.purchasedType == 1) ? "VIP" : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "—");
         DeviceSortItem *payItem = new DeviceSortItem(payStr);
+        if(item.purchasedType == 1)
+            payItem->setIcon(QIcon(":/svg/crown"));
         int payRank = (item.purchasedType == 1) ? 999999 : ((item.purchasedType == 2) ? item.purchasedValue : 0);
         payItem->setData(payRank, Qt::UserRole);
         payItem->setTextAlignment(Qt::AlignCenter);
@@ -299,7 +301,8 @@ void MyDeviceService::fillMyDevicesPage()
         else
             payItem->setForeground(QBrush(QColor("#8E9297")));
 
-        DeviceSortItem *guarItem = new DeviceSortItem(item.serverQuarantee == 1 ? "✓ Активна" : "✗ Истекла");
+        DeviceSortItem *guarItem = new DeviceSortItem(item.serverQuarantee == 1 ? "Активна" : "Истекла");
+        guarItem->setIcon(QIcon(item.serverQuarantee == 1 ? ":/svg/check" : ":/svg/close"));
         guarItem->setData(item.serverQuarantee == 1 ? 1 : 0, Qt::UserRole);
         guarItem->setTextAlignment(Qt::AlignCenter);
         if(item.serverQuarantee == 1)

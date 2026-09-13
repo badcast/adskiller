@@ -70,17 +70,25 @@ void ContactFixerWidget::updateDeviceUi()
     if(!m_device.devId.isEmpty())
     {
         QString name = !m_device.marketingName.isEmpty() ? m_device.marketingName : (!m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.model.isEmpty() ? m_device.model : m_device.devId));
-        m_lblDeviceStatus->setText("📱 " + name + " (Подключен)");
-        m_lblDeviceStatus->setStyleSheet("background-color: #064E3B; color: #34D399; font-size: 12px; font-weight: bold; border: 1px solid #059669; border-radius: 6px; padding: 6px 12px;");
+        m_lblDeviceStatus->setText(name + " (Подключен)");
+        m_lblDeviceStatus->setStyleSheet("background-color: #064E3B; color: #34D399; font-size: 12px; font-weight: bold; border: 1px solid #059669; border-radius: 0px; padding: 6px 12px;");
         if(m_btnConnectDevice)
-            m_btnConnectDevice->setText("🔄 Сменить устройство");
+        {
+            m_btnConnectDevice->setText("Сменить устройство");
+            m_btnConnectDevice->setIcon(QIcon(":/svg/refresh-cw"));
+            m_btnConnectDevice->setIconSize(QSize(13, 13));
+        }
     }
     else
     {
-        m_lblDeviceStatus->setText("📱 Телефон не подключен");
-        m_lblDeviceStatus->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 12px; font-weight: 500; border: 1px solid #334155; border-radius: 6px; padding: 6px 12px;");
+        m_lblDeviceStatus->setText("Телефон не подключен");
+        m_lblDeviceStatus->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 12px; font-weight: 500; border: 1px solid #334155; border-radius: 0px; padding: 6px 12px;");
         if(m_btnConnectDevice)
-            m_btnConnectDevice->setText("🔗 Подключить ADB");
+        {
+            m_btnConnectDevice->setText("Подключить ADB");
+            m_btnConnectDevice->setIcon(QIcon(":/svg/wifi"));
+            m_btnConnectDevice->setIconSize(QSize(13, 13));
+        }
     }
 }
 
@@ -128,7 +136,7 @@ void ContactFixerWidget::setupUi()
     // ================= 1. TOP HEADER & DEVICE BAR =================
     QFrame *headerFrame = new QFrame(this);
     headerFrame->setObjectName("cf_header");
-    headerFrame->setStyleSheet("#cf_header { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 10px; }");
+    headerFrame->setStyleSheet("#cf_header { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; }");
     QVBoxLayout *headerVBox = new QVBoxLayout(headerFrame);
     headerVBox->setContentsMargins(12, 8, 12, 8);
     headerVBox->setSpacing(6);
@@ -139,7 +147,8 @@ void ContactFixerWidget::setupUi()
 
     QVBoxLayout *titleBox = new QVBoxLayout();
     titleBox->setSpacing(1);
-    QLabel *titleLbl = new QLabel("📇 Исправление и нормализация контактов", headerFrame);
+    QLabel *titleLbl = new QLabel("<img src=\":/svg/users\" width=\"16\" height=\"16\" style=\"vertical-align: middle;\"/>  Исправление и нормализация контактов", headerFrame);
+    titleLbl->setTextFormat(Qt::RichText);
     titleLbl->setStyleSheet("font-size: 14px; font-weight: bold; color: #38BDF8;");
     QLabel *subtitleLbl = new QLabel("Автоматическое форматирование телефонных номеров в телефонной книге vCard / Android", headerFrame);
     subtitleLbl->setStyleSheet("font-size: 11px; color: #64748B;");
@@ -149,13 +158,15 @@ void ContactFixerWidget::setupUi()
 
     headerRowA->addStretch(1);
 
-    m_lblDeviceStatus = new QLabel("📱 Телефон не подключен", headerFrame);
-    m_lblDeviceStatus->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 11px; font-weight: 500; border: 1px solid #334155; border-radius: 4px; padding: 3px 8px;");
+    m_lblDeviceStatus = new QLabel("Телефон не подключен", headerFrame);
+    m_lblDeviceStatus->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 11px; font-weight: 500; border: 1px solid #334155; border-radius: 0px; padding: 3px 8px;");
     headerRowA->addWidget(m_lblDeviceStatus);
 
-    m_btnConnectDevice = new QPushButton("🔗 Подключить ADB", headerFrame);
+    m_btnConnectDevice = new QPushButton("Подключить ADB", headerFrame);
+    m_btnConnectDevice->setIcon(QIcon(":/svg/wifi"));
+    m_btnConnectDevice->setIconSize(QSize(13, 13));
     m_btnConnectDevice->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #38BDF8; font-weight: 600; border-radius: 5px; padding: 4px 10px; min-height: 26px; border: 1px solid #0284C7; font-size: 11.5px; }"
+        "QPushButton { background-color: #1E293B; color: #38BDF8; font-weight: 600; border-radius: 0px; padding: 4px 10px; min-height: 26px; border: 1px solid #0284C7; font-size: 11.5px; }"
         "QPushButton:hover { background-color: #0284C7; color: #FFFFFF; }");
     connect(m_btnConnectDevice, &QPushButton::clicked, this, &ContactFixerWidget::requestDeviceConnect);
     headerRowA->addWidget(m_btnConnectDevice);
@@ -172,7 +183,7 @@ void ContactFixerWidget::setupUi()
     m_loadedPathEdit = new QLineEdit(headerFrame);
     m_loadedPathEdit->setReadOnly(true);
     m_loadedPathEdit->setPlaceholderText("Файл или устройство ещё не загружены. Откройте .vcf с ПК или нажмите «Считать с телефона»...");
-    m_loadedPathEdit->setStyleSheet("QLineEdit { background-color: #070A12; color: #38BDF8; border: 1px solid #1E293B; border-radius: 5px; padding: 3px 8px; font-family: monospace; font-size: 11.5px; min-height: 26px; }");
+    m_loadedPathEdit->setStyleSheet("QLineEdit { background-color: #070A12; color: #38BDF8; border: 1px solid #1E293B; border-radius: 0px; padding: 3px 8px; font-family: monospace; font-size: 11.5px; min-height: 26px; }");
     sourceRow->addWidget(m_loadedPathEdit, 1);
 
     headerVBox->addLayout(sourceRow);
@@ -181,7 +192,7 @@ void ContactFixerWidget::setupUi()
     // ================= 2. ACTIONS & TOOLBAR CARD =================
     QFrame *actionFrame = new QFrame(this);
     actionFrame->setObjectName("cf_actions");
-    actionFrame->setStyleSheet("#cf_actions { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; }");
+    actionFrame->setStyleSheet("#cf_actions { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; }");
     QVBoxLayout *actionVBox = new QVBoxLayout(actionFrame);
     actionVBox->setContentsMargins(12, 8, 12, 8);
     actionVBox->setSpacing(6);
@@ -190,16 +201,20 @@ void ContactFixerWidget::setupUi()
     QHBoxLayout *actRow1 = new QHBoxLayout();
     actRow1->setSpacing(8);
 
-    m_btnOpenVcf = new QPushButton("📂 Открыть .vcf с ПК", actionFrame);
+    m_btnOpenVcf = new QPushButton("Открыть .vcf с ПК", actionFrame);
+    m_btnOpenVcf->setIcon(QIcon(":/svg/folder"));
+    m_btnOpenVcf->setIconSize(QSize(13, 13));
     m_btnOpenVcf->setStyleSheet(
-        "QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #0EA5E9); color: #FFFFFF; font-weight: 600; font-size: 11.5px; border-radius: 5px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: none; }"
+        "QPushButton { background-color: #0284C7; color: #FFFFFF; font-weight: 600; font-size: 11.5px; border-radius: 0px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: none; }"
         "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0369A1, stop:1 #0284C7); }");
     connect(m_btnOpenVcf, &QPushButton::clicked, this, &ContactFixerWidget::openVcfFile);
     actRow1->addWidget(m_btnOpenVcf);
 
-    m_btnLoadDevice = new QPushButton("📱 Считать с телефона", actionFrame);
+    m_btnLoadDevice = new QPushButton("Считать с телефона", actionFrame);
+    m_btnLoadDevice->setIcon(QIcon(":/svg/smartphone"));
+    m_btnLoadDevice->setIconSize(QSize(13, 13));
     m_btnLoadDevice->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #38BDF8; font-weight: 600; font-size: 11.5px; border-radius: 5px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #0284C7; }"
+        "QPushButton { background-color: #1E293B; color: #38BDF8; font-weight: 600; font-size: 11.5px; border-radius: 0px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #0284C7; }"
         "QPushButton:hover { background-color: #0284C7; color: #FFFFFF; }");
     connect(m_btnLoadDevice, &QPushButton::clicked, this, &ContactFixerWidget::loadFromDevice);
     actRow1->addWidget(m_btnLoadDevice);
@@ -211,29 +226,35 @@ void ContactFixerWidget::setupUi()
     m_remotePathEdit = new QLineEdit("/sdcard/Download/contacts.vcf", actionFrame);
     m_remotePathEdit->setToolTip("Путь к файлу .vcf на устройстве для чтения и записи");
     m_remotePathEdit->setStyleSheet(
-        "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 2px 8px; font-family: monospace; font-size: 11.5px; height: 26px; min-height: 26px; max-height: 26px; min-width: 170px; }"
+        "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 8px; font-family: monospace; font-size: 11.5px; height: 26px; min-height: 26px; max-height: 26px; min-width: 170px; }"
         "QLineEdit:focus { border-color: #38BDF8; }");
     actRow1->addWidget(m_remotePathEdit);
 
     actRow1->addStretch(1);
 
-    m_btnSaveVcf = new QPushButton("💾 Сохранить .vcf", actionFrame);
+    m_btnSaveVcf = new QPushButton("Сохранить .vcf", actionFrame);
+    m_btnSaveVcf->setIcon(QIcon(":/svg/download"));
+    m_btnSaveVcf->setIconSize(QSize(13, 13));
     m_btnSaveVcf->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #E2E8F0; font-weight: 600; font-size: 11.5px; border-radius: 5px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #334155; }"
+        "QPushButton { background-color: #1E293B; color: #E2E8F0; font-weight: 600; font-size: 11.5px; border-radius: 0px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #334155; }"
         "QPushButton:hover { background-color: #27354A; border-color: #38BDF8; color: #38BDF8; }");
     connect(m_btnSaveVcf, &QPushButton::clicked, this, &ContactFixerWidget::saveVcfFile);
     actRow1->addWidget(m_btnSaveVcf);
 
-    m_btnPushDevice = new QPushButton("📤 Отправить на телефон", actionFrame);
+    m_btnPushDevice = new QPushButton("Отправить на телефон", actionFrame);
+    m_btnPushDevice->setIcon(QIcon(":/svg/send"));
+    m_btnPushDevice->setIconSize(QSize(13, 13));
     m_btnPushDevice->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #E2E8F0; font-weight: 600; font-size: 11.5px; border-radius: 5px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #334155; }"
+        "QPushButton { background-color: #1E293B; color: #E2E8F0; font-weight: 600; font-size: 11.5px; border-radius: 0px; padding: 3px 10px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #334155; }"
         "QPushButton:hover { background-color: #27354A; border-color: #38BDF8; color: #38BDF8; }");
     connect(m_btnPushDevice, &QPushButton::clicked, this, &ContactFixerWidget::pushToDevice);
     actRow1->addWidget(m_btnPushDevice);
 
-    m_btnExportCsv = new QPushButton("📄 Экспорт в CSV", actionFrame);
+    m_btnExportCsv = new QPushButton("Экспорт в CSV", actionFrame);
+    m_btnExportCsv->setIcon(QIcon(":/svg/clipboard"));
+    m_btnExportCsv->setIconSize(QSize(13, 13));
     m_btnExportCsv->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #94A3B8; font-weight: 500; font-size: 11.5px; border-radius: 5px; padding: 3px 8px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #334155; }"
+        "QPushButton { background-color: #1E293B; color: #94A3B8; font-weight: 500; font-size: 11.5px; border-radius: 0px; padding: 3px 8px; height: 26px; min-height: 26px; max-height: 26px; border: 1px solid #334155; }"
         "QPushButton:hover { color: #F8FAFC; border-color: #64748B; }");
     connect(m_btnExportCsv, &QPushButton::clicked, this, &ContactFixerWidget::exportCsv);
     actRow1->addWidget(m_btnExportCsv);
@@ -249,12 +270,12 @@ void ContactFixerWidget::setupUi()
     actRow2->addWidget(ruleLbl);
 
     m_comboFormatRule = new QComboBox(actionFrame);
-    m_comboFormatRule->addItem("🌐 Международный красивый: +7 (900) 000-00-00");
-    m_comboFormatRule->addItem("🏠 Локальный красивый: 8 (900) 000-00-00");
-    m_comboFormatRule->addItem("📲 Международный компактный: +79000000000");
-    m_comboFormatRule->addItem("📟 Локальный компактный: 89000000000");
+    m_comboFormatRule->addItem("Международный красивый: +7 (900) 000-00-00");
+    m_comboFormatRule->addItem("Локальный красивый: 8 (900) 000-00-00");
+    m_comboFormatRule->addItem("Международный компактный: +79000000000");
+    m_comboFormatRule->addItem("Локальный компактный: 89000000000");
     m_comboFormatRule->setStyleSheet(
-        "QComboBox { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 2px 8px; height: 26px; min-height: 26px; max-height: 26px; min-width: 280px; font-size: 11.5px; }"
+        "QComboBox { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 8px; height: 26px; min-height: 26px; max-height: 26px; min-width: 280px; font-size: 11.5px; }"
         "QComboBox:hover { border-color: #38BDF8; }"
         "QComboBox::drop-down { border: none; width: 18px; }"
         "QComboBox QAbstractItemView { background-color: #0F172A; color: #F8FAFC; selection-background-color: #0284C7; border: 1px solid #1E293B; }");
@@ -267,9 +288,11 @@ void ContactFixerWidget::setupUi()
     connect(m_chkFixLeading8, &QCheckBox::toggled, this, &ContactFixerWidget::applyFixToAll);
     actRow2->addWidget(m_chkFixLeading8);
 
-    m_btnApplyFix = new QPushButton("⚡ Применить формат", actionFrame);
+    m_btnApplyFix = new QPushButton("Применить формат", actionFrame);
+    m_btnApplyFix->setIcon(QIcon(":/svg/zap"));
+    m_btnApplyFix->setIconSize(QSize(13, 13));
     m_btnApplyFix->setStyleSheet(
-        "QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #059669, stop:1 #10B981); color: #FFFFFF; font-weight: bold; font-size: 11.5px; border-radius: 5px; padding: 3px 12px; height: 26px; min-height: 26px; max-height: 26px; border: none; }"
+        "QPushButton { background-color: #059669; color: #FFFFFF; font-weight: bold; font-size: 11.5px; border-radius: 0px; padding: 3px 12px; height: 26px; min-height: 26px; max-height: 26px; border: none; }"
         "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #047857, stop:1 #059669); }");
     connect(m_btnApplyFix, &QPushButton::clicked, this, &ContactFixerWidget::applyFixToAll);
     actRow2->addWidget(m_btnApplyFix);
@@ -277,10 +300,10 @@ void ContactFixerWidget::setupUi()
     actRow2->addStretch(1);
 
     m_searchEdit = new QLineEdit(actionFrame);
-    m_searchEdit->setPlaceholderText("🔍 Поиск по имени или номеру...");
+    m_searchEdit->setPlaceholderText("Поиск по имени или номеру...");
     m_searchEdit->setClearButtonEnabled(true);
     m_searchEdit->setStyleSheet(
-        "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 2px 8px; font-size: 11.5px; height: 26px; min-height: 26px; max-height: 26px; min-width: 190px; }"
+        "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 8px; font-size: 11.5px; height: 26px; min-height: 26px; max-height: 26px; min-width: 190px; }"
         "QLineEdit:focus { border-color: #38BDF8; }");
     connect(m_searchEdit, &QLineEdit::textChanged, this, &ContactFixerWidget::onSearchFilterChanged);
     actRow2->addWidget(m_searchEdit);
@@ -301,14 +324,14 @@ void ContactFixerWidget::setupUi()
     QHBoxLayout *selectionBar = new QHBoxLayout();
     m_btnSelectAll = new QPushButton("Выбрать все", leftContainer);
     m_btnSelectAll->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 4px; padding: 3px 10px; min-height: 24px; font-size: 11px; font-weight: 500; }"
+        "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 0px; padding: 3px 10px; min-height: 24px; font-size: 11px; font-weight: 500; }"
         "QPushButton:hover { color: #38BDF8; border-color: #38BDF8; }");
     connect(m_btnSelectAll, &QPushButton::clicked, this, &ContactFixerWidget::onSelectAllClicked);
     selectionBar->addWidget(m_btnSelectAll);
 
     m_btnDeselectAll = new QPushButton("Снять выбор", leftContainer);
     m_btnDeselectAll->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 4px; padding: 3px 10px; min-height: 24px; font-size: 11px; font-weight: 500; }"
+        "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 0px; padding: 3px 10px; min-height: 24px; font-size: 11px; font-weight: 500; }"
         "QPushButton:hover { color: #38BDF8; border-color: #38BDF8; }");
     connect(m_btnDeselectAll, &QPushButton::clicked, this, &ContactFixerWidget::onDeselectAllClicked);
     selectionBar->addWidget(m_btnDeselectAll);
@@ -323,7 +346,7 @@ void ContactFixerWidget::setupUi()
 
     m_table = new QTableWidget(leftContainer);
     m_table->setColumnCount(7);
-    m_table->setHorizontalHeaderLabels({"[✓]", "Имя контакта", "Исходный номер", "Страна", "Код", "Исправленный номер", "Тип"});
+    m_table->setHorizontalHeaderLabels({"Выбор", "Имя контакта", "Исходный номер", "Страна", "Код", "Исправленный номер", "Тип"});
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::SingleSelection);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -341,7 +364,7 @@ void ContactFixerWidget::setupUi()
     m_table->horizontalHeader()->setSectionResizeMode(6, QHeaderView::ResizeToContents);
 
     m_table->setStyleSheet(
-        "QTableWidget { background-color: #070A12; border: 1px solid #1E293B; border-radius: 6px; gridline-color: #1E293B; color: #F8FAFC; selection-background-color: #1E293B; selection-color: #38BDF8; font-size: 11.5px; }"
+        "QTableWidget { background-color: #070A12; border: 1px solid #1E293B; border-radius: 0px; gridline-color: #1E293B; color: #F8FAFC; selection-background-color: #1E293B; selection-color: #38BDF8; font-size: 11.5px; }"
         "QTableWidget::item { padding: 4px 8px; border-bottom: 1px solid #0F172A; }"
         "QTableWidget::item:hover { background-color: #0F172A; }"
         "QTableWidget::item:selected { background-color: #141E33; color: #38BDF8; }"
@@ -359,13 +382,14 @@ void ContactFixerWidget::setupUi()
 
     QFrame *testerCard = new QFrame(rightContainer);
     testerCard->setObjectName("testerCard");
-    testerCard->setStyleSheet("#testerCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; padding: 6px; }");
+    testerCard->setStyleSheet("#testerCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; padding: 6px; }");
 
     QVBoxLayout *cardLayout = new QVBoxLayout(testerCard);
     cardLayout->setContentsMargins(10, 10, 10, 10);
     cardLayout->setSpacing(6);
 
-    QLabel *cardTitle = new QLabel("🔍 Интерактивный тестер номеров", testerCard);
+    QLabel *cardTitle = new QLabel("<img src=\":/svg/bot\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/>  Интерактивный тестер номеров", testerCard);
+    cardTitle->setTextFormat(Qt::RichText);
     cardTitle->setStyleSheet("font-size: 13px; font-weight: bold; color: #38BDF8; margin-bottom: 1px;");
     cardLayout->addWidget(cardTitle);
 
@@ -377,7 +401,7 @@ void ContactFixerWidget::setupUi()
     m_testNumberInput->setText("+890000000000");
     m_testNumberInput->setPlaceholderText("Например: +890000000000 или 89001234567");
     m_testNumberInput->setStyleSheet(
-        "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 4px 8px; font-family: monospace; font-size: 12px; font-weight: bold; min-height: 28px; } "
+        "QLineEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 4px 8px; font-family: monospace; font-size: 12px; font-weight: bold; min-height: 28px; } "
         "QLineEdit:focus { border-color: #38BDF8; }");
     connect(
         m_testNumberInput,
@@ -439,14 +463,16 @@ void ContactFixerWidget::setupUi()
         QHBoxLayout *h = new QHBoxLayout();
         h->setSpacing(5);
         labelPtr = new QLabel("—", w);
-        labelPtr->setStyleSheet("background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 4px; padding: 3px 6px; font-family: monospace; font-size: 11px; min-height: 24px;");
+        labelPtr->setStyleSheet("background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 3px 6px; font-family: monospace; font-size: 11px; min-height: 24px;");
         h->addWidget(labelPtr, 1);
 
-        QPushButton *btnCopy = new QPushButton("📋", w);
+        QPushButton *btnCopy = new QPushButton(w);
+        btnCopy->setIcon(QIcon(":/svg/copy"));
+        btnCopy->setIconSize(QSize(12, 12));
         btnCopy->setFixedSize(24, 24);
         btnCopy->setToolTip("Копировать в буфер");
         btnCopy->setStyleSheet(
-            "QPushButton { background-color: #1E293B; border: 1px solid #334155; border-radius: 4px; color: #38BDF8; font-size: 11px; } "
+            "QPushButton { background-color: #1E293B; border: 1px solid #334155; border-radius: 0px; color: #38BDF8; font-size: 11px; } "
             "QPushButton:hover { background-color: #0284C7; color: white; }");
         connect(btnCopy, &QPushButton::clicked, [labelPtr]() { QApplication::clipboard()->setText(labelPtr->text()); });
         h->addWidget(btnCopy);
@@ -464,32 +490,35 @@ void ContactFixerWidget::setupUi()
 
     // Quick Add Contact Frame with dedicated fields
     QFrame *addFrame = new QFrame(testerCard);
-    addFrame->setStyleSheet("background-color: #070A12; border: 1px solid #1E293B; border-radius: 6px; padding: 6px;");
+    addFrame->setStyleSheet("background-color: #070A12; border: 1px solid #1E293B; border-radius: 0px; padding: 6px;");
     QVBoxLayout *addLayout = new QVBoxLayout(addFrame);
     addLayout->setContentsMargins(6, 6, 6, 6);
     addLayout->setSpacing(5);
 
-    QLabel *addTitle = new QLabel("➕ Быстрое добавление контакта", addFrame);
+    QLabel *addTitle = new QLabel("<img src=\":/svg/plus\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/>  Быстрое добавление контакта", addFrame);
+    addTitle->setTextFormat(Qt::RichText);
     addTitle->setStyleSheet("color: #38BDF8; font-size: 11.5px; font-weight: bold;");
     addLayout->addWidget(addTitle);
 
     m_quickNameEdit = new QLineEdit(addFrame);
     m_quickNameEdit->setPlaceholderText("Имя контакта (напр. Иван Иванов)");
     m_quickNameEdit->setStyleSheet(
-        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 3px 8px; font-size: 11.5px; min-height: 26px; } "
+        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 3px 8px; font-size: 11.5px; min-height: 26px; } "
         "QLineEdit:focus { border-color: #38BDF8; }");
     addLayout->addWidget(m_quickNameEdit);
 
     m_quickNumberEdit = new QLineEdit(addFrame);
     m_quickNumberEdit->setPlaceholderText("Номер (напр. +7 900 123-45-67)");
     m_quickNumberEdit->setStyleSheet(
-        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 5px; padding: 3px 8px; font-size: 11.5px; min-height: 26px; font-family: monospace; } "
+        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 3px 8px; font-size: 11.5px; min-height: 26px; font-family: monospace; } "
         "QLineEdit:focus { border-color: #38BDF8; }");
     addLayout->addWidget(m_quickNumberEdit);
 
-    m_btnQuickAdd = new QPushButton("➕ Добавить в список", addFrame);
+    m_btnQuickAdd = new QPushButton("Добавить в список", addFrame);
+    m_btnQuickAdd->setIcon(QIcon(":/svg/plus"));
+    m_btnQuickAdd->setIconSize(QSize(13, 13));
     m_btnQuickAdd->setStyleSheet(
-        "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 5px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; min-height: 26px; } "
+        "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 0px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; min-height: 26px; } "
         "QPushButton:hover { background-color: #0284C7; color: #FFFFFF; border-color: #38BDF8; }");
     connect(m_btnQuickAdd, &QPushButton::clicked, this, &ContactFixerWidget::onQuickAddContact);
     addLayout->addWidget(m_btnQuickAdd);
@@ -544,7 +573,8 @@ void ContactFixerWidget::onTestNumberInputChanged(const QString &text)
     NumberPreview np(input.toStdString());
     m_testCountryLabel->setText(np.country().empty() ? "Не определена" : QString::fromStdString(np.country()));
     m_testDialCodeLabel->setText(np.dialCode().empty() ? "—" : QString::fromStdString(np.dialCode()));
-    m_testValidLabel->setText(np.isGenericNumber() ? "✅ Корректный" : "⚠️ Нестандартный");
+    m_testValidLabel->setText(np.isGenericNumber() ? "Корректный" : "Нестандартный");
+    m_testValidLabel->setStyleSheet(np.isGenericNumber() ? "font-size: 11px; font-weight: 600; color: #10B981;" : "font-size: 11px; font-weight: 600; color: #F59E0B;");
 
     m_valBeautyGlobal->setText(QString::fromStdString(np.format(NumberFormat::Beauty | NumberFormat::Global)));
     m_valBeautyLocal->setText(QString::fromStdString(np.format(NumberFormat::Beauty | NumberFormat::Local)));
@@ -1284,7 +1314,7 @@ PageIndex ContactFixerService::targetPage()
 
 QString ContactFixerService::widgetIconName()
 {
-    return "white-media-transfer";
+    return "contact-fixer";
 }
 
 bool ContactFixerService::canStart()

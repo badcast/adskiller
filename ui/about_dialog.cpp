@@ -35,11 +35,19 @@
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("О программе AdsKiller"));
-    setWindowIcon(QIcon(QStringLiteral(":/resources/app-logo")));
+
+    QPixmap iconPix(QStringLiteral(":/resources/banner-low"));
+    if(iconPix.isNull())
+        iconPix = QPixmap(QStringLiteral(":/resources/banner"));
+    if(iconPix.isNull())
+        iconPix = QPixmap(QStringLiteral("res/banner-low.png"));
+    if(iconPix.isNull())
+        iconPix = QPixmap(QStringLiteral(":/resources/app-logo"));
+    setWindowIcon(QIcon(iconPix));
     setModal(true);
 
-    resize(680, 640);
-    setMinimumSize(600, 520);
+    resize(580, 520);
+    setMinimumSize(520, 460);
 
     setupUi();
 }
@@ -54,39 +62,97 @@ void AboutDialog::setCurrentTab(TabIndex tab)
 
 void AboutDialog::setupUi()
 {
-    // Modern dialog styling compatible with both light and dark themes
+    // Minimalist Metro UI styling compatible with Obsidian dark theme
     setStyleSheet(QStringLiteral(
         "QDialog {"
         "    font-family: \"Segoe UI Variable\", \"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif;"
+        "    background-color: #070A12;"
+        "    color: #F8FAFC;"
         "}"
         "QFrame#headerCard {"
-        "    background-color: rgba(127, 127, 127, 0.08);"
-        "    border: 1px solid rgba(127, 127, 127, 0.20);"
-        "    border-radius: 12px;"
+        "    background-color: #0F172A;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
         "}"
         "QFrame[card=\"true\"] {"
-        "    background-color: rgba(127, 127, 127, 0.08);"
-        "    border: 1px solid rgba(127, 127, 127, 0.18);"
-        "    border-radius: 10px;"
+        "    background-color: #0F172A;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
         "}"
         "QFrame[card=\"true\"]:hover {"
-        "    border: 1px solid rgba(127, 127, 127, 0.32);"
+        "    border: 1px solid #38BDF8;"
         "}"
         "QLabel#cardTitle {"
-        "    font-size: 13px;"
+        "    font-size: 12px;"
         "    font-weight: bold;"
+        "    color: #38BDF8;"
+        "}"
+        "QLabel#aboutBannerIcon {"
+        "    background-color: #070A12;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
         "}"
         "QTextEdit#licenseTextEdit {"
         "    font-family: \"Cascadia Code\", \"Consolas\", \"Courier New\", monospace;"
         "    font-size: 11px;"
-        "    border: 1px solid rgba(127, 127, 127, 0.22);"
-        "    border-radius: 8px;"
+        "    background-color: #0B0F19;"
+        "    color: #CBD5E1;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
         "    padding: 8px;"
+        "}"
+        "QTabWidget::pane {"
+        "    border: 1px solid #1E293B;"
+        "    background-color: #0B0F19;"
+        "    border-radius: 0px;"
+        "}"
+        "QTabBar::tab {"
+        "    background-color: #0F172A;"
+        "    color: #94A3B8;"
+        "    padding: 6px 14px;"
+        "    border: 1px solid #1E293B;"
+        "    border-bottom: none;"
+        "    border-radius: 0px;"
+        "    margin-right: 2px;"
+        "}"
+        "QTabBar::tab:selected {"
+        "    background-color: #0B0F19;"
+        "    color: #38BDF8;"
+        "    border-top: 2px solid #38BDF8;"
+        "    font-weight: bold;"
+        "}"
+        "QPushButton {"
+        "    background-color: #1E293B;"
+        "    color: #F8FAFC;"
+        "    border: 1px solid #334155;"
+        "    border-radius: 0px;"
+        "    padding: 6px 14px;"
+        "    font-size: 11.5px;"
+        "    font-weight: 600;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #334155;"
+        "    border-color: #38BDF8;"
+        "    color: #FFFFFF;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #0F172A;"
+        "    border-color: #0284C7;"
+        "}"
+        "QPushButton#primaryButton {"
+        "    background-color: #0284C7;"
+        "    border: 1px solid #0284C7;"
+        "    color: #FFFFFF;"
+        "    font-weight: bold;"
+        "}"
+        "QPushButton#primaryButton:hover {"
+        "    background-color: #0369A1;"
+        "    border-color: #38BDF8;"
         "}"));
 
     auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(18, 18, 18, 18);
-    mainLayout->setSpacing(14);
+    mainLayout->setContentsMargins(16, 14, 16, 14);
+    mainLayout->setSpacing(12);
 
     // 1. Header Banner
     mainLayout->addWidget(createHeaderWidget());
@@ -112,39 +178,46 @@ QWidget *AboutDialog::createHeaderWidget()
     headerFrame->setObjectName(QStringLiteral("headerCard"));
 
     auto *headerLayout = new QHBoxLayout(headerFrame);
-    headerLayout->setContentsMargins(16, 14, 16, 14);
-    headerLayout->setSpacing(16);
+    headerLayout->setContentsMargins(14, 10, 14, 10);
+    headerLayout->setSpacing(14);
 
-    // App Logo
+    // App Logo / Banner Icon with banner-low.png
     auto *logoLabel = new QLabel(headerFrame);
-    logoLabel->setFixedSize(60, 60);
-    QPixmap logoPix(QStringLiteral(":/resources/app-logo"));
-    if(!logoPix.isNull())
-    {
-        logoLabel->setPixmap(logoPix.scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    }
+    logoLabel->setObjectName(QStringLiteral("aboutBannerIcon"));
+    logoLabel->setFixedSize(62, 62);
     logoLabel->setAlignment(Qt::AlignCenter);
+
+    QPixmap bannerPix(QStringLiteral(":/resources/banner-low"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
+
+    if(!bannerPix.isNull())
+    {
+        logoLabel->setPixmap(bannerPix.scaled(58, 58, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
     headerLayout->addWidget(logoLabel);
 
     // App Info Layout
     auto *infoLayout = new QVBoxLayout();
-    infoLayout->setSpacing(4);
+    infoLayout->setSpacing(3);
 
     // Row 1: Title + Version Pill + Tag
     auto *titleRow = new QHBoxLayout();
     titleRow->setSpacing(8);
 
     auto *titleLabel = new QLabel(QStringLiteral("AdsKiller"), headerFrame);
-    titleLabel->setStyleSheet(QStringLiteral("font-size: 22px; font-weight: 800; letter-spacing: 0.5px;"));
+    titleLabel->setStyleSheet(QStringLiteral("font-size: 20px; font-weight: 800; letter-spacing: 0.5px; color: #F8FAFC;"));
     titleRow->addWidget(titleLabel);
 
     const QString verStr = QStringLiteral("v%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     auto *versionBadge = new QLabel(verStr, headerFrame);
     versionBadge->setStyleSheet(QStringLiteral(
-        "background-color: #005FB8;"
+        "background-color: #0284C7;"
         "color: #FFFFFF;"
-        "border-radius: 10px;"
-        "padding: 2px 10px;"
+        "border-radius: 0px;"
+        "padding: 2px 8px;"
         "font-size: 11px;"
         "font-weight: bold;"));
     titleRow->addWidget(versionBadge);
@@ -154,7 +227,7 @@ QWidget *AboutDialog::createHeaderWidget()
         "background-color: rgba(16, 185, 129, 0.20);"
         "color: #10B981;"
         "border: 1px solid rgba(16, 185, 129, 0.40);"
-        "border-radius: 10px;"
+        "border-radius: 0px;"
         "padding: 2px 8px;"
         "font-size: 10px;"
         "font-weight: 600;"));
@@ -163,13 +236,13 @@ QWidget *AboutDialog::createHeaderWidget()
     infoLayout->addLayout(titleRow);
 
     // Row 2: Subtitle
-    auto *subLabel = new QLabel(QStringLiteral("Десктопный комплекс для очистки, оптимизации и безопасного деблоатинга Android"), headerFrame);
-    subLabel->setStyleSheet(QStringLiteral("font-size: 12px; color: rgba(127, 127, 127, 0.95);"));
+    auto *subLabel = new QLabel(QStringLiteral("Очистка, ускорение и деблоатинг Android без Root-прав"), headerFrame);
+    subLabel->setStyleSheet(QStringLiteral("font-size: 12px; color: #94A3B8;"));
     infoLayout->addWidget(subLabel);
 
     // Row 3: Meta info
-    auto *metaLabel = new QLabel(QStringLiteral("Лицензия: GNU GPL v3 • Авторские права © 2026 imister.tech"), headerFrame);
-    metaLabel->setStyleSheet(QStringLiteral("font-size: 11px; color: rgba(127, 127, 127, 0.85);"));
+    auto *metaLabel = new QLabel(QStringLiteral("GNU GPL v3 • Авторские права © 2026 imister.tech • C++17 / Qt 6"), headerFrame);
+    metaLabel->setStyleSheet(QStringLiteral("font-size: 11px; color: #64748B;"));
     infoLayout->addWidget(metaLabel);
 
     headerLayout->addLayout(infoLayout);
@@ -186,112 +259,142 @@ QWidget *AboutDialog::createAboutTab()
 
     auto *container = new QWidget(scrollArea);
     auto *layout = new QVBoxLayout(container);
-    layout->setContentsMargins(8, 12, 8, 12);
-    layout->setSpacing(12);
+    layout->setContentsMargins(10, 10, 10, 10);
+    layout->setSpacing(10);
 
-    // Card 1: Description
-    auto *descCard = new QFrame(container);
-    descCard->setProperty("card", true);
-    auto *descLayout = new QVBoxLayout(descCard);
-    descLayout->setContentsMargins(14, 12, 14, 12);
-    descLayout->setSpacing(8);
+    // 1. Hero Card with Minimalist Description & Banner Icon
+    auto *heroCard = new QFrame(container);
+    heroCard->setProperty("card", true);
+    auto *heroLayout = new QHBoxLayout(heroCard);
+    heroLayout->setContentsMargins(12, 10, 12, 10);
+    heroLayout->setSpacing(14);
 
-    auto *descTitle = new QLabel(QStringLiteral("О проекте"), descCard);
-    descTitle->setObjectName(QStringLiteral("cardTitle"));
-    descLayout->addWidget(descTitle);
+    auto *heroBannerLabel = new QLabel(heroCard);
+    heroBannerLabel->setObjectName(QStringLiteral("aboutBannerIcon"));
+    heroBannerLabel->setFixedSize(54, 70);
+    heroBannerLabel->setAlignment(Qt::AlignCenter);
 
-    auto *descText = new QLabel(
-        QStringLiteral(
-            "<b>AdsKiller</b> — высокопроизводительное десктопное приложение на C++, предназначенное "
-            "для сервисных центров, системных инженеров и пользователей Android.<br><br>"
-            "Программа позволяет в один клик избавить подключенное устройство от навязчивой встроенной "
-            "рекламы, неиспользуемых системных служб (<b>bloatware</b>), трекеров и мусора "
-            "<b>без необходимости получения Root-прав</b>.<br><br>"
-            "Вся работа строится на базе протокола <b>Android Debug Bridge (ADB)</b> в изолированном "
-            "режиме пользователя (<code>--user 0</code>), что гарантирует стабильность операционной "
-            "системы и исключает риск повреждения устройства («окирпичивания»)."),
-        descCard);
-    descText->setWordWrap(true);
-    descText->setTextFormat(Qt::RichText);
-    descLayout->addWidget(descText);
-    layout->addWidget(descCard);
-
-    // Card 2: Key Features
-    auto *featCard = new QFrame(container);
-    featCard->setProperty("card", true);
-    auto *featLayout = new QVBoxLayout(featCard);
-    featLayout->setContentsMargins(14, 12, 14, 12);
-    featLayout->setSpacing(8);
-
-    auto *featTitle = new QLabel(QStringLiteral("Ключевые возможности"), featCard);
-    featTitle->setObjectName(QStringLiteral("cardTitle"));
-    featLayout->addWidget(featTitle);
-
-    auto *featText = new QLabel(
-        QStringLiteral(
-            "• 🛡️ <b>Удаление рекламы и трекеров:</b> пакетное сканирование и нейтрализация рекламных SDK "
-            "(AdMob, UnityAds, IronSource, встроенные пуши MIUI/HyperOS) и шпионских служб.<br>"
-            "• ⚡ <b>Ускорение и оптимизация RAM (Boost RAM):</b> мониторинг процессов, принудительная "
-            "выгрузка фоновых демонов и автозапуска, освобождающая от 500 МБ до 2+ ГБ оперативной памяти.<br>"
-            "• 🧹 <b>Глубокая очистка диска:</b> безопасное удаление временных файлов, логов сбоев, "
-            "миниатюр галереи и остаточного кэша приложений без затрагивания личных данных.<br>"
-            "• 👥 <b>Восстановление контактов (Contact Fixer):</b> обработка и исправление телефонных книг "
-            "в формате VCard (VCF), исправление масок телефонных номеров и удаление дубликатов.<br>"
-            "• 🔓 <b>Сервисные модули для Xiaomi:</b> считывание параметров загрузчика (Bootloader), "
-            "проверка статуса привязки Mi-аккаунта.<br>"
-            "• 📱 <b>База устройств и гарантийный учет:</b> распознавание марок и моделей смартфонов, "
-            "ведение подробной истории сервисных сессий."),
-        featCard);
-    featText->setWordWrap(true);
-    featText->setTextFormat(Qt::RichText);
-    featLayout->addWidget(featText);
-    layout->addWidget(featCard);
-
-    // Card 3: Tech Stack & Architecture
-    auto *techCard = new QFrame(container);
-    techCard->setProperty("card", true);
-    auto *techLayout = new QVBoxLayout(techCard);
-    techLayout->setContentsMargins(14, 12, 14, 12);
-    techLayout->setSpacing(8);
-
-    auto *techTitle = new QLabel(QStringLiteral("Архитектура и технологии"), techCard);
-    techTitle->setObjectName(QStringLiteral("cardTitle"));
-    techLayout->addWidget(techTitle);
-
-    auto *techChipsLayout = new QHBoxLayout();
-    techChipsLayout->setSpacing(8);
-
-    const QStringList techBadges = {QStringLiteral("C++17 Core"), QStringLiteral("Qt 6 Widgets"), QStringLiteral("ADB Front Engine"), QStringLiteral("Safe User Mode"), QStringLiteral("GNU GPL v3")};
-
-    for(const QString &badgeText : techBadges)
+    QPixmap bannerPix(QStringLiteral(":/resources/banner-low"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
+    if(!bannerPix.isNull())
     {
-        auto *badge = new QLabel(badgeText, techCard);
-        badge->setStyleSheet(QStringLiteral(
-            "background-color: rgba(0, 95, 184, 0.15);"
-            "color: #0078D4;"
-            "border: 1px solid rgba(0, 95, 184, 0.30);"
-            "border-radius: 6px;"
-            "padding: 3px 8px;"
-            "font-size: 11px;"
-            "font-weight: 600;"));
-        techChipsLayout->addWidget(badge);
+        heroBannerLabel->setPixmap(bannerPix.scaled(50, 66, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
-    techChipsLayout->addStretch();
-    techLayout->addLayout(techChipsLayout);
-    layout->addWidget(techCard);
+    heroLayout->addWidget(heroBannerLabel);
 
-    // Card 4: Quick Links
+    auto *heroTextLayout = new QVBoxLayout();
+    heroTextLayout->setSpacing(4);
+
+    auto *heroTitle = new QLabel(QStringLiteral("<b>AdsKiller</b> — легковесный инструмент деблоатинга"), heroCard);
+    heroTitle->setStyleSheet(QStringLiteral("font-size: 12.5px; color: #F8FAFC; font-weight: bold;"));
+    heroTextLayout->addWidget(heroTitle);
+
+    auto *heroDesc = new QLabel(
+        QStringLiteral("Безопасная очистка Android от встроенной рекламы, системного мусора и ускорение оперативной памяти через изолированный ADB-режим без Root-прав."),
+        heroCard);
+    heroDesc->setWordWrap(true);
+    heroDesc->setStyleSheet(QStringLiteral("font-size: 11.5px; color: #94A3B8;"));
+    heroTextLayout->addWidget(heroDesc);
+
+    heroLayout->addLayout(heroTextLayout, 1);
+    layout->addWidget(heroCard);
+
+    // 2. Minimalist Feature Tiles Grid (2x2)
+    auto *gridCard = new QFrame(container);
+    gridCard->setProperty("card", true);
+    auto *gridLayout = new QGridLayout(gridCard);
+    gridLayout->setContentsMargins(12, 10, 12, 10);
+    gridLayout->setHorizontalSpacing(12);
+    gridLayout->setVerticalSpacing(8);
+
+    auto createMiniTile = [gridCard](const QString &icon, const QString &title, const QString &subtitle) -> QWidget *
+    {
+        auto *tile = new QFrame(gridCard);
+        tile->setStyleSheet(QStringLiteral(
+            "QFrame {"
+            "    background-color: #0B0F19;"
+            "    border: 1px solid #1E293B;"
+            "    border-radius: 0px;"
+            "}"
+            "QFrame:hover {"
+            "    border-color: #38BDF8;"
+            "}"));
+
+        auto *tl = new QHBoxLayout(tile);
+        tl->setContentsMargins(8, 6, 8, 6);
+        tl->setSpacing(8);
+
+        auto *iconLbl = new QLabel(tile);
+        iconLbl->setPixmap(QPixmap(icon).scaled(18, 18, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLbl->setFixedWidth(22);
+        iconLbl->setAlignment(Qt::AlignCenter);
+        tl->addWidget(iconLbl);
+
+        auto *textCol = new QVBoxLayout();
+        textCol->setSpacing(1);
+
+        auto *headLbl = new QLabel(title, tile);
+        headLbl->setStyleSheet(QStringLiteral("font-size: 11px; font-weight: bold; color: #F8FAFC; background: transparent; border: none;"));
+        textCol->addWidget(headLbl);
+
+        auto *subLbl = new QLabel(subtitle, tile);
+        subLbl->setStyleSheet(QStringLiteral("font-size: 10px; color: #94A3B8; background: transparent; border: none;"));
+        textCol->addWidget(subLbl);
+
+        tl->addLayout(textCol, 1);
+        return tile;
+    };
+
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/shield"), QStringLiteral("Блокировка рекламы"), QStringLiteral("Нейтрализация баннеров и трекеров (No Root)")), 0, 0);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/zap"), QStringLiteral("Boost RAM & Очистка"), QStringLiteral("Освобождение памяти и удаление кэша")), 0, 1);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/users"), QStringLiteral("Contact Fixer"), QStringLiteral("Исправление телефонных книг VCF")), 1, 0);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/bot"), QStringLiteral("AI-Ассистент"), QStringLiteral("Перевод документов и умный чат")), 1, 1);
+
+    layout->addWidget(gridCard);
+
+    // 3. Minimalist Tech Spec Strip
+    auto *specCard = new QFrame(container);
+    specCard->setProperty("card", true);
+    auto *specLayout = new QHBoxLayout(specCard);
+    specLayout->setContentsMargins(12, 6, 12, 6);
+    specLayout->setSpacing(8);
+
+    const QStringList techBadges = {QStringLiteral("C++17"), QStringLiteral("Qt 6"), QStringLiteral("ADB Safe Engine"), QStringLiteral("Safe User Mode"), QStringLiteral("GNU GPL v3")};
+    for(const QString &b : techBadges)
+    {
+        auto *lbl = new QLabel(b, specCard);
+        lbl->setStyleSheet(QStringLiteral(
+            "background-color: #070A12;"
+            "color: #38BDF8;"
+            "border: 1px solid #1E293B;"
+            "border-radius: 0px;"
+            "padding: 2px 7px;"
+            "font-size: 10.5px;"
+            "font-weight: 600;"));
+        specLayout->addWidget(lbl);
+    }
+    specLayout->addStretch();
+    layout->addWidget(specCard);
+
+    // 4. Compact Links Row
     auto *linksCard = new QFrame(container);
     linksCard->setProperty("card", true);
     auto *linksLayout = new QHBoxLayout(linksCard);
-    linksLayout->setContentsMargins(14, 10, 14, 10);
-    linksLayout->setSpacing(12);
+    linksLayout->setContentsMargins(12, 6, 12, 6);
+    linksLayout->setSpacing(10);
 
-    auto *webBtn = new QPushButton(QStringLiteral("🌐 Официальный сайт (adskiller.imister.tech)"), linksCard);
+    auto *webBtn = new QPushButton(QStringLiteral("adskiller.imister.tech"), linksCard);
+    webBtn->setIcon(QIcon(":/svg/globe"));
+    webBtn->setIconSize(QSize(15, 15));
     connect(webBtn, &QPushButton::clicked, this, &AboutDialog::openProjectWebsite);
     linksLayout->addWidget(webBtn);
 
-    auto *supportBtn = new QPushButton(QStringLiteral("💬 Техническая поддержка (WhatsApp)"), linksCard);
+    auto *supportBtn = new QPushButton(QStringLiteral("WhatsApp Поддержка"), linksCard);
+    supportBtn->setIcon(QIcon(":/svg/message-circle"));
+    supportBtn->setIconSize(QSize(15, 15));
     connect(supportBtn, &QPushButton::clicked, this, &AboutDialog::openSupportWhatsApp);
     linksLayout->addWidget(supportBtn);
 
@@ -433,7 +536,7 @@ QWidget *AboutDialog::createAuthorCard(const QString &initials, const QColor &gr
     roleBadge->setStyleSheet(QStringLiteral(
                                  "background-color: %1;"
                                  "color: #FFFFFF;"
-                                 "border-radius: 5px;"
+                                 "border-radius: 0px;"
                                  "padding: 2px 7px;"
                                  "font-size: 10px;"
                                  "font-weight: 600;")
@@ -502,12 +605,12 @@ QWidget *AboutDialog::createGplTab()
         QString text;
         QString color;
     } chips[] = {
-        {QStringLiteral("✓ Свободное использование"), QStringLiteral("#10B981")},
-        {QStringLiteral("✓ Доступ к исходному коду"), QStringLiteral("#10B981")},
-        {QStringLiteral("✓ Модификация"), QStringLiteral("#10B981")},
-        {QStringLiteral("✓ Распространение"), QStringLiteral("#10B981")},
-        {QStringLiteral("ℹ Copyleft (GPL v3)"), QStringLiteral("#0078D4")},
-        {QStringLiteral("⚠️ Без гарантий (AS IS)"), QStringLiteral("#F59E0B")}};
+        {QStringLiteral("Свободное использование"), QStringLiteral("#10B981")},
+        {QStringLiteral("Доступ к исходному коду"), QStringLiteral("#10B981")},
+        {QStringLiteral("Модификация"), QStringLiteral("#10B981")},
+        {QStringLiteral("Распространение"), QStringLiteral("#10B981")},
+        {QStringLiteral("Copyleft (GPL v3)"), QStringLiteral("#0078D4")},
+        {QStringLiteral("Без гарантий (AS IS)"), QStringLiteral("#F59E0B")}};
 
     for(const auto &chip : chips)
     {
@@ -516,7 +619,7 @@ QWidget *AboutDialog::createGplTab()
                                      "background-color: rgba(127, 127, 127, 0.12);"
                                      "color: %1;"
                                      "border: 1px solid rgba(127, 127, 127, 0.25);"
-                                     "border-radius: 5px;"
+                                     "border-radius: 0px;"
                                      "padding: 2px 7px;"
                                      "font-size: 10px;"
                                      "font-weight: 600;")
@@ -540,11 +643,15 @@ QWidget *AboutDialog::createGplTab()
     auto *btnRow = new QHBoxLayout();
     btnRow->setSpacing(10);
 
-    m_copyLicenseBtn = new QPushButton(QStringLiteral("📋 Копировать текст лицензии"), widget);
+    m_copyLicenseBtn = new QPushButton(QStringLiteral("Копировать текст лицензии"), widget);
+    m_copyLicenseBtn->setIcon(QIcon(":/svg/copy"));
+    m_copyLicenseBtn->setIconSize(QSize(15, 15));
     connect(m_copyLicenseBtn, &QPushButton::clicked, this, &AboutDialog::copyLicenseToClipboard);
     btnRow->addWidget(m_copyLicenseBtn);
 
-    auto *fsfBtn = new QPushButton(QStringLiteral("🌐 Официальная страница gnu.org/licenses"), widget);
+    auto *fsfBtn = new QPushButton(QStringLiteral("Официальная страница gnu.org/licenses"), widget);
+    fsfBtn->setIcon(QIcon(":/svg/globe"));
+    fsfBtn->setIconSize(QSize(15, 15));
     connect(fsfBtn, &QPushButton::clicked, this, &AboutDialog::openGplWebsite);
     btnRow->addWidget(fsfBtn);
 
@@ -588,13 +695,15 @@ QWidget *AboutDialog::createChangelogTab()
 
     topLayout->addLayout(topInfoLayout, 1);
 
-    m_changelogRefreshBtn = new QPushButton(QStringLiteral("🔄 Обновить"), topCard);
+    m_changelogRefreshBtn = new QPushButton(QStringLiteral("Обновить"), topCard);
+    m_changelogRefreshBtn->setIcon(QIcon(":/svg/refresh-cw"));
+    m_changelogRefreshBtn->setIconSize(QSize(14, 14));
     m_changelogRefreshBtn->setCursor(Qt::PointingHandCursor);
     m_changelogRefreshBtn->setStyleSheet(QStringLiteral(
         "QPushButton {"
         "    background-color: rgba(127, 127, 127, 0.12);"
         "    border: 1px solid rgba(127, 127, 127, 0.25);"
-        "    border-radius: 7px;"
+        "    border-radius: 0px;"
         "    padding: 5px 12px;"
         "    font-size: 11.5px;"
         "    font-weight: 500;"
@@ -610,13 +719,15 @@ QWidget *AboutDialog::createChangelogTab()
     connect(m_changelogRefreshBtn, &QPushButton::clicked, this, &AboutDialog::fetchChangelog);
     topLayout->addWidget(m_changelogRefreshBtn);
 
-    auto *webBtn = new QPushButton(QStringLiteral("🌐 В браузере"), topCard);
+    auto *webBtn = new QPushButton(QStringLiteral("В браузере"), topCard);
+    webBtn->setIcon(QIcon(":/svg/globe"));
+    webBtn->setIconSize(QSize(14, 14));
     webBtn->setCursor(Qt::PointingHandCursor);
     webBtn->setStyleSheet(QStringLiteral(
         "QPushButton {"
         "    background-color: rgba(127, 127, 127, 0.12);"
         "    border: 1px solid rgba(127, 127, 127, 0.25);"
-        "    border-radius: 7px;"
+        "    border-radius: 0px;"
         "    padding: 5px 12px;"
         "    font-size: 11.5px;"
         "    font-weight: 500;"
@@ -625,6 +736,9 @@ QWidget *AboutDialog::createChangelogTab()
         "    background-color: rgba(0, 120, 212, 0.2);"
         "    border-color: #0078D4;"
         "    color: #0078D4;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: rgba(0, 120, 212, 0.35);"
         "}"));
     connect(webBtn, &QPushButton::clicked, this, &AboutDialog::openChangelogWebsite);
     topLayout->addWidget(webBtn);
@@ -650,7 +764,7 @@ QWidget *AboutDialog::createChangelogTab()
         "    background-color: #0078D4;"
         "    color: #FFFFFF;"
         "    border: none;"
-        "    border-radius: 6px;"
+        "    border-radius: 0px;"
         "    padding: 4px 12px;"
         "    font-size: 11px;"
         "    font-weight: 600;"
@@ -762,11 +876,12 @@ void AboutDialog::showChangelogLoading()
     if(m_changelogStatusWidget && m_changelogStatusLabel)
     {
         m_changelogStatusLabel->setText(QStringLiteral(
-            "<span style=\"color:#0078D4; font-weight:600;\">⏳ Загрузка...</span> "
+            "<img src=\":/svg/clock\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> "
+            "<span style=\"color:#0078D4; font-weight:600;\">Загрузка...</span> "
             "Получение актуального списка изменений с adskiller.imister.tech/changelog"));
         if(m_changelogRetryBtn)
             m_changelogRetryBtn->hide();
-        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); border-radius: 8px; }"));
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); border-radius: 0px; }"));
         m_changelogStatusWidget->show();
     }
 }
@@ -776,12 +891,13 @@ void AboutDialog::showChangelogError(const QString &errorMsg)
     if(m_changelogStatusWidget && m_changelogStatusLabel)
     {
         m_changelogStatusLabel->setText(QStringLiteral(
-                                            "<span style=\"color:#EF4444; font-weight:bold;\">⚠️ Ошибка соединения:</span> %1<br>"
+                                            "<img src=\":/svg/alert-triangle\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> "
+                                            "<span style=\"color:#EF4444; font-weight:bold;\">Ошибка соединения:</span> %1<br>"
                                             "<span style=\"color:rgba(127,127,127,0.9); font-size:11px;\">Ниже показаны встроенные сведения о релизе (автономный режим).</span>")
                                             .arg(errorMsg));
         if(m_changelogRetryBtn)
             m_changelogRetryBtn->show();
-        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; }"));
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 0px; }"));
         m_changelogStatusWidget->show();
     }
 }
@@ -803,23 +919,23 @@ QString AboutDialog::formatChangelogText(const QString &raw)
 
     // Code `code`
     static QRegularExpression codeRe(QStringLiteral(R"(`([^`]+)`)"));
-    s.replace(codeRe, QStringLiteral("<code style=\"background:rgba(127,127,127,0.15); padding:1px 5px; border-radius:3px; font-family:monospace;\">\\1</code>"));
+    s.replace(codeRe, QStringLiteral("<code style=\"background:rgba(127,127,127,0.15); padding:1px 5px; border-radius: 0px; font-family:monospace;\">\\1</code>"));
 
     // Tag pills
     static QRegularExpression tagNew(QStringLiteral(R"(\[(New|Новое|Добавлено)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagNew, QStringLiteral("<span style=\"background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">НОВОЕ</span>"));
+    s.replace(tagNew, QStringLiteral("<span style=\"background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">НОВОЕ</span>"));
 
     static QRegularExpression tagFix(QStringLiteral(R"(\[(Fix|Исправлено|Исправление)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagFix, QStringLiteral("<span style=\"background:rgba(59,130,246,0.2); color:#3B82F6; border:1px solid rgba(59,130,246,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">ИСПРАВЛЕНО</span>"));
+    s.replace(tagFix, QStringLiteral("<span style=\"background:rgba(59,130,246,0.2); color:#3B82F6; border:1px solid rgba(59,130,246,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">ИСПРАВЛЕНО</span>"));
 
     static QRegularExpression tagOpt(QStringLiteral(R"(\[(Opt|Optimized|Improvement|Улучшено|Улучшение)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagOpt, QStringLiteral("<span style=\"background:rgba(245,158,11,0.2); color:#F59E0B; border:1px solid rgba(245,158,11,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">УЛУЧШЕНИЕ</span>"));
+    s.replace(tagOpt, QStringLiteral("<span style=\"background:rgba(245,158,11,0.2); color:#F59E0B; border:1px solid rgba(245,158,11,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">УЛУЧШЕНИЕ</span>"));
 
     static QRegularExpression tagUi(QStringLiteral(R"(\[(UI|Дизайн|Интерфейс)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagUi, QStringLiteral("<span style=\"background:rgba(168,85,247,0.2); color:#A855F7; border:1px solid rgba(168,85,247,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">ДИЗАЙН</span>"));
+    s.replace(tagUi, QStringLiteral("<span style=\"background:rgba(168,85,247,0.2); color:#A855F7; border:1px solid rgba(168,85,247,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">ДИЗАЙН</span>"));
 
     static QRegularExpression tagSec(QStringLiteral(R"(\[(Sec|Security|Безопасность)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagSec, QStringLiteral("<span style=\"background:rgba(239,68,68,0.2); color:#EF4444; border:1px solid rgba(239,68,68,0.4); border-radius:4px; padding:1px 6px; font-size:10px; font-weight:bold;\">БЕЗОПАСНОСТЬ</span>"));
+    s.replace(tagSec, QStringLiteral("<span style=\"background:rgba(239,68,68,0.2); color:#EF4444; border:1px solid rgba(239,68,68,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">БЕЗОПАСНОСТЬ</span>"));
 
     // Bullets (- or * at start of line)
     static QRegularExpression bulletRe(QStringLiteral(R"((?:^|\n)[-*•]\s+(.+))"));
@@ -892,11 +1008,11 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
         QString verDisplay = version.startsWith(QLatin1Char('v')) ? version : QStringLiteral("v%1").arg(version);
         auto *verBadge = new QLabel(verDisplay, card);
         verBadge->setStyleSheet(QStringLiteral(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0078D4, stop:1 #005A9E);"
+            "background-color: #0284C7;"
             "color: #FFFFFF;"
             "font-weight: bold;"
             "font-size: 11.5px;"
-            "border-radius: 6px;"
+            "border-radius: 0px;"
             "padding: 3px 9px;"));
         headerLayout->addWidget(verBadge);
 
@@ -906,12 +1022,12 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
 
         if(cleanVer == currentVerStr)
         {
-            auto *curBadge = new QLabel(QStringLiteral("● Текущая версия"), card);
+            auto *curBadge = new QLabel(QStringLiteral("ТЕКУЩАЯ ВЕРСИЯ"), card);
             curBadge->setStyleSheet(QStringLiteral(
                 "background-color: rgba(16, 185, 129, 0.18);"
                 "color: #10B981;"
                 "border: 1px solid rgba(16, 185, 129, 0.40);"
-                "border-radius: 6px;"
+                "border-radius: 0px;"
                 "padding: 2px 8px;"
                 "font-size: 10px;"
                 "font-weight: 600;"));
@@ -920,7 +1036,9 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
 
         if(!date.isEmpty())
         {
-            auto *dateLabel = new QLabel(QStringLiteral("📅 %1").arg(date), card);
+            auto *dateLabel = new QLabel(card);
+            dateLabel->setTextFormat(Qt::RichText);
+            dateLabel->setText(QStringLiteral("<img src=\":/svg/calendar\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/> %1").arg(date));
             dateLabel->setStyleSheet(QStringLiteral("color: rgba(127, 127, 127, 0.85); font-size: 11px;"));
             headerLayout->addWidget(dateLabel);
         }
@@ -966,8 +1084,8 @@ QWidget *AboutDialog::createFooterWidget()
 
     auto *siteLabel = new QLabel(
         QStringLiteral(
-            "<a href=\"https://adskiller.imister.tech\" style=\"text-decoration: none; color: #0078D4; font-weight: 600;\">"
-            "🌐 adskiller.imister.tech</a>"),
+            "<a href=\"https://adskiller.imister.tech\" style=\"text-decoration: none; color: #38BDF8; font-weight: 600;\">"
+            "<img src=\":/svg/globe\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/> adskiller.imister.tech</a>"),
         footerWidget);
     siteLabel->setOpenExternalLinks(true);
     footerLayout->addWidget(siteLabel);
@@ -1089,7 +1207,8 @@ void AboutDialog::copyLicenseToClipboard()
     if(m_copyLicenseBtn)
     {
         const QString origText = m_copyLicenseBtn->text();
-        m_copyLicenseBtn->setText(QStringLiteral("✓ Скопировано в буфер обмена!"));
+        m_copyLicenseBtn->setIcon(QIcon(":/svg/check"));
+        m_copyLicenseBtn->setText(QStringLiteral(" Скопировано в буфер обмена!"));
         m_copyLicenseBtn->setEnabled(false);
 
         QTimer::singleShot(
@@ -1099,6 +1218,7 @@ void AboutDialog::copyLicenseToClipboard()
             {
                 if(m_copyLicenseBtn)
                 {
+                    m_copyLicenseBtn->setIcon(QIcon(":/svg/copy"));
                     m_copyLicenseBtn->setText(origText);
                     m_copyLicenseBtn->setEnabled(true);
                 }

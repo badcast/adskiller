@@ -103,7 +103,7 @@
               </size>
              </property>
              <property name="text">
-              <string>➤</string>
+              <string></string>
              </property>
             </widget>
            </item>
@@ -842,7 +842,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">background-color: #b71c1c;</string>
+                  <string notr="true">background-color: #0B0F19; border-bottom: 1px solid #1E293B;</string>
                  </property>
                  <property name="frameShape">
                   <enum>QFrame::Shape::NoFrame</enum>
@@ -1056,7 +1056,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
            <item row="0" column="0">
             <widget class="QFrame" name="toplevel_up">
              <property name="styleSheet">
-              <string notr="true">background-color: #b71c1c;</string>
+              <string notr="true">background-color: #0B0F19; border-bottom: 1px solid #1E293B;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1090,23 +1090,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <width>40</width>
                   <height>40</height>
                  </size>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton
-                                {
-                                background: #A52A2A;
-                                color: white;
-                                }
-
-                                QPushButton::hover
-                                {
-                                background: #8A3324;
-                                }
-
-                                QPushButton::pressed
-                                {
-                                background: #3D2B1F;
-                                }</string>
                 </property>
                 <property name="text">
                  <string>Выйти</string>
@@ -1153,23 +1136,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <width>40</width>
                   <height>40</height>
                  </size>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton
-                                {
-                                background: #A52A2A;
-                                color: white;
-                                }
-
-                                QPushButton::hover
-                                {
-                                background: #8A3324;
-                                }
-
-                                QPushButton::pressed
-                                {
-                                background: #3D2B1F;
-                                }</string>
                 </property>
                 <property name="text">
                  <string/>
@@ -1673,7 +1639,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
             </size>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: #b71c1c;</string>
+            <string notr="true">background-color: #0B0F19; border-bottom: 1px solid #1E293B;</string>
            </property>
            <property name="frameShape">
             <enum>QFrame::Shape::NoFrame</enum>
@@ -1707,23 +1673,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 <width>90</width>
                 <height>40</height>
                </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
-                            {
-                            background: #A52A2A;
-                            color: white;
-                            }
-
-                            QPushButton::hover
-                            {
-                            background: #8A3324;
-                            }
-
-                            QPushButton::pressed
-                            {
-                            background: #3D2B1F;
-                            }</string>
               </property>
               <property name="text">
                <string>Назад</string>

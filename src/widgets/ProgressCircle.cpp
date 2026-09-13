@@ -399,12 +399,13 @@ QPixmap ProgressCircle::generatePixmap() const
     else if(mInfinilyMode && innerRadiusPx > 10.0)
     {
         // Modern center loading icon
-        QFont iconFont = this->font();
-        iconFont.setPixelSize(qMax(12, static_cast<int>(radius * 0.36)));
-        painter.setFont(iconFont);
-        painter.setPen(mColor.lighter(130));
-        QRectF centerRect(center.x() - radius * 0.4, center.y() - radius * 0.4, radius * 0.8, radius * 0.8);
-        painter.drawText(centerRect, Qt::AlignCenter, "⚡");
+        int iconSize = qMax(12, static_cast<int>(radius * 0.5));
+        QPixmap zapPix(":/svg/zap");
+        if(!zapPix.isNull())
+        {
+            QRect targetRect(static_cast<int>(center.x() - iconSize / 2.0), static_cast<int>(center.y() - iconSize / 2.0), iconSize, iconSize);
+            painter.drawPixmap(targetRect, zapPix.scaled(iconSize, iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        }
     }
 
     return pixmap;

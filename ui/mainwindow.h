@@ -18,6 +18,8 @@
 #include <QTableView>
 #include <QVersionNumber>
 #include <QWidget>
+#include <QPushButton>
+#include <QIcon>
 
 #include "ProgressCircle.h"
 
@@ -60,6 +62,64 @@ class AITranslaterWidget;
 class AITranslaterService;
 class RadioPlayerWidget;
 class QToolBar;
+class QEnterEvent;
+
+class ServiceTileButton : public QPushButton
+{
+    Q_OBJECT
+
+public:
+    enum class Tier
+    {
+        Vip,
+        Free,
+        Credit,
+        Dynamic,
+        Disabled
+    };
+
+    explicit ServiceTileButton(const QIcon &icon,
+                               const QString &title,
+                               const QString &badgeText,
+                               Tier tier,
+                               bool showRibbon = true,
+                               const QString &ribbonText = QString::fromUtf8("NEW"),
+                               QWidget *parent = nullptr);
+
+    void setTier(Tier tier);
+    Tier tier() const { return m_tier; }
+
+    void setTitle(const QString &title);
+    QString title() const { return m_title; }
+
+    void setBadgeText(const QString &text);
+    QString badgeText() const { return m_badgeText; }
+
+    void setShowRibbon(bool show);
+    bool showRibbon() const { return m_showRibbon; }
+
+    void setRibbonText(const QString &text);
+    QString ribbonText() const { return m_ribbonText; }
+
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    void enterEvent(QEnterEvent *event) override;
+#else
+    void enterEvent(QEvent *event) override;
+#endif
+    void leaveEvent(QEvent *event) override;
+
+private:
+    QString m_title;
+    QString m_badgeText;
+    Tier m_tier;
+    bool m_showRibbon;
+    QString m_ribbonText;
+};
 
 class MainWindow : public QMainWindow
 {

@@ -127,7 +127,7 @@ QString AdsKillerService::uuid() const
 
 QString AdsKillerService::widgetIconName()
 {
-    return "white-ads-remove";
+    return "ads-killer";
 }
 
 AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr), _priv(new PrivateKillerRes)
@@ -185,19 +185,19 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
                "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
                "    <tr>"
                "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
-               "        📱 %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
+               "        <img src=':/svg/smartphone' width='14' height='14' style='vertical-align: middle;'/> %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
                "      </td>"
                "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
-               "        ● Подключено [ %3 ]"
+               "        Подключено [ %3 ]"
                "      </td>"
                "    </tr>"
                "  </table>"
-               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 6px;'>"
+               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 0px;'>"
                "    <tr>"
-               "      <td>🤖 <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
-               "      <td>💾 <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
-               "      <td>⚡ <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
-               "      <td>⚙️ <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
+               "      <td><img src=':/svg/bot' width='13' height='13' style='vertical-align: middle;'/> <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
+               "      <td><img src=':/svg/hard-drive' width='13' height='13' style='vertical-align: middle;'/> <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
+               "      <td><img src=':/svg/zap' width='13' height='13' style='vertical-align: middle;'/> <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
+               "      <td><img src=':/svg/settings' width='13' height='13' style='vertical-align: middle;'/> <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
                "    </tr>"
                "  </table>"
                "</div>")

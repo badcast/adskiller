@@ -196,6 +196,7 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
+    QString widgetIconName() override;
 };
 
 class BuyVIPService : public Service
@@ -330,6 +331,7 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
+    QString widgetIconName() override;
 };
 
 class AIAgentService : public Service
@@ -351,6 +353,7 @@ public:
     bool isFinish() override;
     bool start() override;
     void stop() override;
+    QString widgetIconName() override;
 
     static void resetHistory();
 

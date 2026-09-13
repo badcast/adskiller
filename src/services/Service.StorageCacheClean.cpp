@@ -37,3 +37,8 @@ bool StorageCacheCleanService::start()
 void StorageCacheCleanService::stop()
 {
 }
+
+QString StorageCacheCleanService::widgetIconName()
+{
+    return "storage-clean";
+}

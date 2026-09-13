@@ -6,6 +6,9 @@
 #include <memory>
 
 #include <QCloseEvent>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QEnterEvent>
+#endif
 #include <QDesktopServices>
 #include <QEasingCurve>
 #include <QEventLoop>
@@ -165,6 +168,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Top Radio Station Player
     setupRadioPlayer();
+
+    // Setup SVG icons on action buttons
+    ui->butShowPass->setText(QString());
+    ui->butShowPass->setIcon(QIcon(":/svg/eye"));
+    ui->butShowPass->setIconSize(QSize(16, 16));
+    ui->butShowPass->setToolTip(tr("Показать пароль"));
+    ui->butShowPass->setCursor(Qt::PointingHandCursor);
+
+    ui->aiChatSend->setText(QString());
+    ui->aiChatSend->setIcon(QIcon(":/svg/send"));
+    ui->aiChatSend->setIconSize(QSize(15, 15));
+    ui->aiChatSend->setCursor(Qt::PointingHandCursor);
 }
 
 MainWindow::~MainWindow()
@@ -173,6 +188,339 @@ MainWindow::~MainWindow()
     Adb::killServer();
     AppSetting::save();
     delete ui;
+}
+
+// ============================================================================
+// ServiceTileButton Implementation (Metro UI Tile Card with "NEW" Red Ribbon)
+// ============================================================================
+
+ServiceTileButton::ServiceTileButton(const QIcon &icon,
+                                     const QString &title,
+                                     const QString &badgeText,
+                                     Tier tier,
+                                     bool showRibbon,
+                                     const QString &ribbonText,
+                                     QWidget *parent)
+    : QPushButton(parent),
+      m_title(title),
+      m_badgeText(badgeText),
+      m_tier(tier),
+      m_showRibbon(showRibbon),
+      m_ribbonText(ribbonText)
+{
+    setIcon(icon);
+    setAttribute(Qt::WA_Hover, true);
+    setFixedSize(260, 82);
+    setCursor(tier == Tier::Disabled ? Qt::ForbiddenCursor : Qt::PointingHandCursor);
+    setStyleSheet("ServiceTileButton { background: transparent; border: none; outline: none; padding: 0px; margin: 0px; }");
+}
+
+void ServiceTileButton::setTier(Tier tier)
+{
+    m_tier = tier;
+    setCursor(tier == Tier::Disabled ? Qt::ForbiddenCursor : Qt::PointingHandCursor);
+    update();
+}
+
+void ServiceTileButton::setTitle(const QString &title)
+{
+    m_title = title;
+    update();
+}
+
+void ServiceTileButton::setBadgeText(const QString &text)
+{
+    m_badgeText = text;
+    update();
+}
+
+void ServiceTileButton::setShowRibbon(bool show)
+{
+    m_showRibbon = show;
+    update();
+}
+
+void ServiceTileButton::setRibbonText(const QString &text)
+{
+    m_ribbonText = text;
+    update();
+}
+
+QSize ServiceTileButton::sizeHint() const
+{
+    return QSize(260, 82);
+}
+
+QSize ServiceTileButton::minimumSizeHint() const
+{
+    return QSize(220, 76);
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+void ServiceTileButton::enterEvent(QEnterEvent *event)
+{
+    QPushButton::enterEvent(event);
+    update();
+}
+#else
+void ServiceTileButton::enterEvent(QEvent *event)
+{
+    QPushButton::enterEvent(event);
+    update();
+}
+#endif
+
+void ServiceTileButton::leaveEvent(QEvent *event)
+{
+    QPushButton::leaveEvent(event);
+    update();
+}
+
+void ServiceTileButton::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::TextAntialiasing, true);
+
+    const int w = width();
+    const int h = height();
+    const bool enabled = isEnabled();
+    const bool hovered = enabled && underMouse();
+    const bool pressed = enabled && isDown();
+
+    // 1. Metro Card Shell: Crisp Flat Dark Obsidian Background & Outline
+    QColor bgColor;
+    QColor borderColor;
+    if(!enabled)
+    {
+        bgColor = QColor(11, 15, 25);       // #0B0F19
+        borderColor = QColor(30, 41, 59);   // #1E293B
+    }
+    else if(pressed)
+    {
+        bgColor = QColor(8, 14, 26);        // #080E1A
+        borderColor = QColor(2, 132, 199);  // #0284C7
+    }
+    else if(hovered)
+    {
+        bgColor = QColor(19, 31, 55);       // #131F37
+        borderColor = QColor(56, 189, 248); // #38BDF8
+    }
+    else
+    {
+        bgColor = QColor(15, 23, 42);       // #0F172A
+        borderColor = QColor(30, 41, 59);   // #1E293B
+    }
+
+    painter.fillRect(QRect(0, 0, w, h), bgColor);
+    painter.setPen(QPen(borderColor, 1));
+    painter.drawRect(QRect(0, 0, w - 1, h - 1));
+
+    // 2. Left Status Accent Stripe (4px width)
+    QColor accentColor;
+    if(!enabled || m_tier == Tier::Disabled)
+    {
+        accentColor = QColor(71, 85, 105);   // #475569 Slate
+    }
+    else
+    {
+        switch(m_tier)
+        {
+        case Tier::Vip:
+            accentColor = hovered ? QColor(251, 191, 36) : QColor(245, 158, 11);  // Gold #F59E0B / #FBBF24
+            break;
+        case Tier::Free:
+            accentColor = hovered ? QColor(52, 211, 153) : QColor(16, 185, 129);  // Emerald #10B981 / #34D399
+            break;
+        case Tier::Dynamic:
+            accentColor = hovered ? QColor(129, 140, 248) : QColor(99, 102, 241); // Indigo #818CF8
+            break;
+        case Tier::Credit:
+        default:
+            accentColor = hovered ? QColor(56, 189, 248) : QColor(14, 165, 233);  // Sky Cyan #38BDF8
+            break;
+        }
+    }
+    painter.fillRect(QRect(0, 0, 4, h), accentColor);
+
+    // 3. Recessed Icon Plate Sub-Panel
+    const int plateX = 12;
+    const int plateY = (h - 54) / 2;
+    const int plateSize = 54;
+    const QRect plateRect(plateX, plateY, plateSize, plateSize);
+
+    const QColor plateBg = hovered ? QColor(11, 17, 30) : QColor(7, 10, 18);
+    const QColor plateBorder = hovered ? QColor(51, 65, 85) : QColor(26, 36, 54);
+    painter.fillRect(plateRect, plateBg);
+    painter.setPen(QPen(plateBorder, 1));
+    painter.drawRect(plateRect);
+
+    // Center icon inside plate (42x42)
+    const QRect iconRect(plateX + 6, plateY + 6, plateSize - 12, plateSize - 12);
+    if(!enabled)
+    {
+        painter.setOpacity(0.35);
+        icon().paint(&painter, iconRect);
+        painter.setOpacity(1.0);
+    }
+    else
+    {
+        icon().paint(&painter, iconRect);
+    }
+
+    // 4. Service Title Typography
+    const int textX = plateRect.right() + 12;
+    const int textTop = plateY + 1;
+    // Reserved width for top-right ribbon
+    const int ribbonReservation = (m_showRibbon && enabled) ? 68 : 12;
+    const int maxTitleW = qMax(40, w - textX - ribbonReservation);
+
+    QFont titleFont("Segoe UI", 10, QFont::Bold);
+    painter.setFont(titleFont);
+    QFontMetrics tfm(titleFont);
+    const QString elidedTitle = tfm.elidedText(m_title, Qt::ElideRight, maxTitleW);
+
+    QColor titleColor;
+    if(!enabled)
+        titleColor = QColor(100, 116, 139); // #64748B
+    else if(hovered)
+        titleColor = QColor(56, 189, 248);  // #38BDF8
+    else
+        titleColor = QColor(248, 250, 252); // #F8FAFC
+
+    painter.setPen(titleColor);
+    painter.drawText(QRect(textX, textTop, maxTitleW, 22), Qt::AlignLeft | Qt::AlignVCenter, elidedTitle);
+
+    // 5. Pricing / Status Badge Pill
+    if(!m_badgeText.isEmpty())
+    {
+        QFont badgeFont("Segoe UI", 8, QFont::Bold);
+        painter.setFont(badgeFont);
+        QFontMetrics bfm(badgeFont);
+
+        QColor pillBg;
+        QColor pillBorder;
+        QColor pillText;
+
+        if(!enabled || m_tier == Tier::Disabled)
+        {
+            pillBg = QColor(24, 30, 41);
+            pillBorder = QColor(51, 65, 85);
+            pillText = QColor(148, 163, 184);
+        }
+        else
+        {
+            switch(m_tier)
+            {
+            case Tier::Vip:
+                pillBg = QColor(36, 24, 6);
+                pillBorder = QColor(146, 64, 14);
+                pillText = QColor(251, 191, 36);
+                break;
+            case Tier::Free:
+                pillBg = QColor(6, 37, 22);
+                pillBorder = QColor(5, 150, 105);
+                pillText = QColor(52, 211, 153);
+                break;
+            case Tier::Dynamic:
+                pillBg = QColor(14, 27, 56);
+                pillBorder = QColor(37, 99, 235);
+                pillText = QColor(96, 165, 250);
+                break;
+            case Tier::Credit:
+            default:
+                pillBg = QColor(12, 32, 56);
+                pillBorder = QColor(2, 132, 199);
+                pillText = QColor(56, 189, 248);
+                break;
+            }
+        }
+
+        const int badgeH = 22;
+        const int badgeY = plateRect.bottom() - badgeH;
+        const int maxPillW = w - textX - 12;
+        const int textW = bfm.horizontalAdvance(m_badgeText);
+        const int pillW = qBound(50, textW + 16, maxPillW);
+        const QRect pillRect(textX, badgeY, pillW, badgeH);
+
+        painter.fillRect(pillRect, pillBg);
+        painter.setPen(QPen(pillBorder, 1));
+        painter.drawRect(pillRect);
+
+        painter.setPen(pillText);
+        const QString elidedBadge = bfm.elidedText(m_badgeText, Qt::ElideRight, pillRect.width() - 8);
+        painter.drawText(pillRect, Qt::AlignCenter, elidedBadge);
+    }
+
+    // 6. Top-Right Red Ribbon Banner with "NEW" Inscription
+    if(m_showRibbon && enabled)
+    {
+        const int ribbonW = 58;
+        const int ribbonH = 21;
+        const int notch = 8;
+        const int rx = w - ribbonW;
+        const int ry = 0;
+
+        // Physical drop shadow behind ribbon
+        QPolygon shadowPoly;
+        shadowPoly << QPoint(w, ry + 2)
+                   << QPoint(rx + 1, ry + 2)
+                   << QPoint(rx + notch + 1, ry + ribbonH / 2 + 1)
+                   << QPoint(rx + 1, ry + ribbonH + 2)
+                   << QPoint(w, ry + ribbonH + 2);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(0, 0, 0, 110));
+        painter.drawPolygon(shadowPoly);
+
+        // Ribbon polygon with decorative swallowtail notch cut on the left
+        QPolygon ribbonPoly;
+        ribbonPoly << QPoint(w, ry)
+                   << QPoint(rx, ry)
+                   << QPoint(rx + notch, ry + ribbonH / 2)
+                   << QPoint(rx, ry + ribbonH)
+                   << QPoint(w, ry + ribbonH);
+
+        // Rich crimson gradient
+        QLinearGradient ribbonGrad(rx, ry, w, ry + ribbonH);
+        if(hovered)
+        {
+            ribbonGrad.setColorAt(0.0, QColor(254, 120, 120));
+            ribbonGrad.setColorAt(0.3, QColor(248, 113, 113));
+            ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));
+            ribbonGrad.setColorAt(1.0, QColor(185, 28, 28));
+        }
+        else
+        {
+            ribbonGrad.setColorAt(0.0, QColor(248, 113, 113)); // #F87171 Ruby highlight
+            ribbonGrad.setColorAt(0.35, QColor(239, 68, 68));  // #EF4444 Vivid red
+            ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));   // #DC2626 Deep red
+            ribbonGrad.setColorAt(1.0, QColor(153, 27, 27));   // #991B1B Crimson shadow
+        }
+
+        painter.setPen(QPen(QColor(185, 28, 28), 1));
+        painter.setBrush(ribbonGrad);
+        painter.drawPolygon(ribbonPoly);
+
+        // Fine glossy highlight line along top edge
+        painter.setPen(QPen(QColor(255, 255, 255, 90), 1));
+        painter.drawLine(rx + 1, ry + 1, w - 1, ry + 1);
+
+        // Ribbon Inscription "NEW"
+        QFont ribbonFont("Segoe UI", 8, QFont::Black);
+        ribbonFont.setBold(true);
+        ribbonFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.2);
+        painter.setFont(ribbonFont);
+
+        const QRect textRect(rx + notch / 2, ry, ribbonW - notch / 2, ribbonH);
+
+        // Embossed 3D shadow for text
+        painter.setPen(QColor(127, 29, 29)); // #7F1D1D
+        painter.drawText(textRect.translated(0, 1), Qt::AlignCenter, m_ribbonText);
+
+        // Pure white foreground
+        painter.setPen(Qt::white);
+        painter.drawText(textRect, Qt::AlignCenter, m_ribbonText);
+    }
 }
 
 void MainWindow::initServiceModules()
@@ -213,178 +561,69 @@ void MainWindow::initServiceModules()
 #endif
 
         QString badgeText;
-        QString styleSheet;
         uint32_t effectivePrice = (x == 0 && network.authedId.basePrice > 0 ? network.authedId.basePrice : remoteService->price);
         bool hasVIP = network.authedId.hasVipAccount();
         bool isDynamic = (remoteService->price == static_cast<std::uint32_t>(-1));
         bool isFree = (effectivePrice == 0);
         bool canBypassWithVip = (remoteService->needVIP && hasVIP);
 
+        ServiceTileButton::Tier tier = ServiceTileButton::Tier::Credit;
+
         if(!instance->active)
         {
+            tier = ServiceTileButton::Tier::Disabled;
             if(!instance->isAvailable())
-                badgeText = QString::fromUtf8("🔧 В разработке");
+                badgeText = QString::fromUtf8("В РАЗРАБОТКЕ");
             else if(!remoteService->active)
-                badgeText = QString::fromUtf8("⛔ Не доступен");
+                badgeText = QString::fromUtf8("НЕ ДОСТУПЕН");
             else
-                badgeText = QString::fromUtf8("⛔ Отключен");
-
-            styleSheet = "QPushButton {"
-                         "   text-align: left;"
-                         "   padding: 10px 14px 10px 12px;"
-                         "   font-size: 12px;"
-                         "   font-weight: 500;"
-                         "   background-color: #17181C;"
-                         "   color: #64748B;"
-                         "   border-radius: 12px;"
-                         "   border: 1px solid #282A30;"
-                         "   border-left: 5px solid #475569;"
-                         "}";
+                badgeText = QString::fromUtf8("ОТКЛЮЧЕН");
         }
         else if(canBypassWithVip)
         {
             // Service supports VIP and user HAS VIP account -> Unlimited access
-            badgeText = QString::fromUtf8("👑 VIP • БЕЗЛИМИТ");
-
-            styleSheet = "QPushButton {"
-                         "   text-align: left;"
-                         "   padding: 10px 14px 10px 12px;"
-                         "   font-size: 12px;"
-                         "   font-weight: bold;"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2C2213, stop:0.5 #231B0E, stop:1 #1A140A);"
-                         "   color: #FEF3C7;"
-                         "   border-radius: 12px;"
-                         "   border: 1px solid rgba(245, 158, 11, 0.45);"
-                         "   border-left: 5px solid #F59E0B;"
-                         "}"
-                         "QPushButton:hover {"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3D2E17, stop:0.5 #312411, stop:1 #241A0B);"
-                         "   border-color: #FBBF24;"
-                         "   border-left: 5px solid #FCD34D;"
-                         "   color: #FFFFFF;"
-                         "}"
-                         "QPushButton:pressed {"
-                         "   background: #140E05;"
-                         "   border-color: #D97706;"
-                         "}";
+            tier = ServiceTileButton::Tier::Vip;
+            badgeText = QString::fromUtf8("VIP • БЕЗЛИМИТ");
         }
         else if(isFree)
         {
             // Completely free service for everyone
+            tier = ServiceTileButton::Tier::Free;
             badgeText = QString::fromUtf8("БЕСПЛАТНО");
-
-            styleSheet = "QPushButton {"
-                         "   text-align: left;"
-                         "   padding: 10px 14px 10px 12px;"
-                         "   font-size: 12px;"
-                         "   font-weight: bold;"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #15271D, stop:0.5 #112017, stop:1 #0D1912);"
-                         "   color: #D1FAE5;"
-                         "   border-radius: 12px;"
-                         "   border: 1px solid rgba(52, 211, 153, 0.4);"
-                         "   border-left: 5px solid #10B981;"
-                         "}"
-                         "QPushButton:hover {"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1E382A, stop:0.5 #182D21, stop:1 #122219);"
-                         "   border-color: #34D399;"
-                         "   border-left: 5px solid #6EE7B7;"
-                         "   color: #FFFFFF;"
-                         "}"
-                         "QPushButton:pressed {"
-                         "   background: #09120D;"
-                         "   border-color: #059669;"
-                         "}";
         }
         else if(isDynamic)
         {
-            badgeText = remoteService->needVIP ? QString::fromUtf8("⚙ ТАРИФ НА ВЫБОР (или 👑 VIP)") : QString::fromUtf8("⚙ ТАРИФ НА ВЫБОР");
-
-            styleSheet = "QPushButton {"
-                         "   text-align: left;"
-                         "   padding: 10px 14px 10px 12px;"
-                         "   font-size: 12px;"
-                         "   font-weight: bold;"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1A2232, stop:0.5 #141B28, stop:1 #0F141F);"
-                         "   color: #E0F2FE;"
-                         "   border-radius: 12px;"
-                         "   border: 1px solid rgba(56, 189, 248, 0.4);"
-                         "   border-left: 5px solid #38BDF8;"
-                         "}"
-                         "QPushButton:hover {"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #233047, stop:0.5 #1C2638, stop:1 #151D2C);"
-                         "   border-color: #38BDF8;"
-                         "   border-left: 5px solid #7DD3FC;"
-                         "   color: #FFFFFF;"
-                         "}"
-                         "QPushButton:pressed {"
-                         "   background: #0B0E16;"
-                         "   border-color: #0284C7;"
-                         "}";
+            tier = ServiceTileButton::Tier::Dynamic;
+            badgeText = remoteService->needVIP ? QString::fromUtf8("ТАРИФ (или VIP)") : QString::fromUtf8("ТАРИФ НА ВЫБОР");
         }
         else if(remoteService->needVIP)
         {
             // Service supports VIP, but user has NO VIP -> Show price in credits with VIP alternative
-            badgeText = QString::fromUtf8("💳 %1 %2  (или 👑 VIP)").arg(effectivePrice).arg(network.authedId.currencyType);
-
-            styleSheet = "QPushButton {"
-                         "   text-align: left;"
-                         "   padding: 10px 14px 10px 12px;"
-                         "   font-size: 12px;"
-                         "   font-weight: bold;"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1C2333, stop:0.5 #161C2A, stop:1 #111520);"
-                         "   color: #F0F9FF;"
-                         "   border-radius: 12px;"
-                         "   border: 1px solid rgba(245, 158, 11, 0.4);"
-                         "   border-left: 5px solid #F59E0B;"
-                         "}"
-                         "QPushButton:hover {"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #253147, stop:0.5 #1D2638, stop:1 #161D2B);"
-                         "   border-color: #FBBF24;"
-                         "   border-left: 5px solid #FCD34D;"
-                         "   color: #FFFFFF;"
-                         "}"
-                         "QPushButton:pressed {"
-                         "   background: #0D121B;"
-                         "   border-color: #D97706;"
-                         "}";
+            tier = ServiceTileButton::Tier::Vip;
+            badgeText = QString("%1 %2 (или VIP)").arg(effectivePrice).arg(network.authedId.currencyType);
         }
         else
         {
             // Service does NOT require/support VIP -> Standard credit price for all users
-            badgeText = QString::fromUtf8("💳 %1 %2").arg(effectivePrice).arg(network.authedId.currencyType);
-
-            styleSheet = "QPushButton {"
-                         "   text-align: left;"
-                         "   padding: 10px 14px 10px 12px;"
-                         "   font-size: 12px;"
-                         "   font-weight: bold;"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1A2232, stop:0.5 #141B28, stop:1 #0F141F);"
-                         "   color: #E0F2FE;"
-                         "   border-radius: 12px;"
-                         "   border: 1px solid rgba(56, 189, 248, 0.4);"
-                         "   border-left: 5px solid #0284C7;"
-                         "}"
-                         "QPushButton:hover {"
-                         "   background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #233047, stop:0.5 #1C2638, stop:1 #151D2C);"
-                         "   border-color: #38BDF8;"
-                         "   border-left: 5px solid #38BDF8;"
-                         "   color: #FFFFFF;"
-                         "}"
-                         "QPushButton:pressed {"
-                         "   background: #0B0E16;"
-                         "   border-color: #0284C7;"
-                         "}";
+            tier = ServiceTileButton::Tier::Credit;
+            badgeText = QString("%1 %2").arg(effectivePrice).arg(network.authedId.currencyType);
         }
-
-        tmp0 = remoteService->name + "\n" + badgeText;
 
         if(instance->uuid() != IDServiceAIAgentString)
         {
-            QPushButton *button = new QPushButton(QIcon(":/service-icons/" + instance->widgetIconName()), tmp0, ui->serviceContents);
-            button->setCursor(instance->active ? Qt::PointingHandCursor : Qt::ForbiddenCursor);
-            button->setStyleSheet(styleSheet);
-            button->setIconSize({52, 52});
-            button->setFixedSize(260, 80);
+            QIcon svcIcon(":/svg/services/" + instance->widgetIconName());
+            if(svcIcon.isNull())
+                svcIcon = QIcon(":/service-icons/" + instance->widgetIconName());
+
+            ServiceTileButton *button = new ServiceTileButton(
+                svcIcon,
+                remoteService->name,
+                badgeText,
+                tier,
+                instance->active, // Show red ribbon "NEW" for active services
+                QString::fromUtf8("NEW"),
+                ui->serviceContents);
+            button->setFixedSize(260, 82);
             button->setEnabled(instance->active);
 
             QString tip = remoteService->name;
@@ -432,7 +671,7 @@ void MainWindow::initServiceModules()
                                                "<div style='min-width: 330px; font-family: Segoe UI, sans-serif; font-size: 13px; color: #E2E8F0;'>"
                                                "<p style='font-size: 15px; font-weight: bold; color: #F87171; margin-bottom: 8px;'>Недостаточно кредитов для запуска</p>"
                                                "<p style='margin-bottom: 10px;'>Для запуска сервиса <b style='color: #38BDF8;'>«%1»</b> на вашем балансе не хватает средств.</p>"
-                                               "<table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 6px;'>"
+                                               "<table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 0px;'>"
                                                "<tr><td style='padding: 6px 10px; color: #94A3B8;'>Стоимость услуги:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #F8FAFC;'>%2 %3</td></tr>"
                                                "<tr><td style='padding: 6px 10px; color: #94A3B8;'>На вашем балансе:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #FBBF24;'>%4 %3</td></tr>"
                                                "<tr style='border-top: 1px solid rgba(148, 163, 184, 0.2);'><td style='padding: 6px 10px; color: #EF4444; font-weight: bold;'>Не хватает:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #EF4444;'>%5 %3</td></tr>"
@@ -444,9 +683,9 @@ void MainWindow::initServiceModules()
                                                .arg(currency)
                                                .arg(network.authedId.credits)
                                                .arg(shortage > 0 ? shortage : 0)
-                                               .arg(
-                                                   needVIP ? QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'>💡 <i>Вы можете активировать <b>VIP-статус</b> для безлимитного доступа без списания кредитов, либо пополнить баланс через службу поддержки.</i></p>")
-                                                           : QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'>💳 <i>Данная услуга оплачивается только кредитами (VIP-статус не поддерживается). Пополните баланс через раздел Поддержка.</i></p>"));
+                                                .arg(
+                                                    needVIP ? QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Вы можете активировать <b>VIP-статус</b> для безлимитного доступа без списания кредитов, либо пополнить баланс через службу поддержки.</i></p>")
+                                                            : QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Данная услуга оплачивается только кредитами (VIP-статус не поддерживается). Пополните баланс через раздел Поддержка.</i></p>"));
 
                         msgBox.setText(infoHtml);
 
@@ -455,28 +694,28 @@ void MainWindow::initServiceModules()
                             "   background-color: #0F172A;"
                             "   color: #F8FAFC;"
                             "   border: 1px solid #334155;"
-                            "   border-radius: 12px;"
+                            "   border-radius: 0px;"
                             "}"
                             "QLabel {"
                             "   color: #F8FAFC;"
                             "   background: transparent;"
                             "}"
                             "QPushButton {"
-                            "   background-color: #334155;"
+                            "   background-color: #1E293B;"
                             "   color: #F8FAFC;"
-                            "   border: 1px solid #475569;"
-                            "   border-radius: 6px;"
+                            "   border: 1px solid #334155;"
+                            "   border-radius: 0px;"
                             "   padding: 6px 16px;"
                             "   font-size: 12px;"
                             "   font-weight: bold;"
                             "   min-width: 85px;"
                             "}"
                             "QPushButton:hover {"
-                            "   background-color: #475569;"
-                            "   border-color: #64748B;"
+                            "   background-color: #334155;"
+                            "   border-color: #38BDF8;"
                             "}"
                             "QPushButton:pressed {"
-                            "   background-color: #1E293B;"
+                            "   background-color: #0F172A;"
                             "}");
 
                         QPushButton *btnVip = nullptr;
@@ -484,29 +723,34 @@ void MainWindow::initServiceModules()
 
                         if(needVIP)
                         {
-                            btnVip = msgBox.addButton(QString::fromUtf8("👑 Оформить VIP"), QMessageBox::ActionRole);
+                            btnVip = msgBox.addButton(QString::fromUtf8("Оформить VIP"), QMessageBox::ActionRole);
+                            btnVip->setIcon(QIcon(":/svg/crown"));
+                            btnVip->setIconSize(QSize(16, 16));
                             btnVip->setCursor(Qt::PointingHandCursor);
                             btnVip->setStyleSheet(
                                 "QPushButton {"
-                                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #D97706, stop:1 #F59E0B);"
+                                "   background-color: #D97706;"
                                 "   color: #FFFFFF;"
                                 "   font-size: 12px;"
                                 "   font-weight: bold;"
-                                "   border: none;"
-                                "   border-radius: 6px;"
+                                "   border: 1px solid #B45309;"
+                                "   border-radius: 0px;"
                                 "   padding: 6px 16px;"
                                 "   min-width: 125px;"
                                 "}"
                                 "QPushButton:hover {"
-                                "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #F59E0B, stop:1 #FBBF24);"
+                                "   background-color: #F59E0B;"
+                                "   border-color: #FBBF24;"
                                 "}"
                                 "QPushButton:pressed {"
-                                "   background: #B45309;"
+                                "   background-color: #B45309;"
                                 "}");
                         }
                         else
                         {
-                            btnSupport = msgBox.addButton(QString::fromUtf8("💬 Поддержка"), QMessageBox::ActionRole);
+                            btnSupport = msgBox.addButton(QString::fromUtf8("Поддержка"), QMessageBox::ActionRole);
+                            btnSupport->setIcon(QIcon(":/svg/message-circle"));
+                            btnSupport->setIconSize(QSize(16, 16));
                             btnSupport->setCursor(Qt::PointingHandCursor);
                             btnSupport->setStyleSheet(
                                 "QPushButton {"
@@ -514,16 +758,17 @@ void MainWindow::initServiceModules()
                                 "   color: #FFFFFF;"
                                 "   font-size: 12px;"
                                 "   font-weight: bold;"
-                                "   border: none;"
-                                "   border-radius: 6px;"
+                                "   border: 1px solid #0284C7;"
+                                "   border-radius: 0px;"
                                 "   padding: 6px 16px;"
                                 "   min-width: 110px;"
                                 "}"
                                 "QPushButton:hover {"
-                                "   background-color: #0EA5E9;"
+                                "   background-color: #0369A1;"
+                                "   border-color: #38BDF8;"
                                 "}"
                                 "QPushButton:pressed {"
-                                "   background-color: #0369A1;"
+                                "   background-color: #075985;"
                                 "}");
                         }
 
@@ -610,6 +855,13 @@ void MainWindow::initServiceModules()
     {
         layoutSpace->setSpacing(14);
         layoutSpace->setContentsMargins(10, 10, 10, 10);
+        while(layoutSpace->count() > 0)
+        {
+            QLayoutItem *child = layoutSpace->takeAt(0);
+            if(child->widget())
+                child->widget()->deleteLater();
+            delete child;
+        }
     }
 
     x = 0;
@@ -849,12 +1101,12 @@ void MainWindow::pageShownPreStart(int page)
                                 ui->label_5->setStyleSheet(
                                     "background-color: #0B1120;"
                                     "border: 1px solid #1E3A5F;"
-                                    "border-radius: 10px;"
+                                    "border-radius: 0px;"
                                     "color: #38BDF8;"
                                     "font-size: 12.5px;"
                                     "font-weight: 600;"
                                     "padding: 10px;");
-                                ui->label_5->setText(QString::fromUtf8("📡 Поиск подключенного Android-устройства..."));
+                                ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
                             }
                         }
                         else
@@ -896,12 +1148,12 @@ void MainWindow::pageShownPreStart(int page)
                                 ui->label_5->setStyleSheet(
                                     "background-color: #064E3B;"
                                     "border: 1px solid #059669;"
-                                    "border-radius: 10px;"
+                                    "border-radius: 0px;"
                                     "color: #34D399;"
                                     "font-size: 12.5px;"
                                     "font-weight: 600;"
                                     "padding: 10px;");
-                                ui->label_5->setText(QString::fromUtf8("✅ Устройство подключено: %1! Запуск...").arg(devName));
+                                ui->label_5->setText(QString::fromUtf8("Устройство подключено: %1! Запуск...").arg(devName));
                             }
                             else if(hasUnauth)
                             {
@@ -914,12 +1166,12 @@ void MainWindow::pageShownPreStart(int page)
                                 ui->label_5->setStyleSheet(
                                     "background-color: #451A03;"
                                     "border: 1px solid #D97706;"
-                                    "border-radius: 10px;"
+                                    "border-radius: 0px;"
                                     "color: #FBBF24;"
                                     "font-size: 12.5px;"
                                     "font-weight: 600;"
                                     "padding: 10px;");
-                                ui->label_5->setText(QString::fromUtf8("⚠️ Нажмите «Разрешить отладку по USB» на экране телефона"));
+                                ui->label_5->setText(QString::fromUtf8("Нажмите «Разрешить отладку по USB» на экране телефона"));
                             }
                         }
                     }
@@ -1087,11 +1339,11 @@ void MainWindow::clearAuthInfoPage()
     services.clear();
 
     ui->aiChatEdit->clear();
-    ui->aiChatSend->setText(QString::fromUtf8("➤"));
+    ui->aiChatSend->setText(QString());
 
     ui->labelLoginAuthed->setText("-");
-    ui->labelCredits->setText(QString::fromUtf8("💳 0\nБаланс"));
-    ui->labelVipDays->setText(QString::fromUtf8("👑 0 ДНЕЙ\nVIP статус"));
+    ui->labelCredits->setText(QString::fromUtf8("0\nБаланс"));
+    ui->labelVipDays->setText(QString::fromUtf8("0 ДНЕЙ\nVIP статус"));
 
     // Reset Side Reference Panel labels
     QLabel *lbl = nullptr;
@@ -1118,7 +1370,7 @@ void MainWindow::clearAuthInfoPage()
 
     AIAgentService::resetHistory();
     ui->aiChatEdit->clear();
-    ui->aiChatSend->setText(QString::fromUtf8("➤"));
+    ui->aiChatSend->setText(QString());
 
     ui->aiChatEdit->setDisabled(true);
     ui->aiChatSend->setDisabled(true);
@@ -1158,11 +1410,11 @@ void MainWindow::fillAuthInfoPage()
     }
 
     ui->labelLoginAuthed->setText(network.authedId.idName);
-    ui->labelCredits->setText(QString("💳 %1 %2\nБаланс").arg(network.authedId.credits).arg(network.authedId.currencyType));
+    ui->labelCredits->setText(QString("%1 %2\nБаланс").arg(network.authedId.credits).arg(network.authedId.currencyType));
     if(network.authedId.hasVipAccount())
-        ui->labelVipDays->setText(QString("👑 %1 ДНЕЙ\nVIP активен").arg(network.authedId.vipDays));
+        ui->labelVipDays->setText(QString("%1 ДНЕЙ\nVIP активен").arg(network.authedId.vipDays));
     else
-        ui->labelVipDays->setText(QString("👑 Нет VIP\nVIP статус"));
+        ui->labelVipDays->setText(QString("Нет VIP\nVIP статус"));
 
     // Populate Side Reference Panel (Справочник аккаунта)
     QLabel *sLbl = nullptr;
@@ -1179,7 +1431,7 @@ void MainWindow::fillAuthInfoPage()
     {
         if(network.authedId.hasVipAccount())
         {
-            sLbl->setText(QString("👑 %1 дн.").arg(network.authedId.vipDays));
+            sLbl->setText(QString("%1 дн.").arg(network.authedId.vipDays));
             sLbl->setStyleSheet("color: #FBBF24; font-size: 12px; font-weight: bold; background: transparent; border: none;");
         }
         else
@@ -1199,12 +1451,12 @@ void MainWindow::fillAuthInfoPage()
     {
         if(network.authedId.blocked)
         {
-            sLbl->setText(QString::fromUtf8("⛔ Заблокирован"));
+            sLbl->setText(QString::fromUtf8("Заблокирован"));
             sLbl->setStyleSheet("color: #F87171; font-size: 12px; font-weight: bold; background: transparent; border: none;");
         }
         else
         {
-            sLbl->setText(QString::fromUtf8("✅ Активен"));
+            sLbl->setText(QString::fromUtf8("Активен"));
             sLbl->setStyleSheet("color: #34D399; font-size: 12px; font-weight: bold; background: transparent; border: none;");
         }
     }
@@ -1727,13 +1979,17 @@ void MainWindow::on_butShowPass_clicked()
     if(ui->linePassEdit->echoMode() == QLineEdit::EchoMode::Password)
     {
         ui->linePassEdit->setEchoMode(QLineEdit::EchoMode::Normal);
-        ui->butShowPass->setText("🔒");
-        ui->butShowPass->setToolTip("Скрыть пароль");
+        ui->butShowPass->setText(QString());
+        ui->butShowPass->setIcon(QIcon(":/svg/eye-off"));
+        ui->butShowPass->setIconSize(QSize(16, 16));
+        ui->butShowPass->setToolTip(tr("Скрыть пароль"));
     }
     else
     {
         ui->linePassEdit->setEchoMode(QLineEdit::EchoMode::Password);
-        ui->butShowPass->setText("👁");
-        ui->butShowPass->setToolTip("Показать пароль");
+        ui->butShowPass->setText(QString());
+        ui->butShowPass->setIcon(QIcon(":/svg/eye"));
+        ui->butShowPass->setIconSize(QSize(16, 16));
+        ui->butShowPass->setToolTip(tr("Показать пароль"));
     }
 }

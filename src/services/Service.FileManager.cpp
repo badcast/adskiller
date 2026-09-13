@@ -46,8 +46,8 @@ public:
         resize(720, 480);
         setStyleSheet(
             "QDialog { background-color: #0A0E1A; color: #F8FAFC; }"
-            "QTextEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 8px; font-family: monospace; font-size: 12px; selection-background-color: #0284C7; }"
-            "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 8px; padding: 6px 16px; font-weight: 600; }"
+            "QTextEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; font-family: monospace; font-size: 12px; selection-background-color: #0284C7; }"
+            "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; padding: 6px 16px; font-weight: 600; }"
             "QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
 
         QVBoxLayout *layout = new QVBoxLayout(this);
@@ -55,7 +55,8 @@ public:
         layout->setSpacing(10);
 
         QHBoxLayout *topInfo = new QHBoxLayout();
-        QLabel *title = new QLabel("📄 " + fileName, this);
+        QLabel *title = new QLabel("<img src=\":/svg/clipboard\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> " + fileName, this);
+        title->setTextFormat(Qt::RichText);
         title->setStyleSheet("font-size: 14px; font-weight: bold; color: #38BDF8;");
         QLabel *sizeLbl = new QLabel(QString("Размер: %1").arg(FileManagerWidget::formatBytes(content.size())), this);
         sizeLbl->setStyleSheet("color: #94A3B8; font-size: 12px;");
@@ -74,7 +75,7 @@ public:
             {
                 QLabel *imgLabel = new QLabel(this);
                 imgLabel->setAlignment(Qt::AlignCenter);
-                imgLabel->setStyleSheet("background-color: #070A12; border: 1px solid #1E293B; border-radius: 8px; padding: 10px;");
+                imgLabel->setStyleSheet("background-color: #070A12; border: 1px solid #1E293B; border-radius: 0px; padding: 10px;");
                 if(pix.width() > 680 || pix.height() > 360)
                     pix = pix.scaled(680, 360, Qt::KeepAspectRatio, Qt::SmoothTransformation);
                 imgLabel->setPixmap(pix);
@@ -121,17 +122,17 @@ void FileManagerWidget::setupUi()
 {
     setStyleSheet(
         "QWidget { background-color: #0A0E1A; color: #F8FAFC; font-family: 'Segoe UI', 'Noto Sans', sans-serif; }"
-        "QTableWidget { background-color: #0B0F19; alternate-background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 8px; gridline-color: #161F33; selection-background-color: #0284C7; selection-color: #FFFFFF; font-size: 12px; }"
+        "QTableWidget { background-color: #0B0F19; alternate-background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; gridline-color: #161F33; selection-background-color: #0284C7; selection-color: #FFFFFF; font-size: 12px; }"
         "QHeaderView::section { background-color: #0F172A; color: #94A3B8; font-weight: bold; font-size: 11px; border: none; border-bottom: 1px solid #1E293B; padding: 6px 8px; }"
-        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 8px; padding: 5px 10px; font-size: 12px; }"
+        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 10px; font-size: 12px; }"
         "QLineEdit:focus { border-color: #38BDF8; }"
-        "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 8px; padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
+        "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
         "QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }"
         "QPushButton:pressed { background-color: #0B101D; border-color: #0284C7; }"
         "QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; }"
         "QLabel { color: #94A3B8; font-size: 11.5px; }"
-        "QListWidget { background-color: #0B0F19; border: 1px solid #1E293B; border-radius: 8px; padding: 4px; color: #E2E8F0; }"
-        "QListWidget::item { padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; margin-bottom: 2px; }"
+        "QListWidget { background-color: #0B0F19; border: 1px solid #1E293B; border-radius: 0px; padding: 4px; color: #E2E8F0; }"
+        "QListWidget::item { padding: 8px 10px; border-radius: 0px; font-size: 12px; font-weight: 500; margin-bottom: 2px; }"
         "QListWidget::item:hover { background-color: #131E35; color: #38BDF8; }"
         "QListWidget::item:selected { background-color: #141B2D; border: 1px solid rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: bold; }");
 
@@ -143,19 +144,25 @@ void FileManagerWidget::setupUi()
     QHBoxLayout *navLayout = new QHBoxLayout();
     navLayout->setSpacing(6);
 
-    m_btnBack = new QPushButton("◀", this);
+    m_btnBack = new QPushButton(this);
+    m_btnBack->setIcon(QIcon(":/svg/arrow-left"));
+    m_btnBack->setIconSize(QSize(14, 14));
     m_btnBack->setToolTip("Назад");
     m_btnBack->setFixedWidth(34);
     m_btnBack->setEnabled(false);
     connect(m_btnBack, &QPushButton::clicked, this, &FileManagerWidget::navigateBack);
 
-    m_btnForward = new QPushButton("▶", this);
+    m_btnForward = new QPushButton(this);
+    m_btnForward->setIcon(QIcon(":/svg/arrow-right"));
+    m_btnForward->setIconSize(QSize(14, 14));
     m_btnForward->setToolTip("Вперёд");
     m_btnForward->setFixedWidth(34);
     m_btnForward->setEnabled(false);
     connect(m_btnForward, &QPushButton::clicked, this, &FileManagerWidget::navigateForward);
 
-    m_btnUp = new QPushButton("⬆ Наверх", this);
+    m_btnUp = new QPushButton("Наверх", this);
+    m_btnUp->setIcon(QIcon(":/svg/arrow-up"));
+    m_btnUp->setIconSize(QSize(14, 14));
     m_btnUp->setToolTip("Перейти на уровень выше");
     connect(m_btnUp, &QPushButton::clicked, this, &FileManagerWidget::navigateUp);
 
@@ -173,7 +180,9 @@ void FileManagerWidget::setupUi()
                 navigateTo(p);
         });
 
-    m_btnCopyPath = new QPushButton("📋", this);
+    m_btnCopyPath = new QPushButton(this);
+    m_btnCopyPath->setIcon(QIcon(":/svg/copy"));
+    m_btnCopyPath->setIconSize(QSize(13, 13));
     m_btnCopyPath->setToolTip("Скопировать путь");
     m_btnCopyPath->setFixedWidth(32);
     connect(
@@ -187,23 +196,29 @@ void FileManagerWidget::setupUi()
         });
 
     m_searchEdit = new QLineEdit(this);
-    m_searchEdit->setPlaceholderText("🔍 Поиск файлов...");
+    m_searchEdit->setPlaceholderText("Поиск файлов...");
     m_searchEdit->setFixedWidth(190);
     m_searchEdit->setClearButtonEnabled(true);
     connect(m_searchEdit, &QLineEdit::textChanged, this, &FileManagerWidget::onSearchFilterChanged);
 
-    m_btnNewDir = new QPushButton("➕ Папка", this);
+    m_btnNewDir = new QPushButton("Папка", this);
+    m_btnNewDir->setIcon(QIcon(":/svg/plus"));
+    m_btnNewDir->setIconSize(QSize(13, 13));
     m_btnNewDir->setToolTip("Создать новую папку");
     connect(m_btnNewDir, &QPushButton::clicked, this, &FileManagerWidget::createDirectory);
 
-    m_btnUpload = new QPushButton("📤 Загрузить", this);
+    m_btnUpload = new QPushButton("Загрузить", this);
+    m_btnUpload->setIcon(QIcon(":/svg/upload"));
+    m_btnUpload->setIconSize(QSize(13, 13));
     m_btnUpload->setToolTip("Загрузить файл с компьютера");
     m_btnUpload->setStyleSheet(
         "QPushButton { background: #164E63; color: #38BDF8; font-weight: bold; border: 1px solid #0891B2; }"
         "QPushButton:hover { background: #0E7490; color: #FFFFFF; }");
     connect(m_btnUpload, &QPushButton::clicked, this, &FileManagerWidget::uploadFile);
 
-    m_btnRefresh = new QPushButton("🔄", this);
+    m_btnRefresh = new QPushButton(this);
+    m_btnRefresh->setIcon(QIcon(":/svg/refresh-cw"));
+    m_btnRefresh->setIconSize(QSize(13, 13));
     m_btnRefresh->setToolTip("Обновить список");
     m_btnRefresh->setFixedWidth(34);
     connect(m_btnRefresh, &QPushButton::clicked, this, &FileManagerWidget::refreshList);
@@ -222,7 +237,7 @@ void FileManagerWidget::setupUi()
     // 2. Central Splitter: Sidebar + Main Table + Inspector
     QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
     splitter->setHandleWidth(4);
-    splitter->setStyleSheet("QSplitter::handle { background-color: #1E293B; border-radius: 2px; }");
+    splitter->setStyleSheet("QSplitter::handle { background-color: #1E293B; border-radius: 0px; }");
 
     // Left Sidebar: Quick Access
     QWidget *sidebarWidget = new QWidget(splitter);
@@ -235,20 +250,20 @@ void FileManagerWidget::setupUi()
     sidebarLayout->addWidget(sidebarTitle);
 
     m_quickAccessList = new QListWidget(sidebarWidget);
-    auto addShortcut = [this](const QString &label, const QString &path)
+    auto addShortcut = [this](const QString &label, const QString &path, const QString &iconPath)
     {
-        QListWidgetItem *it = new QListWidgetItem(label, m_quickAccessList);
+        QListWidgetItem *it = new QListWidgetItem(QIcon(iconPath), label, m_quickAccessList);
         it->setData(Qt::UserRole, path);
     };
-    addShortcut("📱 Внутренняя память", "/sdcard");
-    addShortcut("📥 Загрузки", "/sdcard/Download");
-    addShortcut("📷 Фото (DCIM)", "/sdcard/DCIM");
-    addShortcut("🖼 Изображения", "/sdcard/Pictures");
-    addShortcut("🎵 Музыка", "/sdcard/Music");
-    addShortcut("🎬 Видео", "/sdcard/Movies");
-    addShortcut("📄 Документы", "/sdcard/Documents");
-    addShortcut("📦 Android Data", "/sdcard/Android/data");
-    addShortcut("⚙ Корень устройства", "/");
+    addShortcut("Внутренняя память", "/sdcard", ":/svg/smartphone");
+    addShortcut("Загрузки", "/sdcard/Download", ":/svg/download");
+    addShortcut("Фото (DCIM)", "/sdcard/DCIM", ":/svg/folder");
+    addShortcut("Изображения", "/sdcard/Pictures", ":/svg/folder");
+    addShortcut("Музыка", "/sdcard/Music", ":/svg/music");
+    addShortcut("Видео", "/sdcard/Movies", ":/svg/folder");
+    addShortcut("Документы", "/sdcard/Documents", ":/svg/clipboard");
+    addShortcut("Android Data", "/sdcard/Android/data", ":/svg/settings");
+    addShortcut("Корень устройства", "/", ":/svg/hard-drive");
     connect(m_quickAccessList, &QListWidget::itemClicked, this, &FileManagerWidget::onQuickAccessClicked);
     sidebarLayout->addWidget(m_quickAccessList);
     splitter->addWidget(sidebarWidget);
@@ -291,7 +306,7 @@ void FileManagerWidget::setupUi()
 
     QFrame *card = new QFrame(m_inspectorPane);
     card->setObjectName("fmInspectorCard");
-    card->setStyleSheet("QFrame#fmInspectorCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 12px; padding: 8px; }");
+    card->setStyleSheet("QFrame#fmInspectorCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; padding: 8px; }");
     QVBoxLayout *cardLayout = new QVBoxLayout(card);
     cardLayout->setContentsMargins(10, 10, 10, 10);
     cardLayout->setSpacing(8);
@@ -316,9 +331,9 @@ void FileManagerWidget::setupUi()
     QHBoxLayout *badges = new QHBoxLayout();
     badges->setSpacing(6);
     m_inspTypeBadge = new QLabel("—", card);
-    m_inspTypeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
+    m_inspTypeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
     m_inspSizeBadge = new QLabel("—", card);
-    m_inspSizeBadge->setStyleSheet("background-color: #1E293B; color: #38BDF8; border: 1px solid #334155; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
+    m_inspSizeBadge->setStyleSheet("background-color: #1E293B; color: #38BDF8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
     badges->addStretch(1);
     badges->addWidget(m_inspTypeBadge);
     badges->addWidget(m_inspSizeBadge);
@@ -355,25 +370,33 @@ void FileManagerWidget::setupUi()
 
     cardLayout->addSpacing(8);
 
-    m_btnDownload = new QPushButton("📥 Скачать на ПК", card);
+    m_btnDownload = new QPushButton("Скачать на ПК", card);
+    m_btnDownload->setIcon(QIcon(":/svg/download"));
+    m_btnDownload->setIconSize(QSize(14, 14));
     m_btnDownload->setStyleSheet(
-        "QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #0EA5E9); color: white; font-weight: bold; padding: 7px; border: none; border-radius: 6px; }"
+        "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 7px; border: none; border-radius: 0px; }"
         "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0369A1, stop:1 #38BDF8); }"
         "QPushButton:disabled { background: #1E293B; color: #475569; }");
     connect(m_btnDownload, &QPushButton::clicked, this, &FileManagerWidget::downloadSelected);
     cardLayout->addWidget(m_btnDownload);
 
-    m_btnPreview = new QPushButton("👁 Быстрый просмотр", card);
+    m_btnPreview = new QPushButton("Быстрый просмотр", card);
+    m_btnPreview->setIcon(QIcon(":/svg/eye"));
+    m_btnPreview->setIconSize(QSize(13, 13));
     connect(m_btnPreview, &QPushButton::clicked, this, &FileManagerWidget::previewSelected);
     cardLayout->addWidget(m_btnPreview);
 
-    m_btnRename = new QPushButton("✏ Переименовать", card);
+    m_btnRename = new QPushButton("Переименовать", card);
+    m_btnRename->setIcon(QIcon(":/svg/edit"));
+    m_btnRename->setIconSize(QSize(13, 13));
     connect(m_btnRename, &QPushButton::clicked, this, &FileManagerWidget::renameSelected);
     cardLayout->addWidget(m_btnRename);
 
-    m_btnDelete = new QPushButton("🗑 Удалить объект", card);
+    m_btnDelete = new QPushButton("Удалить объект", card);
+    m_btnDelete->setIcon(QIcon(":/svg/trash"));
+    m_btnDelete->setIconSize(QSize(13, 13));
     m_btnDelete->setStyleSheet(
-        "QPushButton { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); font-weight: bold; padding: 6px; border-radius: 6px; }"
+        "QPushButton { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); font-weight: bold; padding: 6px; border-radius: 0px; }"
         "QPushButton:hover { background: rgba(239, 68, 68, 0.25); color: #FFA3A3; border-color: #EF4444; }"
         "QPushButton:disabled { background: #0B101D; color: #475569; border-color: #1E293B; }");
     connect(m_btnDelete, &QPushButton::clicked, this, &FileManagerWidget::deleteSelected);
@@ -615,7 +638,7 @@ void FileManagerWidget::refreshList()
 
     if(!m_fileIO.isConnect())
     {
-        m_statusMsg->setText("⚠️ Нет подключения к устройству");
+        m_statusMsg->setText("Нет подключения к устройству");
         return;
     }
 
@@ -726,7 +749,7 @@ void FileManagerWidget::populateTable()
         row++;
     }
 
-    m_statusSummary->setText(QString("📁 %1 папок  •  📄 %2 файлов  •  💾 %3").arg(dirCount).arg(fileCount).arg(formatBytes(totalSize)));
+    m_statusSummary->setText(QString("%1 папок  •  %2 файлов  •  %3").arg(dirCount).arg(fileCount).arg(formatBytes(totalSize)));
     onSelectionChanged();
 }
 
@@ -852,8 +875,8 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
     QTableWidgetItem *item = m_table->itemAt(pos);
     QMenu menu(this);
     menu.setStyleSheet(
-        "QMenu { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 8px; padding: 4px; }"
-        "QMenu::item { padding: 6px 24px 6px 12px; border-radius: 4px; font-size: 11.5px; }"
+        "QMenu { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 4px; }"
+        "QMenu::item { padding: 6px 24px 6px 12px; border-radius: 0px; font-size: 11.5px; }"
         "QMenu::item:selected { background-color: #131E35; color: #38BDF8; }");
 
     if(item)
@@ -868,20 +891,20 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
         {
             if(!isDir)
             {
-                menu.addAction("📥 Скачать на ПК", this, &FileManagerWidget::downloadSelected);
-                menu.addAction("👁 Быстрый просмотр", this, &FileManagerWidget::previewSelected);
+                menu.addAction(QIcon(":/svg/download"), "Скачать на ПК", this, &FileManagerWidget::downloadSelected);
+                menu.addAction(QIcon(":/svg/eye"), "Быстрый просмотр", this, &FileManagerWidget::previewSelected);
             }
-            menu.addAction("✏ Переименовать", this, &FileManagerWidget::renameSelected);
-            menu.addAction("📋 Копировать путь", [fullPath]() { QApplication::clipboard()->setText(fullPath); });
+            menu.addAction(QIcon(":/svg/edit"), "Переименовать", this, &FileManagerWidget::renameSelected);
+            menu.addAction(QIcon(":/svg/copy"), "Копировать путь", [fullPath]() { QApplication::clipboard()->setText(fullPath); });
             menu.addSeparator();
-            menu.addAction("🗑 Удалить", this, &FileManagerWidget::deleteSelected);
+            menu.addAction(QIcon(":/svg/trash"), "Удалить", this, &FileManagerWidget::deleteSelected);
             menu.addSeparator();
         }
     }
 
-    menu.addAction("📁 Создать папку", this, &FileManagerWidget::createDirectory);
-    menu.addAction("📤 Загрузить файл на телефон", this, &FileManagerWidget::uploadFile);
-    menu.addAction("🔄 Обновить", this, &FileManagerWidget::refreshList);
+    menu.addAction(QIcon(":/svg/plus"), "Создать папку", this, &FileManagerWidget::createDirectory);
+    menu.addAction(QIcon(":/svg/upload"), "Загрузить файл на телефон", this, &FileManagerWidget::uploadFile);
+    menu.addAction(QIcon(":/svg/refresh-cw"), "Обновить", this, &FileManagerWidget::refreshList);
 
     menu.exec(m_table->viewport()->mapToGlobal(pos));
 }
@@ -1110,7 +1133,7 @@ PageIndex FileManagerService::targetPage()
 
 QString FileManagerService::widgetIconName()
 {
-    return "white-transfer";
+    return "file-manager";
 }
 
 bool FileManagerService::canStart()

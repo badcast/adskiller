@@ -29,12 +29,11 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     QLabel *iconLabel = new QLabel(this);
     iconLabel->setFixedSize(48, 48);
     iconLabel->setAlignment(Qt::AlignCenter);
-    iconLabel->setText("🛡️");
+    iconLabel->setPixmap(QPixmap(":/svg/shield").scaled(26, 26, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     iconLabel->setStyleSheet(
-        "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1E3A5F, stop:1 #0F2038);"
+        "background-color: #1E3A5F;"
         "border: 1px solid #2563EB;"
-        "border-radius: 24px;"
-        "font-size: 22px;");
+        "border-radius: 0px;");
     headerLayout->addWidget(iconLabel);
 
     QVBoxLayout *titleLayout = new QVBoxLayout();
@@ -59,7 +58,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "QFrame#purchaseDetailsCard {"
         "   background-color: #141518;"
         "   border: 1px solid #282B32;"
-        "   border-radius: 10px;"
+        "   border-radius: 0px;"
         "}");
 
     QGridLayout *cardGrid = new QGridLayout(cardFrame);
@@ -77,7 +76,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         cleanDevName = deviceName;
 
     // Row 0: Device
-    QLabel *lblDevTitle = new QLabel("📱 Устройство:", cardFrame);
+    QLabel *lblDevTitle = new QLabel("Устройство:", cardFrame);
     lblDevTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblDevTitle, 0, 0);
 
@@ -87,7 +86,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     cardGrid->addWidget(lblDevVal, 0, 1);
 
     // Row 1: Procedure
-    QLabel *lblProcTitle = new QLabel("📋 Процедура:", cardFrame);
+    QLabel *lblProcTitle = new QLabel("Процедура:", cardFrame);
     lblProcTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblProcTitle, 1, 0);
 
@@ -103,7 +102,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     cardGrid->addWidget(divider, 2, 0, 1, 2);
 
     // Row 3: Price
-    QLabel *lblPriceTitle = new QLabel("💰 Стоимость:", cardFrame);
+    QLabel *lblPriceTitle = new QLabel("Стоимость:", cardFrame);
     lblPriceTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblPriceTitle, 3, 0);
 
@@ -113,7 +112,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     cardGrid->addWidget(lblPriceVal, 3, 1);
 
     // Row 4: Current balance
-    QLabel *lblBalanceTitle = new QLabel("💳 Текущий баланс:", cardFrame);
+    QLabel *lblBalanceTitle = new QLabel("Текущий баланс:", cardFrame);
     lblBalanceTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblBalanceTitle, 4, 0);
 
@@ -126,7 +125,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     int remainingCredits = qMax<int>(0, static_cast<int>(data.credits) - static_cast<int>(data.basePrice));
     bool hasEnough = (data.credits >= data.basePrice);
 
-    QLabel *lblAfterTitle = new QLabel("📊 Баланс после списания:", cardFrame);
+    QLabel *lblAfterTitle = new QLabel("Баланс после списания:", cardFrame);
     lblAfterTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblAfterTitle, 5, 0);
 
@@ -149,12 +148,14 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     // Warning banner if insufficient funds
     if(!hasEnough)
     {
-        QLabel *warnLabel = new QLabel("⚠️ Недостаточно средств на балансе для оплаты процедуры. Пожалуйста, пополните баланс через меню «Поддержка → Связаться».", this);
+        QLabel *warnLabel = new QLabel(this);
         warnLabel->setWordWrap(true);
+        warnLabel->setTextFormat(Qt::RichText);
+        warnLabel->setText("<img src=\":/svg/alert-triangle\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> Недостаточно средств на балансе для оплаты процедуры. Пожалуйста, пополните баланс через меню «Поддержка → Связаться».");
         warnLabel->setStyleSheet(
             "background-color: rgba(239, 68, 68, 0.12);"
             "border: 1px solid rgba(239, 68, 68, 0.35);"
-            "border-radius: 6px;"
+            "border-radius: 0px;"
             "color: #FCA5A5;"
             "font-size: 11px;"
             "padding: 8px 10px;");
@@ -172,7 +173,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "QPushButton {"
         "   background-color: #22252B;"
         "   border: 1px solid #32363E;"
-        "   border-radius: 8px;"
+        "   border-radius: 0px;"
         "   color: #D1D5DB;"
         "   font-size: 13px;"
         "   font-weight: 600;"
@@ -193,7 +194,9 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     confirmBtn->setMinimumHeight(38);
     if(hasEnough)
     {
-        confirmBtn->setText(QString("💳 Оплатить %1 %2").arg(data.basePrice).arg(data.currencyType));
+        confirmBtn->setIcon(QIcon(":/svg/credit-card"));
+        confirmBtn->setIconSize(QSize(16, 16));
+        confirmBtn->setText(QString(" Оплатить %1 %2").arg(data.basePrice).arg(data.currencyType));
         confirmBtn->setEnabled(true);
     }
     else
@@ -203,16 +206,16 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     }
     confirmBtn->setStyleSheet(
         "QPushButton {"
-        "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #10B981, stop:1 #059669);"
+        "   background-color: #10B981;"
         "   border: 1px solid #059669;"
-        "   border-radius: 8px;"
+        "   border-radius: 0px;"
         "   color: #FFFFFF;"
         "   font-size: 13px;"
         "   font-weight: bold;"
         "   padding: 0px 24px;"
         "}"
         "QPushButton:hover {"
-        "   background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #34D399, stop:1 #10B981);"
+        "   background-color: #059669;"
         "   border-color: #34D399;"
         "}"
         "QPushButton:pressed {"
