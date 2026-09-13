@@ -4,7 +4,6 @@
 
 #include "network.h"
 
-
 class PurchaseConfirmDialog : public QDialog
 {
 public:

@@ -49,6 +49,8 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
+class AdbDeviceVisualizer;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -87,6 +89,7 @@ public:
     bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton);
 
     static MainWindow *current;
+    AdbDeviceVisualizer *adbVisualizer = nullptr;
 
 private slots:
     void on_actionAboutUs_triggered();
@@ -143,6 +146,8 @@ private:
     void clearAuthInfoPage();
     void fillAuthInfoPage();
 
+    void setupWindowLayoutAndAnim();
+    void setupAiPanel();
     void setupPagesDesign();
     void initServiceModules();
     void checkVersion(bool firstRun);

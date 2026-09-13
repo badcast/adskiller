@@ -32,8 +32,7 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 
-AboutDialog::AboutDialog(QWidget *parent)
-    : QDialog(parent)
+AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("О программе AdsKiller"));
     setWindowIcon(QIcon(QStringLiteral(":/resources/app-logo")));
@@ -83,8 +82,7 @@ void AboutDialog::setupUi()
         "    border: 1px solid rgba(127, 127, 127, 0.22);"
         "    border-radius: 8px;"
         "    padding: 8px;"
-        "}"
-    ));
+        "}"));
 
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(18, 18, 18, 18);
@@ -148,8 +146,7 @@ QWidget *AboutDialog::createHeaderWidget()
         "border-radius: 10px;"
         "padding: 2px 10px;"
         "font-size: 11px;"
-        "font-weight: bold;"
-    ));
+        "font-weight: bold;"));
     titleRow->addWidget(versionBadge);
 
     auto *channelBadge = new QLabel(QStringLiteral("Stable Release"), headerFrame);
@@ -160,23 +157,18 @@ QWidget *AboutDialog::createHeaderWidget()
         "border-radius: 10px;"
         "padding: 2px 8px;"
         "font-size: 10px;"
-        "font-weight: 600;"
-    ));
+        "font-weight: 600;"));
     titleRow->addWidget(channelBadge);
     titleRow->addStretch();
     infoLayout->addLayout(titleRow);
 
     // Row 2: Subtitle
-    auto *subLabel = new QLabel(
-        QStringLiteral("Десктопный комплекс для очистки, оптимизации и безопасного деблоатинга Android"),
-        headerFrame);
+    auto *subLabel = new QLabel(QStringLiteral("Десктопный комплекс для очистки, оптимизации и безопасного деблоатинга Android"), headerFrame);
     subLabel->setStyleSheet(QStringLiteral("font-size: 12px; color: rgba(127, 127, 127, 0.95);"));
     infoLayout->addWidget(subLabel);
 
     // Row 3: Meta info
-    auto *metaLabel = new QLabel(
-        QStringLiteral("Лицензия: GNU GPL v3 • Авторские права © 2026 imister.tech"),
-        headerFrame);
+    auto *metaLabel = new QLabel(QStringLiteral("Лицензия: GNU GPL v3 • Авторские права © 2026 imister.tech"), headerFrame);
     metaLabel->setStyleSheet(QStringLiteral("font-size: 11px; color: rgba(127, 127, 127, 0.85);"));
     infoLayout->addWidget(metaLabel);
 
@@ -269,13 +261,7 @@ QWidget *AboutDialog::createAboutTab()
     auto *techChipsLayout = new QHBoxLayout();
     techChipsLayout->setSpacing(8);
 
-    const QStringList techBadges = {
-        QStringLiteral("C++17 Core"),
-        QStringLiteral("Qt 6 Widgets"),
-        QStringLiteral("ADB Front Engine"),
-        QStringLiteral("Safe User Mode"),
-        QStringLiteral("GNU GPL v3")
-    };
+    const QStringList techBadges = {QStringLiteral("C++17 Core"), QStringLiteral("Qt 6 Widgets"), QStringLiteral("ADB Front Engine"), QStringLiteral("Safe User Mode"), QStringLiteral("GNU GPL v3")};
 
     for(const QString &badgeText : techBadges)
     {
@@ -287,8 +273,7 @@ QWidget *AboutDialog::createAboutTab()
             "border-radius: 6px;"
             "padding: 3px 8px;"
             "font-size: 11px;"
-            "font-weight: 600;"
-        ));
+            "font-weight: 600;"));
         techChipsLayout->addWidget(badge);
     }
     techChipsLayout->addStretch();
@@ -332,9 +317,10 @@ QWidget *AboutDialog::createAuthorsTab()
     layout->setSpacing(12);
 
     auto *introLabel = new QLabel(
-        QStringLiteral("<b>Команда авторов и создатели проекта AdsKiller</b><br>"
-                       "<span style=\"color: rgba(127,127,127,0.9); font-size: 11px;\">"
-                       "Люди, благодаря которым разрабатывается и развивается проект.</span>"),
+        QStringLiteral(
+            "<b>Команда авторов и создатели проекта AdsKiller</b><br>"
+            "<span style=\"color: rgba(127,127,127,0.9); font-size: 11px;\">"
+            "Люди, благодаря которым разрабатывается и развивается проект.</span>"),
         container);
     introLabel->setTextFormat(Qt::RichText);
     layout->addWidget(introLabel);
@@ -352,8 +338,7 @@ QWidget *AboutDialog::createAuthorsTab()
             "• Разработка высокопроизводительного слоя интеграции с Android Debug Bridge (ADB).<br>"
             "• Модули оптимизации RAM (Boost RAM), сканирования и удаления рекламных пакетов.<br>"
             "• Сетевой клиент, система шифрования и пользовательский интерфейс Qt."),
-        QStringLiteral("badcast &lt;anon&gt; • Разработка ядра и сервисов")
-    );
+        QStringLiteral("badcast &lt;anon&gt; • Разработка ядра и сервисов"));
     layout->addWidget(leadDevCard);
 
     // Author 2: LeoJames (Icon & Visual Designer)
@@ -368,8 +353,7 @@ QWidget *AboutDialog::createAuthorsTab()
             "• Создание фирменного визуального стиля и дизайн-системы приложения.<br>"
             "• Авторский набор иконок для сервисов (Ads Remove, Boost RAM, Storage Cleaner, Mi Unlock и др.).<br>"
             "• Графические ресурсы, оптимизация пиктограмм под светлую и тёмную темы интерфейса."),
-        QStringLiteral("LeoJames &lt;anon&gt; • Дизайн и графическое оформление")
-    );
+        QStringLiteral("LeoJames &lt;anon&gt; • Дизайн и графическое оформление"));
     layout->addWidget(designerCard);
 
     // Author 3: imister.tech (Project Lead & Infrastructure)
@@ -386,8 +370,7 @@ QWidget *AboutDialog::createAuthorsTab()
             "• Поддержка серверов автоматического обновления и клиентской базы данных.<br>"
             "• Веб-ресурсы: <a href=\"https://imister.tech\" style=\"color: #0078D4;\">imister.tech</a> "
             "и <a href=\"https://adskiller.imister.tech\" style=\"color: #0078D4;\">adskiller.imister.tech</a>."),
-        QStringLiteral("imister.tech • Казахстан • Издатель и инфраструктура")
-    );
+        QStringLiteral("imister.tech • Казахстан • Издатель и инфраструктура"));
     layout->addWidget(leadProjectCard);
 
     // Card 4: Acknowledgements
@@ -418,14 +401,7 @@ QWidget *AboutDialog::createAuthorsTab()
     return scrollArea;
 }
 
-QWidget *AboutDialog::createAuthorCard(const QString &initials,
-                                       const QColor &gradStart,
-                                       const QColor &gradEnd,
-                                       const QString &name,
-                                       const QString &role,
-                                       const QString &roleColor,
-                                       const QString &description,
-                                       const QString &contact)
+QWidget *AboutDialog::createAuthorCard(const QString &initials, const QColor &gradStart, const QColor &gradEnd, const QString &name, const QString &role, const QString &roleColor, const QString &description, const QString &contact)
 {
     auto *cardFrame = new QFrame(this);
     cardFrame->setProperty("card", true);
@@ -455,13 +431,13 @@ QWidget *AboutDialog::createAuthorCard(const QString &initials,
 
     auto *roleBadge = new QLabel(role, cardFrame);
     roleBadge->setStyleSheet(QStringLiteral(
-        "background-color: %1;"
-        "color: #FFFFFF;"
-        "border-radius: 5px;"
-        "padding: 2px 7px;"
-        "font-size: 10px;"
-        "font-weight: 600;"
-    ).arg(roleColor));
+                                 "background-color: %1;"
+                                 "color: #FFFFFF;"
+                                 "border-radius: 5px;"
+                                 "padding: 2px 7px;"
+                                 "font-size: 10px;"
+                                 "font-weight: 600;")
+                                 .arg(roleColor));
     nameRow->addWidget(roleBadge);
     nameRow->addStretch();
     infoLayout->addLayout(nameRow);
@@ -521,27 +497,30 @@ QWidget *AboutDialog::createGplTab()
     auto *chipsLayout = new QHBoxLayout();
     chipsLayout->setSpacing(6);
 
-    const struct { QString text; QString color; } chips[] = {
-        { QStringLiteral("✓ Свободное использование"), QStringLiteral("#10B981") },
-        { QStringLiteral("✓ Доступ к исходному коду"), QStringLiteral("#10B981") },
-        { QStringLiteral("✓ Модификация"), QStringLiteral("#10B981") },
-        { QStringLiteral("✓ Распространение"), QStringLiteral("#10B981") },
-        { QStringLiteral("ℹ Copyleft (GPL v3)"), QStringLiteral("#0078D4") },
-        { QStringLiteral("⚠️ Без гарантий (AS IS)"), QStringLiteral("#F59E0B") }
-    };
+    const struct
+    {
+        QString text;
+        QString color;
+    } chips[] = {
+        {QStringLiteral("✓ Свободное использование"), QStringLiteral("#10B981")},
+        {QStringLiteral("✓ Доступ к исходному коду"), QStringLiteral("#10B981")},
+        {QStringLiteral("✓ Модификация"), QStringLiteral("#10B981")},
+        {QStringLiteral("✓ Распространение"), QStringLiteral("#10B981")},
+        {QStringLiteral("ℹ Copyleft (GPL v3)"), QStringLiteral("#0078D4")},
+        {QStringLiteral("⚠️ Без гарантий (AS IS)"), QStringLiteral("#F59E0B")}};
 
     for(const auto &chip : chips)
     {
         auto *chipLabel = new QLabel(chip.text, summaryCard);
         chipLabel->setStyleSheet(QStringLiteral(
-            "background-color: rgba(127, 127, 127, 0.12);"
-            "color: %1;"
-            "border: 1px solid rgba(127, 127, 127, 0.25);"
-            "border-radius: 5px;"
-            "padding: 2px 7px;"
-            "font-size: 10px;"
-            "font-weight: 600;"
-        ).arg(chip.color));
+                                     "background-color: rgba(127, 127, 127, 0.12);"
+                                     "color: %1;"
+                                     "border: 1px solid rgba(127, 127, 127, 0.25);"
+                                     "border-radius: 5px;"
+                                     "padding: 2px 7px;"
+                                     "font-size: 10px;"
+                                     "font-weight: 600;")
+                                     .arg(chip.color));
         chipsLayout->addWidget(chipLabel);
     }
     chipsLayout->addStretch();
@@ -601,9 +580,7 @@ QWidget *AboutDialog::createChangelogTab()
     topTitle->setObjectName(QStringLiteral("cardTitle"));
     topInfoLayout->addWidget(topTitle);
 
-    auto *topSub = new QLabel(
-        QStringLiteral("История выпусков • Сервер: <a href=\"https://adskiller.imister.tech/changelog\" style=\"color:#0078D4; text-decoration:none;\">adskiller.imister.tech/changelog</a>"),
-        topCard);
+    auto *topSub = new QLabel(QStringLiteral("История выпусков • Сервер: <a href=\"https://adskiller.imister.tech/changelog\" style=\"color:#0078D4; text-decoration:none;\">adskiller.imister.tech/changelog</a>"), topCard);
     topSub->setTextFormat(Qt::RichText);
     topSub->setOpenExternalLinks(true);
     topSub->setStyleSheet(QStringLiteral("color: rgba(127,127,127,0.9); font-size: 11px;"));
@@ -629,8 +606,7 @@ QWidget *AboutDialog::createChangelogTab()
         "}"
         "QPushButton:pressed {"
         "    background-color: rgba(0, 120, 212, 0.35);"
-        "}"
-    ));
+        "}"));
     connect(m_changelogRefreshBtn, &QPushButton::clicked, this, &AboutDialog::fetchChangelog);
     topLayout->addWidget(m_changelogRefreshBtn);
 
@@ -649,8 +625,7 @@ QWidget *AboutDialog::createChangelogTab()
         "    background-color: rgba(0, 120, 212, 0.2);"
         "    border-color: #0078D4;"
         "    color: #0078D4;"
-        "}"
-    ));
+        "}"));
     connect(webBtn, &QPushButton::clicked, this, &AboutDialog::openChangelogWebsite);
     topLayout->addWidget(webBtn);
 
@@ -680,8 +655,7 @@ QWidget *AboutDialog::createChangelogTab()
         "    font-size: 11px;"
         "    font-weight: 600;"
         "}"
-        "QPushButton:hover { background-color: #1084E3; }"
-    ));
+        "QPushButton:hover { background-color: #1084E3; }"));
     connect(m_changelogRetryBtn, &QPushButton::clicked, this, &AboutDialog::fetchChangelog);
     statusLayout->addWidget(m_changelogRetryBtn);
 
@@ -722,58 +696,62 @@ void AboutDialog::fetchChangelog()
 
     QNetworkRequest request(QUrl(QStringLiteral("https://adskiller.imister.tech/changelog")));
     request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("AdsKiller-Desktop/%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch));
-    request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(6000);
 
     QNetworkReply *reply = m_netManager->get(request);
-    connect(reply, &QNetworkReply::finished, this, [this, reply]()
-    {
-        reply->deleteLater();
-        if(m_changelogRefreshBtn)
-            m_changelogRefreshBtn->setEnabled(true);
-
-        if(reply->error() == QNetworkReply::NoError)
+    connect(
+        reply,
+        &QNetworkReply::finished,
+        this,
+        [this, reply]()
         {
-            QByteArray data = reply->readAll();
-            QJsonParseError parseErr;
-            QJsonDocument doc = QJsonDocument::fromJson(data, &parseErr);
-            if(parseErr.error == QJsonParseError::NoError)
+            reply->deleteLater();
+            if(m_changelogRefreshBtn)
+                m_changelogRefreshBtn->setEnabled(true);
+
+            if(reply->error() == QNetworkReply::NoError)
             {
-                QJsonArray arr;
-                if(doc.isArray())
+                QByteArray data = reply->readAll();
+                QJsonParseError parseErr;
+                QJsonDocument doc = QJsonDocument::fromJson(data, &parseErr);
+                if(parseErr.error == QJsonParseError::NoError)
                 {
-                    arr = doc.array();
-                }
-                else if(doc.isObject())
-                {
-                    QJsonObject root = doc.object();
-                    if(root.contains(QStringLiteral("changelog")) && root[QStringLiteral("changelog")].isArray())
-                        arr = root[QStringLiteral("changelog")].toArray();
-                    else if(root.contains(QStringLiteral("data")) && root[QStringLiteral("data")].isArray())
-                        arr = root[QStringLiteral("data")].toArray();
-                    else if(root.contains(QStringLiteral("releases")) && root[QStringLiteral("releases")].isArray())
-                        arr = root[QStringLiteral("releases")].toArray();
-                }
+                    QJsonArray arr;
+                    if(doc.isArray())
+                    {
+                        arr = doc.array();
+                    }
+                    else if(doc.isObject())
+                    {
+                        QJsonObject root = doc.object();
+                        if(root.contains(QStringLiteral("changelog")) && root[QStringLiteral("changelog")].isArray())
+                            arr = root[QStringLiteral("changelog")].toArray();
+                        else if(root.contains(QStringLiteral("data")) && root[QStringLiteral("data")].isArray())
+                            arr = root[QStringLiteral("data")].toArray();
+                        else if(root.contains(QStringLiteral("releases")) && root[QStringLiteral("releases")].isArray())
+                            arr = root[QStringLiteral("releases")].toArray();
+                    }
 
-                if(!arr.isEmpty())
-                {
-                    if(m_changelogStatusWidget)
-                        m_changelogStatusWidget->hide();
-                    renderChangelog(arr);
-                    return;
+                    if(!arr.isEmpty())
+                    {
+                        if(m_changelogStatusWidget)
+                            m_changelogStatusWidget->hide();
+                        renderChangelog(arr);
+                        return;
+                    }
                 }
+                showChangelogError(QStringLiteral("Сервер вернул пустой или некорректный формат списка изменений."));
             }
-            showChangelogError(QStringLiteral("Сервер вернул пустой или некорректный формат списка изменений."));
-        }
-        else
-        {
-            showChangelogError(QStringLiteral("Не удалось связаться с сервером обновлений (%1).").arg(reply->errorString()));
-        }
+            else
+            {
+                showChangelogError(QStringLiteral("Не удалось связаться с сервером обновлений (%1).").arg(reply->errorString()));
+            }
 
-        // Render offline fallback releases so tab is never empty
-        renderChangelog(getFallbackChangelog());
-    });
+            // Render offline fallback releases so tab is never empty
+            renderChangelog(getFallbackChangelog());
+        });
 }
 
 void AboutDialog::showChangelogLoading()
@@ -788,9 +766,7 @@ void AboutDialog::showChangelogLoading()
             "Получение актуального списка изменений с adskiller.imister.tech/changelog"));
         if(m_changelogRetryBtn)
             m_changelogRetryBtn->hide();
-        m_changelogStatusWidget->setStyleSheet(QStringLiteral(
-            "QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); border-radius: 8px; }"
-        ));
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); border-radius: 8px; }"));
         m_changelogStatusWidget->show();
     }
 }
@@ -800,14 +776,12 @@ void AboutDialog::showChangelogError(const QString &errorMsg)
     if(m_changelogStatusWidget && m_changelogStatusLabel)
     {
         m_changelogStatusLabel->setText(QStringLiteral(
-            "<span style=\"color:#EF4444; font-weight:bold;\">⚠️ Ошибка соединения:</span> %1<br>"
-            "<span style=\"color:rgba(127,127,127,0.9); font-size:11px;\">Ниже показаны встроенные сведения о релизе (автономный режим).</span>"
-        ).arg(errorMsg));
+                                            "<span style=\"color:#EF4444; font-weight:bold;\">⚠️ Ошибка соединения:</span> %1<br>"
+                                            "<span style=\"color:rgba(127,127,127,0.9); font-size:11px;\">Ниже показаны встроенные сведения о релизе (автономный режим).</span>")
+                                            .arg(errorMsg));
         if(m_changelogRetryBtn)
             m_changelogRetryBtn->show();
-        m_changelogStatusWidget->setStyleSheet(QStringLiteral(
-            "QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; }"
-        ));
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; }"));
         m_changelogStatusWidget->show();
     }
 }
@@ -923,8 +897,7 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
             "font-weight: bold;"
             "font-size: 11.5px;"
             "border-radius: 6px;"
-            "padding: 3px 9px;"
-        ));
+            "padding: 3px 9px;"));
         headerLayout->addWidget(verBadge);
 
         QString cleanVer = version;
@@ -941,8 +914,7 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
                 "border-radius: 6px;"
                 "padding: 2px 8px;"
                 "font-size: 10px;"
-                "font-weight: 600;"
-            ));
+                "font-weight: 600;"));
             headerLayout->addWidget(curBadge);
         }
 
@@ -981,9 +953,7 @@ QJsonArray AboutDialog::getFallbackChangelog()
     QJsonObject v1;
     v1[QStringLiteral("version")] = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     v1[QStringLiteral("date")] = QStringLiteral("2026-09-01");
-    v1[QStringLiteral("changelog")] = QStringLiteral(
-        "[New] Официальный стабильный релиз утилиты AdsKiller для десктопа."
-    );
+    v1[QStringLiteral("changelog")] = QStringLiteral("[New] Официальный стабильный релиз утилиты AdsKiller для десктопа.");
     arr.append(v1);
     return arr;
 }
@@ -995,8 +965,9 @@ QWidget *AboutDialog::createFooterWidget()
     footerLayout->setContentsMargins(0, 0, 0, 0);
 
     auto *siteLabel = new QLabel(
-        QStringLiteral("<a href=\"https://adskiller.imister.tech\" style=\"text-decoration: none; color: #0078D4; font-weight: 600;\">"
-                       "🌐 adskiller.imister.tech</a>"),
+        QStringLiteral(
+            "<a href=\"https://adskiller.imister.tech\" style=\"text-decoration: none; color: #0078D4; font-weight: 600;\">"
+            "🌐 adskiller.imister.tech</a>"),
         footerWidget);
     siteLabel->setOpenExternalLinks(true);
     footerLayout->addWidget(siteLabel);
@@ -1013,10 +984,7 @@ QWidget *AboutDialog::createFooterWidget()
     return footerWidget;
 }
 
-QPixmap AboutDialog::createAvatarPixmap(const QString &initials,
-                                         const QColor &startColor,
-                                         const QColor &endColor,
-                                         int size)
+QPixmap AboutDialog::createAvatarPixmap(const QString &initials, const QColor &startColor, const QColor &endColor, int size)
 {
     QPixmap pix(size, size);
     pix.fill(Qt::transparent);
@@ -1059,12 +1027,7 @@ QString AboutDialog::loadLicenseText()
     }
 
     // 2. Try reading LICENSE from current directory or application directory
-    const QStringList candidatePaths = {
-        QStringLiteral("LICENSE"),
-        QCoreApplication::applicationDirPath() + QStringLiteral("/LICENSE"),
-        QCoreApplication::applicationDirPath() + QStringLiteral("/../LICENSE"),
-        QStringLiteral("/media/dev/adskiller/LICENSE")
-    };
+    const QStringList candidatePaths = {QStringLiteral("LICENSE"), QCoreApplication::applicationDirPath() + QStringLiteral("/LICENSE"), QCoreApplication::applicationDirPath() + QStringLiteral("/../LICENSE"), QStringLiteral("/media/dev/adskiller/LICENSE")};
 
     for(const QString &path : candidatePaths)
     {
@@ -1109,8 +1072,7 @@ QString AboutDialog::loadLicenseText()
         "certain responsibilities if you distribute copies of the software, or if\n"
         "you modify it: responsibilities to respect the freedom of others.\n\n"
         "Подробная информация о лицензии доступна по адресу:\n"
-        "https://www.gnu.org/licenses/gpl-3.0.html\n"
-    );
+        "https://www.gnu.org/licenses/gpl-3.0.html\n");
 }
 
 void AboutDialog::copyLicenseToClipboard()
@@ -1130,13 +1092,17 @@ void AboutDialog::copyLicenseToClipboard()
         m_copyLicenseBtn->setText(QStringLiteral("✓ Скопировано в буфер обмена!"));
         m_copyLicenseBtn->setEnabled(false);
 
-        QTimer::singleShot(2500, this, [this, origText]() {
-            if(m_copyLicenseBtn)
+        QTimer::singleShot(
+            2500,
+            this,
+            [this, origText]()
             {
-                m_copyLicenseBtn->setText(origText);
-                m_copyLicenseBtn->setEnabled(true);
-            }
-        });
+                if(m_copyLicenseBtn)
+                {
+                    m_copyLicenseBtn->setText(origText);
+                    m_copyLicenseBtn->setEnabled(true);
+                }
+            });
     }
 }
 

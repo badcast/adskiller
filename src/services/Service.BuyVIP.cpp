@@ -111,15 +111,15 @@ void BuyVIPService::click_buy_vip()
         int required = std::get<int>(mPresets[i - 1]) * dailyRate;
         int shortage = required - static_cast<int>(network->authedId.credits);
         error_msg = QString::fromUtf8(
-            "Недостаточно средств на вашем балансе для приобретения VIP.\n\n"
-            "Стоимость: %1 %2\n"
-            "На балансе: %3 %2\n"
-            "Не хватает: %4 %2\n\n"
-            "Пожалуйста, пополните баланс через меню Справка -> Связаться с поддержкой."
-        ).arg(required)
-         .arg(network->authedId.currencyType)
-         .arg(network->authedId.credits)
-         .arg(shortage > 0 ? shortage : 0);
+                        "Недостаточно средств на вашем балансе для приобретения VIP.\n\n"
+                        "Стоимость: %1 %2\n"
+                        "На балансе: %3 %2\n"
+                        "Не хватает: %4 %2\n\n"
+                        "Пожалуйста, пополните баланс через меню Справка -> Связаться с поддержкой.")
+                        .arg(required)
+                        .arg(network->authedId.currencyType)
+                        .arg(network->authedId.credits)
+                        .arg(shortage > 0 ? shortage : 0);
     }
     if(!error_msg.isEmpty())
     {

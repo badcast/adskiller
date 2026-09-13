@@ -13,11 +13,14 @@ int main(int argc, char **argv)
 {
     QApplication a(argc, argv);
     QSharedMemory sharedMemApp("imister.kz-app_adskiller_v1");
-    while(sharedMemApp.attach())
+    int waitAppCloseRetries = 20;
+    while(sharedMemApp.attach() && --waitAppCloseRetries > 0)
     {
         sharedMemApp.detach();
         QThread::msleep(500);
     }
+    if(sharedMemApp.isAttached())
+        sharedMemApp.detach();
 
     QSharedMemory sharedMemory("imister.kz-app_adskiller_v1_update");
     if(sharedMemory.attach())
@@ -49,7 +52,9 @@ int main(int argc, char **argv)
 
     if(!parser.isSet(dirOption))
     {
-        if(!QFile::exists(workDir + QDir::separator() + "adskiller.exe"))
+        if(!QFile::exists(workDir + QDir::separator() + "adskiller.exe") &&
+           !QFile::exists(workDir + QDir::separator() + "adskiller.exe.old") &&
+           !QFile::exists(workDir + QDir::separator() + "adskiller"))
         {
             qDebug() << "Update manager require adskiller.exe";
             sharedMemory.detach();

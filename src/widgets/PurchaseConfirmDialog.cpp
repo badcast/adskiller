@@ -5,8 +5,7 @@
 
 #include "PurchaseConfirmDialog.h"
 
-PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data)
-    : QDialog(parent)
+PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data) : QDialog(parent)
 {
     setWindowTitle("Подтверждение покупки — AdsKiller");
     setWindowIcon(QIcon(":/resources/app-logo"));
@@ -17,8 +16,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "QDialog {"
         "   background-color: #1A1C20;"
         "   color: #F3F4F6;"
-        "}"
-        );
+        "}");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(22, 20, 22, 20);
@@ -36,8 +34,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1E3A5F, stop:1 #0F2038);"
         "border: 1px solid #2563EB;"
         "border-radius: 24px;"
-        "font-size: 22px;"
-        );
+        "font-size: 22px;");
     headerLayout->addWidget(iconLabel);
 
     QVBoxLayout *titleLayout = new QVBoxLayout();
@@ -63,8 +60,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "   background-color: #141518;"
         "   border: 1px solid #282B32;"
         "   border-radius: 10px;"
-        "}"
-        );
+        "}");
 
     QGridLayout *cardGrid = new QGridLayout(cardFrame);
     cardGrid->setContentsMargins(16, 14, 16, 14);
@@ -161,8 +157,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
             "border-radius: 6px;"
             "color: #FCA5A5;"
             "font-size: 11px;"
-            "padding: 8px 10px;"
-            );
+            "padding: 8px 10px;");
         mainLayout->addWidget(warnLabel);
     }
 
@@ -190,8 +185,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "}"
         "QPushButton:pressed {"
         "   background-color: #1A1C20;"
-        "}"
-        );
+        "}");
     btnLayout->addWidget(cancelBtn);
 
     QPushButton *confirmBtn = new QPushButton(this);
@@ -228,8 +222,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
         "   background-color: #2A2E35;"
         "   border-color: #363A42;"
         "   color: #6B7280;"
-        "}"
-        );
+        "}");
     confirmBtn->setDefault(true);
     btnLayout->addWidget(confirmBtn);
 

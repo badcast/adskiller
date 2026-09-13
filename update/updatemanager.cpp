@@ -116,8 +116,6 @@ std::pair<QList<FetchResult>, int> UpdateManager::filter_by(const QString &exist
                     QString file = existsDir + QDir::separator() + f;
                     if(updates[x].md5hash == hashes[file])
                         skip = true;
-                    else
-                        dir.remove(file);
                     break;
                 }
             }
@@ -202,11 +200,8 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
             QFile file(tempDir.path() + QDir::separator() + fetch->remoteLink);
 
             // Make Sub dirs
-            QStringList subDirs = fetch->remoteLink.split("/");
-            for(int y = 0; y < subDirs.size() - 1; ++y)
-            {
-                dir.mkdir(tempDir.path() + QDir::separator() + subDirs[y]);
-            }
+            QFileInfo fileInfo(tempDir.path() + QDir::separator() + fetch->remoteLink);
+            QDir().mkpath(fileInfo.path());
 
             mutex.lock();
             m_statusDownload.downloadStep = x + 1;
@@ -370,32 +365,107 @@ bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destin
         }
     }
 
-    QStringList entries = getFilesEx(sourcePath, GetDirs);
-    QTemporaryDir _lostTemps;
-    for(const QString &entry : std::as_const(entries))
+    // 1. Ensure all destination subdirectories exist
+    QStringList dirEntries = getFilesEx(sourcePath, GetDirs);
+    for(const QString &dirEntry : std::as_const(dirEntries))
     {
-        destinationDir.mkdir(destinationDir.filePath(entry));
-        destinationDir.mkdir(_lostTemps.filePath(entry));
+        destinationDir.mkpath(destinationDir.filePath(dirEntry));
     }
 
-    entries = getFilesEx(sourcePath, GetFiles);
-    for(const QString &entry : std::as_const(entries))
+    // 2. Process each file: remove old or rename to .old if in use, then replace with new file
+    QStringList fileEntries = getFilesEx(sourcePath, GetFiles);
+    bool allSuccess = true;
+
+    for(const QString &entry : std::as_const(fileEntries))
     {
         QString sourceFilePath = sourceDir.filePath(entry);
         QString destinationFilePath = destinationDir.filePath(entry);
-        QString destBackupFile = entry + "_old";
-        QString destBackFilePath = destinationDir.filePath(destBackupFile);
-        if(destinationDir.exists(destBackFilePath) && !QFile::remove(destBackFilePath))
-        {
-            QFile::rename(destBackFilePath, _lostTemps.filePath(destBackupFile));
-        }
-        QFile::rename(destinationFilePath, destinationDir.filePath(destBackFilePath));
+        QString destBackFilePath = destinationFilePath + ".old";
 
-        int states = 10;
-        while(!QFile::rename(sourceFilePath, destinationFilePath) && states--)
+        // Ensure parent directory exists for destination file
+        QFileInfo destFileInfo(destinationFilePath);
+        if(!destFileInfo.dir().exists())
         {
+            destFileInfo.dir().mkpath(".");
+        }
+
+        // If destination file already exists
+        if(QFile::exists(destinationFilePath))
+        {
+            // First try to remove it
+            if(!QFile::remove(destinationFilePath))
+            {
+                // Deletion failed (file may be in use / process still running).
+                // Rename it with .old suffix (e.g. adskiller.exe -> adskiller.exe.old)
+                if(QFile::exists(destBackFilePath))
+                {
+                    if(!QFile::remove(destBackFilePath))
+                    {
+                        // If .old is also locked, rename it with a timestamp
+                        QString tempOld = destBackFilePath + "." + QString::number(QDateTime::currentMSecsSinceEpoch());
+                        QFile::rename(destBackFilePath, tempOld);
+                    }
+                }
+
+                bool renamedToOld = false;
+                int retryRename = 10;
+                while(retryRename-- > 0)
+                {
+                    if(QFile::rename(destinationFilePath, destBackFilePath))
+                    {
+                        renamedToOld = true;
+                        break;
+                    }
+                    QThread::msleep(100);
+                }
+
+                if(!renamedToOld)
+                {
+                    qWarning() << "Failed to rename in-use file to .old:" << destinationFilePath;
+                }
+            }
+            else
+            {
+                // Deletion succeeded; clean up any existing .old file from previous runs
+                if(QFile::exists(destBackFilePath))
+                {
+                    QFile::remove(destBackFilePath);
+                }
+            }
+        }
+
+        // 3. Move newly downloaded file to destination path
+        bool replaced = false;
+        int moveRetries = 10;
+        while(moveRetries-- > 0)
+        {
+            // If destination file still exists somehow, try removing it
+            if(QFile::exists(destinationFilePath))
+            {
+                QFile::remove(destinationFilePath);
+            }
+
+            if(QFile::rename(sourceFilePath, destinationFilePath))
+            {
+                replaced = true;
+                break;
+            }
+            // Fallback for cross-filesystem / cross-drive moves
+            if(QFile::copy(sourceFilePath, destinationFilePath))
+            {
+                QFile::remove(sourceFilePath);
+                replaced = true;
+                break;
+            }
             QThread::msleep(100);
         }
+
+        if(!replaced)
+        {
+            allSuccess = false;
+            qWarning() << "Failed to replace file with updated version:" << destinationFilePath;
+        }
     }
-    return true;
+
+    return allSuccess;
 }

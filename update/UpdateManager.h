@@ -1,6 +1,7 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QDir>
 #include <QEventLoop>
 #include <QFile>

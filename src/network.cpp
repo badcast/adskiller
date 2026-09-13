@@ -29,25 +29,15 @@ enum
     Fauth = 128
 };
 
-inline QString url_fetch()
+inline const QUrl &url_fetch()
 {
-    QString url;
-    url += URL_Remote;
-    url += '/';
-    url += URL_SupVer;
-    url += '/';
-    url += URL_Work;
+    static const QUrl url(QStringLiteral("%1/%2/%3").arg(URL_Remote, URL_SupVer, URL_Work));
     return url;
 }
 
-inline QString url_version()
+inline const QUrl &url_version()
 {
-    QString url;
-    url += URL_Remote;
-    url += '/';
-    url += URL_CDN;
-    url += '/';
-    url += URL_Version;
+    static const QUrl url(QStringLiteral("%1/%2/%3").arg(URL_Remote, URL_CDN, URL_Version));
     return url;
 }
 
@@ -65,20 +55,34 @@ inline LabStatusInfo fromJsonLabs(const QJsonValue &jroot)
 
 inline QString so_strify(ServiceOperation so)
 {
-    return so == ServiceOperation::Get ? "get" : so == ServiceOperation::Set ? "set" : so == ServiceOperation::Open ? "open" : so == ServiceOperation::Close ? "close" : so == ServiceOperation::Other ? "other" : "invalid";
+    switch(so)
+    {
+    case ServiceOperation::Get:
+        return QStringLiteral("get");
+    case ServiceOperation::Set:
+        return QStringLiteral("set");
+    case ServiceOperation::Open:
+        return QStringLiteral("open");
+    case ServiceOperation::Close:
+        return QStringLiteral("close");
+    case ServiceOperation::Other:
+        return QStringLiteral("other");
+    default:
+        return QStringLiteral("invalid");
+    }
 }
 
 inline ServiceOperation so_destrify(const QString &so)
 {
-    if(so == "get")
+    if(so == QLatin1String("get"))
         return ServiceOperation::Get;
-    if(so == "set")
+    if(so == QLatin1String("set"))
         return ServiceOperation::Set;
-    if(so == "open")
+    if(so == QLatin1String("open"))
         return ServiceOperation::Open;
-    if(so == "close")
+    if(so == QLatin1String("close"))
         return ServiceOperation::Close;
-    if(so == "other")
+    if(so == QLatin1String("other"))
         return ServiceOperation::Other;
     return ServiceOperation::Invalid;
 }
@@ -88,99 +92,99 @@ Network::Network(const Network &other) : QObject(nullptr), manager(new QNetworkA
     manager->setTransferTimeout(NetworkTimeoutDefault);
 }
 
-Network::Network(QObject *parent) : QObject(parent), _pending(0), forclyExit(false)
+Network::Network(QObject *parent) : QObject(parent), manager(new QNetworkAccessManager(this)), _lastBytes(0), _pending(0), forclyExit(false)
 {
-    manager = new QNetworkAccessManager(this);
     manager->setTransferTimeout(NetworkTimeoutDefault);
+}
+
+QString Network::defaultUserAgent()
+{
+    static const QString userAgent = QStringLiteral("AdsKiller-Desktop/%1.%2.%3")
+        .arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+    return userAgent;
+}
+
+QNetworkRequest Network::generalCreateRequest(const QUrl &url, bool needAuth) const
+{
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, defaultUserAgent());
+    if(needAuth && !_token.isEmpty())
+    {
+        request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
+    }
+    return request;
+}
+
+QNetworkReply *Network::generalCreateRequest(const QUrl &url, const QJsonObject &json, int pendingFlag, bool needAuth)
+{
+    if(needAuth && !isAuthed())
+    {
+        return nullptr;
+    }
+
+    _pending |= pendingFlag;
+    const QNetworkRequest request = generalCreateRequest(url, needAuth);
+    const QByteArray data = QJsonDocument(json).toJson(QJsonDocument::Compact);
+    return manager->post(request, data);
 }
 
 void Network::pushLoginPass(const QString &login, const QString &pass)
 {
-    QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest request(url);
     authedId = {}; // Clean last info
-    _pending |= Fauth;
+    QJsonObject json;
+    json[QStringLiteral("request")] = QStringLiteral("TOKENVERIFY");
+    json[QStringLiteral("login")] = login;
+    json[QStringLiteral("pass")] = pass;
 
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    json["request"] = "TOKENVERIFY";
-    json["login"] = login;
-    json["pass"] = pass;
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    connect(reply, &QNetworkReply::finished, this, &Network::onAuthJWTFinished);
+    generalCreateRequest(url_fetch(), json, Fauth, &Network::onAuthJWTFinished, false);
 }
 
 void Network::pushAuthToken()
 {
-    QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest request(url);
     if(!isAuthed())
         return;
-    _pending |= Fauth;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
 
-    json["request"] = "TOKENVERIFY";
+    QJsonObject json;
+    json[QStringLiteral("request")] = QStringLiteral("TOKENVERIFY");
 
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onAuthJWTFinished);
+    generalCreateRequest(url_fetch(), json, Fauth, &Network::onAuthJWTFinished, true);
 }
 
 void Network::pullServiceList()
 {
-    QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest request(url);
     if(!isAuthed())
         return;
-    _pending |= FpullServiceList;
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
 
-    json["request"] = "LISTSERVICES";
+    QJsonObject json;
+    json[QStringLiteral("request")] = QStringLiteral("LISTSERVICES");
 
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceList);
+    generalCreateRequest(url_fetch(), json, FpullServiceList, &Network::onPullServiceList, true);
 }
 
 void Network::pullServiceUUID(const QString &uuid, const QJsonObject &request, ServiceOperation so)
 {
-    QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_fetch());
-    QNetworkRequest netRequest(url);
     if(!isAuthed())
         return;
-    _pending |= FpullServiceUUID;
-    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    netRequest.setRawHeader("Authorization", "Bearer " + _token.toUtf8());
 
-    json["request"] = "SERVICEREQ";
-    json["uuid"] = uuid;
-    json["type"] = so_strify(so);
-    json["service"] = request;
-    reply = manager->post(netRequest, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onPullServiceUUID);
+    QJsonObject json;
+    json[QStringLiteral("request")] = QStringLiteral("SERVICEREQ");
+    json[QStringLiteral("uuid")] = uuid;
+    json[QStringLiteral("type")] = so_strify(so);
+    json[QStringLiteral("service")] = request;
+
+    generalCreateRequest(url_fetch(), json, FpullServiceUUID, &Network::onPullServiceUUID, true);
 }
 
 void Network::pullFetchVersion(bool populate)
 {
     QJsonObject json;
-    QNetworkReply *reply;
-    QUrl url(url_version());
-    QNetworkRequest request(url);
-    _pending |= FpullFetchVersion;
     if(populate)
     {
-        json["currentClient"] = QString("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
+        json[QStringLiteral("currentClient")] = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     }
-    reply = manager->post(request, QJsonDocument(json).toJson(QJsonDocument::Compact));
-    QObject::connect(reply, &QNetworkReply::finished, this, &Network::onFetchingVersion);
+
+    generalCreateRequest(url_version(), json, FpullFetchVersion, &Network::onFetchingVersion, false);
 }
 
 bool Network::checkNet()
@@ -210,39 +214,38 @@ void Network::onAuthJWTFinished()
     _lastBytes = 0;
     if(reply)
     {
-        for(;;)
+        if(reply->error() == QNetworkReply::NoError)
         {
-            if(reply->error() == QNetworkReply::NoError)
+            const QByteArray responce = reply->readAll();
+            _lastBytes = responce.size();
+            const QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
+            status = NetworkStatus::ServerError;
+
+            if(!jsonResp.isNull() && jsonResp[QStringLiteral("status")].isDouble())
             {
-                QByteArray responce = reply->readAll();
-                _lastBytes = responce.size();
-                QJsonDocument jsonResp = QJsonDocument::fromJson(responce);
-                status = NetworkStatus::ServerError;
-
-                if(jsonResp.isNull() || !jsonResp["status"].isDouble() || (status = jsonResp["status"].toInt()) != NetworkStatus::OK)
+                status = jsonResp[QStringLiteral("status")].toInt();
+                if(status == NetworkStatus::OK)
                 {
-                    break;
-                }
-
-                if(!jsonResp["token"].isUndefined())
-                {
-                    _token = jsonResp["token"].toString();
-                }
-                else
-                {
-                    authedId.idName = jsonResp["username"].toString();
-                    authedId.lastLogin = jsonResp["lastLogin"].toVariant().toDateTime();
-                    authedId.serverLastTime = jsonResp["serverLastTime"].toVariant().toDateTime();
-                    authedId.connectedDevices = jsonResp["scores"].toInt();
-                    authedId.credits = jsonResp["credits"].toVariant().toUInt();
-                    authedId.vipDays = jsonResp["vip_period"].toVariant().toUInt();
-                    authedId.location = jsonResp["location"].toString();
-                    authedId.blocked = jsonResp["blocked"].toBool();
-                    authedId.basePrice = jsonResp["base_price"].toVariant().toUInt();
-                    authedId.currencyType = jsonResp["currency_type"].toString();
+                    if(!jsonResp[QStringLiteral("token")].isUndefined())
+                    {
+                        _token = jsonResp[QStringLiteral("token")].toString();
+                    }
+                    else
+                    {
+                        const QJsonObject obj = jsonResp.object();
+                        authedId.idName = obj[QStringLiteral("username")].toString();
+                        authedId.lastLogin = obj[QStringLiteral("lastLogin")].toVariant().toDateTime();
+                        authedId.serverLastTime = obj[QStringLiteral("serverLastTime")].toVariant().toDateTime();
+                        authedId.connectedDevices = obj[QStringLiteral("scores")].toInt();
+                        authedId.credits = obj[QStringLiteral("credits")].toVariant().toUInt();
+                        authedId.vipDays = obj[QStringLiteral("vip_period")].toVariant().toUInt();
+                        authedId.location = obj[QStringLiteral("location")].toString();
+                        authedId.blocked = obj[QStringLiteral("blocked")].toBool();
+                        authedId.basePrice = obj[QStringLiteral("base_price")].toVariant().toUInt();
+                        authedId.currencyType = obj[QStringLiteral("currency_type")].toString();
+                    }
                 }
             }
-            break;
         }
         emit sLoginFinish(status, status == NetworkStatus::OK);
         reply->deleteLater();
@@ -258,21 +261,23 @@ void Network::onFetchingVersion()
     _lastBytes = 0;
     if(reply)
     {
-        for(;;)
+        if(reply->error() == QNetworkReply::NoError)
         {
-            if(reply->error() == QNetworkReply::NoError)
+            const QByteArray resp = reply->readAll();
+            _lastBytes = resp.size();
+            const QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull())
             {
-                QByteArray resp = std::move(reply->readAll());
-                _lastBytes = resp.size();
-                QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
-                if(!jsonResp.isNull() && !jsonResp["version"].isNull() && !jsonResp["url"].isNull())
+                const QJsonObject obj = jsonResp.object();
+                const auto versionVal = obj[QStringLiteral("version")];
+                const auto urlVal = obj[QStringLiteral("url")];
+                if(!versionVal.isNull() && !urlVal.isNull())
                 {
-                    version = jsonResp["version"].toString();
-                    url = jsonResp["url"].toString();
+                    version = versionVal.toString();
+                    url = urlVal.toString();
                     status = NetworkStatus::OK;
                 }
             }
-            break;
         }
         emit sFetchingVersion(status, version, url, status == NetworkStatus::OK);
         reply->deleteLater();
@@ -290,30 +295,33 @@ void Network::onPullServiceList()
     {
         if(reply->error() == QNetworkReply::NoError)
         {
-            QByteArray resp = std::move(reply->readAll());
+            const QByteArray resp = reply->readAll();
             _lastBytes = resp.size();
-            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
-            if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && jsonResp["result"].isArray())
+            const QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull())
             {
-                std::function<ServiceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj) -> ServiceItemInfo
+                const QJsonObject rootObj = jsonResp.object();
+                status = rootObj[QStringLiteral("status")].toInt();
+                const QJsonValue resultVal = rootObj[QStringLiteral("result")];
+                if(status == 0 && resultVal.isArray())
                 {
-                    ServiceItemInfo sii;
-                    sii.uuid = obj["uuid"].toString();
-                    sii.active = obj["active"].toBool();
-                    sii.name = obj["name"].toString();
-                    sii.description = obj["description"].toString();
-                    sii.price = obj["price"].toVariant().toUInt();
-                    sii.needVIP = obj["useVIP"].toBool();
-                    sii.hide = obj["hide"].toBool();
-                    return sii;
-                };
-
-                QJsonArray result = jsonResp["result"].toArray();
-                for(auto iter = result.begin(); iter != result.end(); ++iter)
-                {
-                    services << convertToObj(iter->toObject());
+                    const QJsonArray result = resultVal.toArray();
+                    services.reserve(result.size());
+                    for(const auto &item : result)
+                    {
+                        const QJsonObject obj = item.toObject();
+                        ServiceItemInfo sii;
+                        sii.uuid = obj[QStringLiteral("uuid")].toString();
+                        sii.active = obj[QStringLiteral("active")].toBool();
+                        sii.name = obj[QStringLiteral("name")].toString();
+                        sii.description = obj[QStringLiteral("description")].toString();
+                        sii.price = obj[QStringLiteral("price")].toVariant().toUInt();
+                        sii.needVIP = obj[QStringLiteral("useVIP")].toBool();
+                        sii.hide = obj[QStringLiteral("hide")].toBool();
+                        services.append(std::move(sii));
+                    }
+                    status = NetworkStatus::OK;
                 }
-                status = NetworkStatus::OK;
             }
         }
         emit sPullServiceList(services, status == NetworkStatus::OK);
@@ -334,15 +342,23 @@ void Network::onPullServiceUUID()
     {
         if(reply->error() == QNetworkReply::NoError)
         {
-            QByteArray resp = std::move(reply->readAll());
+            const QByteArray resp = reply->readAll();
             _lastBytes = resp.size();
-            QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
-            if(!jsonResp.isNull() && !(status = jsonResp["status"].toInt()) && !jsonResp["result"].isNull() && !jsonResp["guid"].isNull())
+            const QJsonDocument jsonResp = QJsonDocument::fromJson(resp);
+            if(!jsonResp.isNull())
             {
-                guid = jsonResp["guid"].toString();
-                responce = jsonResp["result"].toObject();
-                so = so_destrify(jsonResp["type"].toString());
-                status = NetworkStatus::OK;
+                const QJsonObject rootObj = jsonResp.object();
+                status = rootObj[QStringLiteral("status")].toInt();
+                const auto resVal = rootObj[QStringLiteral("result")];
+                const auto guidVal = rootObj[QStringLiteral("guid")];
+
+                if(status == 0 && !resVal.isNull() && !guidVal.isNull())
+                {
+                    guid = guidVal.toString();
+                    responce = resVal.toObject();
+                    so = so_destrify(rootObj[QStringLiteral("type")].toString());
+                    status = NetworkStatus::OK;
+                }
             }
         }
 
@@ -354,10 +370,7 @@ void Network::onPullServiceUUID()
 
 VersionInfo::VersionInfo(const QString &version, const QString &url, int status) : mDownloadUrl(url), mStatus(status)
 {
-    QVector<int> ints;
-    QStringList list = std::move(version.split('.', Qt::SkipEmptyParts));
-    std::transform(std::begin(list), std::end(list), std::back_inserter(ints), [](const QString &str) -> int { return str.toInt(); });
-    mVersion = QVersionNumber {ints};
+    mVersion = QVersionNumber::fromString(version);
 }
 
 bool VersionInfo::empty() const

@@ -45,19 +45,9 @@ private:
     QWidget *createChangelogTab();
     QWidget *createFooterWidget();
 
-    QWidget *createAuthorCard(const QString &initials,
-                             const QColor &gradStart,
-                             const QColor &gradEnd,
-                             const QString &name,
-                             const QString &role,
-                             const QString &roleColor,
-                             const QString &description,
-                             const QString &contact = QString());
+    QWidget *createAuthorCard(const QString &initials, const QColor &gradStart, const QColor &gradEnd, const QString &name, const QString &role, const QString &roleColor, const QString &description, const QString &contact = QString());
 
-    static QPixmap createAvatarPixmap(const QString &initials,
-                                      const QColor &startColor,
-                                      const QColor &endColor,
-                                      int size = 48);
+    static QPixmap createAvatarPixmap(const QString &initials, const QColor &startColor, const QColor &endColor, int size = 48);
 
     static QString loadLicenseText();
 
@@ -67,15 +57,15 @@ private:
     static QString formatChangelogText(const QString &raw);
     static QJsonArray getFallbackChangelog();
 
-    QTabWidget *m_tabWidget { nullptr };
-    QTextEdit *m_licenseEdit { nullptr };
-    QPushButton *m_copyLicenseBtn { nullptr };
+    QTabWidget *m_tabWidget {nullptr};
+    QTextEdit *m_licenseEdit {nullptr};
+    QPushButton *m_copyLicenseBtn {nullptr};
 
     // Changelog tab elements
-    QNetworkAccessManager *m_netManager { nullptr };
-    QVBoxLayout *m_changelogListLayout { nullptr };
-    QWidget *m_changelogStatusWidget { nullptr };
-    QLabel *m_changelogStatusLabel { nullptr };
-    QPushButton *m_changelogRetryBtn { nullptr };
-    QPushButton *m_changelogRefreshBtn { nullptr };
+    QNetworkAccessManager *m_netManager {nullptr};
+    QVBoxLayout *m_changelogListLayout {nullptr};
+    QWidget *m_changelogStatusWidget {nullptr};
+    QLabel *m_changelogStatusLabel {nullptr};
+    QPushButton *m_changelogRetryBtn {nullptr};
+    QPushButton *m_changelogRefreshBtn {nullptr};
 };

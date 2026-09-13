@@ -15,6 +15,7 @@
         <file alias="snowflake-image">res/snowflake-image.png</file>
         <file alias="banner">res/banner-low.png</file>
         <file alias="app-logo">res/icon_std.png</file>
+        <file alias="checkbox-checked">res/checkbox-checked.svg</file>
         <file alias="license-gplv3">LICENSE</file>
     </qresource>
     <qresource prefix="/service-icons">
