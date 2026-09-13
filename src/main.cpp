@@ -52,41 +52,41 @@ int main(int argc, char **argv)
 
     QWidget *banner = createBanner();
     banner->show();
+    w = new MainWindow;
+    w->current = w;
+    w->app = &app;
+    w->delayUICallLoop(
+        100,
+        [&sharedMem, &w]() -> bool
+        {
+            if(!sharedMem.lock())
+                return true;
+
+            const char *data = reinterpret_cast<const char *>(sharedMem.constData());
+            int len = 0;
+            while(len < sharedMem.size() && data[len] != '\0')
+            {
+                len++;
+            }
+            QString cmd = QString::fromLatin1(data, len);
+
+            if(cmd == ShowCommandPipe)
+            {
+                w->showNormal();
+            }
+            if(cmd == HideCommandPipe)
+            {
+                w->hide();
+            }
+            memset(sharedMem.data(), 0, 1);
+            sharedMem.unlock();
+            return true;
+        });
+
     QTimer::singleShot(
-        3000,
+        1500,
         [&]()
         {
-
-            w = new MainWindow;
-            w->current = w;
-            w->app = &app;
-            w->delayUICallLoop(
-                100,
-                [&sharedMem, &w]() -> bool
-                {
-                    if(!sharedMem.lock())
-                        return true;
-
-                    const char *data = reinterpret_cast<const char *>(sharedMem.constData());
-                    int len = 0;
-                    while(len < sharedMem.size() && data[len] != '\0')
-                    {
-                        len++;
-                    }
-                    QString cmd = QString::fromLatin1(data, len);
-
-                    if(cmd == ShowCommandPipe)
-                    {
-                        w->showNormal();
-                    }
-                    if(cmd == HideCommandPipe)
-                    {
-                        w->hide();
-                    }
-                    memset(sharedMem.data(), 0, 1);
-                    sharedMem.unlock();
-                    return true;
-                });
             w->show();
             banner->close();
             delete banner;
