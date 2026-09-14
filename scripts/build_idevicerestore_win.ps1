@@ -12,7 +12,7 @@ New-Item -ItemType Directory -Force -Path $DestDir | Out-Null
 New-Item -ItemType Directory -Force -Path $BuildAppleDir | Out-Null
 
 # Источник: официальный порт libimobiledevice / idevicerestore для Windows x64
-$ZipUrl = "https://github.com/libimobiledevice-win32/imobiledevice-net/releases/download/v1.3.17/libimobiledevice.x64.zip"
+$ZipUrl = "https://github.com/libimobiledevice-win32/imobiledevice-net/releases/download/v1.3.17/libimobiledevice.1.2.1-r1122-win-x64.zip"
 $ZipPath = Join-Path $RootDir "build\idevicerestore_win.zip"
 
 try {
