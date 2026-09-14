@@ -1,4 +1,4 @@
-#include "network.h"
+#include "Network.h"
 
 bool UserDataInfo::isNotValidBalance() const
 {

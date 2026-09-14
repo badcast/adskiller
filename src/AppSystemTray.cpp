@@ -3,7 +3,7 @@
 #include <QMessageBox>
 
 #include "AppSystemTray.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
 {

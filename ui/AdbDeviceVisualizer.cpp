@@ -13,8 +13,8 @@
 #include <QLinearGradient>
 #include <cmath>
 
-#include "adbfront.h"
-#include "applefront.h"
+#include "Adbfront.h"
+#include "Applefront.h"
 
 
 AdbDeviceVisualizer::AdbDeviceVisualizer(QWidget *parent) : QWidget(parent), m_status(UNKNOWN), m_time(0.0f), m_connectedTime(0.0f)

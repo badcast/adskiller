@@ -10,7 +10,7 @@
 #include <QIcon>
 #include <QMenu>
 #include <QPoint>
-#include "adbfront.h"
+#include "Adbfront.h"
 
 class FileManagerWidget : public QWidget
 {

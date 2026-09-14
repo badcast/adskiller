@@ -27,10 +27,10 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
-#include "adbfront.h"
-#include "applefront.h"
-#include "extension.h"
-#include "network.h"
+#include "Adbfront.h"
+#include "Applefront.h"
+#include "Extension.h"
+#include "Network.h"
 
 #if !NDEBUG
 #define SHOW_SERVICE_BY_DEBUG 0

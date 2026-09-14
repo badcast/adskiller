@@ -13,7 +13,7 @@
 
 #include <string.h>
 
-#include "classfieldraw.h"
+#include "Classfieldraw.h"
 
 #ifndef CLASSFIELDDATA
 #error "Classfield data is not entry"

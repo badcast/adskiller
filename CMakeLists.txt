@@ -17,33 +17,33 @@ find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
 
 set(PROJECT_SOURCES
-        ui/mainwindow.h
-        ui/mainwindow.ui
-        ui/mainwindow.cpp
+        ui/MainWindow.h
+        ui/MainWindow.ui
+        ui/MainWindow.cpp
         ui/MainPages.cpp
         ui/RadioPlayerWidget.h
         ui/RadioPlayerWidget.cpp
         ui/AdbDeviceVisualizer.h
          ui/AdbDeviceVisualizer.cpp
-        ui/about_dialog.h
-        ui/about_dialog.cpp
-        ui/icontextbutton.cpp
-        ui/icontextbutton.h
-        include/begin.h
-        include/extension.h
-        include/network.h
+        ui/AboutDialog.h
+        ui/AboutDialog.cpp
+        ui/IconTextButton.cpp
+        ui/IconTextButton.h
+        include/Begin.h
+        include/Extension.h
+        include/Network.h
         include/AppSystemTray.h
         include/Strings.h
-        src/main.cpp
-        src/network.cpp
+        src/Main.cpp
+        src/Network.cpp
         src/Identity.cpp
         src/AppSystemTray.cpp
-        src/extension.cpp
-        src/settings.cpp
+        src/Extension.cpp
+        src/Settings.cpp
         resources.qrc
 )
 
-file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT_SOURCE_DIR}/ui/update_*")
+file(GLOB UPDATE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/update/*" "${CMAKE_CURRENT_SOURCE_DIR}/ui/Update*")
 
 if(WIN32)
     file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")

@@ -6,8 +6,8 @@
 #include <QPainter>
 #include <QString>
 
-#include "adbfront.h"
-#include "applefront.h"
+#include "Adbfront.h"
+#include "Applefront.h"
 
 class AdbDeviceVisualizer : public QWidget
 {

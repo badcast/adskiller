@@ -22,7 +22,7 @@
 #include <QScrollArea>
 #include <QStorageInfo>
 
-#include "applefront.h"
+#include "Applefront.h"
 
 struct IpswFirmwareInfo
 {
