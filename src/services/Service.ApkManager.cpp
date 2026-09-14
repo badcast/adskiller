@@ -38,7 +38,7 @@
 
 #include "ApkManagerWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 namespace
 {

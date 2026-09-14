@@ -26,10 +26,10 @@
 #include "AppSystemTray.h"
 #include "Services.h"
 #include "Snowflake.h"
-#include "adbfront.h"
-#include "begin.h"
-#include "extension.h"
-#include "network.h"
+#include "AdbFront.h"
+#include "Begin.h"
+#include "Extension.h"
+#include "Network.h"
 
 enum
 {

@@ -1,6 +1,6 @@
 #include "AITranslaterWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include <QApplication>
 #include <QClipboard>

@@ -1,6 +1,6 @@
 #include <QPainter>
 
-#include "icontextbutton.h"
+#include "IconTextButton.h"
 
 IconTextButton::IconTextButton(const QIcon &icon, const QString &text, QWidget *parent) : QPushButton(parent), _icon(icon), _text(text)
 {

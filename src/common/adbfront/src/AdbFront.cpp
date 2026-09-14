@@ -10,8 +10,8 @@
 #include <QStringList>
 #include <QTemporaryFile>
 
-#include "adbcmds.h"
-#include "adbfront.h"
+#include "AdbCmds.h"
+#include "AdbFront.h"
 
 QString AdbExecutableFilename()
 {

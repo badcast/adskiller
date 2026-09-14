@@ -11,7 +11,7 @@
 #include <QMap>
 #include <QIcon>
 #include <QSet>
-#include "adbfront.h"
+#include "AdbFront.h"
 
 struct AppPackageInfo
 {

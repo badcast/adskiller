@@ -335,13 +335,14 @@ QString UpdateManager::getFileMD5Hash(const QString &filePath)
         return QString();
     }
 
-    std::byte _buffer[4096];
+    //
     QCryptographicHash hash(QCryptographicHash::Md5);
-    QSpan<std::byte> spanbuffer = _buffer;
+    char _buffer[4096];
     while(!file.atEnd())
     {
-        QByteArrayView buffer = file.readLineInto(spanbuffer);
-        hash.addData(buffer);
+        qint64 len = file.read(_buffer, sizeof(_buffer));
+        if (len > 0) hash.addData(_buffer, len);
+
     }
 
     file.close();

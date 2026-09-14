@@ -1,5 +1,5 @@
-#include "about_dialog.h"
-#include "begin.h"
+#include "AboutDialog.h"
+#include "Begin.h"
 #include "Strings.h"
 
 #include <QApplication>

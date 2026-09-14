@@ -4,9 +4,9 @@
 #include <QJsonObject>
 #include <QVersionNumber>
 
-#include "adbfront.h"
-#include "begin.h"
-#include "network.h"
+#include "AdbFront.h"
+#include "Begin.h"
+#include "Network.h"
 
 #ifndef NREMOTEADDR
 #define NREMOTEADDR "http://localhost:8000/api"

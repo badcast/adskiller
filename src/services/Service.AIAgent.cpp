@@ -1,5 +1,5 @@
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 #include <QEventLoop>
 #include <QMessageBox>
 #include <QDateTime>

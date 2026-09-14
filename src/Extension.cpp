@@ -3,8 +3,8 @@
 #include <QString>
 
 #include "Services.h"
-#include "extension.h"
-#include "mainwindow.h"
+#include "Extension.h"
+#include "MainWindow.h"
 
 QByteArray CipherAlgoCrypto::RandomKey()
 {

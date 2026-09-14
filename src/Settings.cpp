@@ -1,4 +1,4 @@
-#include "extension.h"
+#include "Extension.h"
 
 std::shared_ptr<QSettings> AppSetting::settings;
 

@@ -1,4 +1,4 @@
-#include "update_window.h"
+#include "UpdateWindow.h"
 #include <QVBoxLayout>
 #include <QScreen>
 #include <QGuiApplication>

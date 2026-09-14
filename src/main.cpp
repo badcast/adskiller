@@ -16,9 +16,9 @@
 #include <QStyleFactory>
 #include <QWidget>
 
-#include "begin.h"
-#include "mainwindow.h"
-#include "network.h"
+#include "Begin.h"
+#include "MainWindow.h"
+#include "Network.h"
 
 constexpr auto ShowCommandPipe = "adskiller_window_show";
 constexpr auto HideCommandPipe = "adskiller_window_hide";

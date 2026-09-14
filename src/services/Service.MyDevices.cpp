@@ -11,7 +11,7 @@
 #include <QStandardItemModel>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 static QIcon createBrandBadgeIcon(const QString &vendorRaw)
 {

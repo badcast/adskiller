@@ -14,7 +14,7 @@
 #include <QLinearGradient>
 #include <cmath>
 
-#include "adbfront.h"
+#include "AdbFront.h"
 
 class AdbDeviceVisualizer : public QWidget
 {

@@ -8,8 +8,8 @@
 #include <QString>
 #include <QVariant>
 
-#include "adbfront.h"
-#include "begin.h"
+#include "AdbFront.h"
+#include "Begin.h"
 
 enum DeviceConnectType
 {

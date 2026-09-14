@@ -3,7 +3,7 @@
 #include <QJsonObject>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 constexpr auto BalanceStrFormat = "Ваш баланс: %1";
 
@@ -163,8 +163,11 @@ void BuyVIPService::service_uuid_responce(const QJsonObject responce, const QStr
     dailyRate = 0;
     if(!ok)
     {
-        int i = QMessageBox::warning(MainWindow::current, "Ошибка сети", "Обнаружена проблема с подключением к сети, что делать дальше, вам потребуется перезапустить данный сервис или выйти в личный кабинет.", "Выйти", "Перезапустить");
-        if(i == 0)
+        QMessageBox msgBox(QMessageBox::Warning, "Ошибка сети", "Обнаружена проблема с подключением к сети, что делать дальше, вам потребуется перезапустить данный сервис или выйти в личный кабинет.", QMessageBox::NoButton, MainWindow::current);
+        QPushButton *exitButton = msgBox.addButton("Выйти", QMessageBox::ActionRole);
+        QPushButton *restartButton = msgBox.addButton("Перезапустить", QMessageBox::ActionRole);
+        msgBox.exec();
+        if(msgBox.clickedButton() == exitButton)
         {
             close();
         }

@@ -1,4 +1,4 @@
-#include "begin.h"
+#include "Begin.h"
 
 class QLabelDots
 {

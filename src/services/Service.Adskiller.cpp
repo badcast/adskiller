@@ -11,7 +11,7 @@
 #include <QPushButton>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include "PurchaseConfirmDialog.h"
 

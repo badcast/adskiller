@@ -27,9 +27,9 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
-#include "adbfront.h"
-#include "extension.h"
-#include "network.h"
+#include "AdbFront.h"
+#include "Extension.h"
+#include "Network.h"
 
 #if !NDEBUG
 #define SHOW_SERVICE_BY_DEBUG 0

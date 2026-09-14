@@ -4,8 +4,8 @@
 #include <QApplication>
 
 #include "UpdateManager.h"
-#include "begin.h"
-#include "update_window.h"
+#include "Begin.h"
+#include "UpdateWindow.h"
 
 int startProcessDownload(QApplication &app, QString &workDir, bool simulate);
 

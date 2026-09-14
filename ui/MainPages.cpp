@@ -37,8 +37,8 @@
 
 #include "PurchaseConfirmDialog.h"
 
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "MainWindow.h"
+#include "ui_MainWindow.h"
 #include "AdbDeviceVisualizer.h"
 #include "AIChatView.h"
 #include "Snowflake.h"

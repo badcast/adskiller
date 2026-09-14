@@ -1,6 +1,6 @@
 #include "ContactFixerWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include "NumberPreview.h"
 #include "vcard.h"

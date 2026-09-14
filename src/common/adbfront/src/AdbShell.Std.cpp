@@ -2,8 +2,8 @@
 
 #include <QTextStream>
 
-#include "adbcmds.h"
-#include "adbfront.h"
+#include "AdbCmds.h"
+#include "AdbFront.h"
 
 const std::array<const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
 

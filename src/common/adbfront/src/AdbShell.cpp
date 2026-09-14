@@ -14,8 +14,8 @@
 #include <QRandomGenerator>
 #include <QStringList>
 
-#include "adbcmds.h"
-#include "adbfront.h"
+#include "AdbCmds.h"
+#include "AdbFront.h"
 
 struct AdbCmdResult
 {

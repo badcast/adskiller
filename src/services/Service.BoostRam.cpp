@@ -4,7 +4,7 @@
 #include <chrono>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #define FORCLYQUIT_CHECK             \
     if(bCmd == CommandExecForceKill) \
