@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 
+#include <QButtonGroup>
 #include <QCloseEvent>
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QEnterEvent>
@@ -651,6 +652,15 @@ void MainWindow::initServiceModules()
                 }
             }
             button->setToolTip(tip);
+            button->setProperty("serviceUuid", remoteService->uuid);
+            button->setProperty("isAdsKiller", remoteService->uuid == IDServiceAdsString);
+            button->setProperty("isAppleFirmware", false);
+            button->setProperty("isFree", isFree);
+            button->setProperty("isPaid", !isFree);
+            button->setProperty("isActive", instance->active);
+            button->setProperty("isUnderDev", false);
+            button->setProperty("serviceName", remoteService->name);
+            button->setProperty("serviceDesc", remoteService->description);
 
             // Target service by slot with credit verification
             QObject::connect(
@@ -850,7 +860,13 @@ void MainWindow::initServiceModules()
 
         services << std::move(instance);
     }
-    std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) { return static_cast<int>(lhs->active) > static_cast<int>(rhs->active); });
+    std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) {
+        bool lhsIsAds = (lhs && lhs->uuid() == IDServiceAdsString);
+        bool rhsIsAds = (rhs && rhs->uuid() == IDServiceAdsString);
+        if(lhsIsAds != rhsIsAds)
+            return lhsIsAds;
+        return static_cast<int>(lhs->active) > static_cast<int>(rhs->active);
+    });
 
     QGridLayout *layoutSpace = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
     if(layoutSpace)
@@ -877,6 +893,243 @@ void MainWindow::initServiceModules()
         }
     }
     serverServices.reset();
+
+    createAppleServiceButton();
+    applyServiceFilters();
+}
+
+void MainWindow::createAppleServiceButton()
+{
+    if(!ui || !ui->serviceContents || !ui->serviceContents->layout())
+        return;
+
+    if(ui->serviceContents->findChild<ServiceTileButton *>("serviceButton_AppleFirmware"))
+        return;
+
+    QIcon appleIcon(":/svg/services/apple");
+    if(appleIcon.isNull())
+        appleIcon = QIcon(":/service-icons/apple");
+    if(appleIcon.isNull())
+        appleIcon = QIcon("res/svg/services/apple.svg");
+    if(appleIcon.isNull())
+        appleIcon = QIcon("svg/services/apple.svg");
+
+    ServiceTileButton *appleBtn = new ServiceTileButton(
+        appleIcon,
+        QString::fromUtf8("Прошивки APPLE"),
+        QString::fromUtf8("БЕСПЛАТНО"),
+        ServiceTileButton::Tier::Free,
+        true,
+        QString::fromUtf8("SOON"),
+        ui->serviceContents);
+    appleBtn->setObjectName("serviceButton_AppleFirmware");
+    appleBtn->setFixedSize(260, 82);
+    appleBtn->setEnabled(true);
+    appleBtn->setCursor(Qt::PointingHandCursor);
+    appleBtn->setProperty("serviceUuid", "apple_firmware");
+    appleBtn->setProperty("isAppleFirmware", true);
+    appleBtn->setProperty("isAdsKiller", false);
+    appleBtn->setProperty("isFree", true);
+    appleBtn->setProperty("isPaid", false);
+    appleBtn->setProperty("isActive", false);
+    appleBtn->setProperty("isUnderDev", true);
+    appleBtn->setProperty("serviceName", QString::fromUtf8("Прошивки APPLE"));
+    appleBtn->setProperty("serviceDesc", QString::fromUtf8("Прошивка, восстановление и обход блокировок Apple iOS устройств"));
+    appleBtn->setToolTip(QString::fromUtf8("Прошивки APPLE\nПрошивка, восстановление и обход блокировок Apple iOS устройств\n\n• Бесплатная услуга (в разработке)"));
+
+    QObject::connect(
+        appleBtn,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            QMessageBox msgBox(this);
+            msgBox.setWindowTitle(QString::fromUtf8("Прошивки APPLE"));
+            msgBox.setIcon(QMessageBox::Information);
+            msgBox.setText(QString::fromUtf8(
+                "<h3>Сервис «Прошивки APPLE»</h3>"
+                "<p>Данный модуль в настоящее время находится <b>в активной разработке</b>.</p>"
+                "<p style='color: #94A3B8; font-size: 11px;'>Функционал загрузки официальных и кастомных IPSW-прошивок, восстановления из режима DFU/Recovery, а также инструменты работы с устройствами Apple iOS будут доступны в ближайшем обновлении.</p>"));
+
+            QPushButton *btnOk = msgBox.addButton(QString::fromUtf8("Понятно"), QMessageBox::AcceptRole);
+            btnOk->setCursor(Qt::PointingHandCursor);
+            btnOk->setStyleSheet(
+                "QPushButton {"
+                "   background-color: #0284C7;"
+                "   color: #FFFFFF;"
+                "   font-size: 12px;"
+                "   font-weight: bold;"
+                "   border: 1px solid #0284C7;"
+                "   border-radius: 0px;"
+                "   padding: 6px 20px;"
+                "   min-width: 100px;"
+                "}"
+                "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
+                "QPushButton:pressed { background-color: #075985; }");
+            msgBox.setDefaultButton(btnOk);
+            msgBox.exec();
+        });
+
+    if(auto *grid = qobject_cast<QGridLayout *>(ui->serviceContents->layout()))
+    {
+        int count = ui->serviceContents->findChildren<ServiceTileButton *>(QString(), Qt::FindDirectChildrenOnly).size();
+        grid->addWidget(appleBtn, count / 2, count % 2);
+    }
+}
+
+void MainWindow::applyServiceFilters()
+{
+    if(!ui || !ui->serviceContents || !ui->serviceContents->layout())
+        return;
+
+    QGridLayout *grid = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
+    if(!grid)
+        return;
+
+    // Search query from top-right search box
+    QLineEdit *searchEdit = ui->toplevel_up_2 ? ui->toplevel_up_2->findChild<QLineEdit *>("serviceSearchEdit") : nullptr;
+    QString query = searchEdit ? searchEdit->text().trimmed() : QString();
+
+    // Active filter from vertical filter panel
+    QString currentFilter = "all";
+    if(QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
+    {
+        QAbstractButton *checked = bg->checkedButton();
+        if(checked)
+            currentFilter = checked->property("filterMode").toString();
+    }
+
+    // Direct ServiceTileButton children of serviceContents
+    QList<ServiceTileButton *> allButtons = ui->serviceContents->findChildren<ServiceTileButton *>(QString(), Qt::FindDirectChildrenOnly);
+
+    auto getServicePriority = [](ServiceTileButton *btn) -> int {
+        if(btn->property("isAdsKiller").toBool()
+           || btn->property("serviceUuid").toString() == IDServiceAdsString
+           || btn->title().contains(QString::fromUtf8("реклам"), Qt::CaseInsensitive)
+           || btn->title().contains(QString::fromUtf8("Ads"), Qt::CaseInsensitive))
+        {
+            return 1; // 1. Удаление рекламы (Ads Killer) ALWAYS FIRST
+        }
+        if(btn->property("isAppleFirmware").toBool()
+           || btn->objectName() == "serviceButton_AppleFirmware"
+           || btn->title().contains(QString::fromUtf8("APPLE"), Qt::CaseInsensitive))
+        {
+            return 2; // 2. Прошивки APPLE ALWAYS SECOND
+        }
+        return 10;
+    };
+
+    // Sort order: Ads Killer ALWAYS 1st, Apple Firmware ALWAYS 2nd, then active services, then rest
+    std::sort(allButtons.begin(), allButtons.end(), [getServicePriority](ServiceTileButton *a, ServiceTileButton *b) {
+        int prioA = getServicePriority(a);
+        int prioB = getServicePriority(b);
+        if(prioA != prioB)
+            return prioA < prioB;
+
+        bool aDev = a->property("isUnderDev").toBool();
+        bool bDev = b->property("isUnderDev").toBool();
+        if(aDev != bDev)
+            return !aDev;
+
+        bool aAct = a->property("isActive").toBool();
+        bool bAct = b->property("isActive").toBool();
+        if(aAct != bAct)
+            return aAct > bAct;
+
+        return a->title() < b->title();
+    });
+
+    int visibleIndex = 0;
+    int totalCount = allButtons.size();
+    int availCount = 0;
+    int unavailCount = 0;
+    int freeCount = 0;
+    int paidCount = 0;
+
+    for(ServiceTileButton *btn : allButtons)
+    {
+        bool isUnderDev = btn->property("isUnderDev").toBool();
+        bool isActive = btn->property("isActive").toBool();
+        bool isFree = btn->property("isFree").toBool() || (btn->tier() == ServiceTileButton::Tier::Free);
+        bool isPaid = btn->property("isPaid").toBool() || (btn->tier() == ServiceTileButton::Tier::Credit || btn->tier() == ServiceTileButton::Tier::Vip || btn->tier() == ServiceTileButton::Tier::Dynamic);
+        bool isAvail = isActive && !isUnderDev;
+        bool isUnavail = !isActive || isUnderDev || (btn->tier() == ServiceTileButton::Tier::Disabled);
+
+        if(isAvail) ++availCount;
+        if(isUnavail) ++unavailCount;
+        if(isFree) ++freeCount;
+        if(isPaid) ++paidCount;
+
+        bool matchesFilter = true;
+        if(currentFilter == "available")
+            matchesFilter = isAvail;
+        else if(currentFilter == "unavailable")
+            matchesFilter = isUnavail;
+        else if(currentFilter == "free")
+            matchesFilter = isFree;
+        else if(currentFilter == "paid")
+            matchesFilter = isPaid;
+
+        bool matchesSearch = true;
+        if(!query.isEmpty())
+        {
+            matchesSearch = btn->title().contains(query, Qt::CaseInsensitive)
+                            || btn->toolTip().contains(query, Qt::CaseInsensitive)
+                            || btn->property("serviceDesc").toString().contains(query, Qt::CaseInsensitive)
+                            || btn->badgeText().contains(query, Qt::CaseInsensitive);
+        }
+
+        bool visible = matchesFilter && matchesSearch;
+        grid->removeWidget(btn);
+        btn->setVisible(visible);
+
+        if(visible)
+        {
+            grid->addWidget(btn, visibleIndex / 2, visibleIndex % 2);
+            ++visibleIndex;
+        }
+    }
+
+    // Update counts on filter buttons
+    if(QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
+    {
+        for(QAbstractButton *ab : bg->buttons())
+        {
+            QString mode = ab->property("filterMode").toString();
+            if(mode == "all")
+                ab->setText(QString::fromUtf8("Все сервисы (%1)").arg(totalCount));
+            else if(mode == "available")
+                ab->setText(QString::fromUtf8("Доступные (%1)").arg(availCount));
+            else if(mode == "unavailable")
+                ab->setText(QString::fromUtf8("Не доступные (%1)").arg(unavailCount));
+            else if(mode == "free")
+                ab->setText(QString::fromUtf8("Бесплатные (%1)").arg(freeCount));
+            else if(mode == "paid")
+                ab->setText(QString::fromUtf8("Платные (%1)").arg(paidCount));
+        }
+    }
+
+    // Empty state message
+    QLabel *emptyLbl = ui->serviceContents->findChild<QLabel *>("servicesEmptyLabel");
+    if(visibleIndex == 0)
+    {
+        if(!emptyLbl)
+        {
+            emptyLbl = new QLabel(ui->serviceContents);
+            emptyLbl->setObjectName("servicesEmptyLabel");
+            emptyLbl->setAlignment(Qt::AlignCenter);
+            emptyLbl->setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600; padding: 40px; background: transparent;");
+        }
+        emptyLbl->setText(query.isEmpty() 
+            ? QString::fromUtf8("В данной категории нет сервисов")
+            : QString::fromUtf8("По запросу «%1» ничего не найдено").arg(query));
+        grid->addWidget(emptyLbl, 0, 0, 1, 2, Qt::AlignCenter);
+        emptyLbl->show();
+    }
+    else if(emptyLbl)
+    {
+        emptyLbl->hide();
+    }
 }
 
 void MainWindow::on_actionAboutUs_triggered()
@@ -1665,7 +1918,7 @@ void MainWindow::slotAuthFinish(int status, bool ok)
             switch(_status)
             {
                 case 0:
-                    resText = "Токен успешно прошел проверку. Добро пожаловать!";
+                    resText = "Авторизация прошла успешно. Добро пожаловать!";
 
                     if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
                     {

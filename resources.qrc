@@ -51,6 +51,7 @@
         <file alias="ai-agent">res/svg/services/ai-agent.svg</file>
         <file alias="file-manager">res/svg/services/file-manager.svg</file>
         <file alias="ai-translator">res/svg/services/ai-translator.svg</file>
+        <file alias="apple">res/svg/services/apple.svg</file>
     </qresource>
     <qresource prefix="/svg/services">
         <file alias="ads-killer">res/svg/services/ads-killer.svg</file>
@@ -65,6 +66,7 @@
         <file alias="ai-agent">res/svg/services/ai-agent.svg</file>
         <file alias="file-manager">res/svg/services/file-manager.svg</file>
         <file alias="ai-translator">res/svg/services/ai-translator.svg</file>
+        <file alias="apple">res/svg/services/apple.svg</file>
         <file alias="unavailable">res/svg/services/unavailable.svg</file>
     </qresource>
     <qresource prefix="/svg">
@@ -121,5 +123,6 @@
         <file alias="arrow-left">res/svg/arrow-left.svg</file>
         <file alias="arrow-right">res/svg/arrow-right.svg</file>
         <file alias="arrow-up">res/svg/arrow-up.svg</file>
+        <file alias="apple">res/svg/services/apple.svg</file>
     </qresource>
 </RCC>

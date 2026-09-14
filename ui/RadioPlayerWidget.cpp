@@ -36,16 +36,22 @@ RadioPlayerWidget::~RadioPlayerWidget()
 void RadioPlayerWidget::populateDefaultStations()
 {
     m_stations.clear();
-    m_stations.append({QString::fromUtf8("Radio Record"), QStringLiteral("http://air.radiorecord.ru:805/rr_320"), QString::fromUtf8("Dance / Club")});
-    m_stations.append({QString::fromUtf8("DFM"), QStringLiteral("http://icecast.radiodfm.hostingradio.ru/dfm.mp3"), QString::fromUtf8("Dance / Pop")});
-    m_stations.append({QString::fromUtf8("Европа Плюс"), QStringLiteral("http://ep256.hostingradio.ru:8052/europaplus256.mp3"), QString::fromUtf8("Top 40")});
-    m_stations.append({QString::fromUtf8("Ретро FM"), QStringLiteral("http://retro256.hostingradio.ru:8043/retro256.mp3"), QString::fromUtf8("Retro 80-90s")});
-    m_stations.append({QString::fromUtf8("Relax FM"), QStringLiteral("http://ic7.101.ru:8000/a200"), QString::fromUtf8("Lounge / Chill")});
-    m_stations.append({QString::fromUtf8("Радио Jazz"), QStringLiteral("http://jazz.streamr.ru/jazz-64.mp3"), QString::fromUtf8("Jazz & Blues")});
-    m_stations.append({QString::fromUtf8("Rock FM"), QStringLiteral("http://nashe1.hostingradio.ru/rock-128.mp3"), QString::fromUtf8("Classic Rock")});
-    m_stations.append({QString::fromUtf8("NRJ Energy"), QStringLiteral("http://ic7.101.ru:8000/a1"), QString::fromUtf8("Modern Hits")});
-    m_stations.append({QString::fromUtf8("Монте-Карло"), QStringLiteral("http://montecarlo.hostingradio.ru/montecarlo128.mp3"), QString::fromUtf8("Lounge Pop")});
-    m_stations.append({QString::fromUtf8("Lofi Chillhop"), QStringLiteral("http://stream.zeno.fm/f3wvbbqmdg8uv"), QString::fromUtf8("Lo-Fi Beats")});
+    m_stations.append({QString::fromUtf8("Tengri FM"), QStringLiteral("https://stream.tengrifm.kz/tengrifm.mp3"), QString::fromUtf8("Rock / Modern Pop")});
+    m_stations.append({QString::fromUtf8("Жұлдыз FM"), QStringLiteral("https://stream.zhuldyzfm.kz/zhuldyzfm.mp3"), QString::fromUtf8("Kazakh Pop / Folk")});
+    m_stations.append({QString::fromUtf8("Radio NS"), QStringLiteral("https://online.ns.kz/live"), QString::fromUtf8("Pop / Hits")});
+    m_stations.append({QString::fromUtf8("Gakku FM"), QStringLiteral("https://air.gakku.tv/gakku128.mp3"), QString::fromUtf8("Kazakh Modern Pop")});
+    m_stations.append({QString::fromUtf8("Русское Радио Азия"), QStringLiteral("https://stream.rusradio.kz/rusradio_128"), QString::fromUtf8("Pop Hits")});
+    m_stations.append({QString::fromUtf8("Любимое Радио"), QStringLiteral("https://stream.lr.kz/live"), QString::fromUtf8("Retro / Pop")});
+    m_stations.append({QString::fromUtf8("Монте-Карло"), QStringLiteral("https://montecarlo.hostingradio.ru/montecarlo128.mp3"), QString::fromUtf8("Lounge Pop")});
+    m_stations.append({QString::fromUtf8("Lofi Girl"), QStringLiteral("https://play.streamafrica.net/lofigirl"), QString::fromUtf8("Lo-Fi Beats")});
+    m_stations.append({QString::fromUtf8("Radio Record"), QStringLiteral("https://radiorecord.hostingradio.ru/rr_96.aacp"), QString::fromUtf8("Dance / Club")});
+    m_stations.append({QString::fromUtf8("DFM"), QStringLiteral("https://dfm.hostingradio.ru/dfm96.aacp"), QString::fromUtf8("Dance / Pop")});
+    m_stations.append({QString::fromUtf8("Европа Плюс"), QStringLiteral("https://ep.hostingradio.ru/europaplus128.mp3"), QString::fromUtf8("Top 40")});
+    m_stations.append({QString::fromUtf8("Ретро FM"), QStringLiteral("https://retro.hostingradio.ru/retro128.mp3"), QString::fromUtf8("Retro 80-90s")});
+    m_stations.append({QString::fromUtf8("Relax FM"), QStringLiteral("https://pub0302.101.ru:8443/stream/air/aac/64/200"), QString::fromUtf8("Lounge / Chill")});
+    m_stations.append({QString::fromUtf8("Радио Jazz"), QStringLiteral("https://jazz.hostingradio.ru/jazz-128.mp3"), QString::fromUtf8("Jazz & Blues")});
+    m_stations.append({QString::fromUtf8("Rock FM"), QStringLiteral("https://nashe1.hostingradio.ru/rock-128.mp3"), QString::fromUtf8("Classic Rock")});
+    m_stations.append({QString::fromUtf8("NRJ Energy"), QStringLiteral("https://pub0302.101.ru:8443/stream/air/aac/64/99"), QString::fromUtf8("Modern Hits")});
 
     // Load custom user stations from QSettings
     QSettings settings("AdsKiller", "RadioStations");

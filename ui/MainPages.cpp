@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <QApplication>
+#include <QButtonGroup>
 #include <QCloseEvent>
 #include <QCheckBox>
 #include <QCoreApplication>
@@ -1244,25 +1245,126 @@ void MainWindow::setupPagesDesign()
     {
         ui->label_7->setText(QString::fromUtf8("ДОСТУПНЫЕ СЕРВИСЫ"));
     }
+    if(ui->toplevel_layout_auth_2 && !ui->toplevel_up_2->findChild<QLineEdit *>("serviceSearchEdit"))
+    {
+        ui->toplevel_layout_auth_2->setContentsMargins(14, 4, 14, 4);
+        ui->toplevel_layout_auth_2->setSpacing(10);
+        ui->toplevel_layout_auth_2->addStretch(1);
+
+        QLineEdit *searchEdit = new QLineEdit(ui->toplevel_up_2);
+        searchEdit->setObjectName("serviceSearchEdit");
+        searchEdit->setPlaceholderText(QString::fromUtf8("Поиск сервисов..."));
+        searchEdit->setClearButtonEnabled(true);
+        searchEdit->setFixedWidth(240);
+        searchEdit->setFixedHeight(26);
+        searchEdit->setCursor(Qt::IBeamCursor);
+        searchEdit->addAction(QIcon(":/svg/search"), QLineEdit::LeadingPosition);
+        searchEdit->setStyleSheet(
+            "QLineEdit#serviceSearchEdit {"
+            "   background-color: #070B14;"
+            "   border: 1px solid #1E293B;"
+            "   border-radius: 0px;"
+            "   color: #F8FAFC;"
+            "   font-size: 11px;"
+            "   padding: 2px 8px 2px 4px;"
+            "}"
+            "QLineEdit#serviceSearchEdit:hover { border-color: #334155; background-color: #0F172A; }"
+            "QLineEdit#serviceSearchEdit:focus { border-color: #38BDF8; background-color: #0F172A; }");
+
+        ui->toplevel_layout_auth_2->addWidget(searchEdit, 0, Qt::AlignRight | Qt::AlignVCenter);
+
+        QObject::connect(searchEdit, &QLineEdit::textChanged, this, [this]() {
+            this->applyServiceFilters();
+        });
+    }
+
     if(ui->authInfo)
     {
         ui->authInfo->setVisible(false);
     }
+
     if(ui->sss && ui->serviceContents)
     {
-        for(int i = ui->sss->count() - 1; i >= 0; --i)
+        if(services.isEmpty())
         {
-            QLayoutItem *item = ui->sss->itemAt(i);
-            if(item && item->widget() && item->widget() != ui->serviceContents)
+            if(auto *btn18 = ui->serviceContents->findChild<QPushButton *>("button_RemoveADSMalware_18"))
             {
-                QWidget *w = item->widget();
-                ui->sss->removeWidget(w);
-                w->deleteLater();
+                ui->serviceContents->layout()->removeWidget(btn18);
+                btn18->deleteLater();
+            }
+            if(auto *btn19 = ui->serviceContents->findChild<QPushButton *>("button_RemoveADSMalware_19"))
+            {
+                ui->serviceContents->layout()->removeWidget(btn19);
+                btn19->deleteLater();
             }
         }
 
-        ui->sss->setContentsMargins(14, 6, 14, 16);
-        ui->sss->setAlignment(ui->serviceContents, Qt::AlignHCenter | Qt::AlignTop);
+        while(ui->sss->count() > 0)
+        {
+            QLayoutItem *item = ui->sss->takeAt(0);
+            if(item->widget() && item->widget() != ui->serviceContents)
+            {
+                item->widget()->deleteLater();
+            }
+            delete item;
+        }
+
+        ui->sss->setContentsMargins(14, 8, 14, 16);
+        ui->sss->setSpacing(16);
+
+        // Vertical Quick Filters Panel
+        QFrame *filterPanel = new QFrame(ui->scrollAreaWidgetContents_3);
+        filterPanel->setObjectName("cabinetFilterPanel");
+        filterPanel->setFixedWidth(180);
+
+        QVBoxLayout *fLayout = new QVBoxLayout(filterPanel);
+        fLayout->setContentsMargins(8, 10, 8, 10);
+        fLayout->setSpacing(6);
+
+        QLabel *filterTitle = new QLabel(QString::fromUtf8("ФИЛЬТР СЕРВИСОВ"), filterPanel);
+        filterTitle->setObjectName("cabinetFilterTitle");
+        fLayout->addWidget(filterTitle);
+
+        QButtonGroup *filterGroup = new QButtonGroup(this);
+        filterGroup->setObjectName("serviceFilterGroup");
+        filterGroup->setExclusive(true);
+
+        auto addFilterBtn = [this, filterPanel, fLayout, filterGroup](const QString &mode, const QString &text, const QString &iconPath, bool checked = false)
+        {
+            QPushButton *btn = new QPushButton(text, filterPanel);
+            btn->setObjectName("cabinetFilterBtn");
+            btn->setProperty("filterMode", mode);
+            btn->setCheckable(true);
+            btn->setChecked(checked);
+            btn->setCursor(Qt::PointingHandCursor);
+            btn->setFixedHeight(32);
+            btn->setIcon(QIcon(iconPath));
+            btn->setIconSize(QSize(16, 16));
+
+            filterGroup->addButton(btn);
+            fLayout->addWidget(btn);
+
+            QObject::connect(btn, &QPushButton::toggled, this, [this](bool c) {
+                if(c) this->applyServiceFilters();
+            });
+            return btn;
+        };
+
+        addFilterBtn("all", QString::fromUtf8("Все сервисы"), ":/svg/shuffle", true);
+        addFilterBtn("available", QString::fromUtf8("Доступные"), ":/svg/check-circle");
+        addFilterBtn("unavailable", QString::fromUtf8("Не доступные"), ":/svg/services/unavailable");
+        addFilterBtn("free", QString::fromUtf8("Бесплатные"), ":/svg/tag");
+        addFilterBtn("paid", QString::fromUtf8("Платные"), ":/svg/credit-card");
+
+        fLayout->addStretch(1);
+
+        ui->sss->insertStretch(0, 1);
+        ui->sss->addWidget(ui->serviceContents, 0, Qt::AlignTop);
+        ui->sss->addWidget(filterPanel, 0, Qt::AlignTop);
+        ui->sss->addStretch(1);
+
+        this->createAppleServiceButton();
+        this->applyServiceFilters();
     }
 
     // ==========================================

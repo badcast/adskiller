@@ -63,6 +63,7 @@ class AITranslaterService;
 class RadioPlayerWidget;
 class QToolBar;
 class QEnterEvent;
+class QButtonGroup;
 
 class ServiceTileButton : public QPushButton
 {
@@ -234,6 +235,8 @@ private:
     void setupRadioPlayer();
     void setupPagesDesign();
     void initServiceModules();
+    void applyServiceFilters();
+    void createAppleServiceButton();
     void checkVersion(bool firstRun);
     void willTerminate();
 
