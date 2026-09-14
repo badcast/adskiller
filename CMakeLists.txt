@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         ui/RadioPlayerWidget.h
         ui/RadioPlayerWidget.cpp
         ui/AdbDeviceVisualizer.h
+         ui/AdbDeviceVisualizer.cpp
         ui/about_dialog.h
         ui/about_dialog.cpp
         ui/icontextbutton.cpp
@@ -48,6 +49,10 @@ if(WIN32)
     file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")
     set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/adskiller.rc")
     set(UPDATE_SOURCES ${UPDATE_SOURCES} "${CMAKE_SOURCE_DIR}/update.rc")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/3rdParty/apple")
+    file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/apple" DESTINATION "${CMAKE_BINARY_DIR}")
 endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

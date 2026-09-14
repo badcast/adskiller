@@ -49,6 +49,7 @@
 #include "ApkManagerWidget.h"
 #include "ContactFixerWidget.h"
 #include "AITranslaterWidget.h"
+#include "AppleIpswWidget.h"
 #include <QToolBar>
 #include "RadioPlayerWidget.h"
 
@@ -189,6 +190,12 @@ void MainWindow::setupWindowLayoutAndAnim()
     atWidget->setVisible(false);
     ui->contentLayout->layout()->addWidget(atWidget);
     pages.insert(AITranslaterPage, atWidget);
+
+    AppleIpswWidget *appleWidget = new AppleIpswWidget(this);
+    appleWidget->setObjectName("page_appleipsw");
+    appleWidget->setVisible(false);
+    ui->contentLayout->layout()->addWidget(appleWidget);
+    pages.insert(AppleIpswPage, appleWidget);
 
     ui->tabWidget->deleteLater();
 
@@ -1363,7 +1370,6 @@ void MainWindow::setupPagesDesign()
         ui->sss->addWidget(filterPanel, 0, Qt::AlignTop);
         ui->sss->addStretch(1);
 
-        this->createAppleServiceButton();
         this->applyServiceFilters();
     }
 
@@ -1386,55 +1392,7 @@ void MainWindow::setupPagesDesign()
         ui->scrollArea_2->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     }
 
-    if(ui->label)
-    {
-        ui->label->setText(
-            "<html><head/><body>"
-            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #E2E8F0; padding: 2px;\">"
-            "  <div style=\"margin-bottom: 12px;\">"
-            "    <span style=\"font-size: 16px; font-weight: 700; color: #F8FAFC;\">Подключение устройства (ADB)</span>"
-            "  </div>"
-            "  <p style=\"color: #94A3B8; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.4;\">"
-            "    Для выполнения процедур активируйте <b>Отладку по USB</b> на вашем Android-смартфоне:"
-            "  </p>"
-            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 0px; padding: 9px 12px; margin-bottom: 8px;\">"
-            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">1</span>"
-            "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Режим разработчика</strong>"
-            "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
-            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> (или версию MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
-            "    </p>"
-            "  </div>"
-            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 0px; padding: 9px 12px; margin-bottom: 8px;\">"
-            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">2</span>"
-            "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Включите отладку по USB</strong>"
-            "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
-            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте тумблер <b>Отладка по USB</b> (для Xiaomi также «Установка через USB»)."
-            "    </p>"
-            "  </div>"
-            "  <div style=\"background: #1E293B; border: 1px solid #334155; border-radius: 0px; padding: 9px 12px; margin-bottom: 8px;\">"
-            "    <span style=\"background: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 8px; font-weight: bold; font-size: 11px;\">3</span>"
-            "    <strong style=\"color: #F8FAFC; font-size: 12.5px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
-            "    <p style=\"margin: 4px 0 0 24px; color: #94A3B8; font-size: 11.5px; line-height: 1.4;\">"
-            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; отметьте <b>«Всегда разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
-            "    </p>"
-            "  </div>"
-            "  <div style=\"background: rgba(30, 41, 59, 0.4); border: 1px dashed #334155; border-radius: 0px; padding: 8px 12px; margin-top: 6px;\">"
-            "    <span style=\"color: #38BDF8; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Телефон не определяется?</span>"
-            "    <p style=\"margin: 3px 0 0 0; color: #64748B; font-size: 11px; line-height: 1.35;\">"
-            "      Смените режим подключения USB на <b>«Передача файлов (MTP)»</b> либо подключите кабель в другой USB-порт на ПК."
-            "    </p>"
-            "  </div>"
-            "</div>"
-            "</body></html>");
-    }
-    if(ui->label_3)
-    {
-        ui->label_3->setText("<a style=\"color: #38BDF8; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\"><img src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Подробная пошаговая инструкция с иллюстрациями &rarr;</a>");
-    }
-    if(ui->label_5)
-    {
-        ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
-    }
+    updateDevicePageInstructions(DeviceConnectType::ADB);
 
     if(ui->device_right_group && !adbVisualizer)
     {

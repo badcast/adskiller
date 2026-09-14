@@ -48,7 +48,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libgl-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-cursor0 \
-            libasound2-dev libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+            libasound2-dev libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            autoconf automake libtool pkg-config libplist-dev libimobiledevice-dev libusbmuxd-dev libzip-dev libcurl4-openssl-dev
+
+      - name: Build idevicerestore from official sources (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          bash scripts/build_idevicerestore.sh || true
+
+      - name: Setup idevicerestore (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & scripts/build_idevicerestore_win.ps1
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
@@ -103,6 +115,12 @@ jobs:
             Copy-Item 'build/adb' (Join-Path $deployDir 'adb') -Recurse -Force
           }
 
+          if (Test-Path 'build/apple') {
+            Copy-Item 'build/apple' (Join-Path $deployDir 'apple') -Recurse -Force
+          } elseif (Test-Path '3rdParty/apple') {
+            Copy-Item '3rdParty/apple' (Join-Path $deployDir 'apple') -Recurse -Force
+          }
+
       - name: Upload Artifacts (Linux)
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
@@ -111,7 +129,8 @@ jobs:
           path: |
             build/adskiller
             build/update
-          if-no-files-found: error
+            build/apple/
+          if-no-files-found: warn
 
       - name: Upload Artifacts (Windows)
         if: runner.os == 'Windows'

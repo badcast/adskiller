@@ -14,7 +14,8 @@
 enum DeviceConnectType
 {
     None = 0,
-    ADB = 1
+    ADB = 1,
+    Apple = 2
 };
 
 class CipherAlgoCrypto

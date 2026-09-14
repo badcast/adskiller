@@ -28,6 +28,7 @@
 #include <QJsonValue>
 
 #include "adbfront.h"
+#include "applefront.h"
 #include "extension.h"
 #include "network.h"
 
@@ -49,6 +50,7 @@ constexpr auto IDServiceVIPBuyString = "3a8b33fa-f2b0-4c09-87fe-84c828565731";
 constexpr auto IDServiceAIAgentString = "039bc49d-6bdc-482b-a55e-1b6e8f73ea64";
 constexpr auto IDServiceFileManagerString = "44b598b1-a969-42fa-8192-d59e2522542b";
 constexpr auto IDServiceAITranslaterString = "92bcdf30-c410-4a0b-88f9-516c29f7ee8a";
+constexpr auto IDServiceAppleIpswString = "a9f1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c";
 
 enum PageIndex
 {
@@ -63,6 +65,7 @@ enum PageIndex
     ApkManagerPage,
     ContactFixerPage,
     AITranslaterPage,
+    AppleIpswPage,
 
     LengthPages
 };
@@ -77,6 +80,7 @@ class ContactFixerService;
 class MiDeviceUnlockService;
 class FileManagerService;
 class AITranslaterService;
+class AppleIpswService;
 class ServiceProvider;
 
 class ServiceProvider
@@ -100,6 +104,7 @@ class Service : public QObject
 protected:
     DeviceConnectType mDeviceConnectType;
     AdbDevice mAdbDevice;
+    AppleDevice mAppleDevice;
 
 public:
     QString title;
@@ -111,6 +116,9 @@ public:
     }
 
     virtual void setArgs(const AdbDevice &adbDevice);
+    virtual void setAppleArgs(const AppleDevice &appleDevice);
+    const AppleDevice &appleDevice() const { return mAppleDevice; }
+    const AdbDevice &adbDevice() const { return mAdbDevice; }
 
     virtual QString uuid() const = 0;
     virtual bool isAvailable() const;
@@ -438,4 +446,26 @@ public:
     bool start() override;
     void stop() override;
     QString widgetIconName() override;
+};
+
+class AppleIpswService : public Service
+{
+    Q_OBJECT
+
+public:
+    AppleIpswService(QObject *parent = nullptr);
+    ~AppleIpswService() override;
+
+    QString uuid() const override;
+    PageIndex targetPage() override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    QString widgetIconName() override;
+
+private:
+    bool m_started = false;
+    bool m_finished = false;
 };

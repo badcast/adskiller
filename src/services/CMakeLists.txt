@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(INCL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 file(GLOB SRC_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${INCL_DIR}/*.h)
+list(APPEND SRC_FILES "${CMAKE_SOURCE_DIR}/include/applefront.h")
 
 add_library(services STATIC ${SRC_FILES})
 target_include_directories(services PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)

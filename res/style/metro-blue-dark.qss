@@ -1063,7 +1063,7 @@ ServiceTileButton {
  * 3. Devices Connection Page (page_devices)
  * ========================================== */
 QWidget#page_devices {
-    background-color: #0A0E1A;
+    background-color: #121214;
 }
 
 QScrollArea#scrollArea_2 {
@@ -1075,17 +1075,25 @@ QWidget#scrollAreaWidgetContents_2 {
     background: transparent;
 }
 
+QLabel#label {
+    background: transparent;
+}
+
+QLabel#label_3 {
+    background: transparent;
+}
+
 QFrame#device_left_group {
-    background-color: #0F172A;
-    border: 1px solid #1E293B;
+    background-color: #141416;
+    border: 1px solid #27272A;
     border-radius: 0px;
 }
 
 QLabel#label_5 {
-    background-color: #0B1120;
-    border: 1px solid #1E3A5F;
+    background-color: #18181B;
+    border: 1px solid #0284C7;
     border-radius: 0px;
-    color: #38BDF8;
+    color: #00E5FF;
     font-size: 12.5px;
     font-weight: 600;
     padding: 10px;

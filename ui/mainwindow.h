@@ -27,6 +27,7 @@
 #include "Services.h"
 #include "Snowflake.h"
 #include "adbfront.h"
+#include "applefront.h"
 #include "begin.h"
 #include "extension.h"
 #include "network.h"
@@ -60,6 +61,8 @@ class ContactFixerWidget;
 class ContactFixerService;
 class AITranslaterWidget;
 class AITranslaterService;
+class AppleIpswWidget;
+class AppleIpswService;
 class RadioPlayerWidget;
 class QToolBar;
 class QEnterEvent;
@@ -137,6 +140,8 @@ class MainWindow : public QMainWindow
     friend class ContactFixerService;
     friend class AITranslaterWidget;
     friend class AITranslaterService;
+    friend class AppleIpswWidget;
+    friend class AppleIpswService;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -168,7 +173,9 @@ public:
     bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton);
 
     AdbDevice currentAdbDevice() const;
+    AppleDevice currentAppleDevice() const;
     QWidget *pageWidget(PageIndex page) const;
+    void updateDevicePageInstructions(DeviceConnectType type);
 
     static MainWindow *current;
     AdbDeviceVisualizer *adbVisualizer = nullptr;
@@ -236,7 +243,6 @@ private:
     void setupPagesDesign();
     void initServiceModules();
     void applyServiceFilters();
-    void createAppleServiceButton();
     void checkVersion(bool firstRun);
     void willTerminate();
 
@@ -244,6 +250,7 @@ private:
     {
         bool isAuthed;
         AdbDevice adbDevice;
+        AppleDevice appleDevice;
         DeviceConnectType connectionType;
     } connectPhone;
 };

@@ -22,7 +22,7 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     _CurrentService = std::move(service);
     _CurrentService->stop();
 
-    if(_CurrentService->deviceConnectType() == DeviceConnectType::ADB)
+    if((_CurrentService->deviceConnectType() == DeviceConnectType::ADB || _CurrentService->deviceConnectType() == DeviceConnectType::Apple) && _CurrentService->uuid() != IDServiceAppleIpswString)
     {
         MainWindow::current->connectPhone = {};
         MainWindow::current->connectPhone.connectionType = _CurrentService->deviceConnectType();

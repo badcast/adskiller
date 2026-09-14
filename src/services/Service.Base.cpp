@@ -6,6 +6,11 @@ void Service::setArgs(const AdbDevice &adbDevice)
     mAdbDevice = adbDevice;
 }
 
+void Service::setAppleArgs(const AppleDevice &appleDevice)
+{
+    mAppleDevice = appleDevice;
+}
+
 bool Service::isAvailable() const
 {
     return dynamic_cast<const UnavailableService *const>(this) == nullptr;
@@ -18,7 +23,11 @@ PageIndex Service::targetPage()
 
 bool Service::canStart()
 {
-    return mDeviceConnectType == DeviceConnectType::ADB && !mAdbDevice.isEmpty() || mDeviceConnectType == DeviceConnectType::None;
+    if(mDeviceConnectType == DeviceConnectType::ADB)
+        return !mAdbDevice.isEmpty();
+    if(mDeviceConnectType == DeviceConnectType::Apple)
+        return !mAppleDevice.isEmpty();
+    return mDeviceConnectType == DeviceConnectType::None;
 }
 
 QString Service::widgetIconName()
@@ -74,6 +83,7 @@ std::list<std::shared_ptr<Service>> Service::EnumAppServices(QObject *parent)
 {
     std::list<std::shared_ptr<Service>> services;
     services.emplace_back(std::move(std::make_shared<AdsKillerService>(parent)));
+    services.emplace_back(std::move(std::make_shared<AppleIpswService>(parent)));
     services.emplace_back(std::move(std::make_shared<MyDeviceService>(parent)));
     services.emplace_back(std::move(std::make_shared<StorageCacheCleanService>(parent)));
     services.emplace_back(std::move(std::make_shared<BoostRamService>(parent)));

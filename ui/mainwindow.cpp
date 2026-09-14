@@ -52,6 +52,7 @@
 #include "FileManagerWidget.h"
 #include "ApkManagerWidget.h"
 #include "ContactFixerWidget.h"
+#include "AppleIpswWidget.h"
 #include "AdbDeviceVisualizer.h"
 
 MainWindow *MainWindow::current;
@@ -654,7 +655,6 @@ void MainWindow::initServiceModules()
             button->setToolTip(tip);
             button->setProperty("serviceUuid", remoteService->uuid);
             button->setProperty("isAdsKiller", remoteService->uuid == IDServiceAdsString);
-            button->setProperty("isAppleFirmware", false);
             button->setProperty("isFree", isFree);
             button->setProperty("isPaid", !isFree);
             button->setProperty("isActive", instance->active);
@@ -860,6 +860,82 @@ void MainWindow::initServiceModules()
 
         services << std::move(instance);
     }
+
+    for(auto &remaining : buildServices)
+    {
+        remaining->active = true;
+
+        if(remaining->uuid() != IDServiceAIAgentString && !remaining->ownerWidget)
+        {
+            QString svcName;
+            QString svcDesc;
+
+            if(remaining->uuid() == IDServiceAppleIpswString)
+            {
+                svcName = QString::fromUtf8("Прошивки APPLE");
+                svcDesc = QString::fromUtf8("Официальные прошивки IPSW, восстановление и чистая установка для iPhone/iPad");
+            }
+            else if(!remaining->title.isEmpty())
+            {
+                svcName = remaining->title;
+            }
+            else
+            {
+                svcName = remaining->widgetIconName();
+            }
+
+            remaining->title = svcName;
+
+            QIcon svcIcon(":/svg/services/" + remaining->widgetIconName());
+            if(svcIcon.isNull())
+                svcIcon = QIcon(":/service-icons/" + remaining->widgetIconName());
+            if(svcIcon.isNull())
+                svcIcon = QIcon("res/svg/services/" + remaining->widgetIconName() + ".svg");
+            if(svcIcon.isNull())
+                svcIcon = QIcon("svg/services/" + remaining->widgetIconName() + ".svg");
+            if(svcIcon.isNull())
+                svcIcon = QIcon(":/svg/apple");
+
+            QString ribbonText = (remaining->uuid() == IDServiceAppleIpswString) ? QString::fromUtf8("BETA") : QString::fromUtf8("NEW");
+            ServiceTileButton *button = new ServiceTileButton(
+                svcIcon,
+                svcName,
+                QString::fromUtf8("БЕСПЛАТНО"),
+                ServiceTileButton::Tier::Free,
+                true,
+                ribbonText,
+                ui->serviceContents);
+            button->setFixedSize(260, 82);
+            button->setEnabled(true);
+            button->setCursor(Qt::PointingHandCursor);
+
+            QString tip = svcName;
+            if(!svcDesc.isEmpty())
+                tip += "\n" + svcDesc;
+            tip += QString::fromUtf8("\n\n• Бесплатная услуга (0 кредитов)");
+            button->setToolTip(tip);
+
+            button->setProperty("serviceUuid", remaining->uuid());
+            button->setProperty("isAdsKiller", remaining->uuid() == IDServiceAdsString);
+            button->setProperty("isAppleFirmware", remaining->uuid() == IDServiceAppleIpswString);
+            button->setProperty("isFree", true);
+            button->setProperty("isPaid", false);
+            button->setProperty("isActive", true);
+            button->setProperty("isUnderDev", false);
+            button->setProperty("serviceName", svcName);
+            button->setProperty("serviceDesc", svcDesc);
+
+            std::shared_ptr<Service> serviceRef = remaining;
+            QObject::connect(button, &QPushButton::clicked, this, [this, serviceRef]() {
+                this->runService(serviceRef);
+            });
+
+            remaining->ownerWidget = button;
+        }
+
+        services << std::move(remaining);
+    }
+
     std::sort(std::begin(services), std::end(services), [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) {
         bool lhsIsAds = (lhs && lhs->uuid() == IDServiceAdsString);
         bool rhsIsAds = (rhs && rhs->uuid() == IDServiceAdsString);
@@ -894,87 +970,7 @@ void MainWindow::initServiceModules()
     }
     serverServices.reset();
 
-    createAppleServiceButton();
     applyServiceFilters();
-}
-
-void MainWindow::createAppleServiceButton()
-{
-    if(!ui || !ui->serviceContents || !ui->serviceContents->layout())
-        return;
-
-    if(ui->serviceContents->findChild<ServiceTileButton *>("serviceButton_AppleFirmware"))
-        return;
-
-    QIcon appleIcon(":/svg/services/apple");
-    if(appleIcon.isNull())
-        appleIcon = QIcon(":/service-icons/apple");
-    if(appleIcon.isNull())
-        appleIcon = QIcon("res/svg/services/apple.svg");
-    if(appleIcon.isNull())
-        appleIcon = QIcon("svg/services/apple.svg");
-
-    ServiceTileButton *appleBtn = new ServiceTileButton(
-        appleIcon,
-        QString::fromUtf8("Прошивки APPLE"),
-        QString::fromUtf8("БЕСПЛАТНО"),
-        ServiceTileButton::Tier::Free,
-        true,
-        QString::fromUtf8("SOON"),
-        ui->serviceContents);
-    appleBtn->setObjectName("serviceButton_AppleFirmware");
-    appleBtn->setFixedSize(260, 82);
-    appleBtn->setEnabled(true);
-    appleBtn->setCursor(Qt::PointingHandCursor);
-    appleBtn->setProperty("serviceUuid", "apple_firmware");
-    appleBtn->setProperty("isAppleFirmware", true);
-    appleBtn->setProperty("isAdsKiller", false);
-    appleBtn->setProperty("isFree", true);
-    appleBtn->setProperty("isPaid", false);
-    appleBtn->setProperty("isActive", false);
-    appleBtn->setProperty("isUnderDev", true);
-    appleBtn->setProperty("serviceName", QString::fromUtf8("Прошивки APPLE"));
-    appleBtn->setProperty("serviceDesc", QString::fromUtf8("Прошивка, восстановление и обход блокировок Apple iOS устройств"));
-    appleBtn->setToolTip(QString::fromUtf8("Прошивки APPLE\nПрошивка, восстановление и обход блокировок Apple iOS устройств\n\n• Бесплатная услуга (в разработке)"));
-
-    QObject::connect(
-        appleBtn,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            QMessageBox msgBox(this);
-            msgBox.setWindowTitle(QString::fromUtf8("Прошивки APPLE"));
-            msgBox.setIcon(QMessageBox::Information);
-            msgBox.setText(QString::fromUtf8(
-                "<h3>Сервис «Прошивки APPLE»</h3>"
-                "<p>Данный модуль в настоящее время находится <b>в активной разработке</b>.</p>"
-                "<p style='color: #94A3B8; font-size: 11px;'>Функционал загрузки официальных и кастомных IPSW-прошивок, восстановления из режима DFU/Recovery, а также инструменты работы с устройствами Apple iOS будут доступны в ближайшем обновлении.</p>"));
-
-            QPushButton *btnOk = msgBox.addButton(QString::fromUtf8("Понятно"), QMessageBox::AcceptRole);
-            btnOk->setCursor(Qt::PointingHandCursor);
-            btnOk->setStyleSheet(
-                "QPushButton {"
-                "   background-color: #0284C7;"
-                "   color: #FFFFFF;"
-                "   font-size: 12px;"
-                "   font-weight: bold;"
-                "   border: 1px solid #0284C7;"
-                "   border-radius: 0px;"
-                "   padding: 6px 20px;"
-                "   min-width: 100px;"
-                "}"
-                "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
-                "QPushButton:pressed { background-color: #075985; }");
-            msgBox.setDefaultButton(btnOk);
-            msgBox.exec();
-        });
-
-    if(auto *grid = qobject_cast<QGridLayout *>(ui->serviceContents->layout()))
-    {
-        int count = ui->serviceContents->findChildren<ServiceTileButton *>(QString(), Qt::FindDirectChildrenOnly).size();
-        grid->addWidget(appleBtn, count / 2, count % 2);
-    }
 }
 
 void MainWindow::applyServiceFilters()
@@ -1011,15 +1007,16 @@ void MainWindow::applyServiceFilters()
             return 1; // 1. Удаление рекламы (Ads Killer) ALWAYS FIRST
         }
         if(btn->property("isAppleFirmware").toBool()
-           || btn->objectName() == "serviceButton_AppleFirmware"
-           || btn->title().contains(QString::fromUtf8("APPLE"), Qt::CaseInsensitive))
+           || btn->property("serviceUuid").toString() == IDServiceAppleIpswString
+           || btn->title().contains(QString::fromUtf8("APPLE"), Qt::CaseInsensitive)
+           || btn->title().contains(QString::fromUtf8("Apple"), Qt::CaseInsensitive))
         {
             return 2; // 2. Прошивки APPLE ALWAYS SECOND
         }
         return 10;
     };
 
-    // Sort order: Ads Killer ALWAYS 1st, Apple Firmware ALWAYS 2nd, then active services, then rest
+    // Sort order: Ads Killer ALWAYS 1st, then active services, then rest
     std::sort(allButtons.begin(), allButtons.end(), [getServicePriority](ServiceTileButton *a, ServiceTileButton *b) {
         int prioA = getServicePriority(a);
         int prioB = getServicePriority(b);
@@ -1250,6 +1247,139 @@ void MainWindow::willTerminate()
     QMessageBox::critical(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::Ok);
 }
 
+void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
+{
+    if(!ui || !ui->label)
+        return;
+
+    if(type == DeviceConnectType::Apple)
+    {
+        if(s_adbVisualizer)
+        {
+            s_adbVisualizer->setIsApple(true);
+        }
+
+        ui->label->setText(
+            "<html><head/><body>"
+            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #FFFFFF; padding: 2px;\">"
+            "  <div style=\"margin-bottom: 12px;\">"
+            "    <span style=\"font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px;\">Подключение устройства Apple (iOS / iPadOS)</span>"
+            "  </div>"
+            "  <p style=\"color: #A1A1AA; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.45;\">"
+            "    Для выполнения процедур прошивки и обслуживания подключите ваш iPhone или iPad к ПК:"
+            "  </p>"
+            "  <div style=\"background-color: #18181B; border: 1px solid #27272A; border-radius: 0px; padding: 10px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background-color: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 7px; font-weight: bold; font-size: 11px;\">1</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Кабель Lightning или Type-C</strong>"
+            "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
+            "      Подключите iPhone / iPad к компьютеру оригинальным или сертифицированным кабелем. Рекомендуется подключать напрямую в разъём системного блока без переходников и хабов."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #18181B; border: 1px solid #27272A; border-radius: 0px; padding: 10px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background-color: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 7px; font-weight: bold; font-size: 11px;\">2</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Доверие этому компьютеру</strong>"
+            "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
+            "      Разблокируйте экран устройства. В появившемся диалоговом окне нажмите <b>«Доверять»</b> и введите код-пароль разблокировки на экране iPhone/iPad."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #18181B; border: 1px solid #27272A; border-radius: 0px; padding: 10px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background-color: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 7px; font-weight: bold; font-size: 11px;\">3</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режимы Recovery и DFU (при необходимости)</strong>"
+            "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
+            "      Если устройство заблокировано или зависло на яблоке, переведите его в режим <b>Recovery Mode</b> или <b>DFU</b>. Приложение автоматически определит его и откроет прошивку."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px 12px; margin-top: 6px;\">"
+            "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Устройство не определяется?</span>"
+            "    <p style=\"margin: 4px 0 0 0; color: #71717A; font-size: 11px; line-height: 1.4;\">"
+            "      Проверьте исправность кабеля и разъёма USB или удерживайте комбинацию кнопок для входа в Recovery Mode."
+            "    </p>"
+            "  </div>"
+            "</div>"
+            "</body></html>");
+
+        if(ui->label_3)
+        {
+            ui->label_3->setText("<a style=\"color: #00E5FF; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://support.apple.com/ru-ru/109043\"><img src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Справка Apple: Как ввести iPhone/iPad в режим восстановления (Recovery) &rarr;</a>");
+        }
+        if(ui->label_5)
+        {
+            ui->label_5->setStyleSheet(
+                "background-color: #18181B;"
+                "border: 1px solid #0284C7;"
+                "border-radius: 0px;"
+                "color: #00E5FF;"
+                "font-size: 12.5px;"
+                "font-weight: 600;"
+                "padding: 10px;");
+            ui->label_5->setText(QString::fromUtf8("Поиск подключенного устройства Apple (Lightning / Type-C)..."));
+        }
+    }
+    else
+    {
+        if(s_adbVisualizer)
+        {
+            s_adbVisualizer->setIsApple(false);
+        }
+
+        ui->label->setText(
+            "<html><head/><body>"
+            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #FFFFFF; padding: 2px;\">"
+            "  <div style=\"margin-bottom: 12px;\">"
+            "    <span style=\"font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px;\">Подключение устройства Android (ADB)</span>"
+            "  </div>"
+            "  <p style=\"color: #A1A1AA; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.45;\">"
+            "    Для выполнения процедур активируйте <b>Отладку по USB</b> на вашем Android-смартфоне:"
+            "  </p>"
+            "  <div style=\"background-color: #18181B; border: 1px solid #27272A; border-radius: 0px; padding: 10px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background-color: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 7px; font-weight: bold; font-size: 11px;\">1</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режим разработчика</strong>"
+            "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
+            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> (или версию MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #18181B; border: 1px solid #27272A; border-radius: 0px; padding: 10px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background-color: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 7px; font-weight: bold; font-size: 11px;\">2</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Включите отладку по USB</strong>"
+            "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
+            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте тумблер <b>Отладка по USB</b> (для Xiaomi также «Установка через USB»)."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #18181B; border: 1px solid #27272A; border-radius: 0px; padding: 10px 12px; margin-bottom: 8px;\">"
+            "    <span style=\"background-color: #0284C7; color: #FFFFFF; border-radius: 0px; padding: 2px 7px; font-weight: bold; font-size: 11px;\">3</span>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
+            "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
+            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; отметьте <b>«Всегда разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
+            "    </p>"
+            "  </div>"
+            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px 12px; margin-top: 6px;\">"
+            "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Телефон не определяется?</span>"
+            "    <p style=\"margin: 4px 0 0 0; color: #71717A; font-size: 11px; line-height: 1.4;\">"
+            "      Смените режим подключения USB на <b>«Передача файлов (MTP)»</b> либо подключите кабель в другой USB-порт на ПК."
+            "    </p>"
+            "  </div>"
+            "</div>"
+            "</body></html>");
+
+        if(ui->label_3)
+        {
+            ui->label_3->setText("<a style=\"color: #00E5FF; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\"><img src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Подробная пошаговая инструкция с иллюстрациями &rarr;</a>");
+        }
+        if(ui->label_5)
+        {
+            ui->label_5->setStyleSheet(
+                "background-color: #18181B;"
+                "border: 1px solid #0284C7;"
+                "border-radius: 0px;"
+                "color: #00E5FF;"
+                "font-size: 12.5px;"
+                "font-weight: 600;"
+                "padding: 10px;");
+            ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
+        }
+    }
+}
+
 void MainWindow::showPage(PageIndex pageNum)
 {
     if(curPage != LoaderPage)
@@ -1275,7 +1405,10 @@ void MainWindow::showPage(PageIndex pageNum)
         switch(pageNum)
         {
             case DevicesPage:
-                ui->label_8->setText("Подключение Android-устройства (ADB)");
+                if(connectPhone.connectionType == DeviceConnectType::Apple)
+                    ui->label_8->setText(QString::fromUtf8("Подключение Apple-устройства (Lightning / Type-C)"));
+                else
+                    ui->label_8->setText("Подключение Android-устройства (ADB)");
                 break;
             case LongInfoPage:
                 ui->label_8->setText(ServiceProvider::currentService() ? ServiceProvider::currentService()->title : "Выполнение процедуры");
@@ -1297,6 +1430,9 @@ void MainWindow::showPage(PageIndex pageNum)
                 break;
             case AITranslaterPage:
                 ui->label_8->setText("ИИ-Переводчик документов");
+                break;
+            case AppleIpswPage:
+                ui->label_8->setText("Прошивка и восстановление Apple iOS");
                 break;
             default:
                 ui->label_8->setText("Назад в личный кабинет");
@@ -1328,6 +1464,9 @@ void MainWindow::pageShownPreStart(int page)
 
             ServiceProvider::currentService()->stop();
 
+            // Set custom instructions and text background according to connection type
+            updateDevicePageInstructions(connectPhone.connectionType);
+
             // Unset
             deviceSelectSwitched = false;
             deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
@@ -1347,86 +1486,175 @@ void MainWindow::pageShownPreStart(int page)
                     auto *vis = s_adbVisualizer;
                     if(!deviceSelectSwitched)
                     {
-                        QList<AdbDevice> devices = Adb::getDevices();
-                        if(devices.isEmpty())
+                        if(connectPhone.connectionType == DeviceConnectType::Apple)
                         {
-                            if(vis && vis->status() != UNKNOWN)
+                            QList<AppleDevice> devices = Apple::getDevices();
+                            if(devices.isEmpty())
                             {
-                                vis->setStatus(UNKNOWN);
-                                ui->label_5->setStyleSheet(
-                                    "background-color: #0B1120;"
-                                    "border: 1px solid #1E3A5F;"
-                                    "border-radius: 0px;"
-                                    "color: #38BDF8;"
-                                    "font-size: 12.5px;"
-                                    "font-weight: 600;"
-                                    "padding: 10px;");
-                                ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
+                                if(vis && vis->status() != UNKNOWN)
+                                {
+                                    vis->setStatus(UNKNOWN);
+                                    ui->label_5->setStyleSheet(
+                                        "background-color: #18181B;"
+                                        "border: 1px solid #0284C7;"
+                                        "border-radius: 0px;"
+                                        "color: #00E5FF;"
+                                        "font-size: 12.5px;"
+                                        "font-weight: 600;"
+                                        "padding: 10px;");
+                                    ui->label_5->setText(QString::fromUtf8("Поиск подключенного устройства Apple (Lightning / Type-C)..."));
+                                }
+                            }
+                            else
+                            {
+                                bool hasAuth = false;
+                                bool hasUnauth = false;
+                                AppleDevice authDev;
+                                AppleDevice unauthDev;
+
+                                for(const AppleDevice &device : std::as_const(devices))
+                                {
+                                    AppleConStatus status = Apple::deviceStatus(device);
+                                    if(status == APPLE_DEVICE || status == APPLE_RECOVERY || status == APPLE_DFU)
+                                    {
+                                        hasAuth = true;
+                                        authDev = device;
+                                        break;
+                                    }
+                                    else if(status == APPLE_UNAUTH)
+                                    {
+                                        hasUnauth = true;
+                                        unauthDev = device;
+                                    }
+                                }
+
+                                if(hasAuth)
+                                {
+                                    connectPhone.isAuthed = true;
+                                    connectPhone.appleDevice = authDev;
+                                    ServiceProvider::currentService()->setAppleArgs(authDev);
+
+                                    QString devName = !authDev.displayName.isEmpty() ? authDev.displayName : (!authDev.marketingName.isEmpty() ? authDev.marketingName : authDev.devId);
+                                    QString modeStr = authDev.mode == AppleDeviceMode::Recovery ? QString("Recovery Mode") : (authDev.mode == AppleDeviceMode::DFU ? QString("DFU Mode") : (!authDev.productVersion.isEmpty() ? QString("iOS %1").arg(authDev.productVersion) : QString("Normal Mode")));
+                                    QString devSub = QString("Apple • %1").arg(modeStr);
+
+                                    if(vis && vis->status() != DEVICE)
+                                    {
+                                        vis->setStatus(DEVICE, devName, devSub);
+                                    }
+                                    ui->label_5->setStyleSheet(
+                                        "background-color: #0D261A;"
+                                        "border: 1px solid #059669;"
+                                        "border-radius: 0px;"
+                                        "color: #34D399;"
+                                        "font-size: 12.5px;"
+                                        "font-weight: 600;"
+                                        "padding: 10px;");
+                                    ui->label_5->setText(QString::fromUtf8("Устройство Apple подключено: %1! Запуск...").arg(devName));
+                                }
+                                else if(hasUnauth)
+                                {
+                                    QString devName = !unauthDev.displayName.isEmpty() ? unauthDev.displayName : (!unauthDev.marketingName.isEmpty() ? unauthDev.marketingName : unauthDev.devId);
+
+                                    if(vis && vis->status() != UNAUTH)
+                                    {
+                                        vis->setStatus(UNAUTH, devName);
+                                    }
+                                    ui->label_5->setStyleSheet(
+                                        "background-color: #241A08;"
+                                        "border: 1px solid #D97706;"
+                                        "border-radius: 0px;"
+                                        "color: #FBBF24;"
+                                        "font-size: 12.5px;"
+                                        "font-weight: 600;"
+                                        "padding: 10px;");
+                                    ui->label_5->setText(QString::fromUtf8("Нажмите «Доверять этому компьютеру» на экране iPhone/iPad"));
+                                }
                             }
                         }
                         else
                         {
-                            bool hasAuth = false;
-                            bool hasUnauth = false;
-                            AdbDevice authDev;
-                            AdbDevice unauthDev;
-
-                            for(const AdbDevice &device : std::as_const(devices))
+                            QList<AdbDevice> devices = Adb::getDevices();
+                            if(devices.isEmpty())
                             {
-                                AdbConStatus status = Adb::deviceStatus(device.devId);
-                                if(status == DEVICE)
+                                if(vis && vis->status() != UNKNOWN)
                                 {
-                                    hasAuth = true;
-                                    authDev = device;
-                                    break;
-                                }
-                                else if(status == UNAUTH)
-                                {
-                                    hasUnauth = true;
-                                    unauthDev = device;
+                                    vis->setStatus(UNKNOWN);
+                                    ui->label_5->setStyleSheet(
+                                        "background-color: #18181B;"
+                                        "border: 1px solid #0284C7;"
+                                        "border-radius: 0px;"
+                                        "color: #00E5FF;"
+                                        "font-size: 12.5px;"
+                                        "font-weight: 600;"
+                                        "padding: 10px;");
+                                    ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
                                 }
                             }
-
-                            if(hasAuth)
+                            else
                             {
-                                connectPhone.isAuthed = true;
-                                connectPhone.adbDevice = authDev;
-                                ServiceProvider::currentService()->setArgs(authDev);
+                                bool hasAuth = false;
+                                bool hasUnauth = false;
+                                AdbDevice authDev;
+                                AdbDevice unauthDev;
 
-                                QString devName = !authDev.marketingName.isEmpty() ? authDev.marketingName : (!authDev.displayName.isEmpty() ? authDev.displayName : (!authDev.model.isEmpty() ? authDev.model : authDev.devId));
-                                QString devSub = !authDev.vendor.isEmpty() ? (authDev.vendor + " (" + authDev.model + ")") : authDev.devId;
-
-                                if(vis && vis->status() != DEVICE)
+                                for(const AdbDevice &device : std::as_const(devices))
                                 {
-                                    vis->setStatus(DEVICE, devName, devSub);
+                                    AdbConStatus status = Adb::deviceStatus(device.devId);
+                                    if(status == DEVICE)
+                                    {
+                                        hasAuth = true;
+                                        authDev = device;
+                                        break;
+                                    }
+                                    else if(status == UNAUTH)
+                                    {
+                                        hasUnauth = true;
+                                        unauthDev = device;
+                                    }
                                 }
-                                ui->label_5->setStyleSheet(
-                                    "background-color: #064E3B;"
-                                    "border: 1px solid #059669;"
-                                    "border-radius: 0px;"
-                                    "color: #34D399;"
-                                    "font-size: 12.5px;"
-                                    "font-weight: 600;"
-                                    "padding: 10px;");
-                                ui->label_5->setText(QString::fromUtf8("Устройство подключено: %1! Запуск...").arg(devName));
-                            }
-                            else if(hasUnauth)
-                            {
-                                QString devName = !unauthDev.marketingName.isEmpty() ? unauthDev.marketingName : (!unauthDev.displayName.isEmpty() ? unauthDev.displayName : (!unauthDev.model.isEmpty() ? unauthDev.model : unauthDev.devId));
 
-                                if(vis && vis->status() != UNAUTH)
+                                if(hasAuth)
                                 {
-                                    vis->setStatus(UNAUTH, devName);
+                                    connectPhone.isAuthed = true;
+                                    connectPhone.adbDevice = authDev;
+                                    ServiceProvider::currentService()->setArgs(authDev);
+
+                                    QString devName = !authDev.marketingName.isEmpty() ? authDev.marketingName : (!authDev.displayName.isEmpty() ? authDev.displayName : (!authDev.model.isEmpty() ? authDev.model : authDev.devId));
+                                    QString devSub = !authDev.vendor.isEmpty() ? (authDev.vendor + " (" + authDev.model + ")") : authDev.devId;
+
+                                    if(vis && vis->status() != DEVICE)
+                                    {
+                                        vis->setStatus(DEVICE, devName, devSub);
+                                    }
+                                    ui->label_5->setStyleSheet(
+                                        "background-color: #0D261A;"
+                                        "border: 1px solid #059669;"
+                                        "border-radius: 0px;"
+                                        "color: #34D399;"
+                                        "font-size: 12.5px;"
+                                        "font-weight: 600;"
+                                        "padding: 10px;");
+                                    ui->label_5->setText(QString::fromUtf8("Устройство подключено: %1! Запуск...").arg(devName));
                                 }
-                                ui->label_5->setStyleSheet(
-                                    "background-color: #451A03;"
-                                    "border: 1px solid #D97706;"
-                                    "border-radius: 0px;"
-                                    "color: #FBBF24;"
-                                    "font-size: 12.5px;"
-                                    "font-weight: 600;"
-                                    "padding: 10px;");
-                                ui->label_5->setText(QString::fromUtf8("Нажмите «Разрешить отладку по USB» на экране телефона"));
+                                else if(hasUnauth)
+                                {
+                                    QString devName = !unauthDev.marketingName.isEmpty() ? unauthDev.marketingName : (!unauthDev.displayName.isEmpty() ? unauthDev.displayName : (!unauthDev.model.isEmpty() ? unauthDev.model : unauthDev.devId));
+
+                                    if(vis && vis->status() != UNAUTH)
+                                    {
+                                        vis->setStatus(UNAUTH, devName);
+                                    }
+                                    ui->label_5->setStyleSheet(
+                                        "background-color: #241A08;"
+                                        "border: 1px solid #D97706;"
+                                        "border-radius: 0px;"
+                                        "color: #FBBF24;"
+                                        "font-size: 12.5px;"
+                                        "font-weight: 600;"
+                                        "padding: 10px;");
+                                    ui->label_5->setText(QString::fromUtf8("Нажмите «Разрешить отладку по USB» на экране телефона"));
+                                }
                             }
                         }
                     }
@@ -1525,6 +1753,22 @@ void MainWindow::pageShownPreStart(int page)
                 {
                     if(!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
+                }
+            }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
+            break;
+        }
+        case AppleIpswPage:
+        {
+            if(pages.contains(AppleIpswPage))
+            {
+                auto *widget = static_cast<AppleIpswWidget *>(pages.value(AppleIpswPage));
+                if(widget)
+                {
+                    if(!connectPhone.appleDevice.isEmpty())
+                        widget->setDevice(connectPhone.appleDevice);
+                    widget->refreshDevice();
                 }
             }
             if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
@@ -1817,6 +2061,11 @@ bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balance
 AdbDevice MainWindow::currentAdbDevice() const
 {
     return connectPhone.adbDevice;
+}
+
+AppleDevice MainWindow::currentAppleDevice() const
+{
+    return connectPhone.appleDevice;
 }
 
 QWidget *MainWindow::pageWidget(PageIndex page) const
