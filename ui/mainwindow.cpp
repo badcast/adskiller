@@ -7,6 +7,7 @@
 
 #include <QButtonGroup>
 #include <QCloseEvent>
+#include <QResizeEvent>
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QEnterEvent>
 #endif
@@ -214,7 +215,10 @@ ServiceTileButton::ServiceTileButton(const QIcon &icon,
 {
     setIcon(icon);
     setAttribute(Qt::WA_Hover, true);
-    setFixedSize(260, 82);
+    setFixedHeight(70);
+    setMinimumWidth(260);
+    setMaximumWidth(360);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     setCursor(tier == Tier::Disabled ? Qt::ForbiddenCursor : Qt::PointingHandCursor);
     setStyleSheet("ServiceTileButton { background: transparent; border: none; outline: none; padding: 0px; margin: 0px; }");
 }
@@ -252,12 +256,12 @@ void ServiceTileButton::setRibbonText(const QString &text)
 
 QSize ServiceTileButton::sizeHint() const
 {
-    return QSize(260, 82);
+    return QSize(280, 70);
 }
 
 QSize ServiceTileButton::minimumSizeHint() const
 {
-    return QSize(220, 76);
+    return QSize(260, 70);
 }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -456,8 +460,8 @@ void ServiceTileButton::paintEvent(QPaintEvent *)
         painter.drawText(pillRect, Qt::AlignCenter, elidedBadge);
     }
 
-    // 6. Top-Right Red Ribbon Banner with "NEW" Inscription
-    if(m_showRibbon && enabled)
+    // 6. Top-Right Red Ribbon Banner with "NEW" or "BETA" Inscription
+    if(m_showRibbon)
     {
         const int ribbonW = 58;
         const int ribbonH = 21;
@@ -619,15 +623,18 @@ void MainWindow::initServiceModules()
             if(svcIcon.isNull())
                 svcIcon = QIcon(":/service-icons/" + instance->widgetIconName());
 
+            bool isApple = (remoteService->uuid == IDServiceAppleIpswString || instance->uuid() == IDServiceAppleIpswString);
+            QString ribbonText = isApple ? QString::fromUtf8("BETA") : QString::fromUtf8("NEW");
+            bool showRibbon = isApple || instance->active;
+
             ServiceTileButton *button = new ServiceTileButton(
                 svcIcon,
                 remoteService->name,
                 badgeText,
                 tier,
-                instance->active, // Show red ribbon "NEW" for active services
-                QString::fromUtf8("NEW"),
+                showRibbon,
+                ribbonText,
                 ui->serviceContents);
-            button->setFixedSize(260, 82);
             button->setEnabled(instance->active);
 
             QString tip = remoteService->name;
@@ -905,7 +912,6 @@ void MainWindow::initServiceModules()
                 true,
                 ribbonText,
                 ui->serviceContents);
-            button->setFixedSize(260, 82);
             button->setEnabled(true);
             button->setCursor(Qt::PointingHandCursor);
 
@@ -975,11 +981,7 @@ void MainWindow::initServiceModules()
 
 void MainWindow::applyServiceFilters()
 {
-    if(!ui || !ui->serviceContents || !ui->serviceContents->layout())
-        return;
-
-    QGridLayout *grid = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
-    if(!grid)
+    if(!ui || !ui->serviceContents)
         return;
 
     // Search query from top-right search box
@@ -1077,15 +1079,73 @@ void MainWindow::applyServiceFilters()
         }
 
         bool visible = matchesFilter && matchesSearch;
-        grid->removeWidget(btn);
         btn->setVisible(visible);
-
         if(visible)
-        {
-            grid->addWidget(btn, visibleIndex / 2, visibleIndex % 2);
             ++visibleIndex;
+    }
+
+    // --- Responsive column calculation based on scroll area viewport ---
+    int availW = 0;
+    if(ui->scrollArea_3 && ui->scrollArea_3->viewport())
+        availW = ui->scrollArea_3->viewport()->width();
+    if(availW <= 100 && ui->page_cabinet)
+        availW = ui->page_cabinet->width();
+    if(availW <= 100)
+        availW = this->width() - 80;
+
+    // Filter panel is 180px fixed width + 16px spacing in sss + 28px margins + scrollbar
+    const int sideSpace = 180 + 16 + 28 + 24;
+    const int tileAreaW = qMax(280, availW - sideSpace);
+
+    // Tiles have target width 280, spacing 12px, strictly 70px height
+    const int tileTargetW = 280;
+    const int tileSpacing = 12;
+    int cols = qMax(1, (tileAreaW + tileSpacing) / (tileTargetW + tileSpacing));
+    cols = qBound(1, cols, 6);
+
+    QGridLayout *grid = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
+    if(!grid)
+    {
+        grid = new QGridLayout(ui->serviceContents);
+    }
+    grid->setSpacing(tileSpacing);
+    grid->setContentsMargins(4, 4, 4, 4);
+
+    // Clear existing layout items from the grid (preserves child widgets)
+    while(grid->count() > 0)
+    {
+        grid->takeAt(0);
+    }
+
+    // Place visible buttons in rows and columns
+    int row = 0;
+    int col = 0;
+    int visibleIndexFinal = 0;
+    for(ServiceTileButton *btn : allButtons)
+    {
+        if(btn->isVisible())
+        {
+            grid->addWidget(btn, row, col, Qt::AlignTop);
+            ++visibleIndexFinal;
+            col++;
+            if(col >= cols)
+            {
+                col = 0;
+                row++;
+            }
         }
     }
+
+    // Configure column stretches so columns expand evenly
+    for(int c = 0; c < cols; ++c)
+        grid->setColumnStretch(c, 1);
+    for(int c = cols; c < cols + 6; ++c)
+        grid->setColumnStretch(c, 0);
+
+    // Top-align all tile rows; bottom stretch row keeps tiles firmly at 70px height
+    for(int r = 0; r <= row; ++r)
+        grid->setRowStretch(r, 0);
+    grid->setRowStretch(row + 1, 1);
 
     // Update counts on filter buttons
     if(QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
@@ -1108,7 +1168,7 @@ void MainWindow::applyServiceFilters()
 
     // Empty state message
     QLabel *emptyLbl = ui->serviceContents->findChild<QLabel *>("servicesEmptyLabel");
-    if(visibleIndex == 0)
+    if(visibleIndexFinal == 0)
     {
         if(!emptyLbl)
         {
@@ -1117,10 +1177,10 @@ void MainWindow::applyServiceFilters()
             emptyLbl->setAlignment(Qt::AlignCenter);
             emptyLbl->setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600; padding: 40px; background: transparent;");
         }
-        emptyLbl->setText(query.isEmpty() 
+        emptyLbl->setText(query.isEmpty()
             ? QString::fromUtf8("В данной категории нет сервисов")
             : QString::fromUtf8("По запросу «%1» ничего не найдено").arg(query));
-        grid->addWidget(emptyLbl, 0, 0, 1, 2, Qt::AlignCenter);
+        grid->addWidget(emptyLbl, 0, 0, 1, cols, Qt::AlignCenter);
         emptyLbl->show();
     }
     else if(emptyLbl)
@@ -2302,6 +2362,14 @@ void MainWindow::showEvent(QShowEvent *event)
     if(snows)
         delayUICall(50, [this]() { snows->start(); });
     event->accept();
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    // Recompute service tile column count when window is resized
+    if(ui && ui->serviceContents && !services.isEmpty())
+        applyServiceFilters();
 }
 
 void MainWindow::setTheme(ThemeScheme theme)

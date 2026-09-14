@@ -193,6 +193,7 @@ private slots:
     void slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok);
     void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
     void on_butShowPass_clicked();
 

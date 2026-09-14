@@ -1316,13 +1316,20 @@ void MainWindow::setupPagesDesign()
             delete item;
         }
 
+        ui->scrollArea_3->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
+        ui->scrollArea_3->setWidgetResizable(true);
+        ui->scrollAreaWidgetContents_3->setMinimumWidth(0);
+        ui->serviceContents->setMinimumWidth(0);
+
         ui->sss->setContentsMargins(14, 8, 14, 16);
         ui->sss->setSpacing(16);
+        ui->serviceContents->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
         // Vertical Quick Filters Panel
         QFrame *filterPanel = new QFrame(ui->scrollAreaWidgetContents_3);
         filterPanel->setObjectName("cabinetFilterPanel");
         filterPanel->setFixedWidth(180);
+        filterPanel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 
         QVBoxLayout *fLayout = new QVBoxLayout(filterPanel);
         fLayout->setContentsMargins(8, 10, 8, 10);
@@ -1340,6 +1347,7 @@ void MainWindow::setupPagesDesign()
         {
             QPushButton *btn = new QPushButton(text, filterPanel);
             btn->setObjectName("cabinetFilterBtn");
+            btn->setAccessibleName(QString("filterBtn_%1").arg(mode));
             btn->setProperty("filterMode", mode);
             btn->setCheckable(true);
             btn->setChecked(checked);
@@ -1365,10 +1373,9 @@ void MainWindow::setupPagesDesign()
 
         fLayout->addStretch(1);
 
-        ui->sss->insertStretch(0, 1);
-        ui->sss->addWidget(ui->serviceContents, 0, Qt::AlignTop);
-        ui->sss->addWidget(filterPanel, 0, Qt::AlignTop);
-        ui->sss->addStretch(1);
+        // serviceContents takes all horizontal space (stretch=1); filterPanel stays fixed on the right (stretch=0)
+        ui->sss->addWidget(ui->serviceContents, 1, Qt::AlignTop);
+        ui->sss->addWidget(filterPanel, 0, Qt::AlignTop | Qt::AlignRight);
 
         this->applyServiceFilters();
     }

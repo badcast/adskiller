@@ -37,6 +37,7 @@ void RadioPlayerWidget::populateDefaultStations()
 {
     m_stations.clear();
     // Казахстан
+    m_stations.append({QString::fromUtf8("Казахское Радио Туркестан 101.0 FM"), QStringLiteral("https://radio-streams.kaztrk.kz/qazradio/qazradio/icecast.audio"), QString::fromUtf8("Kazakh Pop / Folk")});
     m_stations.append({QString::fromUtf8("Tengri FM"), QStringLiteral("https://stream.tengrifm.kz/tengrifm.mp3"), QString::fromUtf8("Rock / Modern Pop")});
     m_stations.append({QString::fromUtf8("Жұлдыз FM"), QStringLiteral("https://stream.zhuldyzfm.kz/zhuldyzfm.mp3"), QString::fromUtf8("Kazakh Pop / Folk")});
     m_stations.append({QString::fromUtf8("Radio NS"), QStringLiteral("https://online.ns.kz/live"), QString::fromUtf8("Pop / Hits")});

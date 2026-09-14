@@ -92,6 +92,17 @@ void AboutDialog::setupUi()
         "    border: 1px solid #1E293B;"
         "    border-radius: 0px;"
         "}"
+        "QLabel#aboutAppIcon {"
+        "    background-color: #070A12;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
+        "    padding: 4px;"
+        "}"
+        "QLabel#aboutHeroBanner {"
+        "    background-color: #070A12;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
+        "}"
         "QTextEdit#licenseTextEdit {"
         "    font-family: \"Cascadia Code\", \"Consolas\", \"Courier New\", monospace;"
         "    font-size: 11px;"
@@ -181,21 +192,21 @@ QWidget *AboutDialog::createHeaderWidget()
     headerLayout->setContentsMargins(14, 10, 14, 10);
     headerLayout->setSpacing(14);
 
-    // App Logo / Banner Icon with banner-low.png
+    // App Logo / Banner Icon - ADSKILLER icon
     auto *logoLabel = new QLabel(headerFrame);
-    logoLabel->setObjectName(QStringLiteral("aboutBannerIcon"));
-    logoLabel->setFixedSize(62, 62);
+    logoLabel->setObjectName(QStringLiteral("aboutAppIcon"));
+    logoLabel->setFixedSize(80, 80);
     logoLabel->setAlignment(Qt::AlignCenter);
 
-    QPixmap bannerPix(QStringLiteral(":/resources/banner-low"));
-    if(bannerPix.isNull())
-        bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
-    if(bannerPix.isNull())
-        bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
+    QPixmap appIconPix(QStringLiteral(":/resources/icon-hello"));
+    if(appIconPix.isNull())
+        appIconPix = QPixmap(QStringLiteral(":/resources/app-logo"));
+    if(appIconPix.isNull())
+        appIconPix = QPixmap(QStringLiteral("res/icon-hello.png"));
 
-    if(!bannerPix.isNull())
+    if(!appIconPix.isNull())
     {
-        logoLabel->setPixmap(bannerPix.scaled(58, 58, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        logoLabel->setPixmap(appIconPix.scaled(76, 76, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
     headerLayout->addWidget(logoLabel);
 
@@ -270,8 +281,8 @@ QWidget *AboutDialog::createAboutTab()
     heroLayout->setSpacing(14);
 
     auto *heroBannerLabel = new QLabel(heroCard);
-    heroBannerLabel->setObjectName(QStringLiteral("aboutBannerIcon"));
-    heroBannerLabel->setFixedSize(54, 70);
+    heroBannerLabel->setObjectName(QStringLiteral("aboutHeroBanner"));
+    heroBannerLabel->setFixedSize(70, 100);
     heroBannerLabel->setAlignment(Qt::AlignCenter);
 
     QPixmap bannerPix(QStringLiteral(":/resources/banner-low"));
@@ -281,7 +292,7 @@ QWidget *AboutDialog::createAboutTab()
         bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
     if(!bannerPix.isNull())
     {
-        heroBannerLabel->setPixmap(bannerPix.scaled(50, 66, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        heroBannerLabel->setPixmap(bannerPix.scaled(66, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
     heroLayout->addWidget(heroBannerLabel);
 

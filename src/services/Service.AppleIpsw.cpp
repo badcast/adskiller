@@ -424,13 +424,17 @@ void AppleIpswWidget::setupUi()
     modeBtnLayout->setSpacing(4);
 
     m_btnModeSimple = new QPushButton(QString::fromUtf8("⚡ ОБЫЧНЫЙ РЕЖИМ (Мастер)"), modeBtnBox);
+    m_btnModeSimple->setObjectName(QStringLiteral("ipswBtnModeSimple"));
     m_btnModeSimple->setCursor(Qt::PointingHandCursor);
+    m_btnModeSimple->setAttribute(Qt::WA_Hover, true);
     m_btnModeSimple->setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #00E5FF; padding: 6px 14px; font-size: 12px;");
     connect(m_btnModeSimple, &QPushButton::clicked, this, [this]() { onSwitchMode(0); });
     modeBtnLayout->addWidget(m_btnModeSimple);
 
     m_btnModeAdvanced = new QPushButton(QString::fromUtf8("🛠 РАСШИРЕННЫЙ (Эксперт)"), modeBtnBox);
+    m_btnModeAdvanced->setObjectName(QStringLiteral("ipswBtnModeAdvanced"));
     m_btnModeAdvanced->setCursor(Qt::PointingHandCursor);
+    m_btnModeAdvanced->setAttribute(Qt::WA_Hover, true);
     m_btnModeAdvanced->setStyleSheet("background-color: #27272A; color: #A1A1AA; font-weight: 600; border: 1px solid #3F3F46; padding: 6px 14px; font-size: 12px;");
     connect(m_btnModeAdvanced, &QPushButton::clicked, this, [this]() { onSwitchMode(1); });
     modeBtnLayout->addWidget(m_btnModeAdvanced);
@@ -439,6 +443,9 @@ void AppleIpswWidget::setupUi()
     headerLayout->addStretch();
 
     m_btnRefreshDevice = new QPushButton(QString::fromUtf8("🔄 Статус USB"), this);
+    m_btnRefreshDevice->setObjectName(QStringLiteral("ipswBtnRefreshDevice"));
+    m_btnRefreshDevice->setAttribute(Qt::WA_Hover, true);
+    m_btnRefreshDevice->setCursor(Qt::PointingHandCursor);
     connect(m_btnRefreshDevice, &QPushButton::clicked, this, &AppleIpswWidget::scanDevices);
     headerLayout->addWidget(m_btnRefreshDevice);
 
@@ -554,11 +561,17 @@ void AppleIpswWidget::setupSimpleWizardPage()
     s1Bar->addStretch();
 
     QPushButton *btnManualRefresh = new QPushButton(QString::fromUtf8("🔄 Проверить подключение USB"), step1);
+    btnManualRefresh->setObjectName(QStringLiteral("ipswBtnManualRefreshUSB"));
+    btnManualRefresh->setAttribute(Qt::WA_Hover, true);
+    btnManualRefresh->setCursor(Qt::PointingHandCursor);
     btnManualRefresh->setStyleSheet("background-color: #27272A; border: 1px solid #3F3F46; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(btnManualRefresh, &QPushButton::clicked, this, &AppleIpswWidget::scanDevices);
     s1Bar->addWidget(btnManualRefresh);
 
     m_btnSimpleStep1Next = new QPushButton(QString::fromUtf8("Продолжить (Автонастройки) ➔"), step1);
+    m_btnSimpleStep1Next->setObjectName(QStringLiteral("ipswBtnStep1Next"));
+    m_btnSimpleStep1Next->setAttribute(Qt::WA_Hover, true);
+    m_btnSimpleStep1Next->setCursor(Qt::PointingHandCursor);
     m_btnSimpleStep1Next->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 20px; font-weight: bold; font-size: 13px; } QPushButton:disabled { background-color: #1A1A1D; color: #52525B; border-color: #27272A; }");
     m_btnSimpleStep1Next->setEnabled(false);
     connect(m_btnSimpleStep1Next, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleStep1Next);
@@ -635,6 +648,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
 
     QHBoxLayout *s2Bar = new QHBoxLayout();
     m_btnSimpleStep2Back = new QPushButton(QString::fromUtf8("⬅ Назад (к устройству)"), step2);
+    m_btnSimpleStep2Back->setObjectName(QStringLiteral("ipswBtnStep2Back"));
+    m_btnSimpleStep2Back->setAttribute(Qt::WA_Hover, true);
+    m_btnSimpleStep2Back->setCursor(Qt::PointingHandCursor);
     m_btnSimpleStep2Back->setStyleSheet("background-color: #27272A; border: 1px solid #3F3F46; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(m_btnSimpleStep2Back, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleStep2Back);
     s2Bar->addWidget(m_btnSimpleStep2Back);
@@ -642,6 +658,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
     s2Bar->addStretch();
 
     m_btnSimpleStep2Start = new QPushButton(QString::fromUtf8("⚡ Начать восстановление ➔"), step2);
+    m_btnSimpleStep2Start->setObjectName(QStringLiteral("ipswBtnStep2Start"));
+    m_btnSimpleStep2Start->setAttribute(Qt::WA_Hover, true);
+    m_btnSimpleStep2Start->setCursor(Qt::PointingHandCursor);
     m_btnSimpleStep2Start->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 24px; font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; }");
     connect(m_btnSimpleStep2Start, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleStep2Start);
     s2Bar->addWidget(m_btnSimpleStep2Start);
@@ -667,10 +686,12 @@ void AppleIpswWidget::setupSimpleWizardPage()
     s3CardLayout->addWidget(s3Title);
 
     m_lblSimpleProgressStatus = new QLabel(QString::fromUtf8("Инициализация процесса..."), s3Card);
+    m_lblSimpleProgressStatus->setObjectName(QStringLiteral("ipswLblSimpleProgressStatus"));
     m_lblSimpleProgressStatus->setStyleSheet("color: #00E5FF; font-size: 13px; font-weight: bold;");
     s3CardLayout->addWidget(m_lblSimpleProgressStatus);
 
     m_simpleProgressBar = new QProgressBar(s3Card);
+    m_simpleProgressBar->setObjectName(QStringLiteral("ipswSimpleProgressBar"));
     m_simpleProgressBar->setMinimumHeight(24);
     m_simpleProgressBar->setValue(0);
     s3CardLayout->addWidget(m_simpleProgressBar);
@@ -700,6 +721,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
     QHBoxLayout *s3Bar = new QHBoxLayout();
 
     m_btnSimpleCancel = new QPushButton(QString::fromUtf8("⏹ Отмена операции"), step3);
+    m_btnSimpleCancel->setObjectName(QStringLiteral("ipswBtnSimpleCancel"));
+    m_btnSimpleCancel->setAttribute(Qt::WA_Hover, true);
+    m_btnSimpleCancel->setCursor(Qt::PointingHandCursor);
     m_btnSimpleCancel->setStyleSheet("background-color: #991B1B; border: 1px solid #EF4444; color: #FFFFFF; padding: 8px 16px; font-weight: bold;");
     connect(m_btnSimpleCancel, &QPushButton::clicked, this, &AppleIpswWidget::onCancelFlashClicked);
     s3Bar->addWidget(m_btnSimpleCancel);
@@ -707,6 +731,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
     s3Bar->addStretch();
 
     m_btnSimpleRetry = new QPushButton(QString::fromUtf8("🔄 Повторить попытку"), step3);
+    m_btnSimpleRetry->setObjectName(QStringLiteral("ipswBtnSimpleRetry"));
+    m_btnSimpleRetry->setAttribute(Qt::WA_Hover, true);
+    m_btnSimpleRetry->setCursor(Qt::PointingHandCursor);
     m_btnSimpleRetry->setStyleSheet("background-color: #047857; border: 1px solid #10B981; color: #FFFFFF; padding: 8px 24px; font-weight: bold; font-size: 13px;");
     m_btnSimpleRetry->setVisible(false);
     connect(m_btnSimpleRetry, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleRetry);
@@ -759,28 +786,37 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     modelRow->addWidget(lblModel);
 
     m_comboDeviceModel = new QComboBox(tabCatalog);
+    m_comboDeviceModel->setObjectName(QStringLiteral("ipswComboDeviceModel"));
     m_comboDeviceModel->setMinimumWidth(300);
     connect(m_comboDeviceModel, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppleIpswWidget::onModelSelected);
     modelRow->addWidget(m_comboDeviceModel);
 
     m_btnRefreshCatalog = new QPushButton(QString::fromUtf8("🔄 Обновить список"), tabCatalog);
+    m_btnRefreshCatalog->setObjectName(QStringLiteral("ipswBtnRefreshCatalog"));
+    m_btnRefreshCatalog->setAttribute(Qt::WA_Hover, true);
+    m_btnRefreshCatalog->setCursor(Qt::PointingHandCursor);
     connect(m_btnRefreshCatalog, &QPushButton::clicked, this, &AppleIpswWidget::onRefreshCatalogClicked);
     modelRow->addWidget(m_btnRefreshCatalog);
 
     modelRow->addStretch();
 
     m_btnSelectLocal = new QPushButton(QString::fromUtf8("📂 Выбрать локальный .ipsw..."), tabCatalog);
-    m_btnSelectLocal->setStyleSheet("background-color: #27272A; border: 1px solid #00E5FF; color: #00E5FF;");
+    m_btnSelectLocal->setObjectName(QStringLiteral("ipswBtnSelectLocal"));
+    m_btnSelectLocal->setAttribute(Qt::WA_Hover, true);
+    m_btnSelectLocal->setCursor(Qt::PointingHandCursor);
+    m_btnSelectLocal->setStyleSheet("QPushButton { background-color: #27272A; border: 1px solid #00E5FF; color: #00E5FF; padding: 6px 14px; font-weight: 600; } QPushButton:hover { background-color: #00E5FF; color: #000000; }");
     connect(m_btnSelectLocal, &QPushButton::clicked, this, &AppleIpswWidget::onSelectLocalIpswClicked);
     modelRow->addWidget(m_btnSelectLocal);
 
     tcLayout->addLayout(modelRow);
 
     m_lblSelectedIpsw = new QLabel(QString::fromUtf8("Файл прошивки не выбран. Выберите версию из таблицы ниже или укажите локальный .ipsw"), tabCatalog);
+    m_lblSelectedIpsw->setObjectName(QStringLiteral("ipswLblSelectedIpsw"));
     m_lblSelectedIpsw->setStyleSheet("color: #00E5FF; font-size: 11.5px; padding: 4px; background: rgba(0,229,255,0.05); border: 1px dashed #0284C7;");
     tcLayout->addWidget(m_lblSelectedIpsw);
 
     m_firmwareTable = new QTableWidget(tabCatalog);
+    m_firmwareTable->setObjectName(QStringLiteral("ipswFirmwareCatalogTable"));
     m_firmwareTable->setColumnCount(5);
     m_firmwareTable->setHorizontalHeaderLabels({
         QString::fromUtf8("Версия iOS"),
@@ -814,7 +850,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     sbLayout->setContentsMargins(8, 4, 8, 4);
 
     m_lblStoragePath = new QLabel(storageBar);
+    m_lblStoragePath->setObjectName(QStringLiteral("ipswLblStoragePath"));
     m_lblDiskSpace = new QLabel(storageBar);
+    m_lblDiskSpace->setObjectName(QStringLiteral("ipswLblDiskSpace"));
     m_lblDiskSpace->setStyleSheet("color: #00E5FF; font-weight: bold;");
 
     sbLayout->addWidget(m_lblStoragePath);
@@ -823,20 +861,30 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     sbLayout->addSpacing(12);
 
     m_btnOpenFolder = new QPushButton(QString::fromUtf8("📂 Открыть папку"), storageBar);
+    m_btnOpenFolder->setObjectName(QStringLiteral("ipswBtnOpenFolder"));
+    m_btnOpenFolder->setAttribute(Qt::WA_Hover, true);
+    m_btnOpenFolder->setCursor(Qt::PointingHandCursor);
     connect(m_btnOpenFolder, &QPushButton::clicked, this, &AppleIpswWidget::onOpenFolderClicked);
     sbLayout->addWidget(m_btnOpenFolder);
 
     m_btnChangeFolder = new QPushButton(QString::fromUtf8("Изменить папку..."), storageBar);
+    m_btnChangeFolder->setObjectName(QStringLiteral("ipswBtnChangeFolder"));
+    m_btnChangeFolder->setAttribute(Qt::WA_Hover, true);
+    m_btnChangeFolder->setCursor(Qt::PointingHandCursor);
     connect(m_btnChangeFolder, &QPushButton::clicked, this, &AppleIpswWidget::onChangeFolderClicked);
     sbLayout->addWidget(m_btnChangeFolder);
 
     m_btnRescanLocal = new QPushButton(QString::fromUtf8("🔄 Обновить"), storageBar);
+    m_btnRescanLocal->setObjectName(QStringLiteral("ipswBtnRescanLocal"));
+    m_btnRescanLocal->setAttribute(Qt::WA_Hover, true);
+    m_btnRescanLocal->setCursor(Qt::PointingHandCursor);
     connect(m_btnRescanLocal, &QPushButton::clicked, this, &AppleIpswWidget::scanLocalFirmwares);
     sbLayout->addWidget(m_btnRescanLocal);
 
     tsLayout->addWidget(storageBar);
 
     m_localFirmwareTable = new QTableWidget(tabStorage);
+    m_localFirmwareTable->setObjectName(QStringLiteral("ipswLocalFirmwareTable"));
     m_localFirmwareTable->setColumnCount(5);
     m_localFirmwareTable->setHorizontalHeaderLabels({
         QString::fromUtf8("Имя файла"),
@@ -862,9 +910,13 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     QHBoxLayout *a1Bar = new QHBoxLayout();
     a1Bar->addStretch();
     m_btnAdvStep1Next = new QPushButton(QString::fromUtf8("Далее: Режим сброса и настройки ➔"), advStep1);
-    m_btnAdvStep1Next->setStyleSheet("background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 20px; font-weight: bold; font-size: 13px;");
+    m_btnAdvStep1Next->setObjectName(QStringLiteral("ipswBtnAdvStep1Next"));
+    m_btnAdvStep1Next->setAttribute(Qt::WA_Hover, true);
+    m_btnAdvStep1Next->setCursor(Qt::PointingHandCursor);
+    m_btnAdvStep1Next->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 20px; font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; }");
     connect(m_btnAdvStep1Next, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep1Next);
     a1Bar->addWidget(m_btnAdvStep1Next);
+
     a1Layout->addLayout(a1Bar);
     a1Layout->addStretch(1);
 
@@ -893,6 +945,7 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     advModeBoxLayout->setSpacing(12);
 
     m_rbRetainData = new QRadioButton(QString::fromUtf8("<b>Обновление (сохранить пользовательские данные) [-u Update]</b>"), advModeBox);
+    m_rbRetainData->setObjectName(QStringLiteral("ipswRbRetainData"));
     m_rbRetainData->setChecked(true);
     m_flashModeGroup->addButton(m_rbRetainData, 0);
     QLabel *retDesc = new QLabel(QString::fromUtf8("Флаг <code>-u</code>: Сохраняет разделы с пользовательскими данными (/private/var). Обновляет ядро, RootFS и Baseband."), advModeBox);
@@ -901,6 +954,7 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     advModeBoxLayout->addWidget(retDesc);
 
     m_rbCleanRestore = new QRadioButton(QString::fromUtf8("<b>Чистая прошивка со сбросом (стереть все данные) [-e Erase]</b>"), advModeBox);
+    m_rbCleanRestore->setObjectName(QStringLiteral("ipswRbCleanRestore"));
     m_flashModeGroup->addButton(m_rbCleanRestore, 1);
     QLabel *eraseDesc = new QLabel(QString::fromUtf8("Флаг <code>-e</code>: Полная переразметка NAND накопителя, уничтожение файловой системы. Рекомендуется при повреждении системы."), advModeBox);
     eraseDesc->setStyleSheet("color: #F87171; font-size: 11.5px; margin-left: 24px;");
@@ -931,6 +985,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
 
     QHBoxLayout *a2Bar = new QHBoxLayout();
     m_btnAdvStep2Back = new QPushButton(QString::fromUtf8("⬅ Назад к каталогу"), advStep2);
+    m_btnAdvStep2Back->setObjectName(QStringLiteral("ipswBtnAdvStep2Back"));
+    m_btnAdvStep2Back->setAttribute(Qt::WA_Hover, true);
+    m_btnAdvStep2Back->setCursor(Qt::PointingHandCursor);
     m_btnAdvStep2Back->setStyleSheet("background-color: #27272A; border: 1px solid #3F3F46; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(m_btnAdvStep2Back, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep2Back);
     a2Bar->addWidget(m_btnAdvStep2Back);
@@ -938,9 +995,13 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     a2Bar->addStretch();
 
     m_btnAdvStep2Next = new QPushButton(QString::fromUtf8("Далее: Подключение USB и запуск ➔"), advStep2);
-    m_btnAdvStep2Next->setStyleSheet("background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 20px; font-weight: bold; font-size: 13px;");
+    m_btnAdvStep2Next->setObjectName(QStringLiteral("ipswBtnAdvStep2Next"));
+    m_btnAdvStep2Next->setAttribute(Qt::WA_Hover, true);
+    m_btnAdvStep2Next->setCursor(Qt::PointingHandCursor);
+    m_btnAdvStep2Next->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 20px; font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; }");
     connect(m_btnAdvStep2Next, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep2Next);
     a2Bar->addWidget(m_btnAdvStep2Next);
+
 
     a2Layout->addLayout(a2Bar);
     a2Layout->addStretch(1);
@@ -1008,14 +1069,23 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     cardLayout->addWidget(actionsTitle);
 
     m_btnExitRecovery = new QPushButton(QString::fromUtf8("Выйти из Recovery"), m_deviceCardWidget);
+    m_btnExitRecovery->setObjectName(QStringLiteral("ipswBtnExitRecovery"));
+    m_btnExitRecovery->setAttribute(Qt::WA_Hover, true);
+    m_btnExitRecovery->setCursor(Qt::PointingHandCursor);
     connect(m_btnExitRecovery, &QPushButton::clicked, this, &AppleIpswWidget::onExitRecoveryClicked);
     cardLayout->addWidget(m_btnExitRecovery);
 
     m_btnEnterRecovery = new QPushButton(QString::fromUtf8("Войти в Recovery"), m_deviceCardWidget);
+    m_btnEnterRecovery->setObjectName(QStringLiteral("ipswBtnEnterRecovery"));
+    m_btnEnterRecovery->setAttribute(Qt::WA_Hover, true);
+    m_btnEnterRecovery->setCursor(Qt::PointingHandCursor);
     connect(m_btnEnterRecovery, &QPushButton::clicked, this, &AppleIpswWidget::onEnterRecoveryClicked);
     cardLayout->addWidget(m_btnEnterRecovery);
 
     m_btnReboot = new QPushButton(QString::fromUtf8("Перезагрузить устройство"), m_deviceCardWidget);
+    m_btnReboot->setObjectName(QStringLiteral("ipswBtnReboot"));
+    m_btnReboot->setAttribute(Qt::WA_Hover, true);
+    m_btnReboot->setCursor(Qt::PointingHandCursor);
     connect(m_btnReboot, &QPushButton::clicked, this, &AppleIpswWidget::onRebootClicked);
     cardLayout->addWidget(m_btnReboot);
 
@@ -1033,33 +1103,47 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     ebLayout->setSpacing(8);
 
     m_lblProgressStatus = new QLabel(QString::fromUtf8("Готов к работе"), execBox);
+    m_lblProgressStatus->setObjectName(QStringLiteral("ipswLblProgressStatus"));
     m_lblProgressStatus->setStyleSheet("color: #A1A1AA; font-size: 12px;");
     ebLayout->addWidget(m_lblProgressStatus);
 
     m_progressBar = new QProgressBar(execBox);
+    m_progressBar->setObjectName(QStringLiteral("ipswAdvProgressBar"));
     m_progressBar->setValue(0);
     ebLayout->addWidget(m_progressBar);
 
     QHBoxLayout *ctrlBtns = new QHBoxLayout();
 
     m_btnAdvStep3Back = new QPushButton(QString::fromUtf8("⬅ Назад"), execBox);
+    m_btnAdvStep3Back->setObjectName(QStringLiteral("ipswBtnAdvStep3Back"));
+    m_btnAdvStep3Back->setAttribute(Qt::WA_Hover, true);
+    m_btnAdvStep3Back->setCursor(Qt::PointingHandCursor);
     m_btnAdvStep3Back->setStyleSheet("background-color: #27272A; border: 1px solid #3F3F46; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(m_btnAdvStep3Back, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep2Back);
     ctrlBtns->addWidget(m_btnAdvStep3Back);
 
     m_btnStartFlash = new QPushButton(QString::fromUtf8("⚡ НАЧАТЬ ПРОШИВКУ"), execBox);
+    m_btnStartFlash->setObjectName(QStringLiteral("ipswBtnStartFlash"));
+    m_btnStartFlash->setAttribute(Qt::WA_Hover, true);
+    m_btnStartFlash->setCursor(Qt::PointingHandCursor);
     m_btnStartFlash->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #00E5FF; color: #FFFFFF; padding: 8px 24px; font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; } QPushButton:disabled { background-color: #27272A; color: #52525B; border-color: #3F3F46; }");
     connect(m_btnStartFlash, &QPushButton::clicked, this, &AppleIpswWidget::onStartFlashClicked);
     ctrlBtns->addWidget(m_btnStartFlash, 2);
 
     m_btnCancelFlash = new QPushButton(QString::fromUtf8("⏹ Отмена"), execBox);
+    m_btnCancelFlash->setObjectName(QStringLiteral("ipswBtnCancelFlash"));
+    m_btnCancelFlash->setAttribute(Qt::WA_Hover, true);
+    m_btnCancelFlash->setCursor(Qt::PointingHandCursor);
     m_btnCancelFlash->setStyleSheet("QPushButton { background-color: #991B1B; border: 1px solid #EF4444; color: #FFFFFF; padding: 8px 16px; font-weight: bold; } QPushButton:disabled { background-color: #27272A; color: #52525B; border-color: #3F3F46; }");
     m_btnCancelFlash->setEnabled(false);
     connect(m_btnCancelFlash, &QPushButton::clicked, this, &AppleIpswWidget::onCancelFlashClicked);
     ctrlBtns->addWidget(m_btnCancelFlash);
 
     m_btnAdvRetry = new QPushButton(QString::fromUtf8("🔄 Повторить"), execBox);
-    m_btnAdvRetry->setStyleSheet("background-color: #047857; border: 1px solid #10B981; color: #FFFFFF; padding: 8px 16px; font-weight: bold;");
+    m_btnAdvRetry->setObjectName(QStringLiteral("ipswBtnAdvRetry"));
+    m_btnAdvRetry->setAttribute(Qt::WA_Hover, true);
+    m_btnAdvRetry->setCursor(Qt::PointingHandCursor);
+    m_btnAdvRetry->setStyleSheet("QPushButton { background-color: #047857; border: 1px solid #10B981; color: #FFFFFF; padding: 8px 16px; font-weight: bold; } QPushButton:hover { background-color: #059669; }");
     m_btnAdvRetry->setVisible(false);
     connect(m_btnAdvRetry, &QPushButton::clicked, this, &AppleIpswWidget::onAdvRetry);
     ctrlBtns->addWidget(m_btnAdvRetry);
@@ -1068,8 +1152,10 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     rLayout->addWidget(execBox);
 
     m_logTerminal = new QTextEdit(rightWidget);
+    m_logTerminal->setObjectName(QStringLiteral("ipswLogTerminal"));
     m_logTerminal->setReadOnly(true);
     rLayout->addWidget(m_logTerminal, 1);
+
 
     splitter->addWidget(rightWidget);
     splitter->setStretchFactor(0, 1);
