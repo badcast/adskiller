@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 
+#include <QApplication>
 #include <QCloseEvent>
 #include <QCheckBox>
 #include <QCoreApplication>
@@ -733,6 +734,8 @@ void MainWindow::setupPagesDesign()
         QString styleSheetContent = QString::fromUtf8(styleFile.readAll());
         styleFile.close();
         this->setStyleSheet(styleSheetContent);
+        if(qApp)
+            qApp->setStyleSheet(styleSheetContent);
     }
 
     if(ui->contentLayout)
@@ -981,76 +984,164 @@ void MainWindow::setupPagesDesign()
         ui->authpageUpdate->setCursor(Qt::PointingHandCursor);
         ui->authpageUpdate->setToolTip(QString::fromUtf8("Обновить данные кабинета и доступность сервисов"));
     }
-    if(ui->frame_7)
-    {
-        ui->frame_7->setMaximumSize(16777215, 16777215);
-        ui->frame_7->setMinimumHeight(140);
+    if(ui->frame_5)
+        ui->frame_5->hide();
+    if(ui->frame_6)
+        ui->frame_6->hide();
 
-        if(!ui->frame_7->layout() && ui->frame_6 && ui->authedMainWin && ui->frame_5)
-        {
-            QHBoxLayout *f7Layout = new QHBoxLayout(ui->frame_7);
-            f7Layout->setContentsMargins(16, 12, 16, 12);
-            f7Layout->setSpacing(14);
-            f7Layout->addWidget(ui->frame_6, 1);
-            f7Layout->addWidget(ui->authedMainWin, 1);
-            f7Layout->addWidget(ui->frame_5, 1);
-        }
+    if(ui->horizontalLayout)
+    {
+        ui->horizontalLayout->setContentsMargins(14, 8, 14, 4);
+        ui->horizontalLayout->setSpacing(0);
+        if(ui->horizontalSpacer_8)
+            ui->horizontalSpacer_8->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
+        if(ui->horizontalSpacer_9)
+            ui->horizontalSpacer_9->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
+
     if(ui->authedMainWin)
     {
-        ui->authedMainWin->setMaximumSize(16777215, 16777215);
-        ui->authedMainWin->setMinimumHeight(110);
         if(ui->authedMainWin->layout())
         {
-            ui->authedMainWin->layout()->setContentsMargins(10, 8, 10, 8);
-            ui->authedMainWin->layout()->setSpacing(4);
             if(ui->frame_3)
-                ui->authedMainWin->layout()->setAlignment(ui->frame_3, Qt::AlignCenter);
+                ui->authedMainWin->layout()->removeWidget(ui->frame_3);
             if(ui->labelLoginAuthed)
-                ui->authedMainWin->layout()->setAlignment(ui->labelLoginAuthed, Qt::AlignCenter);
+                ui->authedMainWin->layout()->removeWidget(ui->labelLoginAuthed);
+            delete ui->authedMainWin->layout();
         }
-    }
-    if(ui->frame_3)
-    {
-        ui->frame_3->setFixedSize(58, 58);
-    }
-    if(ui->labelLoginAuthed)
-    {
-        QFont font = ui->labelLoginAuthed->font();
-        font.setUnderline(false);
-        ui->labelLoginAuthed->setFont(font);
-        ui->labelLoginAuthed->setAlignment(Qt::AlignCenter);
-    }
-    if(ui->frame_6)
-    {
-        ui->frame_6->setMaximumSize(16777215, 16777215);
-        ui->frame_6->setMinimumHeight(110);
 
-        if(!ui->frame_6->findChild<QPushButton *>("buttonAddVip"))
+        ui->authedMainWin->setMaximumSize(16777215, 16777215);
+        ui->authedMainWin->setMinimumHeight(0);
+
+        QHBoxLayout *authLayout = new QHBoxLayout(ui->authedMainWin);
+        authLayout->setContentsMargins(0, 0, 0, 0);
+        authLayout->setSpacing(10);
+
+        if(ui->frame_3)
         {
-            if(ui->frame_6->layout())
+            ui->frame_3->setFixedSize(36, 36);
+            authLayout->addWidget(ui->frame_3, 0, Qt::AlignVCenter);
+        }
+
+        QVBoxLayout *userCol = new QVBoxLayout();
+        userCol->setContentsMargins(0, 0, 0, 0);
+        userCol->setSpacing(1);
+
+        if(ui->labelLoginAuthed)
+        {
+            QFont font = ui->labelLoginAuthed->font();
+            font.setPointSize(12);
+            font.setBold(true);
+            font.setUnderline(false);
+            ui->labelLoginAuthed->setFont(font);
+            ui->labelLoginAuthed->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+            ui->labelLoginAuthed->setStyleSheet("color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
+            userCol->addWidget(ui->labelLoginAuthed);
+        }
+
+        QLabel *roleLbl = ui->authedMainWin->findChild<QLabel *>("cabinetRoleBadge");
+        if(!roleLbl)
+        {
+            roleLbl = new QLabel(QString::fromUtf8("Основной аккаунт"), ui->authedMainWin);
+            roleLbl->setObjectName("cabinetRoleBadge");
+            roleLbl->setStyleSheet("color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: transparent; border: none;");
+        }
+        userCol->addWidget(roleLbl);
+
+        authLayout->addLayout(userCol);
+
+        QLabel *onlineBadge = ui->authedMainWin->findChild<QLabel *>("cabinetOnlineBadge");
+        if(!onlineBadge)
+        {
+            onlineBadge = new QLabel(QString::fromUtf8("● В СЕТИ"), ui->authedMainWin);
+            onlineBadge->setObjectName("cabinetOnlineBadge");
+            onlineBadge->setStyleSheet("color: #34D399; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 0px;");
+        }
+        authLayout->addWidget(onlineBadge, 0, Qt::AlignVCenter);
+    }
+
+    if(ui->frame_7)
+    {
+        if(!ui->frame_7->layout())
+        {
+            ui->frame_7->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            ui->frame_7->setMinimumHeight(0);
+
+            QVBoxLayout *f7MainLayout = new QVBoxLayout(ui->frame_7);
+            f7MainLayout->setContentsMargins(12, 8, 12, 8);
+            f7MainLayout->setSpacing(6);
+
+            // Top Row: Avatar & Name on the FAR LEFT (TURN LEFT), VIP action button on Right
+            QHBoxLayout *topRow = new QHBoxLayout();
+            topRow->setContentsMargins(0, 0, 0, 0);
+            topRow->setSpacing(8);
+
+            if(ui->authedMainWin)
             {
-                if(ui->labelVipDays)
-                    ui->frame_6->layout()->removeWidget(ui->labelVipDays);
-                delete ui->frame_6->layout();
+                topRow->addWidget(ui->authedMainWin, 0, Qt::AlignLeft | Qt::AlignVCenter);
             }
 
-            QVBoxLayout *f6Layout = new QVBoxLayout(ui->frame_6);
-            f6Layout->setContentsMargins(10, 8, 10, 8);
-            f6Layout->setSpacing(6);
-            f6Layout->setAlignment(Qt::AlignCenter);
+            topRow->addStretch(1);
 
-            if(ui->labelVipDays)
-            {
-                f6Layout->addWidget(ui->labelVipDays, 0, Qt::AlignCenter);
-            }
+            // Кнопка "Добавить кредиты"
+            QPushButton *btnAddCredits = new QPushButton(QString::fromUtf8("+ Добавить кредиты"), ui->frame_7);
+            btnAddCredits->setObjectName("buttonAddCredits");
+            btnAddCredits->setCursor(Qt::PointingHandCursor);
+            btnAddCredits->setFixedHeight(26);
+            btnAddCredits->setToolTip(QString::fromUtf8("Пополнить баланс кредитов через администратора"));
+            topRow->addWidget(btnAddCredits, 0, Qt::AlignRight | Qt::AlignVCenter);
 
-            QPushButton *btnAddVip = new QPushButton(QString::fromUtf8("+ Добавить"), ui->frame_6);
+            QObject::connect(
+                btnAddCredits,
+                &QPushButton::clicked,
+                this,
+                [this]()
+                {
+                    QMessageBox msgBox(this);
+                    msgBox.setWindowTitle(QString::fromUtf8("Пополнение баланса"));
+                    msgBox.setIcon(QMessageBox::Information);
+                    msgBox.setText(QString::fromUtf8(
+                        "<h3>Пополнение кредитов</h3>"
+                        "<p>Для пополнения баланса кредитов напишите администратору программы в WhatsApp.</p>"
+                        "<p style='color: #94A3B8; font-size: 11px;'>Нажмите кнопку <b>«Написать в WhatsApp»</b>, чтобы перейти к диалогу с администратором.</p>"));
+
+                    QPushButton *btnWa = msgBox.addButton(QString::fromUtf8("Написать в WhatsApp"), QMessageBox::ActionRole);
+                    btnWa->setIcon(QIcon(":/svg/message-circle"));
+                    btnWa->setIconSize(QSize(16, 16));
+                    btnWa->setCursor(Qt::PointingHandCursor);
+                    btnWa->setStyleSheet(
+                        "QPushButton {"
+                        "   background-color: #059669;"
+                        "   color: #FFFFFF;"
+                        "   font-size: 12px;"
+                        "   font-weight: bold;"
+                        "   border: 1px solid #059669;"
+                        "   border-radius: 0px;"
+                        "   padding: 6px 16px;"
+                        "   min-width: 160px;"
+                        "}"
+                        "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
+                        "QPushButton:pressed { background-color: #047857; }");
+
+                    QPushButton *btnClose = msgBox.addButton(QString::fromUtf8("Закрыть"), QMessageBox::RejectRole);
+                    btnClose->setCursor(Qt::PointingHandCursor);
+                    msgBox.setDefaultButton(btnWa);
+
+                    msgBox.exec();
+
+                    if(msgBox.clickedButton() == btnWa)
+                    {
+                        this->on_action_WhatsApp_triggered();
+                    }
+                });
+
+            // Кнопка "Добавить VIP"
+            QPushButton *btnAddVip = new QPushButton(QString::fromUtf8("+ Добавить VIP"), ui->frame_7);
             btnAddVip->setObjectName("buttonAddVip");
             btnAddVip->setCursor(Qt::PointingHandCursor);
-            btnAddVip->setFixedSize(115, 25);
-            btnAddVip->setToolTip(QString::fromUtf8("Пополнить или продлить VIP-статус"));
-            f6Layout->addWidget(btnAddVip, 0, Qt::AlignCenter);
+            btnAddVip->setFixedHeight(26);
+            btnAddVip->setToolTip(QString::fromUtf8("Оформить или продлить VIP-статус"));
+            topRow->addWidget(btnAddVip, 0, Qt::AlignRight | Qt::AlignVCenter);
 
             QObject::connect(
                 btnAddVip,
@@ -1075,27 +1166,80 @@ void MainWindow::setupPagesDesign()
                     }
                     QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP недоступен."));
                 });
+
+            f7MainLayout->addLayout(topRow);
+
+            // Subtle 1px Horizontal Divider
+            QFrame *divider = new QFrame(ui->frame_7);
+            divider->setObjectName("cabinetHorizontalDivider");
+            divider->setFrameShape(QFrame::HLine);
+            divider->setFixedHeight(1);
+            divider->setStyleSheet("background-color: #1E293B; max-height: 1px; border: none;");
+            f7MainLayout->addWidget(divider);
+
+            // Horizontal Account Reference Bar ("Справочник аккаунта")
+            QFrame *refBar = new QFrame(ui->frame_7);
+            refBar->setObjectName("cabinetHorizontalRefPanel");
+            refBar->setStyleSheet("background: transparent; border: none;");
+
+            QHBoxLayout *refLayout = new QHBoxLayout(refBar);
+            refLayout->setContentsMargins(0, 0, 0, 0);
+            refLayout->setSpacing(6);
+
+            auto createChip = [refBar, refLayout](const QString &iconRes, const QString &caption, const QString &valObjName, const QString &initVal, const QString &valColor = "#F8FAFC")
+            {
+                QFrame *chip = new QFrame(refBar);
+                chip->setObjectName("cabinetSideRow");
+                chip->setProperty("cabinetChip", true);
+                chip->setStyleSheet("QFrame#cabinetSideRow { background-color: #070B14; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 6px; } QFrame#cabinetSideRow:hover { border-color: #334155; background-color: #0E1526; }");
+
+                QHBoxLayout *cl = new QHBoxLayout(chip);
+                cl->setContentsMargins(6, 3, 6, 3);
+                cl->setSpacing(6);
+
+                QLabel *iconLbl = new QLabel(chip);
+                iconLbl->setObjectName("cabinetSideIcon");
+                iconLbl->setFixedSize(18, 18);
+                iconLbl->setAlignment(Qt::AlignCenter);
+                iconLbl->setPixmap(QPixmap(iconRes).scaled(14, 14, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                iconLbl->setStyleSheet("background: transparent; border: none;");
+                cl->addWidget(iconLbl);
+
+                QVBoxLayout *vl = new QVBoxLayout();
+                vl->setContentsMargins(0, 0, 0, 0);
+                vl->setSpacing(1);
+
+                QLabel *capLbl = new QLabel(caption, chip);
+                capLbl->setObjectName("cabinetSideCaption");
+                capLbl->setStyleSheet("color: #64748B; font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; background: transparent; border: none;");
+                vl->addWidget(capLbl);
+
+                QLabel *valLbl = new QLabel(initVal, chip);
+                valLbl->setObjectName(valObjName);
+                valLbl->setProperty("cabinetVal", true);
+                valLbl->setStyleSheet(QString("color: %1; font-size: 11px; font-weight: bold; background: transparent; border: none;").arg(valColor));
+                vl->addWidget(valLbl);
+
+                cl->addLayout(vl);
+                refLayout->addWidget(chip, 1);
+            };
+
+            createChip(":/svg/credit-card", QString::fromUtf8("Баланс"), "cabinetVal_credits", "-", "#34D399");
+            createChip(":/svg/crown", QString::fromUtf8("VIP-статус"), "cabinetVal_vip", "-", "#FBBF24");
+            createChip(":/svg/smartphone", QString::fromUtf8("Устройства"), "cabinetVal_devices", "-", "#38BDF8");
+            createChip(":/svg/globe", QString::fromUtf8("Локация"), "cabinetVal_location", "-", "#94A3B8");
+            createChip(":/svg/shield", QString::fromUtf8("Безопасность"), "cabinetVal_status", "-", "#34D399");
+            createChip(":/svg/refresh-cw", QString::fromUtf8("Время входа"), "cabinetVal_loginTime", "-", "#94A3B8");
+
+            // Hidden login reference label for findChild<QLabel*>("cabinetVal_login")
+            QLabel *hiddenLogin = new QLabel(ui->frame_7);
+            hiddenLogin->setObjectName("cabinetVal_login");
+            hiddenLogin->hide();
+
+            f7MainLayout->addWidget(refBar);
         }
     }
-    if(ui->labelVipDays)
-    {
-        QFont font = ui->labelVipDays->font();
-        font.setUnderline(false);
-        ui->labelVipDays->setFont(font);
-        ui->labelVipDays->setAlignment(Qt::AlignCenter);
-    }
-    if(ui->frame_5)
-    {
-        ui->frame_5->setMaximumSize(16777215, 16777215);
-        ui->frame_5->setMinimumHeight(110);
-    }
-    if(ui->labelCredits)
-    {
-        QFont font = ui->labelCredits->font();
-        font.setUnderline(false);
-        ui->labelCredits->setFont(font);
-        ui->labelCredits->setAlignment(Qt::AlignCenter);
-    }
+
     if(ui->label_7)
     {
         ui->label_7->setText(QString::fromUtf8("ДОСТУПНЫЕ СЕРВИСЫ"));
@@ -1104,79 +1248,21 @@ void MainWindow::setupPagesDesign()
     {
         ui->authInfo->setVisible(false);
     }
-    if(ui->sss && ui->serviceContents && !ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetSideInfoPanel"))
+    if(ui->sss && ui->serviceContents)
     {
         for(int i = ui->sss->count() - 1; i >= 0; --i)
         {
             QLayoutItem *item = ui->sss->itemAt(i);
-            if(item && item->widget() != ui->serviceContents)
+            if(item && item->widget() && item->widget() != ui->serviceContents)
             {
-                ui->sss->takeAt(i);
-                delete item;
+                QWidget *w = item->widget();
+                ui->sss->removeWidget(w);
+                w->deleteLater();
             }
         }
 
-        // Side reference card / Справочник аккаунта
-        QFrame *sidePanel = new QFrame(ui->scrollAreaWidgetContents_3);
-        sidePanel->setObjectName("cabinetSideInfoPanel");
-        sidePanel->setFixedWidth(290);
-
-        QVBoxLayout *sideLayout = new QVBoxLayout(sidePanel);
-        sideLayout->setContentsMargins(14, 14, 14, 14);
-        sideLayout->setSpacing(7);
-
-        QLabel *sideTitle = new QLabel(QString::fromUtf8("СПРАВОЧНИК АККАУНТА"), sidePanel);
-        sideTitle->setObjectName("cabinetSideTitle");
-        sideLayout->addWidget(sideTitle);
-
-        auto createRow = [sidePanel, sideLayout](const QString &iconRes, const QString &caption, const QString &valObjName)
-        {
-            QFrame *row = new QFrame(sidePanel);
-            row->setObjectName("cabinetSideRow");
-            QHBoxLayout *rl = new QHBoxLayout(row);
-            rl->setContentsMargins(8, 5, 10, 5);
-            rl->setSpacing(8);
-
-            QLabel *iconLbl = new QLabel(row);
-            iconLbl->setObjectName("cabinetSideIcon");
-            iconLbl->setFixedSize(26, 26);
-            iconLbl->setAlignment(Qt::AlignCenter);
-            iconLbl->setPixmap(QPixmap(iconRes).scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-            rl->addWidget(iconLbl);
-
-            QVBoxLayout *col = new QVBoxLayout();
-            col->setContentsMargins(0, 0, 0, 0);
-            col->setSpacing(1);
-
-            QLabel *capLbl = new QLabel(caption, row);
-            capLbl->setObjectName("cabinetSideCaption");
-            col->addWidget(capLbl);
-
-            QLabel *valLbl = new QLabel("-", row);
-            valLbl->setObjectName(valObjName);
-            valLbl->setProperty("cabinetVal", true);
-            col->addWidget(valLbl);
-
-            rl->addLayout(col, 1);
-            sideLayout->addWidget(row);
-        };
-
-        createRow(":/svg/users", QString::fromUtf8("Логин аккаунта"), "cabinetVal_login");
-        createRow(":/svg/refresh-cw", QString::fromUtf8("Время входа"), "cabinetVal_loginTime");
-        createRow(":/svg/credit-card", QString::fromUtf8("Баланс кредитов"), "cabinetVal_credits");
-        createRow(":/svg/crown", QString::fromUtf8("VIP-статус"), "cabinetVal_vip");
-        createRow(":/svg/smartphone", QString::fromUtf8("Подключено устройств"), "cabinetVal_devices");
-        createRow(":/svg/globe", QString::fromUtf8("Локация"), "cabinetVal_location");
-        createRow(":/svg/shield", QString::fromUtf8("Статус безопасности"), "cabinetVal_status");
-
-        sideLayout->addStretch(1);
-
-        ui->sss->setContentsMargins(10, 8, 10, 14);
-        ui->sss->setSpacing(16);
-        ui->sss->setAlignment(ui->serviceContents, Qt::AlignTop);
-        ui->sss->insertStretch(0, 1);
-        ui->sss->addWidget(sidePanel, 0, Qt::AlignTop);
-        ui->sss->addStretch(1);
+        ui->sss->setContentsMargins(14, 6, 14, 16);
+        ui->sss->setAlignment(ui->serviceContents, Qt::AlignHCenter | Qt::AlignTop);
     }
 
     // ==========================================

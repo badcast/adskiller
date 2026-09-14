@@ -416,7 +416,7 @@ void AIChatView::showWelcome()
     scrollToBottom();
 
     if(messageCount() == 3)
-        addAIMessage("Салам алейкум!");
+        addAIMessage("Салам алейкум 👋!");
 }
 
 void AIChatView::showLocked()

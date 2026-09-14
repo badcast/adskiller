@@ -22,12 +22,14 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPalette>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QStackedWidget>
 #include <QStandardItemModel>
 #include <QStringListModel>
+#include <QStyleFactory>
 #include <QTableView>
 #include <QTemporaryDir>
 #include <QTimer>
@@ -53,7 +55,7 @@
 
 MainWindow *MainWindow::current;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), timerAuthAnim(nullptr)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), timerAuthAnim(nullptr), app(qApp)
 {
     QStringListModel *model;
     ui->setupUi(this);
@@ -1844,7 +1846,41 @@ void MainWindow::setTheme(ThemeScheme theme)
     }
 
     // Set application Design
-    app->setStyleSheet(styleSheet);
+    if(!app)
+        app = qApp;
+    if(app)
+        app->setStyleSheet(styleSheet);
+    if(qApp)
+    {
+        qApp->setStyleSheet(styleSheet);
+        if(theme == Dark)
+        {
+            qApp->setStyle(QStyleFactory::create("Fusion"));
+            QPalette darkPalette;
+            darkPalette.setColor(QPalette::Window, QColor(10, 14, 26));            // #0A0E1A
+            darkPalette.setColor(QPalette::WindowText, QColor(248, 250, 252));    // #F8FAFC
+            darkPalette.setColor(QPalette::Base, QColor(7, 10, 18));              // #070A12
+            darkPalette.setColor(QPalette::AlternateBase, QColor(15, 23, 42));    // #0F172A
+            darkPalette.setColor(QPalette::ToolTipBase, QColor(15, 23, 42));      // #0F172A
+            darkPalette.setColor(QPalette::ToolTipText, QColor(248, 250, 252));   // #F8FAFC
+            darkPalette.setColor(QPalette::Text, QColor(248, 250, 252));          // #F8FAFC
+            darkPalette.setColor(QPalette::Button, QColor(15, 23, 42));           // #0F172A
+            darkPalette.setColor(QPalette::ButtonText, QColor(248, 250, 252));    // #F8FAFC
+            darkPalette.setColor(QPalette::BrightText, QColor(56, 189, 248));     // #38BDF8
+            darkPalette.setColor(QPalette::Link, QColor(56, 189, 248));           // #38BDF8
+            darkPalette.setColor(QPalette::Highlight, QColor(2, 132, 199));       // #0284C7
+            darkPalette.setColor(QPalette::HighlightedText, QColor(255, 255, 255)); // #FFFFFF
+            darkPalette.setColor(QPalette::PlaceholderText, QColor(100, 116, 139)); // #64748B
+
+            darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(71, 85, 105)); // #475569
+            darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(71, 85, 105));
+            darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(71, 85, 105));
+            darkPalette.setColor(QPalette::Disabled, QPalette::Highlight, QColor(30, 41, 59));   // #1E293B
+            darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, QColor(71, 85, 105));
+            qApp->setPalette(darkPalette);
+        }
+    }
+    this->setStyleSheet(styleSheet);
     AppSetting::themeIndex(nullptr, static_cast<int>(theme));
 }
 
