@@ -45,6 +45,7 @@
 #include "Strings.h"
 #include "Services.h"
 #include "ProgressCircle.h"
+#include "CyberReactorLoader.h"
 #include "FileManagerWidget.h"
 #include "ApkManagerWidget.h"
 #include "ContactFixerWidget.h"
@@ -203,14 +204,16 @@ void MainWindow::setupWindowLayoutAndAnim()
     malwareProgressCircle->setInfinilyMode(false);
     ui->progressCircleLayout->addWidget(malwareProgressCircle);
 
+    ui->loaderLayout->setContentsMargins(15, 10, 15, 10);
+    ui->loaderLayout->setSpacing(8);
+
+    cyberReactorLoader = new CyberReactorLoader(this);
+    cyberReactorLoader->setMinimumHeight(240);
+    ui->loaderLayout->addWidget(cyberReactorLoader);
+    ui->loaderLayout->parentWidget()->setStyleSheet("border: none");
+
     loaderProgressCircle = new ProgressCircle(this);
-    loaderProgressCircle->setInfinilyMode(true);
-    loaderProgressCircle->setVisibleText(false);
-    loaderProgressCircle->setInnerRadius(0);
-    loaderProgressCircle->setColor(Qt::darkRed);
-    loaderProgressCircle->setInnerRadius(.5);
-    loaderProgressCircle->setMinimumHeight(225);
-    ui->loaderLayout->addWidget(loaderProgressCircle);
+    loaderProgressCircle->setVisible(false);
 
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
@@ -980,6 +983,10 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 2. Cabinet Page (page_cabinet)
     // ==========================================
+    if(ui->scrollArea_3)
+    {
+        ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    }
     if(ui->logoutButton)
     {
         ui->logoutButton->setCursor(Qt::PointingHandCursor);
@@ -1246,6 +1253,7 @@ void MainWindow::setupPagesDesign()
 
             f7MainLayout->addWidget(refBar);
         }
+        updateCabinetUserCard();
     }
 
     if(ui->label_7)
@@ -1318,66 +1326,76 @@ void MainWindow::setupPagesDesign()
 
         ui->scrollArea_3->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
         ui->scrollArea_3->setWidgetResizable(true);
+        ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         ui->scrollAreaWidgetContents_3->setMinimumWidth(0);
         ui->serviceContents->setMinimumWidth(0);
 
-        ui->sss->setContentsMargins(14, 8, 14, 16);
-        ui->sss->setSpacing(16);
+        // Clean up any old vertical panel if it exists
+        if(auto *oldPanel = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterPanel"))
+        {
+            oldPanel->deleteLater();
+        }
+
+        // Horizontal Quick Filters Bar (no title header, arranged horizontally)
+        QFrame *filterBar = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterBar");
+        if(!filterBar)
+        {
+            filterBar = new QFrame(ui->scrollAreaWidgetContents_3);
+            filterBar->setObjectName("cabinetFilterBar");
+            filterBar->setFixedHeight(36);
+            filterBar->setStyleSheet("QFrame#cabinetFilterBar { background: transparent; border: none; }");
+
+            QHBoxLayout *fLayout = new QHBoxLayout(filterBar);
+            fLayout->setContentsMargins(14, 4, 14, 4);
+            fLayout->setSpacing(8);
+
+            QButtonGroup *filterGroup = new QButtonGroup(this);
+            filterGroup->setObjectName("serviceFilterGroup");
+            filterGroup->setExclusive(true);
+
+            auto addFilterBtn = [this, filterBar, fLayout, filterGroup](const QString &mode, const QString &text, const QString &iconPath, bool checked = false)
+            {
+                QPushButton *btn = new QPushButton(text, filterBar);
+                btn->setObjectName("cabinetFilterBtn");
+                btn->setAccessibleName(QString("filterBtn_%1").arg(mode));
+                btn->setProperty("filterMode", mode);
+                btn->setCheckable(true);
+                btn->setChecked(checked);
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedHeight(28);
+                btn->setIcon(QIcon(iconPath));
+                btn->setIconSize(QSize(14, 14));
+
+                filterGroup->addButton(btn);
+                fLayout->addWidget(btn);
+
+                QObject::connect(btn, &QPushButton::toggled, this, [this](bool c) {
+                    if(c) this->applyServiceFilters();
+                });
+                return btn;
+            };
+
+            addFilterBtn("all", QString::fromUtf8("Все сервисы"), ":/svg/shuffle", true);
+            addFilterBtn("available", QString::fromUtf8("Доступные"), ":/svg/check-circle");
+            addFilterBtn("paid", QString::fromUtf8("Платные"), ":/svg/credit-card");
+            addFilterBtn("free", QString::fromUtf8("Бесплатные"), ":/svg/tag");
+            addFilterBtn("unavailable", QString::fromUtf8("Не доступные"), ":/svg/services/unavailable");
+
+            fLayout->addStretch(1);
+
+            // Insert directly between toplevel_up_2 and sss
+            ui->verticalLayout->insertWidget(2, filterBar);
+        }
+
+        ui->sss->setContentsMargins(14, 4, 14, 16);
+        ui->sss->setSpacing(0);
         ui->serviceContents->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-        // Vertical Quick Filters Panel
-        QFrame *filterPanel = new QFrame(ui->scrollAreaWidgetContents_3);
-        filterPanel->setObjectName("cabinetFilterPanel");
-        filterPanel->setFixedWidth(180);
-        filterPanel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-
-        QVBoxLayout *fLayout = new QVBoxLayout(filterPanel);
-        fLayout->setContentsMargins(8, 10, 8, 10);
-        fLayout->setSpacing(6);
-
-        QLabel *filterTitle = new QLabel(QString::fromUtf8("ФИЛЬТР СЕРВИСОВ"), filterPanel);
-        filterTitle->setObjectName("cabinetFilterTitle");
-        fLayout->addWidget(filterTitle);
-
-        QButtonGroup *filterGroup = new QButtonGroup(this);
-        filterGroup->setObjectName("serviceFilterGroup");
-        filterGroup->setExclusive(true);
-
-        auto addFilterBtn = [this, filterPanel, fLayout, filterGroup](const QString &mode, const QString &text, const QString &iconPath, bool checked = false)
-        {
-            QPushButton *btn = new QPushButton(text, filterPanel);
-            btn->setObjectName("cabinetFilterBtn");
-            btn->setAccessibleName(QString("filterBtn_%1").arg(mode));
-            btn->setProperty("filterMode", mode);
-            btn->setCheckable(true);
-            btn->setChecked(checked);
-            btn->setCursor(Qt::PointingHandCursor);
-            btn->setFixedHeight(32);
-            btn->setIcon(QIcon(iconPath));
-            btn->setIconSize(QSize(16, 16));
-
-            filterGroup->addButton(btn);
-            fLayout->addWidget(btn);
-
-            QObject::connect(btn, &QPushButton::toggled, this, [this](bool c) {
-                if(c) this->applyServiceFilters();
-            });
-            return btn;
-        };
-
-        addFilterBtn("all", QString::fromUtf8("Все сервисы"), ":/svg/shuffle", true);
-        addFilterBtn("available", QString::fromUtf8("Доступные"), ":/svg/check-circle");
-        addFilterBtn("unavailable", QString::fromUtf8("Не доступные"), ":/svg/services/unavailable");
-        addFilterBtn("free", QString::fromUtf8("Бесплатные"), ":/svg/tag");
-        addFilterBtn("paid", QString::fromUtf8("Платные"), ":/svg/credit-card");
-
-        fLayout->addStretch(1);
-
-        // serviceContents takes all horizontal space (stretch=1); filterPanel stays fixed on the right (stretch=0)
+        // serviceContents takes all horizontal space now that filters are above it
         ui->sss->addWidget(ui->serviceContents, 1, Qt::AlignTop);
-        ui->sss->addWidget(filterPanel, 0, Qt::AlignTop | Qt::AlignRight);
 
         this->applyServiceFilters();
+
     }
 
     // ==========================================
@@ -1461,7 +1479,7 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     if(ui->buttonBackTo)
     {
-        ui->buttonBackTo->setText("‹ Назад");
+        ui->buttonBackTo->setText("Назад");
         ui->buttonBackTo->setCursor(Qt::PointingHandCursor);
     }
 }

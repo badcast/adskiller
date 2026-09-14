@@ -3,13 +3,14 @@
 #include <QPixmapCache>
 #include <QtMath>
 #include <QEasingCurve>
+#include <QPainterPath>
 
 ProgressCircle::ProgressCircle(QWidget *parent)
     : QWidget(parent), mInfinilyMode(true), mVisibleText(true), mValue(0), mMaximum(100), mInnerRadius(0.6), mOuterRadius(1.0), mColor(76, 194, 255), mVisibleValue(0), mValueAnimation(this, "visibleValue"), mInfiniteAnimation(this, "infiniteAnimationValue"), mInfiniteAnimationValue(0.0)
 {
     mValueAnimation.setEasingCurve(QEasingCurve::OutCubic);
-    mInfiniteAnimation.setLoopCount(-1); // infinite
-    mInfiniteAnimation.setDuration(1200);
+    mInfiniteAnimation.setLoopCount(-1);
+    mInfiniteAnimation.setDuration(1500);
     mInfiniteAnimation.setStartValue(0.0);
     mInfiniteAnimation.setEndValue(1.0);
     mInfiniteAnimation.start();
@@ -59,7 +60,7 @@ void ProgressCircle::setValue(int value)
     {
         mValueAnimation.stop();
         mValueAnimation.setEndValue(value);
-        mValueAnimation.setDuration(300);
+        mValueAnimation.setDuration(400);
         mValueAnimation.start();
 
         mValue = value;
@@ -163,7 +164,6 @@ void ProgressCircle::paintEvent(QPaintEvent *)
         QPixmapCache::insert(key(), pixmap);
     }
 
-    // Draw pixmap at center of item
     QPainter painter(this);
     painter.drawPixmap(0.5 * (width() - pixmap.width()), 0.5 * (height() - pixmap.height()), pixmap);
 }
@@ -202,210 +202,163 @@ QPixmap ProgressCircle::generatePixmap() const
     painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
 
-    // Padding around bounds to allow neon glow effects
-    qreal padding = 8.0;
-    QRectF bounds = pixmap.rect().adjusted(padding, padding, -padding, -padding);
+    const qreal padding = 8.0;
+    const QRectF bounds = pixmap.rect().adjusted(padding, padding, -padding, -padding);
+    const qreal margin = bounds.width() * (1.0 - mOuterRadius) / 2.0;
+    const QRectF circleRect = bounds.adjusted(margin, margin, -margin, -margin);
 
-    qreal margin = bounds.width() * (1.0 - mOuterRadius) / 2.0;
-    QRectF circleRect = bounds.adjusted(margin, margin, -margin, -margin);
-
-    QPointF center = circleRect.center();
-    qreal radius = circleRect.width() / 2.0;
-    if(radius <= 4.0)
+    const QPointF center = circleRect.center();
+    const qreal radius = circleRect.width() / 2.0;
+    if(radius <= 6.0)
         return pixmap;
 
-    qreal trackThickness = qMax(6.0, radius * 0.13);
-    qreal arcRadius = radius - (trackThickness / 2.0);
-    QRectF arcRect(center.x() - arcRadius, center.y() - arcRadius, arcRadius * 2.0, arcRadius * 2.0);
-
-    // 1. Ambient Glass Halo
-    QRadialGradient ambientGlow(center, radius + 4.0);
-    ambientGlow.setColorAt(0.0, QColor(25, 27, 32, 160));
-    ambientGlow.setColorAt(0.75, QColor(20, 22, 26, 110));
-    ambientGlow.setColorAt(1.0, QColor(0, 0, 0, 0));
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(ambientGlow);
-    painter.drawEllipse(center, radius + 4.0, radius + 4.0);
-
-    // 2. Track Ring (Modern frosted glass groove)
-    QPen trackPen(QColor(255, 255, 255, 22), trackThickness, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    painter.setPen(trackPen);
-    painter.setBrush(Qt::NoBrush);
-    painter.drawEllipse(center, arcRadius, arcRadius);
-
-    QPen trackInnerShadow(QColor(0, 0, 0, 70), trackThickness - 4.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    painter.setPen(trackInnerShadow);
-    painter.drawEllipse(center, arcRadius, arcRadius);
+    const int totalSegments = 36;
+    const qreal outerR = radius;
+    const qreal innerR = radius * 0.76;
 
     int value = qMin(mVisibleValue, mMaximum);
+    qreal fillRatio = mInfinilyMode ? 0.0 : qBound(0.0, qreal(value) / qreal(mMaximum), 1.0);
+    int activeSegments = qRound(fillRatio * totalSegments);
 
-    // 3. Progress Arc / Infinite Spinner
-    if(mInfinilyMode)
+    QPen borderPen(QColor(mColor.red(), mColor.green(), mColor.blue(), 50), 1.0);
+    painter.setPen(borderPen);
+    painter.setBrush(Qt::NoBrush);
+    painter.drawEllipse(center, outerR + 3.0, outerR + 3.0);
+
+    for(int i = 0; i < totalSegments; ++i)
     {
-        // Smooth rotating cyber beam
-        int startAngle = qRound((-mInfiniteAnimationValue * 360.0 + 90.0) * 16.0);
-        int spanAngle = -qRound(90.0 * 16.0);
+        qreal angleDeg = -90.0 + (i * (360.0 / totalSegments));
+        qreal rad = qDegreesToRadians(angleDeg);
 
-        // Neon glow arc
-        QColor glowColor(mColor.red(), mColor.green(), mColor.blue(), 55);
-        QPen glowPen(glowColor, trackThickness + 6.0, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(glowPen);
-        painter.drawArc(arcRect, startAngle, spanAngle);
+        qreal cosA = std::cos(rad);
+        qreal sinA = std::sin(rad);
 
-        // Core bright arc with gradient
-        QConicalGradient conical(center, -mInfiniteAnimationValue * 360.0 + 90.0);
-        conical.setColorAt(0.0, mColor.lighter(140));
-        conical.setColorAt(0.25, mColor);
-        conical.setColorAt(0.5, mColor.darker(130));
-        conical.setColorAt(1.0, mColor.lighter(140));
+        QPointF pInner(center.x() + cosA * innerR, center.y() + sinA * innerR);
+        QPointF pOuter(center.x() + cosA * outerR, center.y() + sinA * outerR);
 
-        QPen progressPen(QBrush(conical), trackThickness, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(progressPen);
-        painter.drawArc(arcRect, startAngle, spanAngle);
+        bool isActive = false;
+        qreal intensity = 0.0;
 
-        // High-tech tip spark
-        qreal tipAngleDeg = -mInfiniteAnimationValue * 360.0 + 90.0 - 90.0;
-        qreal tipRad = qDegreesToRadians(tipAngleDeg);
-        QPointF tipPos(center.x() + arcRadius * std::cos(tipRad), center.y() - arcRadius * std::sin(tipRad));
-
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(255, 255, 255, 230));
-        painter.drawEllipse(tipPos, trackThickness * 0.4, trackThickness * 0.4);
-
-        // Secondary counter subtle arc
-        int startAngle2 = qRound((mInfiniteAnimationValue * 180.0 - 90.0) * 16.0);
-        int spanAngle2 = qRound(45.0 * 16.0);
-        QPen counterPen(QColor(mColor.red(), mColor.green(), mColor.blue(), 65), trackThickness * 0.5, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(counterPen);
-        painter.drawArc(arcRect, startAngle2, spanAngle2);
-    }
-    else if(value > 0)
-    {
-        qreal percent = qBound(0.0, qreal(value) / qreal(mMaximum), 1.0);
-        int startAngle = 90 * 16;
-        int spanAngle = -qRound(percent * 360.0 * 16.0);
-
-        // Neon Aura Glow
-        QColor glowColor(mColor.red(), mColor.green(), mColor.blue(), 55);
-        QPen glowPen(glowColor, trackThickness + 6.0, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(glowPen);
-        painter.drawArc(arcRect, startAngle, spanAngle);
-
-        // Main Gradient Arc
-        QLinearGradient arcGrad(arcRect.topLeft(), arcRect.bottomRight());
-        arcGrad.setColorAt(0.0, mColor.lighter(135));
-        arcGrad.setColorAt(0.5, mColor);
-        arcGrad.setColorAt(1.0, mColor.darker(115));
-
-        QPen progressPen(QBrush(arcGrad), trackThickness, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(progressPen);
-        painter.drawArc(arcRect, startAngle, spanAngle);
-
-        // Inner highlight stroke
-        QPen innerHighlight(QColor(255, 255, 255, 80), trackThickness * 0.28, Qt::SolidLine, Qt::RoundCap);
-        painter.setPen(innerHighlight);
-        painter.drawArc(arcRect, startAngle, spanAngle);
-
-        // Glowing Spark Tip
-        qreal tipAngleDeg = 90.0 - (percent * 360.0);
-        qreal tipRad = qDegreesToRadians(tipAngleDeg);
-        QPointF tipPos(center.x() + arcRadius * std::cos(tipRad), center.y() - arcRadius * std::sin(tipRad));
-
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(255, 255, 255, 240));
-        painter.drawEllipse(tipPos, trackThickness * 0.42, trackThickness * 0.42);
-
-        painter.setBrush(QColor(mColor.lighter(150).red(), mColor.lighter(150).green(), mColor.lighter(150).blue(), 100));
-        painter.drawEllipse(tipPos, trackThickness * 0.75, trackThickness * 0.75);
-    }
-
-    // 4. Center Disc / Core
-    qreal innerRadiusPx = mInnerRadius * radius;
-    if(innerRadiusPx > 4.0)
-    {
-        qreal coreR = innerRadiusPx - (trackThickness * 0.45);
-        if(coreR > 2.0)
+        if(mInfinilyMode)
         {
-            // Frosted Center Disc Gradient
-            QLinearGradient coreGrad(center.x(), center.y() - coreR, center.x(), center.y() + coreR);
-            coreGrad.setColorAt(0.0, QColor(36, 38, 44, 235));
-            coreGrad.setColorAt(0.6, QColor(26, 28, 32, 245));
-            coreGrad.setColorAt(1.0, QColor(18, 19, 23, 255));
+            qreal headPos = mInfiniteAnimationValue * totalSegments;
+            qreal dist = std::fmod(std::abs(i - headPos), totalSegments);
+            if(dist > totalSegments / 2.0)
+                dist = totalSegments - dist;
 
-            painter.setPen(QPen(QColor(255, 255, 255, 30), 1.2));
-            painter.setBrush(coreGrad);
-            painter.drawEllipse(center, coreR, coreR);
-
-            // Subtle inner rim shadow
-            painter.setPen(QPen(QColor(0, 0, 0, 70), 1.0));
-            painter.setBrush(Qt::NoBrush);
-            painter.drawEllipse(center, coreR - 1.0, coreR - 1.0);
+            if(dist < 7.0)
+            {
+                isActive = true;
+                intensity = 1.0 - (dist / 7.0);
+            }
         }
+        else
+        {
+            isActive = (i < activeSegments);
+            intensity = isActive ? 1.0 : 0.0;
+        }
+
+        if(isActive)
+        {
+            QColor segColor = mColor.lighter(110 + static_cast<int>(intensity * 40));
+            segColor.setAlpha(qBound(40, static_cast<int>(intensity * 255), 255));
+            painter.setPen(QPen(segColor, 2.5, Qt::SolidLine, Qt::RoundCap));
+        }
+        else
+        {
+            painter.setPen(QPen(QColor(255, 255, 255, 25), 1.5, Qt::SolidLine, Qt::FlatCap));
+        }
+
+        painter.drawLine(pInner, pOuter);
     }
-    else
+
+    qreal coreR = innerR - 6.0;
+    if(coreR > 10.0)
     {
-        // When innerRadius is 0 (completed full disk state)
-        QRadialGradient fullDiskGrad(center, radius);
-        fullDiskGrad.setColorAt(0.0, mColor.lighter(125));
-        fullDiskGrad.setColorAt(0.7, mColor);
-        fullDiskGrad.setColorAt(1.0, mColor.darker(120));
+        painter.setPen(QPen(QColor(mColor.red(), mColor.green(), mColor.blue(), 70), 1.0, Qt::DashLine));
+        painter.setBrush(QColor(10, 14, 20, 180));
+        painter.drawEllipse(center, coreR, coreR);
 
-        painter.setPen(QPen(QColor(255, 255, 255, 80), 2.0));
-        painter.setBrush(fullDiskGrad);
-        painter.drawEllipse(center, radius - 2.0, radius - 2.0);
+        painter.setPen(QPen(mColor, 1.5));
+        painter.drawLine(QPointF(center.x(), center.y() - coreR), QPointF(center.x(), center.y() - coreR + 4.0));
+        painter.drawLine(QPointF(center.x(), center.y() + coreR), QPointF(center.x(), center.y() + coreR - 4.0));
+        painter.drawLine(QPointF(center.x() - coreR, center.y()), QPointF(center.x() - coreR + 4.0, center.y()));
+        painter.drawLine(QPointF(center.x() + coreR, center.y()), QPointF(center.x() + coreR - 4.0, center.y()));
     }
 
-    // 5. Center Typography / Icons
-    if(mVisibleText && !mInfinilyMode)
+    if(mInfinilyMode && coreR > 12.0)
+    {
+        painter.save();
+        QPainterPath clipPath;
+        clipPath.addEllipse(center, coreR - 2.0, coreR - 2.0);
+        painter.setClipPath(clipPath);
+
+        const QString binaryStream = QStringLiteral("1010101010101010101010101010101010101010");
+        const int fontSize = qMax(6, static_cast<int>(coreR * 0.17));
+        QFont binFont("Consolas", fontSize, QFont::Bold);
+        binFont.setStyleHint(QFont::Monospace);
+        painter.setFont(binFont);
+
+        QFontMetrics fmBin(binFont);
+        const qreal lineHeight = fmBin.height() * 0.95;
+        const qreal colSpacing = fmBin.horizontalAdvance(QLatin1Char('0')) * 1.55;
+        const qreal streamShift = mInfiniteAnimationValue * lineHeight * 6.0;
+
+        const int numCols = 5;
+        const qreal startColX = center.x() - ((numCols - 1) * colSpacing) / 2.0;
+
+        for(int col = 0; col < numCols; ++col)
+        {
+            qreal colX = startColX + col * colSpacing;
+            qreal colCenterDist = std::abs(col - (numCols - 1) / 2.0);
+            qreal colAlphaScale = 1.0 - (colCenterDist * 0.22);
+            int colSeed = col * 7;
+
+            for(qreal y = center.y() + coreR + lineHeight; y >= center.y() - coreR - lineHeight; y -= lineHeight)
+            {
+                qreal streamY = y - streamShift;
+                while(streamY < center.y() - coreR)
+                    streamY += (coreR * 2.0 + lineHeight * 2.0);
+
+                qreal distFromCenter = std::sqrt(std::pow(colX - center.x(), 2) + std::pow(streamY - center.y(), 2));
+                if(distFromCenter >= coreR - 2.0)
+                    continue;
+
+                int charIndex = std::abs(static_cast<int>((center.y() + coreR - streamY) / lineHeight) + colSeed) % binaryStream.length();
+                QChar ch = binaryStream.at(charIndex);
+
+                qreal edgeFade = qBound(0.0, 1.0 - (distFromCenter / (coreR - 2.0)), 1.0);
+
+                QColor charColor;
+                if((col + charIndex) % 11 == 0)
+                    charColor = QColor(255, 60, 70);
+                else if((col + charIndex) % 5 == 0)
+                    charColor = QColor(50, 230, 130);
+                else
+                    charColor = QColor(0, 220, 255);
+
+                int alpha = qBound(0, static_cast<int>(edgeFade * colAlphaScale * 140), 255);
+                charColor.setAlpha(alpha);
+
+                painter.setPen(charColor);
+                painter.drawText(QPointF(colX - fmBin.horizontalAdvance(ch) / 2.0, streamY + fmBin.ascent() / 2.0), QString(ch));
+            }
+        }
+        painter.restore();
+    }
+    else if(mVisibleText && !mInfinilyMode)
     {
         QString numStr = QString::number(value);
-        QString pctStr = "%";
 
-        QFont numFont = this->font();
-        numFont.setPixelSize(qMax(14, static_cast<int>(radius * 0.46)));
-        numFont.setWeight(QFont::Bold);
-
-        QFont pctFont = this->font();
-        pctFont.setPixelSize(qMax(9, static_cast<int>(radius * 0.22)));
-        pctFont.setWeight(QFont::DemiBold);
-
-        QFontMetrics fmNum(numFont);
-        QFontMetrics fmPct(pctFont);
-
-        int numW = fmNum.horizontalAdvance(numStr);
-        int pctW = fmPct.horizontalAdvance(pctStr);
-        int totalW = numW + pctW + 2;
-
-        qreal startX = center.x() - (totalW / 2.0);
-        qreal numY = center.y() + (fmNum.capHeight() / 2.0);
-
-        // Draw shadow for crisp contrast
+        QFont numFont("Consolas", qMax(12, static_cast<int>(coreR * 0.62)), QFont::Bold);
+        numFont.setStyleHint(QFont::Monospace);
         painter.setFont(numFont);
-        painter.setPen(QColor(0, 0, 0, 160));
-        painter.drawText(QPointF(startX + 1, numY + 1), numStr);
 
-        // Draw number
-        painter.setPen(QColor(255, 255, 255));
-        painter.drawText(QPointF(startX, numY), numStr);
+        QFontMetrics fm(numFont);
+        QRectF textRect(center.x() - coreR, center.y() - (fm.height() / 2.0), coreR * 2.0, fm.height());
 
-        // Draw % symbol with color accent
-        painter.setFont(pctFont);
-        painter.setPen(QColor(0, 0, 0, 140));
-        painter.drawText(QPointF(startX + numW + 2 + 1, numY + 1), pctStr);
-
-        painter.setPen(mColor.lighter(130));
-        painter.drawText(QPointF(startX + numW + 2, numY), pctStr);
-    }
-    else if(mInfinilyMode && innerRadiusPx > 10.0)
-    {
-        // Modern center loading icon
-        int iconSize = qMax(12, static_cast<int>(radius * 0.5));
-        QPixmap zapPix(":/svg/zap");
-        if(!zapPix.isNull())
-        {
-            QRect targetRect(static_cast<int>(center.x() - iconSize / 2.0), static_cast<int>(center.y() - iconSize / 2.0), iconSize, iconSize);
-            painter.drawPixmap(targetRect, zapPix.scaled(iconSize, iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        }
+        painter.setPen(QColor(240, 248, 255));
+        painter.drawText(textRect, Qt::AlignCenter, numStr);
     }
 
     return pixmap;

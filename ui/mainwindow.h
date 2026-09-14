@@ -13,6 +13,9 @@
 #include <QMap>
 #include <QProgressBar>
 #include <QPropertyAnimation>
+#include <QVariantAnimation>
+#include <QMouseEvent>
+#include <QKeyEvent>
 #include <QSettings>
 #include <QSpacerItem>
 #include <QTableView>
@@ -20,6 +23,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QIcon>
+#include <QTimer>
 
 #include "ProgressCircle.h"
 
@@ -64,6 +68,7 @@ class AITranslaterService;
 class AppleIpswWidget;
 class AppleIpswService;
 class RadioPlayerWidget;
+class CyberReactorLoader;
 class QToolBar;
 class QEnterEvent;
 class QButtonGroup;
@@ -105,6 +110,14 @@ public:
     void setRibbonText(const QString &text);
     QString ribbonText() const { return m_ribbonText; }
 
+    bool isLaunching() const { return m_isLaunching; }
+    void setLaunching(bool launching) { m_isLaunching = launching; }
+    static bool isAnyLaunching() { return s_isAnyLaunching; }
+    static void setAnyLaunching(bool launching) { s_isAnyLaunching = launching; }
+    QColor accentColor() const;
+
+    void triggerClickAnimation();
+
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
@@ -116,6 +129,11 @@ protected:
     void enterEvent(QEvent *event) override;
 #endif
     void leaveEvent(QEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
 private:
     QString m_title;
@@ -123,6 +141,44 @@ private:
     Tier m_tier;
     bool m_showRibbon;
     QString m_ribbonText;
+    bool m_isLaunching = false;
+    static bool s_isAnyLaunching;
+
+    // Windows 10 Reveal Highlight & Bubble Ripple Effect
+    QPoint m_mousePos;
+    bool m_isHovered = false;
+    QPoint m_pressPos;
+    qreal m_rippleProgress = 0.0;
+    qreal m_rippleRadius = 0.0;
+    qreal m_rippleOpacity = 0.0;
+    QVariantAnimation *m_rippleAnim = nullptr;
+
+    // Click / Activation Pulse Animation
+    qreal m_clickProgress = 0.0;
+    QVariantAnimation *m_clickAnim = nullptr;
+};
+
+class ServiceShockwaveOverlay : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit ServiceShockwaveOverlay(QWidget *parent = nullptr);
+    void trigger(const QPoint &centerInWindow, const QColor &accentColor);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+
+private:
+    QPoint m_center;
+    QColor m_accentColor { 0, 229, 255 };
+    qreal m_progress = 0.0;
+    QVariantAnimation *m_anim = nullptr;
 };
 
 class MainWindow : public QMainWindow
@@ -160,6 +216,7 @@ public:
     VersionInfo runtimeVersion;
     VersionInfo actualVersion;
     AdsAppSystemTray *tray;
+    bool isShownedVipExp = false;
 
 #ifdef NDEBUG
     int verChansesAvailable = ChansesRunInvalid;
@@ -206,6 +263,7 @@ private:
     Ui::MainWindow *ui;
     ProgressCircle *malwareProgressCircle;
     ProgressCircle *loaderProgressCircle;
+    CyberReactorLoader *cyberReactorLoader = nullptr;
     QList<QWidget *> malwareStatusLayouts;
     QMap<PageIndex, QWidget *> pages;
     QWidget *vPageSpacer;
@@ -237,6 +295,7 @@ private:
 
     void clearAuthInfoPage();
     void fillAuthInfoPage();
+    void updateCabinetUserCard();
 
     void setupWindowLayoutAndAnim();
     void setupAiPanel();
@@ -246,6 +305,10 @@ private:
     void applyServiceFilters();
     void checkVersion(bool firstRun);
     void willTerminate();
+
+    ServiceShockwaveOverlay *m_shockwaveOverlay = nullptr;
+    bool m_isServiceLaunching {false};
+    void showWindowShockwave(const QPoint &globalPos, const QColor &color);
 
     struct
     {

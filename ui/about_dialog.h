@@ -38,6 +38,7 @@ private slots:
 
 private:
     void setupUi();
+    QWidget *createHeroBannerWidget();
     QWidget *createHeaderWidget();
     QWidget *createAboutTab();
     QWidget *createAuthorsTab();

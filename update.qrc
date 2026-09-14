@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/update_res">
         <file alias="logo">res/icon_update.png</file>
+        <file alias="logo-svg">res/icon_update.svg</file>
     </qresource>
 </RCC>

@@ -24,7 +24,9 @@ set(PROJECT_SOURCES
         ui/RadioPlayerWidget.h
         ui/RadioPlayerWidget.cpp
         ui/AdbDeviceVisualizer.h
-         ui/AdbDeviceVisualizer.cpp
+        ui/AdbDeviceVisualizer.cpp
+        ui/CyberReactorLoader.h
+        ui/CyberReactorLoader.cpp
         ui/about_dialog.h
         ui/about_dialog.cpp
         ui/icontextbutton.cpp

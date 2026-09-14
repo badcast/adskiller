@@ -765,6 +765,11 @@ QWidget#page_cabinet {
     background-color: #0A0E1A;
 }
 
+QScrollArea#scrollArea_3 {
+    background: transparent;
+    border: none;
+}
+
 QFrame#toplevel_up {
     background-color: #0B0F19;
     border-bottom: 1px solid #1E293B;
@@ -1019,8 +1024,8 @@ QPushButton#cabinetFilterBtn {
     color: #94A3B8;
     border: 1px solid #1E293B;
     border-radius: 0px;
-    text-align: left;
-    padding: 4px 10px;
+    text-align: center;
+    padding: 3px 12px;
     font-size: 11px;
     font-weight: 600;
 }
@@ -1034,7 +1039,7 @@ QPushButton#cabinetFilterBtn:hover {
 QPushButton#cabinetFilterBtn:checked {
     background-color: #0F172A;
     border: 1px solid #0284C7;
-    border-left: 3px solid #38BDF8;
+    border-bottom: 2px solid #38BDF8;
     color: #38BDF8;
     font-weight: 700;
 }
@@ -1178,23 +1183,30 @@ QPushButton#malwareReRun:pressed {
 }
 
 /* ==========================================
- * 5. Loader Page (page_loader)
+ * 5. Loader Page (page_loader) - Cyber Reactor Console
  * ========================================== */
 QWidget#page_loader {
-    background-color: #0A0E1A;
+    background-color: #050811;
+    background-image: qradialgradient(cx: 0.5, cy: 0.45, radius: 0.8, fx: 0.5, fy: 0.45,
+                                      stop: 0 rgba(11, 19, 43, 0.7),
+                                      stop: 0.5 rgba(8, 13, 27, 0.9),
+                                      stop: 1 rgba(4, 6, 13, 1.0));
 }
 
 QFrame#frame_loader {
-    background-color: #0F172A;
-    border: 1px solid #1E293B;
-    border-radius: 0px;
+    background-color: rgba(11, 18, 38, 0.90);
+    border: 1.5px solid #0284C7;
+    border-radius: 6px;
+    padding: 12px;
 }
 
 QLabel#loaderPageText {
-    color: #38BDF8;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    color: #F8FAFC;
+    font-family: 'Segoe UI', -apple-system, Roboto, sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 4px;
 }
 
 /* ==========================================

@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/resources">
         <file alias="app-logo-merry">res/icon.png</file>
-        <file alias="app-style-dark">res/style/metro-blue-dark.qss</file>
         <file alias="ApplicationStyle.qss">res/style/ApplicationStyle.qss</file>
         <file alias="icon-hello">res/icon-hello.png</file>
         <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
@@ -13,7 +12,9 @@
         <file alias="banner">res/banner-low.png</file>
         <file alias="banner-low">res/banner-low.png</file>
         <file alias="banner-low.png">res/banner-low.png</file>
+        <file alias="banner-max">res/banner-max.png</file>
         <file alias="app-logo">res/icon_std.png</file>
+        <file alias="app-icon-svg">res/icon.svg</file>
         <file alias="checkbox-checked">res/checkbox-checked.svg</file>
         <file alias="license-gplv3">LICENSE</file>
     </qresource>

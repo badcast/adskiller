@@ -51,16 +51,16 @@ jobs:
             libasound2-dev libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
             autoconf automake libtool pkg-config libplist-dev libimobiledevice-dev libusbmuxd-dev libzip-dev libcurl4-openssl-dev
 
-      - name: Build idevicerestore from official sources (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          bash scripts/build_idevicerestore.sh || true
-
-      - name: Setup idevicerestore (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          & scripts/build_idevicerestore_win.ps1
+      # - name: Build idevicerestore from official sources (Linux)
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     bash scripts/build_idevicerestore.sh || true
+      #
+      # - name: Setup idevicerestore (Windows)
+      #   if: runner.os == 'Windows'
+      #   shell: pwsh
+      #   run: |
+      #     & scripts/build_idevicerestore_win.ps1
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5

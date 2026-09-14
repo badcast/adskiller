@@ -31,23 +31,93 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <QPen>
+
+namespace {
+
+class HeroBannerView : public QWidget
+{
+public:
+    explicit HeroBannerView(const QPixmap &pix, QWidget *parent = nullptr)
+        : QWidget(parent), m_pixmap(pix)
+    {
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        setMinimumHeight(440);
+    }
+
+    void setPixmap(const QPixmap &pix)
+    {
+        m_pixmap = pix;
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *event) override
+    {
+        Q_UNUSED(event);
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+        QRect r = rect();
+        p.fillRect(r, QColor(7, 10, 18));
+
+        if(!m_pixmap.isNull())
+        {
+            QPixmap scaled = m_pixmap.scaled(r.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            int x = (r.width() - scaled.width()) / 2;
+            int y = (r.height() - scaled.height()) / 2;
+            p.drawPixmap(x, y, scaled);
+
+            // Subtle cyber neon border around the banner image
+            p.setPen(QPen(QColor(56, 189, 248, 50), 1));
+            p.drawRect(x, y, scaled.width() - 1, scaled.height() - 1);
+
+            // High-tech sci-fi corner bracket accents
+            p.setPen(QPen(QColor(56, 189, 248, 190), 1.5));
+            const int bracketLen = 10;
+            // Top-left
+            p.drawLine(x, y, x + bracketLen, y);
+            p.drawLine(x, y, x, y + bracketLen);
+            // Top-right
+            p.drawLine(x + scaled.width() - bracketLen, y, x + scaled.width() - 1, y);
+            p.drawLine(x + scaled.width() - 1, y, x + scaled.width() - 1, y + bracketLen);
+            // Bottom-left
+            p.drawLine(x, y + scaled.height() - 1, x + bracketLen, y + scaled.height() - 1);
+            p.drawLine(x, y + scaled.height() - bracketLen, x, y + scaled.height() - 1);
+            // Bottom-right
+            p.drawLine(x + scaled.width() - bracketLen, y + scaled.height() - 1, x + scaled.width() - 1, y + scaled.height() - 1);
+            p.drawLine(x + scaled.width() - 1, y + scaled.height() - bracketLen, x + scaled.width() - 1, y + scaled.height() - 1);
+        }
+        else
+        {
+            p.setPen(QColor(148, 163, 184));
+            p.drawText(r, Qt::AlignCenter, QStringLiteral("AdsKiller Banner"));
+        }
+    }
+
+private:
+    QPixmap m_pixmap;
+};
+
+} // namespace
 
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("О программе AdsKiller"));
 
-    QPixmap iconPix(QStringLiteral(":/resources/banner-low"));
+    QPixmap iconPix(QStringLiteral(":/resources/app-logo"));
     if(iconPix.isNull())
-        iconPix = QPixmap(QStringLiteral(":/resources/banner"));
+        iconPix = QPixmap(QStringLiteral("res/icon.png"));
     if(iconPix.isNull())
-        iconPix = QPixmap(QStringLiteral("res/banner-low.png"));
+        iconPix = QPixmap(QStringLiteral("res/icon_std.png"));
     if(iconPix.isNull())
-        iconPix = QPixmap(QStringLiteral(":/resources/app-logo"));
+        iconPix = QPixmap(QStringLiteral(":/resources/banner-low"));
     setWindowIcon(QIcon(iconPix));
     setModal(true);
 
-    resize(580, 520);
-    setMinimumSize(520, 460);
+    resize(980, 660);
+    setMinimumSize(880, 580);
 
     setupUi();
 }
@@ -62,12 +132,17 @@ void AboutDialog::setCurrentTab(TabIndex tab)
 
 void AboutDialog::setupUi()
 {
-    // Minimalist Metro UI styling compatible with Obsidian dark theme
+    // Minimalist Cyberpunk / Metro UI styling compatible with Obsidian dark theme
     setStyleSheet(QStringLiteral(
         "QDialog {"
         "    font-family: \"Segoe UI Variable\", \"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif;"
         "    background-color: #070A12;"
         "    color: #F8FAFC;"
+        "}"
+        "QFrame#heroBannerCard {"
+        "    background-color: #0A0F1D;"
+        "    border: 1px solid #1E293B;"
+        "    border-radius: 0px;"
         "}"
         "QFrame#headerCard {"
         "    background-color: #0F172A;"
@@ -87,21 +162,11 @@ void AboutDialog::setupUi()
         "    font-weight: bold;"
         "    color: #38BDF8;"
         "}"
-        "QLabel#aboutBannerIcon {"
-        "    background-color: #070A12;"
-        "    border: 1px solid #1E293B;"
-        "    border-radius: 0px;"
-        "}"
         "QLabel#aboutAppIcon {"
         "    background-color: #070A12;"
         "    border: 1px solid #1E293B;"
         "    border-radius: 0px;"
         "    padding: 4px;"
-        "}"
-        "QLabel#aboutHeroBanner {"
-        "    background-color: #070A12;"
-        "    border: 1px solid #1E293B;"
-        "    border-radius: 0px;"
         "}"
         "QTextEdit#licenseTextEdit {"
         "    font-family: \"Cascadia Code\", \"Consolas\", \"Courier New\", monospace;"
@@ -120,11 +185,13 @@ void AboutDialog::setupUi()
         "QTabBar::tab {"
         "    background-color: #0F172A;"
         "    color: #94A3B8;"
-        "    padding: 6px 14px;"
+        "    padding: 7px 16px;"
         "    border: 1px solid #1E293B;"
         "    border-bottom: none;"
         "    border-radius: 0px;"
         "    margin-right: 2px;"
+        "    font-weight: 600;"
+        "    font-size: 11.5px;"
         "}"
         "QTabBar::tab:selected {"
         "    background-color: #0B0F19;"
@@ -161,14 +228,23 @@ void AboutDialog::setupUi()
         "    border-color: #38BDF8;"
         "}"));
 
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(16, 14, 16, 14);
-    mainLayout->setSpacing(12);
+    auto *rootLayout = new QHBoxLayout(this);
+    rootLayout->setContentsMargins(14, 14, 14, 14);
+    rootLayout->setSpacing(14);
 
-    // 1. Header Banner
-    mainLayout->addWidget(createHeaderWidget());
+    // 1. Left Column: Full-Height Hero Banner Widget
+    rootLayout->addWidget(createHeroBannerWidget(), 0);
 
-    // 2. Tab Widget
+    // 2. Right Column: Header, Tabs, Footer
+    auto *rightColWidget = new QWidget(this);
+    auto *rightColLayout = new QVBoxLayout(rightColWidget);
+    rightColLayout->setContentsMargins(0, 0, 0, 0);
+    rightColLayout->setSpacing(10);
+
+    // Header Banner
+    rightColLayout->addWidget(createHeaderWidget());
+
+    // Tab Widget
     m_tabWidget = new QTabWidget(this);
     m_tabWidget->setObjectName(QStringLiteral("aboutTabWidget"));
 
@@ -177,10 +253,93 @@ void AboutDialog::setupUi()
     m_tabWidget->addTab(createGplTab(), QStringLiteral("GPL v3"));
     m_tabWidget->addTab(createChangelogTab(), QStringLiteral("Что нового"));
 
-    mainLayout->addWidget(m_tabWidget, 1);
+    rightColLayout->addWidget(m_tabWidget, 1);
 
-    // 3. Footer Bar
-    mainLayout->addWidget(createFooterWidget());
+    // Footer Bar
+    rightColLayout->addWidget(createFooterWidget());
+
+    rootLayout->addWidget(rightColWidget, 1);
+}
+
+QWidget *AboutDialog::createHeroBannerWidget()
+{
+    auto *bannerFrame = new QFrame(this);
+    bannerFrame->setObjectName(QStringLiteral("heroBannerCard"));
+    bannerFrame->setFixedWidth(340);
+
+    auto *bannerLayout = new QVBoxLayout(bannerFrame);
+    bannerLayout->setContentsMargins(10, 10, 10, 10);
+    bannerLayout->setSpacing(8);
+
+    // Top cyber strip
+    auto *topStrip = new QFrame(bannerFrame);
+    topStrip->setStyleSheet(QStringLiteral(
+        "background-color: #070A12;"
+        "border: 1px solid #1E293B;"
+        "border-left: 3px solid #38BDF8;"
+        "border-radius: 0px;"
+    ));
+    auto *topStripLayout = new QVBoxLayout(topStrip);
+    topStripLayout->setContentsMargins(8, 6, 8, 6);
+    topStripLayout->setSpacing(2);
+
+    auto *badgeTitle = new QLabel(QStringLiteral("ADS MOBILE KILLER"), topStrip);
+    badgeTitle->setStyleSheet(QStringLiteral("font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #38BDF8; background: transparent; border: none;"));
+    auto *badgeSub = new QLabel(QStringLiteral("ADVANCED ANDROID MANAGEMENT SUITE"), topStrip);
+    badgeSub->setStyleSheet(QStringLiteral("font-size: 8.5px; font-weight: 600; letter-spacing: 0.5px; color: #94A3B8; background: transparent; border: none;"));
+
+    topStripLayout->addWidget(badgeTitle);
+    topStripLayout->addWidget(badgeSub);
+    bannerLayout->addWidget(topStrip);
+
+    // Tall Hero Banner Display
+    QPixmap bannerPix;
+    if(QFile::exists(QStringLiteral("res/banner-max.png")))
+        bannerPix.load(QStringLiteral("res/banner-max.png"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral(":/resources/banner-max"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral(":/resources/banner-low"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
+    if(bannerPix.isNull())
+        bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
+
+    auto *heroBanner = new HeroBannerView(bannerPix, bannerFrame);
+    bannerLayout->addWidget(heroBanner, 1);
+
+    // Bottom cyber telemetry bar
+    auto *statusCard = new QFrame(bannerFrame);
+    statusCard->setStyleSheet(QStringLiteral(
+        "background-color: #070A12;"
+        "border: 1px solid #1E293B;"
+        "border-radius: 0px;"
+    ));
+    auto *statusLayout = new QVBoxLayout(statusCard);
+    statusLayout->setContentsMargins(8, 6, 8, 6);
+    statusLayout->setSpacing(3);
+
+    auto *indicatorRow = new QHBoxLayout();
+    indicatorRow->setSpacing(6);
+
+    auto *dot = new QLabel(statusCard);
+    dot->setFixedSize(8, 8);
+    dot->setStyleSheet(QStringLiteral("background-color: #10B981; border-radius: 4px; border: none;"));
+    indicatorRow->addWidget(dot);
+
+    auto *indText = new QLabel(QStringLiteral("SYSTEM CORE: ONLINE"), statusCard);
+    indText->setStyleSheet(QStringLiteral("font-size: 10px; font-weight: 700; color: #10B981; letter-spacing: 0.5px; background: transparent; border: none;"));
+    indicatorRow->addWidget(indText);
+    indicatorRow->addStretch();
+    statusLayout->addLayout(indicatorRow);
+
+    auto *telemetryLabel = new QLabel(QStringLiteral("ADB ENGINE v2.4 • SECURE RPC • ZERO-ROOT"), statusCard);
+    telemetryLabel->setStyleSheet(QStringLiteral("font-size: 8.5px; color: #64748B; font-weight: 600; font-family: 'Cascadia Code', monospace; background: transparent; border: none;"));
+    statusLayout->addWidget(telemetryLabel);
+
+    bannerLayout->addWidget(statusCard);
+
+    return bannerFrame;
 }
 
 QWidget *AboutDialog::createHeaderWidget()
@@ -192,21 +351,23 @@ QWidget *AboutDialog::createHeaderWidget()
     headerLayout->setContentsMargins(14, 10, 14, 10);
     headerLayout->setSpacing(14);
 
-    // App Logo / Banner Icon - ADSKILLER icon
+    // App Logo / Banner Icon - High-Res ADSKILLER icon
     auto *logoLabel = new QLabel(headerFrame);
     logoLabel->setObjectName(QStringLiteral("aboutAppIcon"));
-    logoLabel->setFixedSize(80, 80);
+    logoLabel->setFixedSize(76, 76);
     logoLabel->setAlignment(Qt::AlignCenter);
 
-    QPixmap appIconPix(QStringLiteral(":/resources/icon-hello"));
+    QPixmap appIconPix(QStringLiteral(":/resources/app-logo"));
     if(appIconPix.isNull())
-        appIconPix = QPixmap(QStringLiteral(":/resources/app-logo"));
+        appIconPix = QPixmap(QStringLiteral("res/icon.png"));
     if(appIconPix.isNull())
-        appIconPix = QPixmap(QStringLiteral("res/icon-hello.png"));
+        appIconPix = QPixmap(QStringLiteral("res/icon_std.png"));
+    if(appIconPix.isNull())
+        appIconPix = QPixmap(QStringLiteral(":/resources/icon-hello"));
 
     if(!appIconPix.isNull())
     {
-        logoLabel->setPixmap(appIconPix.scaled(76, 76, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        logoLabel->setPixmap(appIconPix.scaled(68, 68, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
     headerLayout->addWidget(logoLabel);
 
@@ -214,7 +375,7 @@ QWidget *AboutDialog::createHeaderWidget()
     auto *infoLayout = new QVBoxLayout();
     infoLayout->setSpacing(3);
 
-    // Row 1: Title + Version Pill + Tag
+    // Row 1: Title + Version Pill + Channel Badges
     auto *titleRow = new QHBoxLayout();
     titleRow->setSpacing(8);
 
@@ -243,6 +404,18 @@ QWidget *AboutDialog::createHeaderWidget()
         "font-size: 10px;"
         "font-weight: 600;"));
     titleRow->addWidget(channelBadge);
+
+    auto *rootlessBadge = new QLabel(QStringLiteral("Rootless ADB"), headerFrame);
+    rootlessBadge->setStyleSheet(QStringLiteral(
+        "background-color: rgba(56, 189, 248, 0.15);"
+        "color: #38BDF8;"
+        "border: 1px solid rgba(56, 189, 248, 0.35);"
+        "border-radius: 0px;"
+        "padding: 2px 8px;"
+        "font-size: 10px;"
+        "font-weight: 600;"));
+    titleRow->addWidget(rootlessBadge);
+
     titleRow->addStretch();
     infoLayout->addLayout(titleRow);
 
@@ -252,8 +425,8 @@ QWidget *AboutDialog::createHeaderWidget()
     infoLayout->addWidget(subLabel);
 
     // Row 3: Meta info
-    auto *metaLabel = new QLabel(QStringLiteral("GNU GPL v3 • Авторские права © 2026 imister.tech • C++17 / Qt 6"), headerFrame);
-    metaLabel->setStyleSheet(QStringLiteral("font-size: 11px; color: #64748B;"));
+    auto *metaLabel = new QLabel(QStringLiteral("GNU GPL v3 • Авторские права © 2026 imister.tech • C++17 / Qt 6 Native"), headerFrame);
+    metaLabel->setStyleSheet(QStringLiteral("font-size: 10.5px; color: #64748B;"));
     infoLayout->addWidget(metaLabel);
 
     headerLayout->addLayout(infoLayout);
@@ -273,52 +446,34 @@ QWidget *AboutDialog::createAboutTab()
     layout->setContentsMargins(10, 10, 10, 10);
     layout->setSpacing(10);
 
-    // 1. Hero Card with Minimalist Description & Banner Icon
-    auto *heroCard = new QFrame(container);
-    heroCard->setProperty("card", true);
-    auto *heroLayout = new QHBoxLayout(heroCard);
-    heroLayout->setContentsMargins(12, 10, 12, 10);
-    heroLayout->setSpacing(14);
+    // 1. Executive Platform Overview Card
+    auto *overviewCard = new QFrame(container);
+    overviewCard->setProperty("card", true);
+    auto *overviewLayout = new QVBoxLayout(overviewCard);
+    overviewLayout->setContentsMargins(14, 12, 14, 12);
+    overviewLayout->setSpacing(6);
 
-    auto *heroBannerLabel = new QLabel(heroCard);
-    heroBannerLabel->setObjectName(QStringLiteral("aboutHeroBanner"));
-    heroBannerLabel->setFixedSize(70, 100);
-    heroBannerLabel->setAlignment(Qt::AlignCenter);
+    auto *overviewTitle = new QLabel(QStringLiteral("Комплексная экосистема оптимизации и защиты Android"), overviewCard);
+    overviewTitle->setStyleSheet(QStringLiteral("font-size: 13px; font-weight: bold; color: #38BDF8; background: transparent; border: none;"));
+    overviewLayout->addWidget(overviewTitle);
 
-    QPixmap bannerPix(QStringLiteral(":/resources/banner-low"));
-    if(bannerPix.isNull())
-        bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
-    if(bannerPix.isNull())
-        bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
-    if(!bannerPix.isNull())
-    {
-        heroBannerLabel->setPixmap(bannerPix.scaled(66, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    }
-    heroLayout->addWidget(heroBannerLabel);
+    auto *overviewDesc = new QLabel(
+        QStringLiteral("AdsKiller — специализированный настольный программный комплекс для глубокого деблоатинга, удаления нежелательного ПО, "
+                       "тонкой системной оптимизации и ускорения Android-устройств. Взаимодействие осуществляется через защищенный ADB-слой "
+                       "в пользовательском пространстве, без вмешательства в целостность системных разделов и без Root-прав."),
+        overviewCard);
+    overviewDesc->setWordWrap(true);
+    overviewDesc->setStyleSheet(QStringLiteral("font-size: 11.5px; color: #CBD5E1; line-height: 1.45; background: transparent; border: none;"));
+    overviewLayout->addWidget(overviewDesc);
 
-    auto *heroTextLayout = new QVBoxLayout();
-    heroTextLayout->setSpacing(4);
+    layout->addWidget(overviewCard);
 
-    auto *heroTitle = new QLabel(QStringLiteral("<b>AdsKiller</b> — легковесный инструмент деблоатинга"), heroCard);
-    heroTitle->setStyleSheet(QStringLiteral("font-size: 12.5px; color: #F8FAFC; font-weight: bold;"));
-    heroTextLayout->addWidget(heroTitle);
-
-    auto *heroDesc = new QLabel(
-        QStringLiteral("Безопасная очистка Android от встроенной рекламы, системного мусора и ускорение оперативной памяти через изолированный ADB-режим без Root-прав."),
-        heroCard);
-    heroDesc->setWordWrap(true);
-    heroDesc->setStyleSheet(QStringLiteral("font-size: 11.5px; color: #94A3B8;"));
-    heroTextLayout->addWidget(heroDesc);
-
-    heroLayout->addLayout(heroTextLayout, 1);
-    layout->addWidget(heroCard);
-
-    // 2. Minimalist Feature Tiles Grid (2x2)
+    // 2. Feature Tiles Grid (3x2)
     auto *gridCard = new QFrame(container);
     gridCard->setProperty("card", true);
     auto *gridLayout = new QGridLayout(gridCard);
     gridLayout->setContentsMargins(12, 10, 12, 10);
-    gridLayout->setHorizontalSpacing(12);
+    gridLayout->setHorizontalSpacing(10);
     gridLayout->setVerticalSpacing(8);
 
     auto createMiniTile = [gridCard](const QString &icon, const QString &title, const QString &subtitle) -> QWidget *
@@ -359,21 +514,23 @@ QWidget *AboutDialog::createAboutTab()
         return tile;
     };
 
-    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/shield"), QStringLiteral("Блокировка рекламы"), QStringLiteral("Нейтрализация баннеров и трекеров (No Root)")), 0, 0);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/shield"), QStringLiteral("Блокировка рекламы"), QStringLiteral("Нейтрализация баннеров и трекеров")), 0, 0);
     gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/zap"), QStringLiteral("Boost RAM & Очистка"), QStringLiteral("Освобождение памяти и удаление кэша")), 0, 1);
-    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/users"), QStringLiteral("Contact Fixer"), QStringLiteral("Исправление телефонных книг VCF")), 1, 0);
-    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/bot"), QStringLiteral("AI-Ассистент"), QStringLiteral("Перевод документов и умный чат")), 1, 1);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/service-icons/apk-manager"), QStringLiteral("Деблоатинг пакетов"), QStringLiteral("Отключение вендорного bloatware")), 1, 0);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/users"), QStringLiteral("Contact Fixer"), QStringLiteral("Исправление телефонных книг VCF")), 1, 1);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/bot"), QStringLiteral("AI-Ассистент"), QStringLiteral("Умный перевод и нейро-чат")), 2, 0);
+    gridLayout->addWidget(createMiniTile(QStringLiteral(":/svg/rocket"), QStringLiteral("ADB Zero-Root Safe"), QStringLiteral("Безопасное прямое подключение")), 2, 1);
 
     layout->addWidget(gridCard);
 
-    // 3. Minimalist Tech Spec Strip
+    // 3. Tech Spec Strip
     auto *specCard = new QFrame(container);
     specCard->setProperty("card", true);
     auto *specLayout = new QHBoxLayout(specCard);
     specLayout->setContentsMargins(12, 6, 12, 6);
     specLayout->setSpacing(8);
 
-    const QStringList techBadges = {QStringLiteral("C++17"), QStringLiteral("Qt 6"), QStringLiteral("ADB Safe Engine"), QStringLiteral("Safe User Mode"), QStringLiteral("GNU GPL v3")};
+    const QStringList techBadges = {QStringLiteral("C++17 Core"), QStringLiteral("Qt 6 Native"), QStringLiteral("ADB Safe Engine"), QStringLiteral("Zero-Root Mode"), QStringLiteral("GNU GPL v3")};
     for(const QString &b : techBadges)
     {
         auto *lbl = new QLabel(b, specCard);
@@ -383,7 +540,7 @@ QWidget *AboutDialog::createAboutTab()
             "border: 1px solid #1E293B;"
             "border-radius: 0px;"
             "padding: 2px 7px;"
-            "font-size: 10.5px;"
+            "font-size: 10px;"
             "font-weight: 600;"));
         specLayout->addWidget(lbl);
     }
