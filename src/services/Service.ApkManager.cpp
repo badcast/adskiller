@@ -1526,6 +1526,7 @@ bool ApkManagerService::isFinish()
 
 bool ApkManagerService::start()
 {
+    sendCheckPull();
     if(!canStart())
         return false;
 

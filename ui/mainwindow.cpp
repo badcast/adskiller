@@ -1496,6 +1496,8 @@ void MainWindow::pageShownPreStart(int page)
                     widget->refreshList();
                 }
             }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
             break;
         }
         case ApkManagerPage:
@@ -1510,6 +1512,8 @@ void MainWindow::pageShownPreStart(int page)
                     widget->loadPackages();
                 }
             }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
             break;
         }
         case ContactFixerPage:
@@ -1523,6 +1527,8 @@ void MainWindow::pageShownPreStart(int page)
                         widget->setDevice(connectPhone.adbDevice);
                 }
             }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
             break;
         }
         default:

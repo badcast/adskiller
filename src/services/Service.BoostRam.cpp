@@ -159,6 +159,7 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
 
 bool BoostRamService::start()
 {
+    sendCheckPull();
     if(!canStart())
         return false;
     if(pushButtonReRun)

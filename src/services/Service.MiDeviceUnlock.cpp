@@ -26,6 +26,7 @@ bool MiDeviceUnlockService::isFinish()
 
 bool MiDeviceUnlockService::start()
 {
+    sendCheckPull();
     return false;
 }
 

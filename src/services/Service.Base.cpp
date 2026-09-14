@@ -46,6 +46,30 @@ DeviceConnectType Service::deviceConnectType() const
     return mDeviceConnectType;
 }
 
+bool Service::isOnlineService() const
+{
+    const QString id = uuid();
+    return id == IDServiceAdsString ||
+           id == IDServiceMyDeviceString ||
+           id == IDServiceVIPBuyString ||
+           id == IDServiceAIAgentString ||
+           id == IDServiceAITranslaterString;
+}
+
+void Service::sendCheckPull() const
+{
+    if(MainWindow::current && MainWindow::current->network.isAuthed())
+    {
+        const QString id = uuid();
+        if(!id.isEmpty())
+        {
+            QJsonObject req;
+            req[QStringLiteral("check")] = true;
+            MainWindow::current->network.pullServiceUUID(id, req, ServiceOperation::Get);
+        }
+    }
+}
+
 std::list<std::shared_ptr<Service>> Service::EnumAppServices(QObject *parent)
 {
     std::list<std::shared_ptr<Service>> services;

@@ -13,6 +13,11 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
         return false;
     }
 
+    if(!service->isOnlineService())
+    {
+        service->sendCheckPull();
+    }
+
     PageIndex _preloadPage;
     _CurrentService = std::move(service);
     _CurrentService->stop();

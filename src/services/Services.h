@@ -126,6 +126,8 @@ public:
     void close();
 
     DeviceConnectType deviceConnectType() const;
+    virtual bool isOnlineService() const;
+    virtual void sendCheckPull() const;
 
 public:
     static std::list<std::shared_ptr<Service>> EnumAppServices(QObject *parent = nullptr);

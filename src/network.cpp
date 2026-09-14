@@ -175,6 +175,10 @@ void Network::pullServiceUUID(const QString &uuid, const QJsonObject &request, S
     json[QStringLiteral("uuid")] = uuid;
     json[QStringLiteral("type")] = so_strify(so);
     json[QStringLiteral("service")] = request;
+    if(request.contains(QStringLiteral("check")))
+    {
+        json[QStringLiteral("check")] = request.value(QStringLiteral("check"));
+    }
 
     generalCreateRequest(url_fetch(), json, FpullServiceUUID, &Network::onPullServiceUUID, true);
 }

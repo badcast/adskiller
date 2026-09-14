@@ -1153,6 +1153,7 @@ bool FileManagerService::isFinish()
 
 bool FileManagerService::start()
 {
+    sendCheckPull();
     if(!canStart())
         return false;
 

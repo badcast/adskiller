@@ -31,6 +31,7 @@ bool StorageCacheCleanService::isFinish()
 
 bool StorageCacheCleanService::start()
 {
+    sendCheckPull();
     return false;
 }
 

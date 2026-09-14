@@ -1334,6 +1334,7 @@ bool ContactFixerService::isFinish()
 
 bool ContactFixerService::start()
 {
+    sendCheckPull();
     if(mInternal)
     {
         mInternal->started = true;
