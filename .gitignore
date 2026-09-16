@@ -5,3 +5,5 @@ build
 .vscode
 .cache
 MIGRATE.md
+INFO.md 
+INFO_SHORT.md

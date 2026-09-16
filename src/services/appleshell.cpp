@@ -27,7 +27,8 @@ static QHash<QString, std::shared_ptr<AppleGlobal>> s_appleGlobals;
 
 static void AppleWorkerThread(AppleGlobal *global)
 {
-    if(!global) return;
+    if(!global)
+        return;
     global->data.store(1);
 
     while(!global->devId.isEmpty() && global->data.load() > 0)
@@ -53,7 +54,7 @@ static void AppleWorkerThread(AppleGlobal *global)
             int code = -1;
             auto reply = apple_send_cmd(code, prog, args);
             std::lock_guard<std::mutex> lock(global->mutex);
-            global->responses[reqId] = AppleCmdResult{code, reply.second};
+            global->responses[reqId] = AppleCmdResult {code, reply.second};
         }
         else
         {
@@ -122,7 +123,8 @@ bool AppleShell::isConnect() const
 
 void AppleShell::exit()
 {
-    if(!ref) return;
+    if(!ref)
+        return;
 
     std::lock_guard<std::mutex> lock(s_appleGlobalsMutex);
     ref->ref--;
@@ -142,7 +144,8 @@ void AppleShell::exit()
 
 bool AppleShell::reConnect()
 {
-    if(!ref) return false;
+    if(!ref)
+        return false;
     QString curId = ref->devId;
     exit();
     return connect(curId);
@@ -161,7 +164,8 @@ std::pair<bool, QString> AppleShell::commandQueueWait(const QString &program, co
 
 int AppleShell::commandQueueAsync(const QString &program, const QStringList &args)
 {
-    if(!ref) return -1;
+    if(!ref)
+        return -1;
     int reqId = QRandomGenerator::global()->bounded(1, 100000000);
     std::lock_guard<std::mutex> lock(ref->mutex);
     ref->requests.push_back({reqId, program, args});
@@ -170,7 +174,8 @@ int AppleShell::commandQueueAsync(const QString &program, const QStringList &arg
 
 std::pair<bool, QString> AppleShell::commandResult(int requestId, bool waitResult)
 {
-    if(!ref) return {false, {}};
+    if(!ref)
+        return {false, {}};
 
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(10000);
     while(true)
@@ -198,7 +203,8 @@ std::pair<bool, QString> AppleShell::commandResult(int requestId, bool waitResul
 QString AppleShell::getprop(const QString &propname, const QString &domain)
 {
     QString dev = deviceId();
-    if(dev.isEmpty()) return {};
+    if(dev.isEmpty())
+        return {};
 
     QStringList args;
     if(!dev.startsWith("Apple-"))
@@ -248,7 +254,8 @@ std::shared_ptr<AppleSysInfo> AppleShell::getInfo()
 bool AppleShell::validatePairing()
 {
     QString dev = deviceId();
-    if(dev.isEmpty()) return false;
+    if(dev.isEmpty())
+        return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "idevicepair", QStringList() << "-u" << dev << "validate");
     return code == 0 && reply.second.contains("SUCCESS");
@@ -257,7 +264,8 @@ bool AppleShell::validatePairing()
 bool AppleShell::requestPairing()
 {
     QString dev = deviceId();
-    if(dev.isEmpty()) return false;
+    if(dev.isEmpty())
+        return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "idevicepair", QStringList() << "-u" << dev << "pair");
     return code == 0;
@@ -266,7 +274,8 @@ bool AppleShell::requestPairing()
 bool AppleShell::enterRecovery()
 {
     QString dev = deviceId();
-    if(dev.isEmpty()) return false;
+    if(dev.isEmpty())
+        return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "ideviceenterrecovery", QStringList() << dev);
     return code == 0;
@@ -286,7 +295,8 @@ bool AppleShell::restartDevice()
     if(!dev.isEmpty() && !dev.startsWith("Apple-Recovery") && !dev.startsWith("Apple-DFU"))
     {
         auto reply = apple_send_cmd(code, "idevicediagnostics", QStringList() << "-u" << dev << "restart");
-        if(code == 0) return true;
+        if(code == 0)
+            return true;
     }
     auto recReply = apple_send_cmd(code, "irecovery", QStringList() << "-c" << "reboot");
     return code == 0;
@@ -295,7 +305,8 @@ bool AppleShell::restartDevice()
 bool AppleShell::shutdownDevice()
 {
     QString dev = deviceId();
-    if(dev.isEmpty()) return false;
+    if(dev.isEmpty())
+        return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "idevicediagnostics", QStringList() << "-u" << dev << "shutdown");
     return code == 0;

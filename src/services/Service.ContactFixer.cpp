@@ -129,12 +129,28 @@ void ContactFixerWidget::requestDeviceConnect()
 
 void ContactFixerWidget::setupUi()
 {
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    QVBoxLayout *rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setSpacing(0);
+
+    QScrollArea *scrollArea = new QScrollArea(this);
+    scrollArea->setObjectName("cf_scrollArea");
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setStyleSheet("#cf_scrollArea { background-color: transparent; border: none; }");
+
+    QWidget *contentWidget = new QWidget(scrollArea);
+    contentWidget->setObjectName("cf_contentWidget");
+    contentWidget->setStyleSheet("#cf_contentWidget { background-color: transparent; }");
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(contentWidget);
     mainLayout->setContentsMargins(18, 16, 18, 16);
     mainLayout->setSpacing(12);
 
     // ================= 1. TOP HEADER & DEVICE BAR =================
-    QFrame *headerFrame = new QFrame(this);
+    QFrame *headerFrame = new QFrame(contentWidget);
     headerFrame->setObjectName("cf_header");
     headerFrame->setStyleSheet("#cf_header { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; }");
     QVBoxLayout *headerVBox = new QVBoxLayout(headerFrame);
@@ -190,7 +206,7 @@ void ContactFixerWidget::setupUi()
     mainLayout->addWidget(headerFrame);
 
     // ================= 2. ACTIONS & TOOLBAR CARD =================
-    QFrame *actionFrame = new QFrame(this);
+    QFrame *actionFrame = new QFrame(contentWidget);
     actionFrame->setObjectName("cf_actions");
     actionFrame->setStyleSheet("#cf_actions { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; }");
     QVBoxLayout *actionVBox = new QVBoxLayout(actionFrame);
@@ -275,9 +291,11 @@ void ContactFixerWidget::setupUi()
     m_comboFormatRule->addItem("Международный компактный: +79000000000");
     m_comboFormatRule->addItem("Локальный компактный: 89000000000");
     m_comboFormatRule->setStyleSheet(
-        "QComboBox { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 8px; height: 26px; min-height: 26px; max-height: 26px; min-width: 280px; font-size: 11.5px; }"
+        "QComboBox { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 24px 2px 8px; height: 26px; min-height: 26px; max-height: 26px; min-width: 280px; font-size: 11.5px; }"
         "QComboBox:hover { border-color: #38BDF8; }"
-        "QComboBox::drop-down { border: none; width: 18px; }"
+        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; border: none; width: 20px; background-color: transparent; }"
+        "QComboBox::down-arrow { image: url(:/svg/arrow-down); width: 12px; height: 12px; }"
+        "QComboBox::down-arrow:hover { image: url(:/svg/arrow-down-hover); }"
         "QComboBox QAbstractItemView { background-color: #0F172A; color: #F8FAFC; selection-background-color: #0284C7; border: 1px solid #1E293B; }");
     connect(m_comboFormatRule, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ContactFixerWidget::onFormatRuleChanged);
     actRow2->addWidget(m_comboFormatRule);
@@ -312,8 +330,9 @@ void ContactFixerWidget::setupUi()
     mainLayout->addWidget(actionFrame);
 
     // ================= 3. MAIN SPLITTER (Center Table + Right Inspector) =================
-    QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
+    QSplitter *splitter = new QSplitter(Qt::Horizontal, contentWidget);
     splitter->setChildrenCollapsible(false);
+    splitter->setMinimumHeight(420);
 
     // Left Container: Selection Controls & Table
     QWidget *leftContainer = new QWidget(splitter);
@@ -536,19 +555,22 @@ void ContactFixerWidget::setupUi()
     QHBoxLayout *statusBar = new QHBoxLayout();
     statusBar->setContentsMargins(4, 2, 4, 2);
 
-    m_statTotalContacts = new QLabel("Всего контактов: 0", this);
+    m_statTotalContacts = new QLabel("Всего контактов: 0", contentWidget);
     m_statTotalContacts->setStyleSheet("color: #94A3B8; font-size: 12.5px; font-weight: bold; margin-right: 14px;");
     statusBar->addWidget(m_statTotalContacts);
 
-    m_statTotalNumbers = new QLabel("Номеров: 0", this);
+    m_statTotalNumbers = new QLabel("Номеров: 0", contentWidget);
     m_statTotalNumbers->setStyleSheet("color: #94A3B8; font-size: 12.5px; margin-right: 14px;");
     statusBar->addWidget(m_statTotalNumbers);
 
-    m_statusMsg = new QLabel("Готов к работе. Откройте файл контактов .vcf или считайте с телефона.", this);
+    m_statusMsg = new QLabel("Готов к работе. Откройте файл контактов .vcf или считайте с телефона.", contentWidget);
     m_statusMsg->setStyleSheet("color: #38BDF8; font-size: 12.5px; font-style: italic;");
     statusBar->addWidget(m_statusMsg, 1);
 
     mainLayout->addLayout(statusBar);
+
+    scrollArea->setWidget(contentWidget);
+    rootLayout->addWidget(scrollArea);
 
     // Initialize live tester with sample number
     onTestNumberInputChanged("+890000000000");
@@ -1279,6 +1301,61 @@ void ContactFixerWidget::onQuickAddContact()
     m_statusMsg->setText("Контакт добавлен: " + name);
 }
 
+void ContactFixerWidget::resetSession()
+{
+    if(d)
+        d->vcards.clear();
+    m_items.clear();
+    m_filteredItems.clear();
+    m_loadedFilePath.clear();
+
+    if(m_table)
+    {
+        m_table->blockSignals(true);
+        m_table->setRowCount(0);
+        m_table->blockSignals(false);
+    }
+
+    if(m_loadedPathEdit)
+        m_loadedPathEdit->clear();
+    if(m_remotePathEdit)
+        m_remotePathEdit->setText("/sdcard/contacts.vcf");
+    if(m_searchEdit)
+        m_searchEdit->clear();
+
+    if(m_testNumberInput)
+        m_testNumberInput->clear();
+    if(m_quickNameEdit)
+        m_quickNameEdit->clear();
+    if(m_quickNumberEdit)
+        m_quickNumberEdit->clear();
+
+    if(m_valBeautyGlobal)
+        m_valBeautyGlobal->clear();
+    if(m_valBeautyLocal)
+        m_valBeautyLocal->clear();
+    if(m_valCompactGlobal)
+        m_valCompactGlobal->clear();
+    if(m_valCompactLocal)
+        m_valCompactLocal->clear();
+
+    if(m_testCountryLabel)
+        m_testCountryLabel->setText(QString::fromUtf8("Страна: —"));
+    if(m_testDialCodeLabel)
+        m_testDialCodeLabel->setText(QString::fromUtf8("Код: —"));
+    if(m_testValidLabel)
+        m_testValidLabel->setText(QString::fromUtf8("Корректный: —"));
+
+    if(m_btnSaveVcf)
+        m_btnSaveVcf->setEnabled(false);
+    if(m_btnPushDevice)
+        m_btnPushDevice->setEnabled(false);
+    if(m_btnExportCsv)
+        m_btnExportCsv->setEnabled(false);
+
+    updateStats();
+}
+
 // ==================== ContactFixerService ====================
 
 struct CFSInternalData
@@ -1344,9 +1421,13 @@ bool ContactFixerService::start()
     if(MainWindow::current)
     {
         auto *widget = static_cast<ContactFixerWidget *>(MainWindow::current->pageWidget(ContactFixerPage));
-        if(widget && !mAdbDevice.isEmpty())
+        if(widget)
         {
-            widget->setDevice(mAdbDevice);
+            widget->resetSession();
+            if(!mAdbDevice.isEmpty())
+            {
+                widget->setDevice(mAdbDevice);
+            }
         }
     }
 
@@ -1359,5 +1440,12 @@ void ContactFixerService::stop()
     {
         mInternal->started = false;
         mInternal->finished = true;
+    }
+
+    if(MainWindow::current)
+    {
+        auto *widget = static_cast<ContactFixerWidget *>(MainWindow::current->pageWidget(ContactFixerPage));
+        if(widget)
+            widget->resetSession();
     }
 }

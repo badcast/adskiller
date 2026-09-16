@@ -23,6 +23,7 @@ public:
     void setDevice(const AdbDevice &device);
     void refreshList();
     void navigateTo(const QString &path);
+    void resetSession();
 
     static QString formatBytes(qint64 bytes);
 

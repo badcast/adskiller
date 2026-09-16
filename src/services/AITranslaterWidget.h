@@ -23,6 +23,7 @@ public:
 
     // Called by service to pass network token / auth
     void setNetwork(class Network *net);
+    void resetSession();
 
 private:
     void setupUi();

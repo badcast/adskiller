@@ -33,72 +33,72 @@
 #include <QRegularExpression>
 #include <QPen>
 
-namespace {
-
-class HeroBannerView : public QWidget
+namespace
 {
-public:
-    explicit HeroBannerView(const QPixmap &pix, QWidget *parent = nullptr)
-        : QWidget(parent), m_pixmap(pix)
+
+    class HeroBannerView : public QWidget
     {
-        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        setMinimumHeight(440);
-    }
-
-    void setPixmap(const QPixmap &pix)
-    {
-        m_pixmap = pix;
-        update();
-    }
-
-protected:
-    void paintEvent(QPaintEvent *event) override
-    {
-        Q_UNUSED(event);
-        QPainter p(this);
-        p.setRenderHint(QPainter::Antialiasing);
-        p.setRenderHint(QPainter::SmoothPixmapTransform);
-
-        QRect r = rect();
-        p.fillRect(r, QColor(7, 10, 18));
-
-        if(!m_pixmap.isNull())
+    public:
+        explicit HeroBannerView(const QPixmap &pix, QWidget *parent = nullptr) : QWidget(parent), m_pixmap(pix)
         {
-            QPixmap scaled = m_pixmap.scaled(r.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            int x = (r.width() - scaled.width()) / 2;
-            int y = (r.height() - scaled.height()) / 2;
-            p.drawPixmap(x, y, scaled);
-
-            // Subtle cyber neon border around the banner image
-            p.setPen(QPen(QColor(56, 189, 248, 50), 1));
-            p.drawRect(x, y, scaled.width() - 1, scaled.height() - 1);
-
-            // High-tech sci-fi corner bracket accents
-            p.setPen(QPen(QColor(56, 189, 248, 190), 1.5));
-            const int bracketLen = 10;
-            // Top-left
-            p.drawLine(x, y, x + bracketLen, y);
-            p.drawLine(x, y, x, y + bracketLen);
-            // Top-right
-            p.drawLine(x + scaled.width() - bracketLen, y, x + scaled.width() - 1, y);
-            p.drawLine(x + scaled.width() - 1, y, x + scaled.width() - 1, y + bracketLen);
-            // Bottom-left
-            p.drawLine(x, y + scaled.height() - 1, x + bracketLen, y + scaled.height() - 1);
-            p.drawLine(x, y + scaled.height() - bracketLen, x, y + scaled.height() - 1);
-            // Bottom-right
-            p.drawLine(x + scaled.width() - bracketLen, y + scaled.height() - 1, x + scaled.width() - 1, y + scaled.height() - 1);
-            p.drawLine(x + scaled.width() - 1, y + scaled.height() - bracketLen, x + scaled.width() - 1, y + scaled.height() - 1);
+            setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            setMinimumHeight(440);
         }
-        else
+
+        void setPixmap(const QPixmap &pix)
         {
-            p.setPen(QColor(148, 163, 184));
-            p.drawText(r, Qt::AlignCenter, QStringLiteral("AdsKiller Banner"));
+            m_pixmap = pix;
+            update();
         }
-    }
 
-private:
-    QPixmap m_pixmap;
-};
+    protected:
+        void paintEvent(QPaintEvent *event) override
+        {
+            Q_UNUSED(event);
+            QPainter p(this);
+            p.setRenderHint(QPainter::Antialiasing);
+            p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+            QRect r = rect();
+            p.fillRect(r, QColor(7, 10, 18));
+
+            if(!m_pixmap.isNull())
+            {
+                QPixmap scaled = m_pixmap.scaled(r.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                int x = (r.width() - scaled.width()) / 2;
+                int y = (r.height() - scaled.height()) / 2;
+                p.drawPixmap(x, y, scaled);
+
+                // Subtle cyber neon border around the banner image
+                p.setPen(QPen(QColor(56, 189, 248, 50), 1));
+                p.drawRect(x, y, scaled.width() - 1, scaled.height() - 1);
+
+                // High-tech sci-fi corner bracket accents
+                p.setPen(QPen(QColor(56, 189, 248, 190), 1.5));
+                const int bracketLen = 10;
+                // Top-left
+                p.drawLine(x, y, x + bracketLen, y);
+                p.drawLine(x, y, x, y + bracketLen);
+                // Top-right
+                p.drawLine(x + scaled.width() - bracketLen, y, x + scaled.width() - 1, y);
+                p.drawLine(x + scaled.width() - 1, y, x + scaled.width() - 1, y + bracketLen);
+                // Bottom-left
+                p.drawLine(x, y + scaled.height() - 1, x + bracketLen, y + scaled.height() - 1);
+                p.drawLine(x, y + scaled.height() - bracketLen, x, y + scaled.height() - 1);
+                // Bottom-right
+                p.drawLine(x + scaled.width() - bracketLen, y + scaled.height() - 1, x + scaled.width() - 1, y + scaled.height() - 1);
+                p.drawLine(x + scaled.width() - 1, y + scaled.height() - bracketLen, x + scaled.width() - 1, y + scaled.height() - 1);
+            }
+            else
+            {
+                p.setPen(QColor(148, 163, 184));
+                p.drawText(r, Qt::AlignCenter, QStringLiteral("AdsKiller Banner"));
+            }
+        }
+
+    private:
+        QPixmap m_pixmap;
+    };
 
 } // namespace
 
@@ -277,8 +277,7 @@ QWidget *AboutDialog::createHeroBannerWidget()
         "background-color: #070A12;"
         "border: 1px solid #1E293B;"
         "border-left: 3px solid #38BDF8;"
-        "border-radius: 0px;"
-    ));
+        "border-radius: 0px;"));
     auto *topStripLayout = new QVBoxLayout(topStrip);
     topStripLayout->setContentsMargins(8, 6, 8, 6);
     topStripLayout->setSpacing(2);
@@ -313,8 +312,7 @@ QWidget *AboutDialog::createHeroBannerWidget()
     statusCard->setStyleSheet(QStringLiteral(
         "background-color: #070A12;"
         "border: 1px solid #1E293B;"
-        "border-radius: 0px;"
-    ));
+        "border-radius: 0px;"));
     auto *statusLayout = new QVBoxLayout(statusCard);
     statusLayout->setContentsMargins(8, 6, 8, 6);
     statusLayout->setSpacing(3);
@@ -458,9 +456,10 @@ QWidget *AboutDialog::createAboutTab()
     overviewLayout->addWidget(overviewTitle);
 
     auto *overviewDesc = new QLabel(
-        QStringLiteral("AdsKiller — специализированный настольный программный комплекс для глубокого деблоатинга, удаления нежелательного ПО, "
-                       "тонкой системной оптимизации и ускорения Android-устройств. Взаимодействие осуществляется через защищенный ADB-слой "
-                       "в пользовательском пространстве, без вмешательства в целостность системных разделов и без Root-прав."),
+        QStringLiteral(
+            "AdsKiller — специализированный настольный программный комплекс для глубокого деблоатинга, удаления нежелательного ПО, "
+            "тонкой системной оптимизации и ускорения Android-устройств. Взаимодействие осуществляется через защищенный ADB-слой "
+            "в пользовательском пространстве, без вмешательства в целостность системных разделов и без Root-прав."),
         overviewCard);
     overviewDesc->setWordWrap(true);
     overviewDesc->setStyleSheet(QStringLiteral("font-size: 11.5px; color: #CBD5E1; line-height: 1.45; background: transparent; border: none;"));

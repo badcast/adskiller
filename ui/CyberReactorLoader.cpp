@@ -12,8 +12,7 @@
 
 static const qreal PI = 3.14159265358979323846;
 
-CyberReactorLoader::CyberReactorLoader(QWidget *parent)
-    : QWidget(parent)
+CyberReactorLoader::CyberReactorLoader(QWidget *parent) : QWidget(parent)
 {
     setAttribute(Qt::WA_Hover, false);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -23,10 +22,7 @@ CyberReactorLoader::CyberReactorLoader(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     // Тексты теперь связаны с телефонами и блокировкой рекламы
-    m_telemetryLines << QString::fromUtf8("• МОБИЛЬНЫЙ ЩИТ: АНАЛИЗ ТРАФИКА •")
-                     << QString::fromUtf8("• АНТИ-РЕКЛАМА: ПЕРЕХВАТ БАННЕРОВ •")
-                     << QString::fromUtf8("• ОЧИСТКА ЭКРАНА: УДАЛЕНИЕ СКРИПТОВ •")
-                     << QString::fromUtf8("• БЛОКИРОВКА ТРЕКЕРОВ: АКТИВНА •")
+    m_telemetryLines << QString::fromUtf8("• МОБИЛЬНЫЙ ЩИТ: АНАЛИЗ ТРАФИКА •") << QString::fromUtf8("• АНТИ-РЕКЛАМА: ПЕРЕХВАТ БАННЕРОВ •") << QString::fromUtf8("• ОЧИСТКА ЭКРАНА: УДАЛЕНИЕ СКРИПТОВ •") << QString::fromUtf8("• БЛОКИРОВКА ТРЕКЕРОВ: АКТИВНА •")
                      << QString::fromUtf8("• ADSKILLER: ОПТИМИЗАЦИЯ УСТРОЙСТВА •");
 
     initParticles();
@@ -47,9 +43,9 @@ CyberReactorLoader::~CyberReactorLoader()
 void CyberReactorLoader::initParticles()
 {
     m_particles.clear();
-    const qreal baseRadii[] = { 45.0, 52.0, 68.0, 75.0, 88.0, 50.0, 62.0, 78.0, 85.0, 60.0 };
-    const qreal speeds[]    = { 0.035, -0.045, 0.025, -0.030, 0.040, -0.020, 0.050, -0.035, 0.028, -0.042 };
-    const qreal sizes[]     = { 1.5, 2.0, 1.2, 2.5, 1.5, 1.8, 2.2, 1.2, 2.0, 1.4 };
+    const qreal baseRadii[] = {45.0, 52.0, 68.0, 75.0, 88.0, 50.0, 62.0, 78.0, 85.0, 60.0};
+    const qreal speeds[] = {0.035, -0.045, 0.025, -0.030, 0.040, -0.020, 0.050, -0.035, 0.028, -0.042};
+    const qreal sizes[] = {1.5, 2.0, 1.2, 2.5, 1.5, 1.8, 2.2, 1.2, 2.0, 1.4};
 
     for(int i = 0; i < 10; ++i)
     {
@@ -107,29 +103,37 @@ void CyberReactorLoader::hideEvent(QHideEvent *event)
 void CyberReactorLoader::onAnimationTick()
 {
     m_outerAngle += 1.2;
-    if(m_outerAngle >= 360.0) m_outerAngle -= 360.0;
+    if(m_outerAngle >= 360.0)
+        m_outerAngle -= 360.0;
 
     m_middleAngle -= 1.8;
-    if(m_middleAngle <= -360.0) m_middleAngle += 360.0;
+    if(m_middleAngle <= -360.0)
+        m_middleAngle += 360.0;
 
     m_radarAngle += 3.0;
-    if(m_radarAngle >= 360.0) m_radarAngle -= 360.0;
+    if(m_radarAngle >= 360.0)
+        m_radarAngle -= 360.0;
 
     m_pulsePhase += 0.05;
-    if(m_pulsePhase >= 2.0 * PI) m_pulsePhase -= 2.0 * PI;
+    if(m_pulsePhase >= 2.0 * PI)
+        m_pulsePhase -= 2.0 * PI;
 
     // Волна "очистки" расходится от телефона
     m_shockwaveRadius += 1.5;
-    if(m_shockwaveRadius > 130.0) m_shockwaveRadius = 15.0;
+    if(m_shockwaveRadius > 130.0)
+        m_shockwaveRadius = 15.0;
 
     m_streamProgress += 0.012;
-    if(m_streamProgress > 1.0) m_streamProgress = 0.0;
+    if(m_streamProgress > 1.0)
+        m_streamProgress = 0.0;
 
     for(auto &p : m_particles)
     {
         p.angle += p.speed;
-        if(p.angle >= 2.0 * PI) p.angle -= 2.0 * PI;
-        else if(p.angle < 0) p.angle += 2.0 * PI;
+        if(p.angle >= 2.0 * PI)
+            p.angle -= 2.0 * PI;
+        else if(p.angle < 0)
+            p.angle += 2.0 * PI;
     }
 
     qint64 now = m_elapsed.elapsed();
@@ -222,9 +226,11 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
         const qreal py = cy + std::sin(p.angle) * actualR;
 
         // Если частица красная, добавим ей легкое свечение "угрозы"
-        if(p.color.red() > 200) {
+        if(p.color.red() > 200)
+        {
             painter.setPen(Qt::NoPen);
-            QColor glow = p.color; glow.setAlpha(40);
+            QColor glow = p.color;
+            glow.setAlpha(40);
             painter.setBrush(glow);
             painter.drawEllipse(QPointF(px, py), p.size * 2.5, p.size * 2.5);
         }
@@ -239,7 +245,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
     // ========================================================================
     const qreal phoneW = r * 0.40;
     const qreal phoneH = r * 0.75;
-    QRectF phoneRect(cx - phoneW/2.0, cy - phoneH/2.0, phoneW, phoneH);
+    QRectF phoneRect(cx - phoneW / 2.0, cy - phoneH / 2.0, phoneW, phoneH);
 
     // Фоновая заливка телефона (стекло)
     painter.setBrush(QColor(0, 20, 35, 180));
@@ -249,36 +255,34 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
 
     // Динамик смартфона (верхняя полоска)
     painter.setPen(QPen(QColor(0, 245, 255, 150), 1.5, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLine(QPointF(cx - phoneW*0.15, cy - phoneH/2.0 + 5.0),
-                     QPointF(cx + phoneW*0.15, cy - phoneH/2.0 + 5.0));
+    painter.drawLine(QPointF(cx - phoneW * 0.15, cy - phoneH / 2.0 + 5.0), QPointF(cx + phoneW * 0.15, cy - phoneH / 2.0 + 5.0));
 
     // Кнопка / Индикатор "Домой" (кружок внизу)
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(0, 245, 255, 150));
-    painter.drawEllipse(QPointF(cx, cy + phoneH/2.0 - 6.0), 1.5, 1.5);
+    painter.drawEllipse(QPointF(cx, cy + phoneH / 2.0 - 6.0), 1.5, 1.5);
 
     // ========================================================================
     // 7. СКАНЕР РЕКЛАМЫ (Лазер, бегающий по экрану смартфона)
     // ========================================================================
     // Вычисляем позицию лазера с помощью синуса (вверх-вниз)
-    const qreal scanOffset = std::sin(m_pulsePhase) * (phoneH/2.0 - 10.0);
+    const qreal scanOffset = std::sin(m_pulsePhase) * (phoneH / 2.0 - 10.0);
     const qreal scanY = cy + scanOffset;
 
     // Горизонтальная линия сканера
-    QLinearGradient scanGrad(cx - phoneW/2.0, scanY, cx + phoneW/2.0, scanY);
+    QLinearGradient scanGrad(cx - phoneW / 2.0, scanY, cx + phoneW / 2.0, scanY);
     scanGrad.setColorAt(0.0, QColor(0, 245, 255, 0));
     scanGrad.setColorAt(0.5, QColor(255, 255, 255, 255)); // Яркий центр
     scanGrad.setColorAt(1.0, QColor(0, 245, 255, 0));
 
     painter.setPen(QPen(QBrush(scanGrad), 1.5));
-    painter.drawLine(QPointF(cx - phoneW/2.0 + 2.0, scanY),
-                     QPointF(cx + phoneW/2.0 - 2.0, scanY));
+    painter.drawLine(QPointF(cx - phoneW / 2.0 + 2.0, scanY), QPointF(cx + phoneW / 2.0 - 2.0, scanY));
 
     // Свечение под лазером (эффект очистки экрана)
     QLinearGradient scanArea(cx, scanY, cx, scanY + 15.0);
     scanArea.setColorAt(0.0, QColor(0, 245, 255, 80));
     scanArea.setColorAt(1.0, QColor(0, 245, 255, 0));
-    painter.fillRect(QRectF(cx - phoneW/2.0 + 2.0, scanY, phoneW - 4.0, 15.0), scanArea);
+    painter.fillRect(QRectF(cx - phoneW / 2.0 + 2.0, scanY, phoneW - 4.0, 15.0), scanArea);
 
     // ========================================================================
     // 8. Полоса прогресса удаления (Очистка)

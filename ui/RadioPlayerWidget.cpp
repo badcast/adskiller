@@ -96,7 +96,7 @@ void RadioPlayerWidget::initUi()
         "   color: #F8FAFC;"
         "   border: 1px solid #334155;"
         "   border-radius: 0px;"
-        "   padding: 1px 8px;"
+        "   padding: 1px 24px 1px 8px;"
         "   font-size: 11px;"
         "   font-weight: 600;"
         "   min-width: 140px;"
@@ -107,12 +107,28 @@ void RadioPlayerWidget::initUi()
         "   border-color: #38BDF8;"
         "   background-color: #131E35;"
         "}"
+        "QComboBox:focus, QComboBox:on {"
+        "   border: 1px solid #38BDF8;"
+        "   background-color: #131E35;"
+        "}"
         "QComboBox::drop-down {"
         "   subcontrol-origin: padding;"
         "   subcontrol-position: top right;"
-        "   width: 18px;"
+        "   width: 22px;"
         "   border-left: 1px solid #334155;"
         "   border-radius: 0px;"
+        "   background-color: transparent;"
+        "}"
+        "QComboBox::drop-down:hover {"
+        "   background-color: #1E293B;"
+        "}"
+        "QComboBox::down-arrow {"
+        "   image: url(:/svg/arrow-down);"
+        "   width: 12px;"
+        "   height: 12px;"
+        "}"
+        "QComboBox::down-arrow:hover, QComboBox::down-arrow:on {"
+        "   image: url(:/svg/arrow-down-hover);"
         "}"
         "QComboBox QAbstractItemView {"
         "   background-color: #0F172A;"
@@ -121,6 +137,7 @@ void RadioPlayerWidget::initUi()
         "   selection-color: #FFFFFF;"
         "   border: 1px solid #38BDF8;"
         "   padding: 4px;"
+        "   outline: none;"
         "}"
         "QPushButton#btnAddStation {"
         "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #132238, stop:1 #0B1728);"
@@ -256,22 +273,29 @@ void RadioPlayerWidget::initUi()
         "}");
 
     QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(8, 2, 8, 2);
+    layout->setContentsMargins(8, 0, 8, 0);
     layout->setSpacing(6);
+    layout->setAlignment(Qt::AlignVCenter);
+    setFixedHeight(32);
 
     // 1. Logo / Radio badge
     m_lblLogo = new QLabel(QString::fromUtf8("<img src=\":/svg/radio\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> <b>FM LIVE</b>"), this);
     m_lblLogo->setObjectName("lblRadioLogo");
-    m_lblLogo->setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0B1E36, stop:1 #0F2744); color: #38BDF8; border: 1px solid #0284C7; border-radius: 0px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 8px;");
+    m_lblLogo->setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0B1E36, stop:1 #0F2744); color: #38BDF8; border: 1px solid #0284C7; border-radius: 0px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 0px 8px;");
+    m_lblLogo->setFixedHeight(24);
+    m_lblLogo->setAlignment(Qt::AlignCenter);
     layout->addWidget(m_lblLogo);
 
     // 2. Station Selector Combo
     m_comboStations = new QComboBox(this);
     m_comboStations->setFixedHeight(24);
+    m_comboStations->setCursor(Qt::PointingHandCursor);
+    m_comboStations->blockSignals(true);
     for(const auto &station : m_stations)
     {
         m_comboStations->addItem(QStringLiteral("%1 (%2)").arg(station.name, station.genre));
     }
+    m_comboStations->blockSignals(false);
     connect(m_comboStations, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &RadioPlayerWidget::onStationComboChanged);
     layout->addWidget(m_comboStations);
 
@@ -292,7 +316,7 @@ void RadioPlayerWidget::initUi()
     m_btnPrev->setIcon(QIcon(":/svg/skip-back"));
     m_btnPrev->setIconSize(QSize(13, 13));
     m_btnPrev->setToolTip(QString::fromUtf8("Предыдущая станция"));
-    m_btnPrev->setFixedSize(28, 24);
+    m_btnPrev->setFixedSize(26, 24);
     m_btnPrev->setCursor(Qt::PointingHandCursor);
     connect(m_btnPrev, &QPushButton::clicked, this, &RadioPlayerWidget::previousStation);
     layout->addWidget(m_btnPrev);
@@ -302,7 +326,7 @@ void RadioPlayerWidget::initUi()
     m_btnPlay->setIcon(QIcon(":/svg/play"));
     m_btnPlay->setIconSize(QSize(13, 13));
     m_btnPlay->setToolTip(QString::fromUtf8("Включить радио (Пробел)"));
-    m_btnPlay->setFixedSize(38, 24);
+    m_btnPlay->setFixedSize(36, 24);
     m_btnPlay->setCursor(Qt::PointingHandCursor);
     connect(m_btnPlay, &QPushButton::clicked, this, &RadioPlayerWidget::togglePlay);
     layout->addWidget(m_btnPlay);
@@ -312,7 +336,7 @@ void RadioPlayerWidget::initUi()
     m_btnNext->setIcon(QIcon(":/svg/skip-forward"));
     m_btnNext->setIconSize(QSize(13, 13));
     m_btnNext->setToolTip(QString::fromUtf8("Следующая станция"));
-    m_btnNext->setFixedSize(28, 24);
+    m_btnNext->setFixedSize(26, 24);
     m_btnNext->setCursor(Qt::PointingHandCursor);
     connect(m_btnNext, &QPushButton::clicked, this, &RadioPlayerWidget::nextStation);
     layout->addWidget(m_btnNext);
@@ -320,7 +344,8 @@ void RadioPlayerWidget::initUi()
     // 5. Status indicator badge
     m_lblStatus = new QLabel(QString::fromUtf8("СТОП"), this);
     m_lblStatus->setObjectName("lblRadioStatus");
-    m_lblStatus->setStyleSheet("background-color: #111827; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 0px;");
+    m_lblStatus->setStyleSheet("background-color: #111827; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: 600; padding: 0px 7px; border-radius: 0px;");
+    m_lblStatus->setFixedHeight(24);
     m_lblStatus->setMinimumWidth(72);
     m_lblStatus->setAlignment(Qt::AlignCenter);
     layout->addWidget(m_lblStatus);
@@ -328,6 +353,8 @@ void RadioPlayerWidget::initUi()
     // 6. Track / Stream info label (expands)
     m_lblTrackInfo = new QLabel(QString::fromUtf8("Выберите станцию и нажмите «Включить радио»"), this);
     m_lblTrackInfo->setStyleSheet("color: #E2E8F0; font-size: 11px; font-weight: 500; padding-left: 4px;");
+    m_lblTrackInfo->setFixedHeight(24);
+    m_lblTrackInfo->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
     m_lblTrackInfo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_lblTrackInfo->setTextInteractionFlags(Qt::NoTextInteraction);
     layout->addWidget(m_lblTrackInfo, 1);
@@ -338,7 +365,7 @@ void RadioPlayerWidget::initUi()
     m_btnMute->setIcon(QIcon(":/svg/volume"));
     m_btnMute->setIconSize(QSize(14, 14));
     m_btnMute->setToolTip(QString::fromUtf8("Выключить звук"));
-    m_btnMute->setFixedSize(28, 24);
+    m_btnMute->setFixedSize(26, 24);
     m_btnMute->setCursor(Qt::PointingHandCursor);
     connect(m_btnMute, &QPushButton::clicked, this, &RadioPlayerWidget::toggleMute);
     layout->addWidget(m_btnMute);
@@ -346,14 +373,15 @@ void RadioPlayerWidget::initUi()
     m_sliderVolume = new QSlider(Qt::Horizontal, this);
     m_sliderVolume->setRange(0, 100);
     m_sliderVolume->setValue(70);
-    m_sliderVolume->setFixedSize(70, 18);
+    m_sliderVolume->setFixedSize(70, 24);
     m_sliderVolume->setCursor(Qt::PointingHandCursor);
     m_sliderVolume->setToolTip(QString::fromUtf8("Громкость радио"));
     connect(m_sliderVolume, &QSlider::valueChanged, this, &RadioPlayerWidget::onVolumeSliderChanged);
     layout->addWidget(m_sliderVolume);
 
     m_lblVolumePercent = new QLabel(QStringLiteral("70%"), this);
-    m_lblVolumePercent->setFixedWidth(30);
+    m_lblVolumePercent->setFixedSize(34, 24);
+    m_lblVolumePercent->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
     m_lblVolumePercent->setStyleSheet("color: #38BDF8; font-size: 10px; font-weight: bold; padding-left: 2px;");
     layout->addWidget(m_lblVolumePercent);
 
@@ -363,7 +391,7 @@ void RadioPlayerWidget::initUi()
     m_btnClose->setIcon(QIcon(":/svg/close"));
     m_btnClose->setIconSize(QSize(11, 11));
     m_btnClose->setToolTip(QString::fromUtf8("Скрыть панель радио"));
-    m_btnClose->setFixedSize(22, 24);
+    m_btnClose->setFixedSize(24, 24);
     m_btnClose->setCursor(Qt::PointingHandCursor);
     connect(m_btnClose, &QPushButton::clicked, this, &RadioPlayerWidget::requestClose);
     layout->addWidget(m_btnClose);
@@ -381,9 +409,16 @@ void RadioPlayerWidget::loadSettings()
     m_audioOutput->setMuted(muted);
     updateVolumeUi(vol, muted);
 
+    m_comboStations->blockSignals(true);
     if(stationIdx >= 0 && stationIdx < m_comboStations->count())
     {
         m_comboStations->setCurrentIndex(stationIdx);
+    }
+    m_comboStations->blockSignals(false);
+
+    if(stationIdx >= 0 && stationIdx < m_stations.size())
+    {
+        m_lblTrackInfo->setText(QStringLiteral("%1 (%2)").arg(m_stations[stationIdx].name, m_stations[stationIdx].genre));
     }
 }
 
@@ -457,10 +492,16 @@ void RadioPlayerWidget::stop()
     if(m_player)
     {
         m_player->stop();
+        m_player->setSource(QUrl());
     }
     updatePlayButtonState(false);
     m_lblStatus->setText(QString::fromUtf8("СТОП"));
     m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+    int idx = currentStationIndex();
+    if(idx >= 0 && idx < m_stations.size())
+    {
+        m_lblTrackInfo->setText(QStringLiteral("%1 (%2)").arg(m_stations[idx].name, m_stations[idx].genre));
+    }
     emit playbackStateChanged(false);
 }
 
@@ -619,16 +660,17 @@ void RadioPlayerWidget::onStationComboChanged(int index)
 
     bool wasPlaying = isPlaying();
     const auto &station = m_stations[index];
-    m_player->setSource(QUrl(station.url));
 
     emit stationChanged(station.name, index);
 
     if(wasPlaying)
     {
+        m_player->setSource(QUrl(station.url));
         play();
     }
     else
     {
+        // Do NOT open network stream when radio is not actively playing!
         m_lblTrackInfo->setText(QStringLiteral("%1 (%2)").arg(station.name, station.genre));
     }
 }
@@ -713,11 +755,7 @@ void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
     if(m_lblVolumePercent)
     {
         m_lblVolumePercent->setText(QStringLiteral("%1%").arg(muted ? 0 : value));
-        m_lblVolumePercent->setStyleSheet(
-            muted
-                ? "color: #EF4444; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;"
-                : "color: #38BDF8; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;"
-        );
+        m_lblVolumePercent->setStyleSheet(muted ? "color: #EF4444; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;" : "color: #38BDF8; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;");
     }
     if(m_btnMute)
     {

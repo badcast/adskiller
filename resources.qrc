@@ -124,6 +124,8 @@
         <file alias="arrow-left">res/svg/arrow-left.svg</file>
         <file alias="arrow-right">res/svg/arrow-right.svg</file>
         <file alias="arrow-up">res/svg/arrow-up.svg</file>
+        <file alias="arrow-down">res/svg/arrow-down.svg</file>
+        <file alias="arrow-down-hover">res/svg/arrow-down-hover.svg</file>
         <file alias="apple">res/svg/services/apple.svg</file>
     </qresource>
 </RCC>

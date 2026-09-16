@@ -501,9 +501,11 @@ void ApkManagerWidget::setupUi()
         "QHeaderView::section { background-color: #0F172A; color: #94A3B8; font-weight: bold; font-size: 11px; border: none; border-bottom: 1px solid #1E293B; padding: 6px 8px; }"
         "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 10px; font-size: 12px; }"
         "QLineEdit:focus { border-color: #38BDF8; }"
-        "QComboBox { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 10px; font-size: 11.5px; font-weight: 500; }"
+        "QComboBox { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 24px 5px 10px; font-size: 11.5px; font-weight: 500; }"
         "QComboBox:hover { border-color: #38BDF8; background-color: #131E35; }"
-        "QComboBox::drop-down { border: none; width: 22px; }"
+        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; border: none; width: 22px; background-color: transparent; }"
+        "QComboBox::down-arrow { image: url(:/svg/arrow-down); width: 12px; height: 12px; }"
+        "QComboBox::down-arrow:hover { image: url(:/svg/arrow-down-hover); }"
         "QComboBox QAbstractItemView { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; selection-background-color: #0284C7; selection-color: #FFFFFF; padding: 4px; }"
         "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
         "QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }"
@@ -1484,6 +1486,30 @@ void ApkManagerWidget::copyRawDumpsys()
     }
 }
 
+void ApkManagerWidget::resetSession()
+{
+    m_allPackages.clear();
+    m_iconCache.clear();
+    m_currentDetails = AppDetails();
+
+    if(m_table)
+    {
+        m_table->blockSignals(true);
+        m_table->setRowCount(0);
+        m_table->blockSignals(false);
+    }
+
+    if(m_searchEdit)
+        m_searchEdit->clear();
+
+    clearInspector();
+
+    if(m_statusLabel)
+        m_statusLabel->setText(QString::fromUtf8("Готов"));
+    if(m_statCountLabel)
+        m_statCountLabel->setText(QString::fromUtf8("Приложений: 0"));
+}
+
 ApkManagerService::ApkManagerService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
 {
     title = "APK Менеджер";
@@ -1538,6 +1564,7 @@ bool ApkManagerService::start()
         auto *widget = static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage));
         if(widget)
         {
+            widget->resetSession();
             widget->setDevice(mAdbDevice);
             widget->loadPackages();
         }
@@ -1550,4 +1577,11 @@ void ApkManagerService::stop()
 {
     m_started = false;
     m_finished = true;
+
+    if(MainWindow::current)
+    {
+        auto *widget = static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage));
+        if(widget)
+            widget->resetSession();
+    }
 }

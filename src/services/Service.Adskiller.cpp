@@ -569,6 +569,24 @@ void adskiller_awake(AdsKillerService *service)
                     adskiller_write_log("Выполнено.");
                 WAITMODE;
 
+                if(!network->authedId.hasVipAccount())
+                {
+                    mUserValue = 1000;
+                    while(mUserValue == 1000)
+                    {
+                        WAIT(100);
+                    }
+
+                    if(mUserValue != QMessageBox::StandardButton::Yes)
+                    {
+                        adskiller_write_log_head("Запрос отклонен пользователем");
+                        adskiller_write_log("Вы отказались от оплаты. Процедура остановлена.");
+                        WAIT(1000);
+                        mCmd = CommandExecForceKill;
+                        break;
+                    }
+                }
+
                 QStringList resultList {}, disableList {}, localPackageNames;
                 std::shared_ptr<LabStatusInfo> labs;
                 QString mdKey;
@@ -643,24 +661,6 @@ void adskiller_awake(AdsKillerService *service)
                     WAITMODE;
                     mCmd = CommandExecFailed;
                     break;
-                }
-
-                if(!network->authedId.hasVipAccount() && !labs->purchased)
-                {
-                    mUserValue = 1000;
-                    while(mUserValue == 1000)
-                    {
-                        WAIT(100);
-                    }
-
-                    if(mUserValue != QMessageBox::StandardButton::Yes)
-                    {
-                        adskiller_write_log_head("Запрос отклонен пользователем");
-                        adskiller_write_log("вы отказались от оплаты");
-                        WAIT(1000);
-                        mCmd = CommandExecFailed;
-                        break;
-                    }
                 }
 
                 if(labs->analyzeStatus == "part-verify")
@@ -772,8 +772,15 @@ void adskiller_awake(AdsKillerService *service)
                 isFinish = 1;
                 if(mCmd < 0)
                 {
-                    adskiller_write_log_head("Процедура завершилась ошибкой. Повторите.");
-                    status = MalwareStatus::Error;
+                    if(mCmd == CommandExecForceKill)
+                    {
+                        status = MalwareStatus::Idle;
+                    }
+                    else
+                    {
+                        adskiller_write_log_head("Процедура завершилась ошибкой. Повторите.");
+                        status = MalwareStatus::Error;
+                    }
                 }
                 else
                 {

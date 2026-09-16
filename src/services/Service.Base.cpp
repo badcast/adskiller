@@ -58,11 +58,7 @@ DeviceConnectType Service::deviceConnectType() const
 bool Service::isOnlineService() const
 {
     const QString id = uuid();
-    return id == IDServiceAdsString ||
-           id == IDServiceMyDeviceString ||
-           id == IDServiceVIPBuyString ||
-           id == IDServiceAIAgentString ||
-           id == IDServiceAITranslaterString;
+    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString || id == IDServiceAIAgentString || id == IDServiceAITranslaterString;
 }
 
 void Service::sendCheckPull() const

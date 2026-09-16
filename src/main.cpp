@@ -41,8 +41,7 @@ class CyberStreamOverlay : public QWidget
     Q_PROPERTY(qreal phase READ phase WRITE setPhase)
 
 public:
-    explicit CyberStreamOverlay(QWidget *parent = nullptr)
-        : QWidget(parent), m_phase(0.0)
+    explicit CyberStreamOverlay(QWidget *parent = nullptr) : QWidget(parent), m_phase(0.0)
     {
         setAttribute(Qt::WA_TransparentForMouseEvents);
         setAttribute(Qt::WA_NoSystemBackground);
@@ -56,8 +55,15 @@ public:
         anim->start();
     }
 
-    qreal phase() const { return m_phase; }
-    void setPhase(qreal p) { m_phase = p; update(); }
+    qreal phase() const
+    {
+        return m_phase;
+    }
+    void setPhase(qreal p)
+    {
+        m_phase = p;
+        update();
+    }
 
 protected:
     void paintEvent(QPaintEvent *) override
@@ -78,8 +84,8 @@ protected:
         const qreal charW = fm.horizontalAdvance(QLatin1Char('0'));
         const QString streamData = QStringLiteral("1010110010110100101001101010100101101010110100101010");
 
-        const qreal colX[] = { 18.0, 58.0, 110.0, 175.0, 235.0, 285.0 };
-        const qreal colSpeeds[] = { 1.35, 0.95, 1.60, 1.15, 1.45, 0.85 };
+        const qreal colX[] = {18.0, 58.0, 110.0, 175.0, 235.0, 285.0};
+        const qreal colSpeeds[] = {1.35, 0.95, 1.60, 1.15, 1.45, 0.85};
         const int colsCount = sizeof(colX) / sizeof(colX[0]);
 
         for(int c = 0; c < colsCount; ++c)

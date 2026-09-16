@@ -1110,6 +1110,58 @@ void FileManagerWidget::createDirectory()
     }
 }
 
+void FileManagerWidget::resetSession()
+{
+    m_currentItems.clear();
+    m_filteredItems.clear();
+    m_historyBack.clear();
+    m_historyForward.clear();
+    m_currentPath = "/sdcard";
+
+    if(m_table)
+    {
+        m_table->blockSignals(true);
+        m_table->setRowCount(0);
+        m_table->blockSignals(false);
+    }
+
+    if(m_pathEdit)
+        m_pathEdit->setText("/sdcard");
+    if(m_searchEdit)
+        m_searchEdit->clear();
+
+    if(m_inspIcon)
+        m_inspIcon->clear();
+    if(m_inspName)
+        m_inspName->setText(QString::fromUtf8("Файл не выбран"));
+    if(m_inspTypeBadge)
+        m_inspTypeBadge->setText("—");
+    if(m_inspSizeBadge)
+        m_inspSizeBadge->setText("—");
+    if(m_inspPathLabel)
+        m_inspPathLabel->clear();
+    if(m_inspDateVal)
+        m_inspDateVal->clear();
+    if(m_inspPermsVal)
+        m_inspPermsVal->clear();
+
+    if(m_btnDownload)
+        m_btnDownload->setEnabled(false);
+    if(m_btnPreview)
+        m_btnPreview->setEnabled(false);
+    if(m_btnRename)
+        m_btnRename->setEnabled(false);
+    if(m_btnDelete)
+        m_btnDelete->setEnabled(false);
+
+    if(m_statusSummary)
+        m_statusSummary->setText(QString::fromUtf8("0 объектов"));
+    if(m_statusSelected)
+        m_statusSelected->setText(QString::fromUtf8("Ничего не выбрано"));
+    if(m_statusMsg)
+        m_statusMsg->clear();
+}
+
 FileManagerService::FileManagerService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
 {
     title = "Проводник ADB";
@@ -1165,6 +1217,7 @@ bool FileManagerService::start()
         auto *widget = static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage));
         if(widget)
         {
+            widget->resetSession();
             widget->setDevice(mAdbDevice);
             widget->refreshList();
         }
@@ -1177,4 +1230,11 @@ void FileManagerService::stop()
 {
     m_started = false;
     m_finished = true;
+
+    if(MainWindow::current)
+    {
+        auto *widget = static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage));
+        if(widget)
+            widget->resetSession();
+    }
 }

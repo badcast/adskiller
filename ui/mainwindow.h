@@ -24,6 +24,7 @@
 #include <QPushButton>
 #include <QIcon>
 #include <QTimer>
+#include <QDialog>
 
 #include "ProgressCircle.h"
 
@@ -87,41 +88,94 @@ public:
         Disabled
     };
 
-    explicit ServiceTileButton(const QIcon &icon,
-                               const QString &title,
-                               const QString &badgeText,
-                               Tier tier,
-                               bool showRibbon = true,
-                               const QString &ribbonText = QString::fromUtf8("NEW"),
-                               QWidget *parent = nullptr);
+    struct Details
+    {
+        QString title;
+        QString description;
+        QString badgeText;
+        Tier tier = Tier::Free;
+        bool isActive = true;
+        bool isUnderDev = false;
+        bool needVip = false;
+        uint32_t price = 0;
+        QString currency = QString::fromUtf8("кредитов");
+        QString connectTypeName = QString::fromUtf8("Не требуется");
+        QIcon icon;
+    };
+
+    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, bool showRibbon = true, const QString &ribbonText = QString::fromUtf8("NEW"), QWidget *parent = nullptr);
 
     void setTier(Tier tier);
-    Tier tier() const { return m_tier; }
+    Tier tier() const
+    {
+        return m_tier;
+    }
 
     void setTitle(const QString &title);
-    QString title() const { return m_title; }
+    QString title() const
+    {
+        return m_title;
+    }
 
     void setBadgeText(const QString &text);
-    QString badgeText() const { return m_badgeText; }
+    QString badgeText() const
+    {
+        return m_badgeText;
+    }
 
     void setShowRibbon(bool show);
-    bool showRibbon() const { return m_showRibbon; }
+    bool showRibbon() const
+    {
+        return m_showRibbon;
+    }
 
     void setRibbonText(const QString &text);
-    QString ribbonText() const { return m_ribbonText; }
+    QString ribbonText() const
+    {
+        return m_ribbonText;
+    }
 
-    bool isLaunching() const { return m_isLaunching; }
-    void setLaunching(bool launching) { m_isLaunching = launching; }
-    static bool isAnyLaunching() { return s_isAnyLaunching; }
-    static void setAnyLaunching(bool launching) { s_isAnyLaunching = launching; }
+    bool isLaunching() const
+    {
+        return m_isLaunching;
+    }
+    void setLaunching(bool launching)
+    {
+        m_isLaunching = launching;
+    }
+    static bool isAnyLaunching()
+    {
+        return s_isAnyLaunching;
+    }
+    static void setAnyLaunching(bool launching)
+    {
+        s_isAnyLaunching = launching;
+    }
     QColor accentColor() const;
 
     void triggerClickAnimation();
 
+    bool isServiceActive() const
+    {
+        return m_serviceActive;
+    }
+    void setServiceActive(bool active);
+
+    void setServiceDetails(const Details &details);
+    const Details &serviceDetails() const
+    {
+        return m_details;
+    }
+
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
+public slots:
+    void showInfoDialog();
+
 protected:
+    void showEvent(QShowEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     void enterEvent(QEnterEvent *event) override;
@@ -144,6 +198,10 @@ private:
     bool m_isLaunching = false;
     static bool s_isAnyLaunching;
 
+    bool m_serviceActive = true;
+    Details m_details;
+    QPushButton *m_btnHelp = nullptr;
+
     // Windows 10 Reveal Highlight & Bubble Ripple Effect
     QPoint m_mousePos;
     bool m_isHovered = false;
@@ -156,6 +214,20 @@ private:
     // Click / Activation Pulse Animation
     qreal m_clickProgress = 0.0;
     QVariantAnimation *m_clickAnim = nullptr;
+};
+
+class ServiceInfoDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit ServiceInfoDialog(const ServiceTileButton::Details &details, QWidget *parent = nullptr);
+
+private slots:
+    void onAskAiClicked();
+
+private:
+    ServiceTileButton::Details m_details;
 };
 
 class ServiceShockwaveOverlay : public QWidget
@@ -176,7 +248,7 @@ protected:
 
 private:
     QPoint m_center;
-    QColor m_accentColor { 0, 229, 255 };
+    QColor m_accentColor {0, 229, 255};
     qreal m_progress = 0.0;
     QVariantAnimation *m_anim = nullptr;
 };
@@ -198,11 +270,14 @@ class MainWindow : public QMainWindow
     friend class AITranslaterService;
     friend class AppleIpswWidget;
     friend class AppleIpswService;
+    friend class ServiceTileButton;
+    friend class ServiceInfoDialog;
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void askAiQuestion(const QString &question);
     void showMessageFromStatus(int statusCode);
     void setTheme(ThemeScheme theme);
     ThemeScheme getTheme();

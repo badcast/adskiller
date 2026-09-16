@@ -18,7 +18,10 @@ public:
     ~CyberReactorLoader() override;
 
     void setStatusText(const QString &text);
-    QString statusText() const { return m_statusText; }
+    QString statusText() const
+    {
+        return m_statusText;
+    }
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;

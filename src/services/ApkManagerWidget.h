@@ -64,6 +64,7 @@ public:
 
     void setDevice(const AdbDevice &device);
     void loadPackages();
+    void resetSession();
 
 private slots:
     void populateTable();

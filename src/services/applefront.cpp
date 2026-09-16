@@ -15,10 +15,14 @@ QString AppleDevice::modeString() const
 {
     switch(mode)
     {
-        case AppleDeviceMode::Normal: return QString::fromUtf8("Normal (Включен)");
-        case AppleDeviceMode::Recovery: return QString::fromUtf8("Recovery Mode");
-        case AppleDeviceMode::DFU: return QString::fromUtf8("DFU Mode");
-        default: return QString::fromUtf8("Не подключено");
+        case AppleDeviceMode::Normal:
+            return QString::fromUtf8("Normal (Включен)");
+        case AppleDeviceMode::Recovery:
+            return QString::fromUtf8("Recovery Mode");
+        case AppleDeviceMode::DFU:
+            return QString::fromUtf8("DFU Mode");
+        default:
+            return QString::fromUtf8("Не подключено");
     }
 }
 
@@ -29,7 +33,8 @@ QString AppleSysInfo::OSVersionString() const
 
 QString AppleSysInfo::StorageDesignString() const
 {
-    if(diskTotal <= 0) return QString("—");
+    if(diskTotal <= 0)
+        return QString("—");
     double usedGB = diskUsed / (1024.0 * 1024.0 * 1024.0);
     double totalGB = diskTotal / (1024.0 * 1024.0 * 1024.0);
     return QString("%1 ГБ / %2 ГБ").arg(usedGB, 0, 'f', 1).arg(totalGB, 0, 'f', 1);
@@ -37,7 +42,8 @@ QString AppleSysInfo::StorageDesignString() const
 
 QString AppleSysInfo::BatteryDesignString() const
 {
-    if(batteryLevel < 0) return QString("—");
+    if(batteryLevel < 0)
+        return QString("—");
     return QString("%1% %2").arg(batteryLevel).arg(isCharging ? QString::fromUtf8("(Зарядка)") : QString());
 }
 
@@ -50,12 +56,7 @@ QString AppleExecutableFilename(const QString &program)
 {
     QString appDir = QCoreApplication::applicationDirPath();
 #ifdef WIN32
-    QStringList candidates = {
-        appDir + "/apple/" + program + ".exe",
-        appDir + "/bin/apple/" + program + ".exe",
-        appDir + "/" + program + ".exe",
-        program + ".exe"
-    };
+    QStringList candidates = {appDir + "/apple/" + program + ".exe", appDir + "/bin/apple/" + program + ".exe", appDir + "/" + program + ".exe", program + ".exe"};
     for(const QString &path : candidates)
     {
         if(QFile::exists(path))
@@ -63,12 +64,7 @@ QString AppleExecutableFilename(const QString &program)
     }
     return program + ".exe";
 #else
-    QStringList candidates = {
-        appDir + "/apple/" + program,
-        appDir + "/bin/apple/" + program,
-        "/usr/bin/" + program,
-        program
-    };
+    QStringList candidates = {appDir + "/apple/" + program, appDir + "/bin/apple/" + program, "/usr/bin/" + program, program};
     for(const QString &path : candidates)
     {
         if(QFile::exists(path))
@@ -198,8 +194,7 @@ QString Apple::marketingNameForModel(const QString &model)
         {"iPad13,10", "iPad Pro 12.9-inch (5th gen)"},
         {"iPad13,11", "iPad Pro 12.9-inch (5th gen)"},
         {"iPad14,5", "iPad Pro 12.9-inch (6th gen)"},
-        {"iPad14,6", "iPad Pro 12.9-inch (6th gen)"}
-    };
+        {"iPad14,6", "iPad Pro 12.9-inch (6th gen)"}};
     return s_models.value(model, model);
 }
 
@@ -305,9 +300,12 @@ QList<AppleDevice> Apple::getDevices()
             {
                 QString k = rLine.left(colonIdx).trimmed();
                 QString v = rLine.mid(colonIdx + 1).trimmed();
-                if(k == "PRODUCT") recDev.marketingName = v;
-                else if(k == "MODEL") recDev.model = v;
-                else if(k == "ECID") recDev.ecid = v;
+                if(k == "PRODUCT")
+                    recDev.marketingName = v;
+                else if(k == "MODEL")
+                    recDev.model = v;
+                else if(k == "ECID")
+                    recDev.ecid = v;
                 else if(k == "MODE")
                 {
                     if(v.contains("DFU", Qt::CaseInsensitive))

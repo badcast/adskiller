@@ -419,8 +419,7 @@ void MainWindow::setupAiPanel()
                 "<div style=\"text-align:center; padding:12px 0 8px 0;\">"
                 "<img src=\":/svg/bot\" width=\"36\" height=\"36\"/><br/>"
                 "<b style=\"color:#38BDF8; font-size:13pt;\">AdsKiller AI Assistant</b><br/>"
-                "<span style=\"color:#8E9297; font-size:9pt;\">Интеллектуальный помощник</span><br/>"
-                "<span style=\"display:inline-block; margin-top:6px; background-color:#1E293B; color:#38BDF8; font-size:8.5pt; font-weight:600; padding:2px 8px; border-radius:0px;\">В сети</span>"
+                "<span style=\"color:#8E9297; font-size:9pt;\">Интеллектуальный помощник</span>"
                 "</div>"
                 "<hr style=\"border:none; border-top:1px solid #252830; margin:10px 0;\"/>"
                 "<p style=\"font-size:9.5pt;\">"
@@ -1066,21 +1065,20 @@ void MainWindow::setupPagesDesign()
         authLayout->addLayout(userCol);
 
         QLabel *onlineBadge = ui->authedMainWin->findChild<QLabel *>("cabinetOnlineBadge");
-        if(!onlineBadge)
+        if(onlineBadge)
         {
-            onlineBadge = new QLabel(QString::fromUtf8("● В СЕТИ"), ui->authedMainWin);
-            onlineBadge->setObjectName("cabinetOnlineBadge");
-            onlineBadge->setStyleSheet("color: #34D399; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 0px;");
+            onlineBadge->hide();
+            delete onlineBadge;
         }
-        authLayout->addWidget(onlineBadge, 0, Qt::AlignVCenter);
     }
 
     if(ui->frame_7)
     {
         if(!ui->frame_7->layout())
         {
-            ui->frame_7->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            ui->frame_7->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
             ui->frame_7->setMinimumHeight(0);
+            ui->frame_7->setMaximumHeight(115);
 
             QVBoxLayout *f7MainLayout = new QVBoxLayout(ui->frame_7);
             f7MainLayout->setContentsMargins(12, 8, 12, 8);
@@ -1115,10 +1113,11 @@ void MainWindow::setupPagesDesign()
                     QMessageBox msgBox(this);
                     msgBox.setWindowTitle(QString::fromUtf8("Пополнение баланса"));
                     msgBox.setIcon(QMessageBox::Information);
-                    msgBox.setText(QString::fromUtf8(
-                        "<h3>Пополнение кредитов</h3>"
-                        "<p>Для пополнения баланса кредитов напишите администратору программы в WhatsApp.</p>"
-                        "<p style='color: #94A3B8; font-size: 11px;'>Нажмите кнопку <b>«Написать в WhatsApp»</b>, чтобы перейти к диалогу с администратором.</p>"));
+                    msgBox.setText(
+                        QString::fromUtf8(
+                            "<h3>Пополнение кредитов</h3>"
+                            "<p>Для пополнения баланса кредитов напишите администратору программы в WhatsApp.</p>"
+                            "<p style='color: #94A3B8; font-size: 11px;'>Нажмите кнопку <b>«Написать в WhatsApp»</b>, чтобы перейти к диалогу с администратором.</p>"));
 
                     QPushButton *btnWa = msgBox.addButton(QString::fromUtf8("Написать в WhatsApp"), QMessageBox::ActionRole);
                     btnWa->setIcon(QIcon(":/svg/message-circle"));
@@ -1155,6 +1154,26 @@ void MainWindow::setupPagesDesign()
             btnAddVip->setObjectName("buttonAddVip");
             btnAddVip->setCursor(Qt::PointingHandCursor);
             btnAddVip->setFixedHeight(26);
+            btnAddVip->setStyleSheet(QStringLiteral(
+                "QPushButton {"
+                "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FDE047, stop:0.5 #F59E0B, stop:1 #D97706);"
+                "    color: #000000;"
+                "    font-size: 11px;"
+                "    font-weight: 800;"
+                "    border: 1px solid #FBBF24;"
+                "    border-radius: 0px;"
+                "    padding: 2px 10px;"
+                "}"
+                "QPushButton:hover {"
+                "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FEF08A, stop:0.5 #FBBF24, stop:1 #F59E0B);"
+                "    border-color: #FDE047;"
+                "    color: #000000;"
+                "}"
+                "QPushButton:pressed {"
+                "    background: #D97706;"
+                "    border-color: #B45309;"
+                "    color: #000000;"
+                "}"));
             btnAddVip->setToolTip(QString::fromUtf8("Оформить или продлить VIP-статус"));
             topRow->addWidget(btnAddVip, 0, Qt::AlignRight | Qt::AlignVCenter);
 
@@ -1288,9 +1307,7 @@ void MainWindow::setupPagesDesign()
 
         ui->toplevel_layout_auth_2->addWidget(searchEdit, 0, Qt::AlignRight | Qt::AlignVCenter);
 
-        QObject::connect(searchEdit, &QLineEdit::textChanged, this, [this]() {
-            this->applyServiceFilters();
-        });
+        QObject::connect(searchEdit, &QLineEdit::textChanged, this, [this]() { this->applyServiceFilters(); });
     }
 
     if(ui->authInfo)
@@ -1327,20 +1344,29 @@ void MainWindow::setupPagesDesign()
         ui->scrollArea_3->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
         ui->scrollArea_3->setWidgetResizable(true);
         ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+        ui->scrollArea_3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         ui->scrollAreaWidgetContents_3->setMinimumWidth(0);
         ui->serviceContents->setMinimumWidth(0);
+        if(ui->verticalLayout)
+        {
+            ui->verticalLayout->setAlignment(Qt::AlignTop);
+        }
 
-        // Clean up any old vertical panel if it exists
+        // Clean up any old vertical/horizontal filter panels if they exist in scroll area
         if(auto *oldPanel = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterPanel"))
         {
             oldPanel->deleteLater();
         }
+        if(auto *oldFilterBar = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterBar"))
+        {
+            oldFilterBar->deleteLater();
+        }
 
-        // Horizontal Quick Filters Bar (no title header, arranged horizontally)
-        QFrame *filterBar = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterBar");
+        // Horizontal Quick Filters Bar (attached directly to page_cabinet between toplevel_up_2 and scrollArea_3)
+        QFrame *filterBar = ui->page_cabinet->findChild<QFrame *>("cabinetFilterBar");
         if(!filterBar)
         {
-            filterBar = new QFrame(ui->scrollAreaWidgetContents_3);
+            filterBar = new QFrame(ui->page_cabinet);
             filterBar->setObjectName("cabinetFilterBar");
             filterBar->setFixedHeight(36);
             filterBar->setStyleSheet("QFrame#cabinetFilterBar { background: transparent; border: none; }");
@@ -1369,9 +1395,15 @@ void MainWindow::setupPagesDesign()
                 filterGroup->addButton(btn);
                 fLayout->addWidget(btn);
 
-                QObject::connect(btn, &QPushButton::toggled, this, [this](bool c) {
-                    if(c) this->applyServiceFilters();
-                });
+                QObject::connect(
+                    btn,
+                    &QPushButton::toggled,
+                    this,
+                    [this](bool c)
+                    {
+                        if(c)
+                            this->applyServiceFilters();
+                    });
                 return btn;
             };
 
@@ -1383,8 +1415,16 @@ void MainWindow::setupPagesDesign()
 
             fLayout->addStretch(1);
 
-            // Insert directly between toplevel_up_2 and sss
-            ui->verticalLayout->insertWidget(2, filterBar);
+            // Insert directly between toplevel_up_2 (index 2) and scrollArea_3 (index 3)
+            if(auto *cabLayout = qobject_cast<QVBoxLayout *>(ui->page_cabinet->layout()))
+            {
+                cabLayout->insertWidget(3, filterBar);
+                cabLayout->setStretch(0, 0); // toplevel_up
+                cabLayout->setStretch(1, 0); // account card (horizontalLayout)
+                cabLayout->setStretch(2, 0); // toplevel_up_2 (services header & search)
+                cabLayout->setStretch(3, 0); // cabinetFilterBar
+                cabLayout->setStretch(4, 1); // scrollArea_3 (takes ALL remaining vertical space)
+            }
         }
 
         ui->sss->setContentsMargins(14, 4, 14, 16);
@@ -1395,7 +1435,6 @@ void MainWindow::setupPagesDesign()
         ui->sss->addWidget(ui->serviceContents, 1, Qt::AlignTop);
 
         this->applyServiceFilters();
-
     }
 
     // ==========================================

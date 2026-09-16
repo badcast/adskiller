@@ -34,116 +34,121 @@
 static constexpr int AT_POLL_INTERVAL_MS = 4000;
 static constexpr int AT_POLL_MAX = 120; // 8 minutes max
 
-static const QString AITT_STYLE_HEADER =
-    "#at_header {"
-    "  background-color: #0B1120;"
-    "  border: 1px solid #1E293B;"
-    "  border-left: 4px solid #38BDF8;"
-    "  border-radius: 0px;"
-    "}";
+static const QString AITT_STYLE_HEADER = "#at_header {"
+                                         "  background-color: #0B1120;"
+                                         "  border: 1px solid #1E293B;"
+                                         "  border-left: 4px solid #38BDF8;"
+                                         "  border-radius: 0px;"
+                                         "}";
 
-static const QString AITT_STYLE_CARD =
-    "QFrame#at_card {"
-    "  background-color: #0B1120;"
-    "  border: 1px solid #1E293B;"
-    "  border-radius: 0px;"
-    "}";
+static const QString AITT_STYLE_CARD = "QFrame#at_card {"
+                                       "  background-color: #0B1120;"
+                                       "  border: 1px solid #1E293B;"
+                                       "  border-radius: 0px;"
+                                       "}";
 
-static const QString AITT_STYLE_BTN_PRIMARY =
-    "QPushButton {"
-    "  background-color: #0284C7;"
-    "  color: #FFFFFF;"
-    "  border: 1px solid #0284C7;"
-    "  border-radius: 0px;"
-    "  padding: 0px 14px;"
-    "  font-size: 11.5px;"
-    "  font-weight: 700;"
-    "  letter-spacing: 0.5px;"
-    "  min-height: 28px;"
-    "  max-height: 28px;"
-    "}"
-    "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
-    "QPushButton:pressed { background-color: #075985; }"
-    "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
+static const QString AITT_STYLE_BTN_PRIMARY = "QPushButton {"
+                                              "  background-color: #0284C7;"
+                                              "  color: #FFFFFF;"
+                                              "  border: 1px solid #0284C7;"
+                                              "  border-radius: 0px;"
+                                              "  padding: 0px 14px;"
+                                              "  font-size: 11.5px;"
+                                              "  font-weight: 700;"
+                                              "  letter-spacing: 0.5px;"
+                                              "  min-height: 28px;"
+                                              "  max-height: 28px;"
+                                              "}"
+                                              "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
+                                              "QPushButton:pressed { background-color: #075985; }"
+                                              "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
 
-static const QString AITT_STYLE_BTN_SEC =
-    "QPushButton {"
-    "  background-color: #0F172A;"
-    "  color: #CBD5E1;"
-    "  border: 1px solid #1E293B;"
-    "  border-radius: 0px;"
-    "  padding: 0px 12px;"
-    "  font-size: 11.5px;"
-    "  font-weight: 600;"
-    "  min-height: 28px;"
-    "  max-height: 28px;"
-    "}"
-    "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #38BDF8; }"
-    "QPushButton:pressed { background-color: #0B1120; }";
+static const QString AITT_STYLE_BTN_SEC = "QPushButton {"
+                                          "  background-color: #0F172A;"
+                                          "  color: #CBD5E1;"
+                                          "  border: 1px solid #1E293B;"
+                                          "  border-radius: 0px;"
+                                          "  padding: 0px 12px;"
+                                          "  font-size: 11.5px;"
+                                          "  font-weight: 600;"
+                                          "  min-height: 28px;"
+                                          "  max-height: 28px;"
+                                          "}"
+                                          "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #38BDF8; }"
+                                          "QPushButton:pressed { background-color: #0B1120; }";
 
-static const QString AITT_STYLE_BTN_GREEN =
-    "QPushButton {"
-    "  background-color: #059669;"
-    "  color: #FFFFFF;"
-    "  border: 1px solid #059669;"
-    "  border-radius: 0px;"
-    "  padding: 0px 14px;"
-    "  font-size: 11.5px;"
-    "  font-weight: 700;"
-    "  letter-spacing: 0.5px;"
-    "  min-height: 28px;"
-    "  max-height: 28px;"
-    "}"
-    "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
-    "QPushButton:pressed { background-color: #064E3B; }"
-    "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
+static const QString AITT_STYLE_BTN_GREEN = "QPushButton {"
+                                            "  background-color: #059669;"
+                                            "  color: #FFFFFF;"
+                                            "  border: 1px solid #059669;"
+                                            "  border-radius: 0px;"
+                                            "  padding: 0px 14px;"
+                                            "  font-size: 11.5px;"
+                                            "  font-weight: 700;"
+                                            "  letter-spacing: 0.5px;"
+                                            "  min-height: 28px;"
+                                            "  max-height: 28px;"
+                                            "}"
+                                            "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
+                                            "QPushButton:pressed { background-color: #064E3B; }"
+                                            "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
 
-static const QString AITT_STYLE_COMBO =
-    "QComboBox {"
-    "  background-color: #070A12;"
-    "  color: #CBD5E1;"
-    "  border: 1px solid #1E293B;"
-    "  border-radius: 0px;"
-    "  padding: 3px 8px;"
-    "  font-size: 12px;"
-    "  min-height: 28px;"
-    "  max-height: 28px;"
-    "}"
-    "QComboBox:hover { border-color: #38BDF8; }"
-    "QComboBox::drop-down { border: none; width: 18px; }"
-    "QComboBox::down-arrow { image: none; }"
-    "QComboBox QAbstractItemView {"
-    "  background-color: #0B1120;"
-    "  color: #CBD5E1;"
-    "  selection-background-color: #0284C7;"
-    "  selection-color: #FFFFFF;"
-    "  border: 1px solid #1E293B;"
-    "}";
+static const QString AITT_STYLE_COMBO = "QComboBox {"
+                                        "  background-color: #070A12;"
+                                        "  color: #CBD5E1;"
+                                        "  border: 1px solid #1E293B;"
+                                        "  border-radius: 0px;"
+                                        "  padding: 3px 24px 3px 8px;"
+                                        "  font-size: 12px;"
+                                        "  min-height: 28px;"
+                                        "  max-height: 28px;"
+                                        "}"
+                                        "QComboBox:hover { border-color: #38BDF8; }"
+                                        "QComboBox::drop-down {"
+                                        "  subcontrol-origin: padding;"
+                                        "  subcontrol-position: top right;"
+                                        "  border-left: 1px solid #1E293B;"
+                                        "  width: 22px;"
+                                        "  background-color: transparent;"
+                                        "}"
+                                        "QComboBox::down-arrow {"
+                                        "  image: url(:/svg/arrow-down);"
+                                        "  width: 12px;"
+                                        "  height: 12px;"
+                                        "}"
+                                        "QComboBox::down-arrow:hover, QComboBox::down-arrow:on {"
+                                        "  image: url(:/svg/arrow-down-hover);"
+                                        "}"
+                                        "QComboBox QAbstractItemView {"
+                                        "  background-color: #0B1120;"
+                                        "  color: #CBD5E1;"
+                                        "  selection-background-color: #0284C7;"
+                                        "  selection-color: #FFFFFF;"
+                                        "  border: 1px solid #1E293B;"
+                                        "}";
 
-static const QString AITT_STYLE_TEXTEDIT =
-    "QTextEdit {"
-    "  background-color: #070A12;"
-    "  color: #E2E8F0;"
-    "  border: 1px solid #1E293B;"
-    "  border-radius: 0px;"
-    "  font-size: 13px;"
-    "  padding: 8px;"
-    "  selection-background-color: #0284C7;"
-    "}"
-    "QTextEdit:focus { border: 1px solid #38BDF8; }";
+static const QString AITT_STYLE_TEXTEDIT = "QTextEdit {"
+                                           "  background-color: #070A12;"
+                                           "  color: #E2E8F0;"
+                                           "  border: 1px solid #1E293B;"
+                                           "  border-radius: 0px;"
+                                           "  font-size: 13px;"
+                                           "  padding: 8px;"
+                                           "  selection-background-color: #0284C7;"
+                                           "}"
+                                           "QTextEdit:focus { border: 1px solid #38BDF8; }";
 
-static const QString AITT_STYLE_LINEEDIT =
-    "QLineEdit {"
-    "  background-color: #070A12;"
-    "  color: #E2E8F0;"
-    "  border: 1px solid #1E293B;"
-    "  border-radius: 0px;"
-    "  padding: 3px 8px;"
-    "  font-size: 12px;"
-    "  min-height: 28px;"
-    "  max-height: 28px;"
-    "}"
-    "QLineEdit:focus { border: 1px solid #38BDF8; }";
+static const QString AITT_STYLE_LINEEDIT = "QLineEdit {"
+                                           "  background-color: #070A12;"
+                                           "  color: #E2E8F0;"
+                                           "  border: 1px solid #1E293B;"
+                                           "  border-radius: 0px;"
+                                           "  padding: 3px 8px;"
+                                           "  font-size: 12px;"
+                                           "  min-height: 28px;"
+                                           "  max-height: 28px;"
+                                           "}"
+                                           "QLineEdit:focus { border: 1px solid #38BDF8; }";
 
 // Built-in language list – extended via API when connection available
 static const QList<QPair<QString, QString>> kBuiltinLanguages = {
@@ -515,10 +520,6 @@ void AITranslaterWidget::setupDocumentPanel()
     fillLanguageCombo(m_cbDocSrcLang, "ru");
     optRow->addWidget(m_cbDocSrcLang);
 
-    QLabel *arrL = new QLabel(QString::fromUtf8("→"), fileCard);
-    arrL->setStyleSheet("font-size: 14px; color: #64748B;");
-    optRow->addWidget(arrL);
-
     QLabel *dstL = new QLabel(QString::fromUtf8("Перевести в:"), fileCard);
     dstL->setStyleSheet("font-size: 12px; color: #94A3B8;");
     optRow->addWidget(dstL);
@@ -590,8 +591,7 @@ void AITranslaterWidget::setupDocumentPanel()
     // Hint card
     QFrame *hintCard = new QFrame(inner);
     hintCard->setObjectName("at_card");
-    hintCard->setStyleSheet(
-        "QFrame#at_card { background-color: #0B1120; border: 1px solid #1E293B; border-left: 3px solid #F59E0B; border-radius: 0px; }");
+    hintCard->setStyleSheet("QFrame#at_card { background-color: #0B1120; border: 1px solid #1E293B; border-left: 3px solid #F59E0B; border-radius: 0px; }");
     QVBoxLayout *hintVl = new QVBoxLayout(hintCard);
     hintVl->setContentsMargins(14, 10, 14, 10);
     hintVl->setSpacing(4);
@@ -919,7 +919,8 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                 QJsonObject taskObj = result.contains("task") && result["task"].isObject() ? result["task"].toObject() : result;
                 m_asyncTaskId = result.contains("task_id") ? result["task_id"].toString() : taskObj["task_id"].toString();
                 QString status = result.contains("status") ? result["status"].toString() : taskObj["status"].toString();
-                if(status.isEmpty()) status = "queued";
+                if(status.isEmpty())
+                    status = "queued";
 
                 QString srcL = result.contains("source_lang") ? result["source_lang"].toString() : taskObj["source_lang"].toString();
                 QString dstL = result.contains("target_lang") ? result["target_lang"].toString() : taskObj["target_lang"].toString();
@@ -1128,6 +1129,39 @@ void AITranslaterWidget::pollAsyncTask()
     net->pullServiceUUID(IDServiceAITranslaterString, svc, ServiceOperation::Get);
 }
 
+void AITranslaterWidget::resetSession()
+{
+    if(m_pollTimer && m_pollTimer->isActive())
+        m_pollTimer->stop();
+
+    m_asyncTaskId.clear();
+    m_pendingDocBytes.clear();
+    m_pendingDocName.clear();
+
+    if(m_editInput)
+        m_editInput->clear();
+    if(m_editOutput)
+        m_editOutput->clear();
+    if(m_lblTextInfo)
+        m_lblTextInfo->setText(QString::fromUtf8("Символов: 0 | Слов: 0"));
+
+    if(m_editDocPath)
+        m_editDocPath->clear();
+    if(m_lblDocInfo)
+        m_lblDocInfo->clear();
+    if(m_progressDoc)
+    {
+        m_progressDoc->setValue(0);
+        m_progressDoc->setVisible(false);
+    }
+
+    if(m_queueTable)
+        m_queueTable->setRowCount(0);
+
+    setUiBusy(false);
+    showStatus(QString::fromUtf8("Готов к переводу"));
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 //  AITranslaterService  —  Service shell
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1192,7 +1226,10 @@ bool AITranslaterService::start()
     {
         auto *widget = static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage));
         if(widget)
+        {
+            widget->resetSession();
             widget->setNetwork(&MainWindow::current->network);
+        }
     }
 
     return true;
@@ -1204,5 +1241,12 @@ void AITranslaterService::stop()
     {
         mInternal->started = false;
         mInternal->finished = true;
+    }
+
+    if(MainWindow::current)
+    {
+        auto *widget = static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage));
+        if(widget)
+            widget->resetSession();
     }
 }

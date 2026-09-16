@@ -117,8 +117,14 @@ public:
 
     virtual void setArgs(const AdbDevice &adbDevice);
     virtual void setAppleArgs(const AppleDevice &appleDevice);
-    const AppleDevice &appleDevice() const { return mAppleDevice; }
-    const AdbDevice &adbDevice() const { return mAdbDevice; }
+    const AppleDevice &appleDevice() const
+    {
+        return mAppleDevice;
+    }
+    const AdbDevice &adbDevice() const
+    {
+        return mAdbDevice;
+    }
 
     virtual QString uuid() const = 0;
     virtual bool isAvailable() const;

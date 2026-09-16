@@ -46,23 +46,19 @@ enum class AppleDeviceMode
 class AppleDevice
 {
 public:
-    QString devId;              // UDID in normal mode, ECID in recovery/DFU mode
-    QString model;              // ProductType, e.g. "iPhone14,5"
-    QString displayName;        // e.g. "iPhone 13 (User)"
-    QString vendor;             // "Apple"
-    QString marketingName;      // e.g. "iPhone 13"
-    QString productVersion;     // e.g. "17.5.1"
-    QString buildVersion;       // e.g. "21F90"
-    QString serialNumber;       // Serial number
-    QString ecid;               // ECID / UniqueChipID
-    AppleDeviceMode mode;       // Normal, Recovery, DFU
-    bool isPaired;              // Host pairing trusted
+    QString devId;          // UDID in normal mode, ECID in recovery/DFU mode
+    QString model;          // ProductType, e.g. "iPhone14,5"
+    QString displayName;    // e.g. "iPhone 13 (User)"
+    QString vendor;         // "Apple"
+    QString marketingName;  // e.g. "iPhone 13"
+    QString productVersion; // e.g. "17.5.1"
+    QString buildVersion;   // e.g. "21F90"
+    QString serialNumber;   // Serial number
+    QString ecid;           // ECID / UniqueChipID
+    AppleDeviceMode mode;   // Normal, Recovery, DFU
+    bool isPaired;          // Host pairing trusted
 
-    AppleDevice()
-        : devId(), model(), displayName(), vendor("Apple"),
-          marketingName(), productVersion(), buildVersion(),
-          serialNumber(), ecid(), mode(AppleDeviceMode::Unknown),
-          isPaired(false)
+    AppleDevice() : devId(), model(), displayName(), vendor("Apple"), marketingName(), productVersion(), buildVersion(), serialNumber(), ecid(), mode(AppleDeviceMode::Unknown), isPaired(false)
     {
     }
 
@@ -93,9 +89,7 @@ public:
     QString activationState;
     bool passwordProtected;
 
-    AppleSysInfo()
-        : diskTotal(-1), diskUsed(-1), batteryLevel(-1),
-          isCharging(false), passwordProtected(false)
+    AppleSysInfo() : diskTotal(-1), diskUsed(-1), batteryLevel(-1), isCharging(false), passwordProtected(false)
     {
     }
 

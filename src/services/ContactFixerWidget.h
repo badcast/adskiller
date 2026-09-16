@@ -38,6 +38,7 @@ public:
     ~ContactFixerWidget() override;
 
     void setDevice(const AdbDevice &device);
+    void resetSession();
 
 private slots:
     void openVcfFile();
