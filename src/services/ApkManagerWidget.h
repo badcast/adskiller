@@ -13,44 +13,13 @@
 #include <QSet>
 #include "adbfront.h"
 
-struct AppPackageInfo
+struct AppPackageInfo : public AdbPackageInfo
 {
-    QString packageName;
-    QString appName;
-    QString apkPath;
-    qint64 apkSize = 0;
-    bool isSystem = false;
-    bool isDisabled = false;
-    QString versionName = "N/a";
     QIcon icon;
 };
 
-struct AppDetails
+struct AppDetails : public AdbPackageDetails
 {
-    QString packageName;
-    QString appName;
-    QString versionName = "N/a";
-    QString versionCode = "N/a";
-    QString minSdk = "N/a";
-    QString targetSdk = "N/a";
-    QString codePath = "N/a";
-    qint64 apkSize = 0;
-    QString dataDir = "N/a";
-    QString installer = "N/a";
-    QString firstInstallTime = "N/a";
-    QString lastUpdateTime = "N/a";
-    QString primaryCpuAbi = "N/a";
-    QString mainActivity = "N/a";
-    QString signatures = "N/a";
-    bool isSystem = false;
-    bool isDisabled = false;
-    QStringList requestedPermissions;
-    QSet<QString> grantedPermissions;
-    QStringList activities;
-    QStringList services;
-    QStringList receivers;
-    QStringList providers;
-    QString rawDumpsys;
     QIcon icon;
 };
 

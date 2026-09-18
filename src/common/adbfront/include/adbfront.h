@@ -12,6 +12,8 @@
 #include <QFileInfo>
 #include <QList>
 #include <QProcess>
+#include <QRegularExpression>
+#include <QSet>
 #include <QTimer>
 
 enum AdbConStatus
@@ -32,6 +34,39 @@ struct PackageIO
     QString applicationName;
     QString packageName;
     bool disabled;
+};
+
+struct AdbPackageInfo
+{
+    QString packageName;
+    QString appName;
+    QString apkPath;
+    qint64 apkSize = 0;
+    bool isSystem = false;
+    bool isDisabled = false;
+    QString versionName = "N/a";
+};
+
+struct AdbPackageDetails : public AdbPackageInfo
+{
+    QString versionCode = "N/a";
+    QString minSdk = "N/a";
+    QString targetSdk = "N/a";
+    QString codePath = "N/a";
+    QString dataDir = "N/a";
+    QString installer = "N/a";
+    QString firstInstallTime = "N/a";
+    QString lastUpdateTime = "N/a";
+    QString primaryCpuAbi = "N/a";
+    QString mainActivity = "N/a";
+    QString signatures = "N/a";
+    QStringList requestedPermissions;
+    QSet<QString> grantedPermissions;
+    QStringList activities;
+    QStringList services;
+    QStringList receivers;
+    QStringList providers;
+    QString rawDumpsys;
 };
 
 class AdbDevice
@@ -100,6 +135,27 @@ public:
     AdbFileIO getFileIO();
     QString deviceId() const;
 
+    // Package and Application management
+    QList<AdbPackageInfo> getPackageList();
+    AdbPackageDetails getPackageDetails(const QString &packageName);
+    static AdbPackageDetails parseDumpsys(const QString &dumpsysOutput, const QString &packageName);
+    static QString sdkToAndroidVersion(int sdk);
+    static QString friendlyAppName(const QString &pkgName);
+    QByteArray extractPackageIconData(const QString &apkPath, const QString &packageName = {});
+
+    bool launchPackage(const QString &packageName);
+    bool stopPackage(const QString &packageName);
+    bool setPackageEnabled(const QString &packageName, bool enabled);
+    bool enablePackage(const QString &packageName);
+    bool disablePackage(const QString &packageName);
+    bool clearPackageData(const QString &packageName);
+    bool uninstallPackage(const QString &packageName, bool keepData = false);
+    std::pair<bool, QString> installPackage(const QString &localApkPath, bool reinstall = true);
+
+    // File transfer
+    bool pullFile(const QString &remotePath, const QString &localPath);
+    bool pushFile(const QString &localPath, const QString &remotePath);
+
 private:
     bool hasReqID(int requestId);
 
@@ -148,8 +204,6 @@ public:
     QStringList getFiles(const QString &dirPath, bool includeDirs = true);
 
     QList<AdbFileInfo> getFileList(const QString &dirPath);
-    bool pullFile(const QString &remotePath, const QString &localPath);
-    bool pushFile(const QString &localPath, const QString &remotePath);
     bool makeDir(const QString &dirPath);
 };
 

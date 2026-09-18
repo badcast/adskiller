@@ -183,67 +183,55 @@ QList<PackageIO> Adb::getPackages(const QString &deviceSerial)
 
 void Adb::killPackages(const QString &deviceSerial, const QList<PackageIO> &packages, int &successCount)
 {
-    std::pair<bool, QString> reply;
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
     if(!shell->isConnect())
         return;
     for(const PackageIO &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "am" << "force-stop" << package.packageName);
-        if(!reply.first)
-            continue;
-        successCount++;
+        if(shell->stopPackage(package.packageName))
+            successCount++;
     }
 }
 
 bool Adb::uninstallPackages(const QString &deviceSerial, const QStringList &packages, int &successCount)
 {
-    std::pair<bool, QString> reply;
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
     if(!shell->isConnect())
         return false;
     for(const QString &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "pm" << "uninstall" << "--user" << "0" << package);
-        if(!reply.first)
-            continue;
-        successCount++;
+        if(shell->uninstallPackage(package))
+            successCount++;
     }
     return true;
 }
 
 bool Adb::disablePackages(const QString &deviceSerial, const QStringList &packages, int &successCount)
 {
-    std::pair<bool, QString> reply;
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
     if(!shell->isConnect())
         return false;
     for(const QString &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "pm" << "disable-user" << "--user" << "0" << package);
-        if(!reply.first)
-            continue;
-        successCount++;
+        if(shell->disablePackage(package))
+            successCount++;
     }
     return true;
 }
 
 bool Adb::enablePackages(const QString &deviceSerial, const QStringList &packages, int &successCount)
 {
-    std::pair<bool, QString> reply;
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
     if(!shell->isConnect())
         return false;
     for(const QString &package : packages)
     {
-        reply = shell->commandQueueWait(QStringList() << "pm" << "enable" << "--user" << "0" << package);
-        if(!reply.first)
-            continue;
-        successCount++;
+        if(shell->enablePackage(package))
+            successCount++;
     }
     return true;
 }
@@ -386,25 +374,6 @@ bool AdbFileIO::makeDir(const QString &dirPath)
     return exists(dirPath);
 }
 
-bool AdbFileIO::pullFile(const QString &remotePath, const QString &localPath)
-{
-    QString dev = deviceId();
-    if(dev.isEmpty() || remotePath.isEmpty() || localPath.isEmpty())
-        return false;
-    int exitCode = -1;
-    adb_send_cmd(exitCode, QStringList() << "-s" << dev << "pull" << remotePath << localPath);
-    return exitCode == 0;
-}
-
-bool AdbFileIO::pushFile(const QString &localPath, const QString &remotePath)
-{
-    QString dev = deviceId();
-    if(dev.isEmpty() || localPath.isEmpty() || remotePath.isEmpty() || !QFile::exists(localPath))
-        return false;
-    int exitCode = -1;
-    adb_send_cmd(exitCode, QStringList() << "-s" << dev << "push" << localPath << remotePath);
-    return exitCode == 0;
-}
 
 QByteArray AdbFileIO::read(const QString &filePath)
 {

@@ -55,127 +55,6 @@ namespace
         return "0 Б";
     }
 
-    QString sdkToAndroidVersion(int sdk)
-    {
-        switch(sdk)
-        {
-            case 35:
-                return "Android 15";
-            case 34:
-                return "Android 14 (Upside Down Cake)";
-            case 33:
-                return "Android 13 (Tiramisu)";
-            case 32:
-                return "Android 12L";
-            case 31:
-                return "Android 12 (Snow Cone)";
-            case 30:
-                return "Android 11 (Red Velvet Cake)";
-            case 29:
-                return "Android 10 (Quince Tart)";
-            case 28:
-                return "Android 9.0 (Pie)";
-            case 27:
-                return "Android 8.1 (Oreo MR1)";
-            case 26:
-                return "Android 8.0 (Oreo)";
-            case 25:
-                return "Android 7.1 (Nougat MR1)";
-            case 24:
-                return "Android 7.0 (Nougat)";
-            case 23:
-                return "Android 6.0 (Marshmallow)";
-            case 22:
-                return "Android 5.1 (Lollipop MR1)";
-            case 21:
-                return "Android 5.0 (Lollipop)";
-            case 19:
-                return "Android 4.4 (KitKat)";
-            default:
-                if(sdk > 35)
-                    return QString("Android API %1").arg(sdk);
-                if(sdk > 0)
-                    return QString("Android (API %1)").arg(sdk);
-                return "Не указан";
-        }
-    }
-
-    QString friendlyAppName(const QString &pkgName)
-    {
-        static const QHash<QString, QString> knownApps = {
-            {"com.whatsapp", "WhatsApp"},
-            {"com.whatsapp.w4b", "WhatsApp Business"},
-            {"org.telegram.messenger", "Telegram"},
-            {"org.telegram.plus", "Telegram Plus"},
-            {"com.instagram.android", "Instagram"},
-            {"com.facebook.katana", "Facebook"},
-            {"com.facebook.orca", "Messenger"},
-            {"com.facebook.lite", "Facebook Lite"},
-            {"com.google.android.youtube", "YouTube"},
-            {"com.google.android.apps.youtube.music", "YouTube Music"},
-            {"com.android.chrome", "Google Chrome"},
-            {"com.google.android.gm", "Gmail"},
-            {"com.google.android.apps.maps", "Google Карты"},
-            {"com.google.android.apps.photos", "Google Фото"},
-            {"com.google.android.googlequicksearchbox", "Google Поиск"},
-            {"com.google.android.play.games", "Google Play Игры"},
-            {"com.android.vending", "Google Play Маркет"},
-            {"com.google.android.calendar", "Google Календарь"},
-            {"com.google.android.contacts", "Google Контакты"},
-            {"com.google.android.dialer", "Google Телефон"},
-            {"com.google.android.apps.messaging", "Google Сообщения"},
-            {"com.google.android.keep", "Google Заметки"},
-            {"com.google.android.apps.docs", "Google Документы"},
-            {"com.spotify.music", "Spotify"},
-            {"com.zhiliaoapp.musically", "TikTok"},
-            {"com.ss.android.ugc.trill", "TikTok"},
-            {"com.vkontakte.android", "ВКонтакте"},
-            {"ru.yandex.searchplugin", "Яндекс с Алисой"},
-            {"com.yandex.browser", "Яндекс Браузер"},
-            {"ru.yandex.taxi", "Яндекс Go"},
-            {"ru.yandex.music", "Яндекс Музыка"},
-            {"ru.yandex.yandexmaps", "Яндекс Карты"},
-            {"ru.sberbankmobile", "СберБанк Онлайн"},
-            {"ru.tinkoff.activities", "Т-Банк (Тинькофф)"},
-            {"com.viber.voip", "Viber"},
-            {"com.discord", "Discord"},
-            {"com.opera.browser", "Opera"},
-            {"com.opera.mini.native", "Opera Mini"},
-            {"org.mozilla.firefox", "Firefox"},
-            {"com.miui.gallery", "Галерея Xiaomi"},
-            {"com.miui.cleanmaster", "Безопасность Xiaomi"},
-            {"com.sec.android.app.camera", "Камера Samsung"},
-            {"com.sec.android.gallery3d", "Галерея Samsung"},
-            {"com.android.settings", "Настройки"},
-            {"com.android.camera", "Камера"},
-            {"com.android.gallery3d", "Галерея"},
-            {"com.android.contacts", "Контакты"},
-            {"com.android.mms", "Сообщения"},
-            {"com.android.dialer", "Телефон"},
-            {"com.android.providers.media", "Хранилище мультимедиа"},
-            {"com.android.providers.downloads", "Загрузки"},
-            {"com.android.packageinstaller", "Установщик пакетов"}};
-
-        if(knownApps.contains(pkgName))
-            return knownApps.value(pkgName);
-
-        QStringList parts = pkgName.split('.', Qt::SkipEmptyParts);
-        if(parts.isEmpty())
-            return pkgName;
-
-        QString cand = parts.last();
-        if((cand == "android" || cand == "app" || cand == "mobile" || cand == "client") && parts.size() > 1)
-            cand = parts[parts.size() - 2];
-
-        if(!cand.isEmpty())
-        {
-            cand[0] = cand[0].toUpper();
-            return cand;
-        }
-
-        return pkgName;
-    }
-
     QIcon generateFallbackIcon(const QString &appName, const QString &pkgName, bool isSystem)
     {
         const int size = 64;
@@ -246,239 +125,23 @@ namespace
             }
         }
 
-        if(!apkPath.isEmpty())
+        QByteArray rawData = shell.extractPackageIconData(apkPath, pkgName);
+        if(!rawData.isEmpty())
         {
-            auto listReply = shell.commandQueueWait(
-                QStringList() << "unzip" << "-l" << "\"" + apkPath + "\"" << "res/*ic_launcher*.png" << "res/*launcher*.png"
-                              << "res/*icon*.png" << "res/*logo*.png"
-                              << "*.webp" << "2>/dev/null");
-
-            if(listReply.first && !listReply.second.isEmpty())
+            QPixmap pix;
+            if(pix.loadFromData(rawData))
             {
-                QString bestEntry;
-                int bestScore = -1;
-
-                QStringList lines = listReply.second.split('\n', Qt::SkipEmptyParts);
-                for(const QString &line : lines)
-                {
-                    QString trimmed = line.trimmed();
-                    int resIdx = trimmed.indexOf("res/");
-                    if(resIdx == -1)
-                        continue;
-
-                    QString entry = trimmed.mid(resIdx).trimmed();
-                    if(!entry.endsWith(".png", Qt::CaseInsensitive) && !entry.endsWith(".webp", Qt::CaseInsensitive))
-                        continue;
-
-                    int score = 0;
-                    if(entry.contains("xxxhdpi"))
-                        score += 50;
-                    else if(entry.contains("xxhdpi"))
-                        score += 40;
-                    else if(entry.contains("xhdpi"))
-                        score += 30;
-                    else if(entry.contains("hdpi"))
-                        score += 20;
-                    else if(entry.contains("mdpi"))
-                        score += 10;
-
-                    if(entry.contains("ic_launcher"))
-                        score += 15;
-                    else if(entry.contains("icon"))
-                        score += 10;
-
-                    if(score > bestScore)
-                    {
-                        bestScore = score;
-                        bestEntry = entry;
-                    }
-                }
-
-                if(!bestEntry.isEmpty())
-                {
-                    auto dumpReply = shell.commandQueueWait(QStringList() << "unzip" << "-p" << "\"" + apkPath + "\"" << "\"" + bestEntry + "\"" << "2>/dev/null" << "|" << "base64");
-
-                    if(dumpReply.first && !dumpReply.second.isEmpty())
-                    {
-                        QByteArray rawData = QByteArray::fromBase64(dumpReply.second.toLatin1());
-                        if(!rawData.isEmpty())
-                        {
-                            QPixmap pix;
-                            if(pix.loadFromData(rawData))
-                            {
-                                QDir().mkpath(cacheDir);
-                                pix.save(cacheFile, "PNG");
-                                QIcon icon(pix);
-                                cache[pkgName] = icon;
-                                return icon;
-                            }
-                        }
-                    }
-                }
+                QDir().mkpath(cacheDir);
+                pix.save(cacheFile, "PNG");
+                QIcon icon(pix);
+                cache[pkgName] = icon;
+                return icon;
             }
         }
 
         QIcon fallback = generateFallbackIcon(appName, pkgName, isSystem);
         cache[pkgName] = fallback;
         return fallback;
-    }
-
-    AppDetails parseDumpsys(const QString &dumpsysOutput, const QString &pkgName)
-    {
-        AppDetails details;
-        details.packageName = pkgName;
-        details.rawDumpsys = dumpsysOutput;
-
-        static QRegularExpression reVerName("versionName=([^\r\n\\s]+)");
-        auto mVerName = reVerName.match(dumpsysOutput);
-        if(mVerName.hasMatch())
-            details.versionName = mVerName.captured(1);
-
-        static QRegularExpression reVerCode("versionCode=(\\d+)");
-        auto mVerCode = reVerCode.match(dumpsysOutput);
-        if(mVerCode.hasMatch())
-            details.versionCode = mVerCode.captured(1);
-
-        static QRegularExpression reMinSdk("minSdk=(\\d+)");
-        auto mMinSdk = reMinSdk.match(dumpsysOutput);
-        if(mMinSdk.hasMatch())
-            details.minSdk = mMinSdk.captured(1);
-
-        static QRegularExpression reTargetSdk("targetSdk=(\\d+)");
-        auto mTargetSdk = reTargetSdk.match(dumpsysOutput);
-        if(mTargetSdk.hasMatch())
-            details.targetSdk = mTargetSdk.captured(1);
-
-        static QRegularExpression reCodePath("codePath=([^\r\n\\s]+)");
-        auto mCodePath = reCodePath.match(dumpsysOutput);
-        if(mCodePath.hasMatch())
-            details.codePath = mCodePath.captured(1);
-
-        static QRegularExpression reDataDir("dataDir=([^\r\n\\s]+)");
-        auto mDataDir = reDataDir.match(dumpsysOutput);
-        if(mDataDir.hasMatch())
-            details.dataDir = mDataDir.captured(1);
-
-        static QRegularExpression reFirstInstall("firstInstallTime=([0-9\\-]+\\s+[0-9:]+)");
-        auto mFirstInstall = reFirstInstall.match(dumpsysOutput);
-        if(mFirstInstall.hasMatch())
-            details.firstInstallTime = mFirstInstall.captured(1);
-
-        static QRegularExpression reLastUpdate("lastUpdateTime=([0-9\\-]+\\s+[0-9:]+)");
-        auto mLastUpdate = reLastUpdate.match(dumpsysOutput);
-        if(mLastUpdate.hasMatch())
-            details.lastUpdateTime = mLastUpdate.captured(1);
-
-        static QRegularExpression reInstaller("installerPackageName=([^\r\n\\s]+)");
-        auto mInstaller = reInstaller.match(dumpsysOutput);
-        if(mInstaller.hasMatch())
-            details.installer = mInstaller.captured(1);
-
-        static QRegularExpression reAbi("primaryCpuAbi=([^\r\n\\s]+)");
-        auto mAbi = reAbi.match(dumpsysOutput);
-        if(mAbi.hasMatch())
-            details.primaryCpuAbi = mAbi.captured(1);
-
-        static QRegularExpression reSignatures("signatures=PackageSignatures\\{([^\\}]+)\\}");
-        auto mSignatures = reSignatures.match(dumpsysOutput);
-        if(mSignatures.hasMatch())
-            details.signatures = mSignatures.captured(1);
-
-        int reqIdx = dumpsysOutput.indexOf("requested permissions:");
-        if(reqIdx != -1)
-        {
-            int endIdx = dumpsysOutput.indexOf("\n    install permissions:", reqIdx);
-            if(endIdx == -1)
-                endIdx = dumpsysOutput.indexOf("\n    runtime permissions:", reqIdx);
-            if(endIdx == -1)
-                endIdx = dumpsysOutput.indexOf("\n  User 0:", reqIdx);
-
-            QString permBlock = (endIdx != -1) ? dumpsysOutput.mid(reqIdx, endIdx - reqIdx) : dumpsysOutput.mid(reqIdx, 4000);
-            QStringList lines = permBlock.split('\n');
-            for(const QString &l : lines)
-            {
-                QString trimmed = l.trimmed();
-                if(trimmed.startsWith("android.permission.") || trimmed.contains(".permission."))
-                {
-                    if(!details.requestedPermissions.contains(trimmed))
-                        details.requestedPermissions.append(trimmed);
-                }
-            }
-        }
-
-        static QRegularExpression reGranted("([a-zA-Z0-9_\\.]+):\\s*granted=true");
-        auto matchIter = reGranted.globalMatch(dumpsysOutput);
-        while(matchIter.hasNext())
-        {
-            auto match = matchIter.next();
-            details.grantedPermissions.insert(match.captured(1));
-        }
-
-        int actIdx = dumpsysOutput.indexOf("Activity Resolver Table:");
-        if(actIdx != -1)
-        {
-            int actEnd = dumpsysOutput.indexOf("Receiver Resolver Table:", actIdx);
-            if(actEnd == -1)
-                actEnd = dumpsysOutput.indexOf("Service Resolver Table:", actIdx);
-            QString actBlock = (actEnd != -1) ? dumpsysOutput.mid(actIdx, actEnd - actIdx) : dumpsysOutput.mid(actIdx, 3000);
-            static QRegularExpression reComp(pkgName + "/([a-zA-Z0-9_\\.]+)");
-            auto actMatch = reComp.globalMatch(actBlock);
-            while(actMatch.hasNext())
-            {
-                QString act = actMatch.next().captured(1);
-                if(!details.activities.contains(act))
-                    details.activities.append(act);
-            }
-        }
-        if(!details.activities.isEmpty())
-            details.mainActivity = details.activities.first();
-
-        int srvIdx = dumpsysOutput.indexOf("Service Resolver Table:");
-        if(srvIdx != -1)
-        {
-            int srvEnd = dumpsysOutput.indexOf("Provider Resolver Table:", srvIdx);
-            QString srvBlock = (srvEnd != -1) ? dumpsysOutput.mid(srvIdx, srvEnd - srvIdx) : dumpsysOutput.mid(srvIdx, 3000);
-            static QRegularExpression reComp(pkgName + "/([a-zA-Z0-9_\\.]+)");
-            auto srvMatch = reComp.globalMatch(srvBlock);
-            while(srvMatch.hasNext())
-            {
-                QString srv = srvMatch.next().captured(1);
-                if(!details.services.contains(srv))
-                    details.services.append(srv);
-            }
-        }
-
-        int recIdx = dumpsysOutput.indexOf("Receiver Resolver Table:");
-        if(recIdx != -1)
-        {
-            int recEnd = dumpsysOutput.indexOf("Service Resolver Table:", recIdx);
-            QString recBlock = (recEnd != -1) ? dumpsysOutput.mid(recIdx, recEnd - recIdx) : dumpsysOutput.mid(recIdx, 3000);
-            static QRegularExpression reComp(pkgName + "/([a-zA-Z0-9_\\.]+)");
-            auto recMatch = reComp.globalMatch(recBlock);
-            while(recMatch.hasNext())
-            {
-                QString rec = recMatch.next().captured(1);
-                if(!details.receivers.contains(rec))
-                    details.receivers.append(rec);
-            }
-        }
-
-        int prvIdx = dumpsysOutput.indexOf("Provider Resolver Table:");
-        if(prvIdx != -1)
-        {
-            int prvEnd = dumpsysOutput.indexOf("\n\n", prvIdx);
-            QString prvBlock = (prvEnd != -1) ? dumpsysOutput.mid(prvIdx, prvEnd - prvIdx) : dumpsysOutput.mid(prvIdx, 3000);
-            static QRegularExpression reComp(pkgName + "/([a-zA-Z0-9_\\.]+)");
-            auto prvMatch = reComp.globalMatch(prvBlock);
-            while(prvMatch.hasNext())
-            {
-                QString prv = prvMatch.next().captured(1);
-                if(!details.providers.contains(prv))
-                    details.providers.append(prv);
-            }
-        }
-
-        return details;
     }
 } // namespace
 
@@ -832,81 +495,21 @@ void ApkManagerWidget::loadPackages()
     m_statusLabel->setText("Загрузка списка пакетов устройства...");
     qApp->processEvents();
 
-    auto replyPkgs = m_shell.commandQueueWait(QStringList() << "pm" << "list" << "packages" << "-f" << "-u");
-    auto replyUser = m_shell.commandQueueWait(QStringList() << "pm" << "list" << "packages" << "-3");
-    auto replyDis = m_shell.commandQueueWait(QStringList() << "pm" << "list" << "packages" << "-d");
-
-    if(!replyPkgs.first)
+    auto packages = m_shell.getPackageList();
+    if(packages.isEmpty() && !m_shell.isConnect())
     {
         m_statusLabel->setText("[X] Ошибка при получении списка пакетов");
         return;
     }
 
-    QSet<QString> userPkgs;
-    if(replyUser.first)
-    {
-        QStringList uLines = replyUser.second.split('\n', Qt::SkipEmptyParts);
-        for(QString &ul : uLines)
-        {
-            ul = ul.trimmed();
-            if(ul.startsWith("package:"))
-                ul.remove(0, 8);
-            userPkgs.insert(ul.trimmed());
-        }
-    }
-
-    QSet<QString> disabledPkgs;
-    if(replyDis.first)
-    {
-        QStringList dLines = replyDis.second.split('\n', Qt::SkipEmptyParts);
-        for(QString &dl : dLines)
-        {
-            dl = dl.trimmed();
-            if(dl.startsWith("package:"))
-                dl.remove(0, 8);
-            disabledPkgs.insert(dl.trimmed());
-        }
-    }
-
     m_allPackages.clear();
-    QStringList lines = replyPkgs.second.split('\n', Qt::SkipEmptyParts);
-
-    for(const QString &line : lines)
+    for(const auto &p : packages)
     {
-        QString clean = line.trimmed();
-        if(clean.startsWith("package:"))
-            clean.remove(0, 8);
-
-        int eqIdx = clean.lastIndexOf('=');
-        if(eqIdx == -1)
-            continue;
-
-        QString apkPath = clean.left(eqIdx).trimmed();
-        QString pkgName = clean.mid(eqIdx + 1).trimmed();
-        if(pkgName.isEmpty())
-            continue;
-
         AppPackageInfo info;
-        info.packageName = pkgName;
-        info.apkPath = apkPath;
-        info.isSystem = !userPkgs.contains(pkgName);
-        info.isDisabled = disabledPkgs.contains(pkgName);
-        info.appName = friendlyAppName(pkgName);
-
+        static_cast<AdbPackageInfo &>(info) = p;
         info.icon = generateFallbackIcon(info.appName, info.packageName, info.isSystem);
-
         m_allPackages.append(info);
     }
-
-    std::sort(
-        m_allPackages.begin(),
-        m_allPackages.end(),
-        [](const AppPackageInfo &a, const AppPackageInfo &b)
-        {
-            if(a.isSystem != b.isSystem)
-                return !a.isSystem;
-            return a.appName.localeAwareCompare(b.appName) < 0;
-        });
 
     populateTable();
 
@@ -1072,9 +675,9 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
         m_btnToggleFreeze->setStyleSheet("QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; } QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
     }
 
-    auto dumpsysReply = m_shell.commandQueueWait(QStringList() << "dumpsys" << "package" << pkgInfo.packageName);
-    QString dumpsys = dumpsysReply.first ? dumpsysReply.second : "";
-    m_currentDetails = parseDumpsys(dumpsys, pkgInfo.packageName);
+    auto details = m_shell.getPackageDetails(pkgInfo.packageName);
+    m_currentDetails = AppDetails();
+    static_cast<AdbPackageDetails &>(m_currentDetails) = details;
     m_currentDetails.appName = pkgInfo.appName;
     m_currentDetails.icon = extracted;
     m_currentDetails.isSystem = pkgInfo.isSystem;
@@ -1082,14 +685,6 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
 
     if(m_currentDetails.codePath.isEmpty() || m_currentDetails.codePath == "—")
         m_currentDetails.codePath = pkgInfo.apkPath;
-
-    auto sizeReply = m_shell.commandQueueWait(QStringList() << "stat" << "-c" << "%s" << "\"" + pkgInfo.apkPath + "\"" << "2>/dev/null");
-    if(sizeReply.first && !sizeReply.second.trimmed().isEmpty())
-    {
-        qint64 sz = sizeReply.second.trimmed().toLongLong();
-        if(sz > 0)
-            m_currentDetails.apkSize = sz;
-    }
 
     QString instText = m_currentDetails.installer;
     if(instText == "com.android.vending")
@@ -1104,7 +699,7 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
     fillOverviewTab(m_currentDetails);
     fillPermissionsTab(m_currentDetails);
     fillComponentsTab(m_currentDetails);
-    m_dumpsysEdit->setPlainText(dumpsys);
+    m_dumpsysEdit->setPlainText(m_currentDetails.rawDumpsys);
 
     updateButtonsEnabled(true);
     m_statusLabel->setText("Готово");
@@ -1134,8 +729,8 @@ void ApkManagerWidget::fillOverviewTab(const AppDetails &d)
     addRow("Идентификатор пакета (Package ID)", d.packageName);
     addRow("Версия (versionName)", d.versionName);
     addRow("Номер сборки (versionCode)", d.versionCode);
-    addRow("Целевая версия ОС (targetSdk)", d.targetSdk + " (" + sdkToAndroidVersion(d.targetSdk.toInt()) + ")");
-    addRow("Минимальная версия ОС (minSdk)", d.minSdk + " (" + sdkToAndroidVersion(d.minSdk.toInt()) + ")");
+    addRow("Целевая версия ОС (targetSdk)", d.targetSdk + " (" + AdbShell::sdkToAndroidVersion(d.targetSdk.toInt()) + ")");
+    addRow("Минимальная версия ОС (minSdk)", d.minSdk + " (" + AdbShell::sdkToAndroidVersion(d.minSdk.toInt()) + ")");
     addRow("Размер файла APK", d.apkSize > 0 ? formatBytes(d.apkSize) : "—");
     addRow("Путь к APK на устройстве", d.codePath);
     addRow("Каталог данных (dataDir)", d.dataDir);
@@ -1282,9 +877,7 @@ void ApkManagerWidget::launchApp()
     m_statusLabel->setText("Запуск " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    auto reply = m_shell.commandQueueWait(QStringList() << "monkey" << "-p" << m_currentDetails.packageName << "-c" << "android.intent.category.LAUNCHER" << "1");
-
-    if(reply.first)
+    if(m_shell.launchPackage(m_currentDetails.packageName))
         m_statusLabel->setText("[+] Приложение запущено: " + m_currentDetails.packageName);
     else
         m_statusLabel->setText("Не удалось запустить приложение");
@@ -1298,8 +891,7 @@ void ApkManagerWidget::forceStopApp()
     m_statusLabel->setText("Остановка " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    auto reply = m_shell.commandQueueWait(QStringList() << "am" << "force-stop" << m_currentDetails.packageName);
-    if(reply.first)
+    if(m_shell.stopPackage(m_currentDetails.packageName))
         m_statusLabel->setText("Приложение остановлено: " + m_currentDetails.packageName);
     else
         m_statusLabel->setText("Ошибка при остановке приложения");
@@ -1311,14 +903,11 @@ void ApkManagerWidget::toggleFreezeApp()
         return;
 
     bool wasDisabled = m_currentDetails.isDisabled;
-    QString cmd = wasDisabled ? "enable" : "disable-user";
 
     m_statusLabel->setText((wasDisabled ? "Включение " : "Отключение ") + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    auto reply = m_shell.commandQueueWait(QStringList() << "pm" << cmd << "--user" << "0" << m_currentDetails.packageName);
-
-    if(reply.first)
+    if(m_shell.setPackageEnabled(m_currentDetails.packageName, wasDisabled))
     {
         m_currentDetails.isDisabled = !wasDisabled;
 
@@ -1380,8 +969,7 @@ void ApkManagerWidget::clearAppData()
     m_statusLabel->setText("Очистка данных " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    auto reply = m_shell.commandQueueWait(QStringList() << "pm" << "clear" << m_currentDetails.packageName);
-    if(reply.first)
+    if(m_shell.clearPackageData(m_currentDetails.packageName))
         m_statusLabel->setText("[+] Данные приложения успешно сброшены");
     else
         m_statusLabel->setText("[x] Не удалось очистить данные");
@@ -1400,10 +988,7 @@ void ApkManagerWidget::exportSelectedApk()
     m_statusLabel->setText("Выгрузка APK файла с устройства...");
     qApp->processEvents();
 
-    int exitCode = 0;
-    auto reply = adb_send_cmd(exitCode, QStringList() << "-s" << m_device.devId << "pull" << m_currentDetails.codePath << savePath);
-
-    if(reply.first && exitCode == 0)
+    if(m_shell.pullFile(m_currentDetails.codePath, savePath))
     {
         m_statusLabel->setText("[+] APK успешно сохранен: " + savePath);
         QMessageBox::information(this, "Успешно", "APK файл успешно выгружен на компьютер:\n" + savePath);
@@ -1424,10 +1009,9 @@ void ApkManagerWidget::installApk()
     m_statusLabel->setText("Установка APK на устройство...");
     qApp->processEvents();
 
-    int exitCode = 0;
-    auto reply = adb_send_cmd(exitCode, QStringList() << "-s" << m_device.devId << "install" << "-r" << apkFile);
+    auto [ok, output] = m_shell.installPackage(apkFile, true);
 
-    if(reply.first && exitCode == 0 && (reply.second.contains("Success") || !reply.second.contains("Failure")))
+    if(ok)
     {
         m_statusLabel->setText("[+] Приложение успешно установлено!");
         QMessageBox::information(this, "Установка завершена", "Приложение успешно установлено на устройство.");
@@ -1436,7 +1020,7 @@ void ApkManagerWidget::installApk()
     else
     {
         m_statusLabel->setText("[x] Ошибка установки APK");
-        QMessageBox::warning(this, "Ошибка установки", "Не удалось установить APK:\n" + reply.second);
+        QMessageBox::warning(this, "Ошибка установки", "Не удалось установить APK:\n" + output);
     }
 }
 
@@ -1453,9 +1037,7 @@ void ApkManagerWidget::uninstallApp()
     m_statusLabel->setText("Удаление " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    auto reply = m_shell.commandQueueWait(QStringList() << "pm" << "uninstall" << "--user" << "0" << m_currentDetails.packageName);
-
-    if(reply.first && reply.second.contains("Success"))
+    if(m_shell.uninstallPackage(m_currentDetails.packageName))
     {
         m_statusLabel->setText("[+] Приложение удалено: " + m_currentDetails.packageName);
         QMessageBox::information(this, "Удалено", "Приложение успешно удалено.");
@@ -1464,7 +1046,7 @@ void ApkManagerWidget::uninstallApp()
     else
     {
         m_statusLabel->setText("[x] Не удалось удалить приложение");
-        QMessageBox::warning(this, "Ошибка", "Не удалось удалить приложение:\n" + reply.second);
+        QMessageBox::warning(this, "Ошибка", "Не удалось удалить приложение.");
     }
 }
 
