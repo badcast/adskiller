@@ -3,43 +3,17 @@
         <file alias="app-logo-merry">res/icon.png</file>
         <file alias="ApplicationStyle.qss">res/style/ApplicationStyle.qss</file>
         <file alias="icon-hello">res/icon-hello.png</file>
-        <file alias="icon-deviceconnect">res/icon-deviceconnect.png</file>
-        <file alias="icon-authlogin">res/icon-authlogin.png</file>
         <file alias="font-DigitalNumbers">res/fonts/font-DigitalNumbers/DigitalNumbers-Regular.ttf</file>
-        <file alias="usb-port">res/usbport.png</file>
         <file alias="no-avatar">res/no-avatar.png</file>
         <file alias="snowflake-image">res/snowflake-image.png</file>
         <file alias="banner">res/banner-low.png</file>
         <file alias="banner-low">res/banner-low.png</file>
-        <file alias="banner-low.png">res/banner-low.png</file>
         <file alias="banner-max">res/banner-max.png</file>
         <file alias="app-logo">res/icon_std.png</file>
-        <file alias="app-icon-svg">res/icon.svg</file>
         <file alias="checkbox-checked">res/checkbox-checked.svg</file>
         <file alias="license-gplv3">LICENSE</file>
     </qresource>
     <qresource prefix="/service-icons">
-        <file alias="dark-ads-remove">res/icons/dark-ads-remove.png</file>
-        <file alias="dark-apk-manager">res/icons/dark-apk-manager.png</file>
-        <file alias="dark-mi-remove">res/icons/dark-mi-remove.png</file>
-        <file alias="white-ads-remove">res/icons/white-ads-remove.png</file>
-        <file alias="white-apk-manager">res/icons/white-apk-manager.png</file>
-        <file alias="white-mi-remove">res/icons/white-mi-remove.png</file>
-        <file alias="unavailable">res/icons/unvailable.png</file>
-        <file alias="dark-boost-phone">res/icons/dark-boost-phone.png</file>
-        <file alias="dark-clean-garbage">res/icons/dark-clean-garbage.png</file>
-        <file alias="dark-devices-list">res/icons/dark-devices-list.png</file>
-        <file alias="dark-media-transfer">res/icons/dark-media-transfer.png</file>
-        <file alias="dark-transfer">res/icons/dark-transfer.png</file>
-        <file alias="dark-unlock">res/icons/dark-unlock.png</file>
-        <file alias="dark-vibration">res/icons/dark-vibration.png</file>
-        <file alias="white-boost-phone">res/icons/white-boost-phone.png</file>
-        <file alias="white-clean-garbage">res/icons/white-clean-garbage.png</file>
-        <file alias="white-devices-list">res/icons/white-devices-list.png</file>
-        <file alias="white-media-transfer">res/icons/white-media-transfer.png</file>
-        <file alias="white-transfer">res/icons/white-transfer.png</file>
-        <file alias="white-unlock">res/icons/white-unlock.png</file>
-        <file alias="white-vibration">res/icons/white-vibration.png</file>
         <file alias="ads-killer">res/svg/services/ads-killer.svg</file>
         <file alias="my-devices">res/svg/services/my-devices.svg</file>
         <file alias="apk-manager">res/svg/services/apk-manager.svg</file>
@@ -53,6 +27,7 @@
         <file alias="file-manager">res/svg/services/file-manager.svg</file>
         <file alias="ai-translator">res/svg/services/ai-translator.svg</file>
         <file alias="apple">res/svg/services/apple.svg</file>
+        <file alias="unavailable">res/svg/services/unavailable.svg</file>
     </qresource>
     <qresource prefix="/svg/services">
         <file alias="ads-killer">res/svg/services/ads-killer.svg</file>
@@ -126,6 +101,5 @@
         <file alias="arrow-up">res/svg/arrow-up.svg</file>
         <file alias="arrow-down">res/svg/arrow-down.svg</file>
         <file alias="arrow-down-hover">res/svg/arrow-down-hover.svg</file>
-        <file alias="apple">res/svg/services/apple.svg</file>
     </qresource>
 </RCC>

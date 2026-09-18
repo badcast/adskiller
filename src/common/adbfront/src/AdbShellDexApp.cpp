@@ -72,8 +72,7 @@ bool AdbShellDexApp::isAvailable()
         return false;
 
     auto testReply = m_shell.commandQueueWait(
-        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH)
-                      << "app_process" << "/system/bin"
+        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH) << "app_process" << "/system/bin"
                       << "com.adskiller.agent.DexAgent" << "test" << "2>/dev/null");
 
     return testReply.first || testReply.second.contains("ERR:");
@@ -86,8 +85,7 @@ QList<AdbPackageInfo> AdbShellDexApp::getPackageList()
         return result;
 
     auto reply = m_shell.commandQueueWait(
-        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH)
-                      << "app_process" << "/system/bin"
+        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH) << "app_process" << "/system/bin"
                       << "com.adskiller.agent.DexAgent" << "list" << "2>/dev/null");
 
     if(!reply.first || reply.second.trimmed().isEmpty())
@@ -142,8 +140,7 @@ QByteArray AdbShellDexApp::getAppIcon(const QString &packageName, int size)
         return {};
 
     auto reply = m_shell.commandQueueWait(
-        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH)
-                      << "app_process" << "/system/bin"
+        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH) << "app_process" << "/system/bin"
                       << "com.adskiller.agent.DexAgent" << "icon" << packageName << QString::number(size) << "2>/dev/null");
 
     if(!reply.first || reply.second.trimmed().isEmpty())
@@ -163,8 +160,7 @@ AdbPackageDetails AdbShellDexApp::getPackageDetails(const QString &packageName)
         return details;
 
     auto reply = m_shell.commandQueueWait(
-        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH)
-                      << "app_process" << "/system/bin"
+        QStringList() << "CLASSPATH=" + QString(REMOTE_DEX_PATH) << "app_process" << "/system/bin"
                       << "com.adskiller.agent.DexAgent" << "info" << packageName << "2>/dev/null");
 
     if(!reply.first || reply.second.trimmed().isEmpty())

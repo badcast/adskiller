@@ -974,4 +974,3 @@ bool AdbShell::pushFile(const QString &localPath, const QString &remotePath)
     adb_send_cmd(exitCode, QStringList() << "-s" << dev << "push" << localPath << remotePath);
     return exitCode == 0;
 }
-

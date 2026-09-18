@@ -374,7 +374,6 @@ bool AdbFileIO::makeDir(const QString &dirPath)
     return exists(dirPath);
 }
 
-
 QByteArray AdbFileIO::read(const QString &filePath)
 {
     QString dev = deviceId();
