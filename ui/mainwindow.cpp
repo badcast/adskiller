@@ -520,7 +520,7 @@ void ServiceInfoDialog::onAskAiClicked()
     // Authorized! Close info dialog
     accept();
 
-    const QString query = QString::fromUtf8("Сервис \"%1\" что она делает?").arg(m_details.title);
+    const QString query = QString::fromUtf8("Объясни подробнее, сервис \"%1\" что она делает и зачем?").arg(m_details.title);
     MainWindow::current->askAiQuestion(query);
 }
 
@@ -2713,7 +2713,7 @@ void MainWindow::pageShownPreStart(int page)
                                 {
                                     connectPhone.isAuthed = true;
                                     connectPhone.adbDevice = authDev;
-                                    ServiceProvider::currentService()->setArgs(authDev);
+                                    ServiceProvider::currentService()->setAndroidArgs(authDev);
 
                                     QString devName = !authDev.marketingName.isEmpty() ? authDev.marketingName : (!authDev.displayName.isEmpty() ? authDev.displayName : (!authDev.model.isEmpty() ? authDev.model : authDev.devId));
                                     QString devSub = !authDev.vendor.isEmpty() ? (authDev.vendor + " (" + authDev.model + ")") : authDev.devId;
@@ -3417,6 +3417,8 @@ AppleDevice MainWindow::currentAppleDevice() const
 
 QWidget *MainWindow::pageWidget(PageIndex page) const
 {
+    if(pages.empty())
+        return nullptr;
     return pages.value(page, nullptr);
 }
 

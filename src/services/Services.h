@@ -28,7 +28,7 @@
 #include <QJsonValue>
 
 #include "adbfront.h"
-#include "applefront.h"
+#include "AppleFront.h"
 #include "extension.h"
 #include "network.h"
 
@@ -115,7 +115,7 @@ public:
     {
     }
 
-    virtual void setArgs(const AdbDevice &adbDevice);
+    virtual void setAndroidArgs(const AdbDevice &adbDevice);
     virtual void setAppleArgs(const AppleDevice &appleDevice);
     const AppleDevice &appleDevice() const
     {
@@ -185,7 +185,7 @@ public:
     AdsKillerService(QObject *parent = nullptr);
     ~AdsKillerService();
 
-    void setArgs(const AdbDevice &adbDevice) override;
+    void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
     PageIndex targetPage() override;
@@ -204,7 +204,7 @@ class StorageCacheCleanService : public Service
 public:
     StorageCacheCleanService(QObject *parent = nullptr);
 
-    void setArgs(const AdbDevice &adbDevice) override;
+    void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
     bool canStart() override;
@@ -302,7 +302,7 @@ public:
     BoostRamService(QObject *parent = nullptr);
     ~BoostRamService();
 
-    void setArgs(const AdbDevice &adbDevice) override;
+    void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
     PageIndex targetPage() override;

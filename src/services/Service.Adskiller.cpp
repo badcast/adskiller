@@ -143,9 +143,9 @@ AdsKillerService::~AdsKillerService()
     }
 }
 
-void AdsKillerService::setArgs(const AdbDevice &adbDevice)
+void AdsKillerService::setAndroidArgs(const AdbDevice &adbDevice)
 {
-    Service::setArgs(adbDevice);
+    Service::setAndroidArgs(adbDevice);
     MainWindow::current->accessUi_page_longinfo(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
 }
 

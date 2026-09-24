@@ -26,7 +26,7 @@
 #include <QCryptographicHash>
 #include <atomic>
 
-#include "applefront.h"
+#include "AppleFront.h"
 
 struct IpswFirmwareInfo
 {

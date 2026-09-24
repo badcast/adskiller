@@ -14,7 +14,7 @@
 #include <cmath>
 
 #include "adbfront.h"
-#include "applefront.h"
+#include "AppleFront.h"
 
 AdbDeviceVisualizer::AdbDeviceVisualizer(QWidget *parent) : QWidget(parent), m_status(UNKNOWN), m_time(0.0f), m_connectedTime(0.0f)
 {

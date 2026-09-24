@@ -32,7 +32,7 @@
 #include "Services.h"
 #include "Snowflake.h"
 #include "adbfront.h"
-#include "applefront.h"
+#include "AppleFront.h"
 #include "begin.h"
 #include "extension.h"
 #include "network.h"

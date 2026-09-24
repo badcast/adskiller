@@ -1,4 +1,4 @@
-#include "applefront.h"
+#include "AppleFront.h"
 
 #include <algorithm>
 #include <QCoreApplication>
@@ -505,5 +505,3 @@ void Apple::onDeviceWatch()
         disconnect();
     }
 }
-
-#include "moc_applefront.cpp"

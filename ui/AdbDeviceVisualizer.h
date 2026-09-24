@@ -7,7 +7,7 @@
 #include <QString>
 
 #include "adbfront.h"
-#include "applefront.h"
+#include "AppleFront.h"
 
 class AdbDeviceVisualizer : public QWidget
 {

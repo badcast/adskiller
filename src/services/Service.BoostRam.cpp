@@ -96,9 +96,9 @@ QString BoostRamService::widgetIconName()
     return "boost-ram";
 }
 
-void BoostRamService::setArgs(const AdbDevice &adbDevice)
+void BoostRamService::setAndroidArgs(const AdbDevice &adbDevice)
 {
-    Service::setArgs(adbDevice);
+    Service::setAndroidArgs(adbDevice);
     MainWindow::current->accessUi_page_longinfo(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
 }
 

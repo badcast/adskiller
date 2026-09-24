@@ -1,7 +1,7 @@
 #include "Services.h"
 #include "mainwindow.h"
 
-void Service::setArgs(const AdbDevice &adbDevice)
+void Service::setAndroidArgs(const AdbDevice &adbDevice)
 {
     mAdbDevice = adbDevice;
 }

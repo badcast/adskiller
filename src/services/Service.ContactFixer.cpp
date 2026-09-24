@@ -106,7 +106,7 @@ void ContactFixerWidget::requestDeviceConnect()
                 MainWindow::current->connectPhone.isAuthed = true;
                 MainWindow::current->connectPhone.adbDevice = dev;
                 if(ServiceProvider::currentService())
-                    ServiceProvider::currentService()->setArgs(dev);
+                    ServiceProvider::currentService()->setAndroidArgs(dev);
             }
             loadFromDevice();
             return;
@@ -773,7 +773,7 @@ void ContactFixerWidget::loadFromDevice()
                 MainWindow::current->connectPhone.isAuthed = true;
                 MainWindow::current->connectPhone.adbDevice = authDev;
                 if(ServiceProvider::currentService())
-                    ServiceProvider::currentService()->setArgs(authDev);
+                    ServiceProvider::currentService()->setAndroidArgs(authDev);
             }
         }
         else

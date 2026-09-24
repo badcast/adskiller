@@ -22,8 +22,11 @@ CyberReactorLoader::CyberReactorLoader(QWidget *parent) : QWidget(parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     // Тексты теперь связаны с телефонами и блокировкой рекламы
-    m_telemetryLines << QString::fromUtf8("• МОБИЛЬНЫЙ ЩИТ: АНАЛИЗ ТРАФИКА •") << QString::fromUtf8("• АНТИ-РЕКЛАМА: ПЕРЕХВАТ БАННЕРОВ •") << QString::fromUtf8("• ОЧИСТКА ЭКРАНА: УДАЛЕНИЕ СКРИПТОВ •") << QString::fromUtf8("• БЛОКИРОВКА ТРЕКЕРОВ: АКТИВНА •")
-                     << QString::fromUtf8("• ADSKILLER: ОПТИМИЗАЦИЯ УСТРОЙСТВА •");
+    m_telemetryLines << QString::fromUtf8("МОБИЛЬНЫЙ ЩИТ: АНАЛИЗ ТРАФИКА")
+                     << QString::fromUtf8("АНТИ-РЕКЛАМА: ПЕРЕХВАТ БАННЕРОВ")
+                     << QString::fromUtf8("ОЧИСТКА ЭКРАНА: УДАЛЕНИЕ СКРИПТОВ")
+                     << QString::fromUtf8("БЛОКИРОВКА ТРЕКЕРОВ: АКТИВНА")
+                     << QString::fromUtf8("ADSKILLER: ОПТИМИЗАЦИЯ УСТРОЙСТВА");
 
     initParticles();
 

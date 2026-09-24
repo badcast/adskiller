@@ -9,9 +9,9 @@ StorageCacheCleanService::StorageCacheCleanService(QObject *parent) : Service(De
 {
 }
 
-void StorageCacheCleanService::setArgs(const AdbDevice &adbDevice)
+void StorageCacheCleanService::setAndroidArgs(const AdbDevice &adbDevice)
 {
-    Service::setArgs(adbDevice);
+    Service::setAndroidArgs(adbDevice);
 }
 
 bool StorageCacheCleanService::canStart()
