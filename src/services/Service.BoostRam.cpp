@@ -255,7 +255,7 @@ void BoostRamService::stop()
 
 void BoostRamService::circleRamState(bool success)
 {
-    if(MainWindow::current==nullptr)
+    if(MainWindow::current == nullptr)
         return;
     MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
 

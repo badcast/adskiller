@@ -230,17 +230,17 @@ const CountryCodeDB &CountryCodeDB::instance()
     return CountryCodeDB::__instance;
 }
 
-inline std::string CountryCodeDB::country(int code)
+std::string CountryCodeDB::country(int code)
 {
     return countryCode(code).country;
 }
 
-inline std::string CountryCodeDB::dialcode(int code)
+std::string CountryCodeDB::dialcode(int code)
 {
     return countryCode(code).dialcode;
 }
 
-inline CountryCode CountryCodeDB::countryCode(int code)
+CountryCode CountryCodeDB::countryCode(int code)
 {
     CountryCode cc {};
     const CountryCodeDB &cdb = instance();
