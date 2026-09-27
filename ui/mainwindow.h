@@ -68,6 +68,8 @@ class AITranslaterWidget;
 class AITranslaterService;
 class AppleIpswWidget;
 class AppleIpswService;
+class StorageCacheCleanWidget;
+class StorageCacheCleanService;
 class RadioPlayerWidget;
 class CyberReactorLoader;
 class QToolBar;
@@ -270,6 +272,8 @@ class MainWindow : public QMainWindow
     friend class AITranslaterService;
     friend class AppleIpswWidget;
     friend class AppleIpswService;
+    friend class StorageCacheCleanWidget;
+    friend class StorageCacheCleanService;
     friend class ServiceTileButton;
     friend class ServiceInfoDialog;
 

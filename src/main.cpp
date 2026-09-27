@@ -204,7 +204,7 @@ int main(int argc, char **argv)
     app.setPalette(darkPalette);
 
     MainWindow *w = new MainWindow;
-    w->current = w;
+    MainWindow::current = w;
     w->app = &app;
     w->delayUICallLoop(
         100,

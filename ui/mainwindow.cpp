@@ -54,6 +54,7 @@
 #include "ApkManagerWidget.h"
 #include "ContactFixerWidget.h"
 #include "AppleIpswWidget.h"
+#include "StorageCacheCleanWidget.h"
 #include "AdbDeviceVisualizer.h"
 #include "CyberReactorLoader.h"
 
@@ -196,6 +197,7 @@ MainWindow::~MainWindow()
     ServiceProvider::closeService();
     Adb::killServer();
     AppSetting::save();
+    MainWindow::current = nullptr;
     delete ui;
 }
 
@@ -2529,6 +2531,9 @@ void MainWindow::showPage(PageIndex pageNum)
             case AppleIpswPage:
                 ui->label_8->setText("Прошивка и восстановление Apple iOS");
                 break;
+            case StorageCacheCleanPage:
+                ui->label_8->setText("Очистка кэша и мусора (Clean Master)");
+                break;
             default:
                 ui->label_8->setText("Назад в личный кабинет");
                 break;
@@ -2865,6 +2870,21 @@ void MainWindow::pageShownPreStart(int page)
                         widget->setDevice(connectPhone.appleDevice);
                     widget->refreshDevice();
                     QTimer::singleShot(50, widget, [widget]() { widget->showBetaDisclaimer(); });
+                }
+            }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
+            break;
+        }
+        case StorageCacheCleanPage:
+        {
+            if(pages.contains(StorageCacheCleanPage))
+            {
+                auto *widget = static_cast<StorageCacheCleanWidget *>(pages.value(StorageCacheCleanPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
                 }
             }
             if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())

@@ -255,6 +255,8 @@ void BoostRamService::stop()
 
 void BoostRamService::circleRamState(bool success)
 {
+    if(MainWindow::current==nullptr)
+        return;
     MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
 
     QPropertyAnimation *animation;
@@ -281,6 +283,8 @@ void BoostRamService::circleRamState(bool success)
 
 void BoostRamService::circleRamStateReset()
 {
+    if(MainWindow::current == nullptr)
+        return;
     QPropertyAnimation *animation;
     animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(1500);

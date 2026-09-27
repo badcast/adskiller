@@ -66,6 +66,7 @@ enum PageIndex
     ContactFixerPage,
     AITranslaterPage,
     AppleIpswPage,
+    StorageCacheCleanPage,
 
     LengthPages
 };
@@ -197,22 +198,30 @@ public:
     QString widgetIconName() override;
 };
 
+class StorageCacheCleanWidget;
+
 class StorageCacheCleanService : public Service
 {
     Q_OBJECT
 
 public:
     StorageCacheCleanService(QObject *parent = nullptr);
+    ~StorageCacheCleanService() override;
 
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
+    PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
     bool start() override;
     void stop() override;
     QString widgetIconName() override;
+
+private:
+    bool m_started = false;
+    bool m_finished = false;
 };
 
 class BuyVIPService : public Service

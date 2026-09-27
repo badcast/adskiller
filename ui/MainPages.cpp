@@ -51,6 +51,7 @@
 #include "ContactFixerWidget.h"
 #include "AITranslaterWidget.h"
 #include "AppleIpswWidget.h"
+#include "StorageCacheCleanWidget.h"
 #include <QToolBar>
 #include "RadioPlayerWidget.h"
 
@@ -197,6 +198,12 @@ void MainWindow::setupWindowLayoutAndAnim()
     appleWidget->setVisible(false);
     ui->contentLayout->layout()->addWidget(appleWidget);
     pages.insert(AppleIpswPage, appleWidget);
+
+    StorageCacheCleanWidget *cleanWidget = new StorageCacheCleanWidget(this);
+    cleanWidget->setObjectName("page_storageclean");
+    cleanWidget->setVisible(false);
+    ui->contentLayout->layout()->addWidget(cleanWidget);
+    pages.insert(StorageCacheCleanPage, cleanWidget);
 
     ui->tabWidget->deleteLater();
 
