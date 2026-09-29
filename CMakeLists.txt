@@ -36,12 +36,12 @@ set(PROJECT_SOURCES
         include/network.h
         include/AppSystemTray.h
         include/Strings.h
-        src/main.cpp
-        src/network.cpp
-        src/Identity.cpp
-        src/AppSystemTray.cpp
-        src/extension.cpp
-        src/settings.cpp
+        Source/main.cpp
+        Source/network.cpp
+        Source/Identity.cpp
+        Source/AppSystemTray.cpp
+        Source/extension.cpp
+        Source/settings.cpp
         resources.qrc
 )
 
@@ -87,10 +87,10 @@ endif()
 
 add_compile_definitions(APPVERSION="${APPVERSION}" ADS_VER_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR} ADS_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR} ADS_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
 
-add_subdirectory(src/widgets)
-add_subdirectory(src/common/adbfront)
-add_subdirectory(src/common/applefront)
-add_subdirectory(src/services)
+add_subdirectory(Source/widgets)
+add_subdirectory(Source/common/adbfront)
+add_subdirectory(Source/common/applefront)
+add_subdirectory(Source/services)
 
 set_target_properties(application PROPERTIES OUTPUT_NAME adskiller)
 
