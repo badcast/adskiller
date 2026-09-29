@@ -1,6 +1,6 @@
 #include "AppleIpswWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include <QApplication>
 #include <QDialog>
@@ -50,7 +50,6 @@ static QScrollArea *createMetroScrollArea(QWidget *contentWidget, QWidget *paren
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scroll->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
     scroll->setWidgetResizable(true);
-    scroll->setStyleSheet("QScrollArea { background: transparent; border: none; } QScrollArea > QWidget > QWidget { background: transparent; }");
     scroll->setWidget(contentWidget);
     return scroll;
 }
@@ -461,10 +460,6 @@ AppleIpswWidget::AppleIpswWidget(QWidget *parent) : QWidget(parent)
 
     m_detectTimer = new QTimer(this);
     connect(m_detectTimer, &QTimer::timeout, this, &AppleIpswWidget::scanDevices);
-    m_detectTimer->start(4000); // Poll USB every 4 sec
-
-    // Initial scan
-    QTimer::singleShot(500, this, &AppleIpswWidget::scanDevices);
 }
 
 AppleIpswWidget::~AppleIpswWidget()
@@ -495,6 +490,18 @@ QString AppleIpswWidget::downloadDirectory() const
     QString def = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/AdsKiller/IPSW";
     QDir().mkpath(def);
     return def;
+}
+
+void AppleIpswWidget::startDeviceDetection()
+{
+    if(!m_detectTimer->isActive())
+        m_detectTimer->start(4000);
+    refreshDevice();
+}
+
+void AppleIpswWidget::stopDeviceDetection()
+{
+    m_detectTimer->stop();
 }
 
 void AppleIpswWidget::setupUi()
@@ -561,7 +568,7 @@ void AppleIpswWidget::setupUi()
     QVBoxLayout *headerTitleLayout = new QVBoxLayout();
     headerTitleLayout->setSpacing(2);
     QLabel *headerTitle = new QLabel(QString::fromUtf8("<span style='font-size: 14.5px; font-weight: 700; color: #FFFFFF;'>Apple iOS Firmware & Recovery Studio</span>"), headerWidget);
-    QLabel *headerSubtitle = new QLabel(QString::fromUtf8("<span style='font-size: 11px; color: #94A3B8;'>Пошаговый мастер восстановления • Контроль целостности SHA-1 • TSS Подписи Apple</span>"), headerWidget);
+    QLabel *headerSubtitle = new QLabel(QString::fromUtf8("<span style='font-size: 11px; color: #94A3B8;'>Пошаговый мастер восстановления * Контроль целостности SHA-1 * TSS Подписи Apple</span>"), headerWidget);
     headerTitleLayout->addWidget(headerTitle);
     headerTitleLayout->addWidget(headerSubtitle);
     headerLayout->addLayout(headerTitleLayout);
@@ -761,7 +768,7 @@ void AppleIpswWidget::setupSimpleWizardPage()
     {
         QLabel *l = new QLabel(label, m_simpleConnectedDeviceCard);
         l->setStyleSheet("color: #64748B; font-weight: 600; font-size: 11.5px;");
-        valLbl = new QLabel("—", m_simpleConnectedDeviceCard);
+        valLbl = new QLabel("-", m_simpleConnectedDeviceCard);
         valLbl->setStyleSheet("color: #F8FAFC; font-weight: 600; font-size: 11.5px;");
         valLbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
         scdGrid->addWidget(l, r, c * 2);
@@ -795,10 +802,10 @@ void AppleIpswWidget::setupSimpleWizardPage()
         hintLayout->addWidget(l);
     };
 
-    addHint(QString::fromUtf8("• <b>Прямой порт USB:</b> Подключайте кабель напрямую к портам материнской платы ПК (избегайте USB-хабов)."));
-    addHint(QString::fromUtf8("• <b>Доверие компьютеру:</b> Если экран iPhone активен, разблокируйте его и нажмите «Доверять этому компьютеру»."));
-    addHint(QString::fromUtf8("• <b>Зависание на логотипе Apple / Bootloop:</b> Переведите устройство в Recovery Mode (зажмите кнопки громкости и питания до значка кабеля и ПК)."));
-    addHint(QString::fromUtf8("• <b>Контроль кабеля:</b> Поврежденные неоригинальные кабели могут обрывать связь при записи разделов RootFS."));
+    addHint(QString::fromUtf8("* <b>Прямой порт USB:</b> Подключайте кабель напрямую к портам материнской платы ПК (избегайте USB-хабов)."));
+    addHint(QString::fromUtf8("* <b>Доверие компьютеру:</b> Если экран iPhone активен, разблокируйте его и нажмите «Доверять этому компьютеру»."));
+    addHint(QString::fromUtf8("* <b>Зависание на логотипе Apple / Bootloop:</b> Переведите устройство в Recovery Mode (зажмите кнопки громкости и питания до значка кабеля и ПК)."));
+    addHint(QString::fromUtf8("* <b>Контроль кабеля:</b> Поврежденные неоригинальные кабели могут обрывать связь при записи разделов RootFS."));
 
     s1CardLayout->addWidget(hintBox);
     s1Layout->addWidget(s1Card);
@@ -1400,9 +1407,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
 
     QLabel *anbContent = new QLabel(
         QString::fromUtf8(
-            "• При прошивке отправляется запрос цифровой подписи (TSS ticket) на серверы Apple (gs.apple.com).<br>"
-            "• Неподписанные версии iOS будут отклонены TSS, если не предоставлены сохраненные SHSH blobs.<br>"
-            "• Утилита автоматически переведет устройство в нужный режим (Recovery / Restore Ramdisk)."),
+            "* При прошивке отправляется запрос цифровой подписи (TSS ticket) на серверы Apple (gs.apple.com).<br>"
+            "* Неподписанные версии iOS будут отклонены TSS, если не предоставлены сохраненные SHSH blobs.<br>"
+            "* Утилита автоматически переведет устройство в нужный режим (Recovery / Restore Ramdisk)."),
         advNoteBox);
     anbContent->setStyleSheet("color: #CBD5E1; font-size: 11.5px; line-height: 1.5;");
     anbLayout->addWidget(anbContent);
@@ -1477,7 +1484,7 @@ void AppleIpswWidget::setupAdvancedWizardPage()
         QHBoxLayout *row = new QHBoxLayout();
         QLabel *tLbl = new QLabel(title, m_deviceCardWidget);
         tLbl->setStyleSheet("color: #64748B; font-size: 11.5px; font-weight: 600;");
-        valLbl = new QLabel("—", m_deviceCardWidget);
+        valLbl = new QLabel("-", m_deviceCardWidget);
         valLbl->setStyleSheet("color: #F8FAFC; font-weight: 600; font-size: 11.5px;");
         valLbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
         row->addWidget(tLbl);
@@ -1698,7 +1705,7 @@ void AppleIpswWidget::onChecksumProgress(int percent, double speedMBs, qint64 pr
         m_advChecksumProgress->setValue(percent);
     }
 
-    QString status = QString::fromUtf8("Сверка SHA-1: %1% (%2 из %3 • %4 МБ/с)...").arg(percent).arg(formatFileSize(processedBytes), formatFileSize(totalBytes)).arg(speedMBs, 0, 'f', 1);
+    QString status = QString::fromUtf8("Сверка SHA-1: %1% (%2 из %3 * %4 МБ/с)...").arg(percent).arg(formatFileSize(processedBytes), formatFileSize(totalBytes)).arg(speedMBs, 0, 'f', 1);
 
     if(m_lblSimpleChecksumStatus)
         m_lblSimpleChecksumStatus->setText(status);
@@ -1954,13 +1961,13 @@ void AppleIpswWidget::updateSimpleWizardStep1()
                 }
             }
             if(m_lblSimpleCardModel)
-                m_lblSimpleCardModel->setText(!m_device.model.isEmpty() ? m_device.model : "—");
+                m_lblSimpleCardModel->setText(!m_device.model.isEmpty() ? m_device.model : "-");
             if(m_lblSimpleCardIos)
                 m_lblSimpleCardIos->setText(!m_device.productVersion.isEmpty() ? m_device.productVersion : QString::fromUtf8("В Recovery/DFU"));
             if(m_lblSimpleCardSerial)
-                m_lblSimpleCardSerial->setText(!m_device.serialNumber.isEmpty() ? m_device.serialNumber : "—");
+                m_lblSimpleCardSerial->setText(!m_device.serialNumber.isEmpty() ? m_device.serialNumber : "-");
             if(m_lblSimpleCardEcid)
-                m_lblSimpleCardEcid->setText(!m_device.ecid.isEmpty() ? m_device.ecid : "—");
+                m_lblSimpleCardEcid->setText(!m_device.ecid.isEmpty() ? m_device.ecid : "-");
         }
 
         m_btnSimpleStep1Next->setEnabled(true);
@@ -1973,7 +1980,7 @@ void AppleIpswWidget::updateSimpleWizardStep2()
         return;
 
     QString name = !m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
-    m_lblSimpleDeviceSummary->setText(QString::fromUtf8("📱 Выбранное устройство: <b>%1</b> (Режим: %2 • ECID: %3)").arg(name, m_device.modeString(), !m_device.ecid.isEmpty() ? m_device.ecid : "—"));
+    m_lblSimpleDeviceSummary->setText(QString::fromUtf8("📱 Выбранное устройство: <b>%1</b> (Режим: %2 * ECID: %3)").arg(name, m_device.modeString(), !m_device.ecid.isEmpty() ? m_device.ecid : "-"));
 
     IpswFirmwareInfo bestSigned;
     for(const auto &fw : m_firmwares)
@@ -2552,6 +2559,9 @@ void AppleIpswWidget::refreshDevice()
 
 void AppleIpswWidget::scanDevices()
 {
+    if(!m_detectTimer || !m_detectTimer->isActive())
+        return;
+
     QList<AppleDevice> devs = Apple::getDevices();
     if(!devs.isEmpty())
     {
@@ -2586,13 +2596,13 @@ void AppleIpswWidget::updateDeviceCard()
         m_lblDeviceMode->setText(QString::fromUtf8("● Ожидание подключения USB"));
         m_lblDeviceMode->setStyleSheet("font-size: 11.5px; color: #EAB308; font-weight: 600; padding: 4px 10px; background: rgba(234, 179, 8, 0.1); border: 1px solid #854D0E;");
         if(m_lblIosVersion)
-            m_lblIosVersion->setText("—");
+            m_lblIosVersion->setText("-");
         if(m_lblSerial)
-            m_lblSerial->setText("—");
+            m_lblSerial->setText("-");
         if(m_lblEcid)
-            m_lblEcid->setText("—");
+            m_lblEcid->setText("-");
         if(m_lblUdid)
-            m_lblUdid->setText("—");
+            m_lblUdid->setText("-");
 
         if(m_btnExitRecovery)
             m_btnExitRecovery->setEnabled(false);
@@ -2637,11 +2647,11 @@ void AppleIpswWidget::updateDeviceCard()
     if(m_lblIosVersion)
         m_lblIosVersion->setText(!m_device.productVersion.isEmpty() ? m_device.productVersion : QString::fromUtf8("В Recovery/DFU"));
     if(m_lblSerial)
-        m_lblSerial->setText(!m_device.serialNumber.isEmpty() ? m_device.serialNumber : "—");
+        m_lblSerial->setText(!m_device.serialNumber.isEmpty() ? m_device.serialNumber : "-");
     if(m_lblEcid)
-        m_lblEcid->setText(!m_device.ecid.isEmpty() ? m_device.ecid : "—");
+        m_lblEcid->setText(!m_device.ecid.isEmpty() ? m_device.ecid : "-");
     if(m_lblUdid)
-        m_lblUdid->setText(!m_device.devId.isEmpty() ? (m_device.devId.left(14) + "...") : "—");
+        m_lblUdid->setText(!m_device.devId.isEmpty() ? (m_device.devId.left(14) + "...") : "-");
 }
 
 void AppleIpswWidget::fetchFirmwareCatalog(const QString &modelId)
@@ -2723,7 +2733,7 @@ void AppleIpswWidget::populateFirmwareTable()
         m_firmwareTable->setItem(row, 1, buildItem);
 
         // 2: Release Date
-        QTableWidgetItem *dateItem = new QTableWidgetItem(!fw.releaseDate.isEmpty() ? fw.releaseDate : "—");
+        QTableWidgetItem *dateItem = new QTableWidgetItem(!fw.releaseDate.isEmpty() ? fw.releaseDate : "-");
         dateItem->setForeground(QColor("#64748B"));
         dateItem->setTextAlignment(Qt::AlignCenter);
         m_firmwareTable->setItem(row, 2, dateItem);
@@ -2843,7 +2853,7 @@ void AppleIpswWidget::onDownloadProgress(qint64 received, qint64 total, double s
             m_progressBar->setValue(pct);
         if(m_simpleProgressBar)
             m_simpleProgressBar->setValue(pct);
-        QString status = QString::fromUtf8("Скачивание: %1 из %2 (%3%) • Скорость: %4 МБ/с").arg(formatFileSize(received), formatFileSize(total)).arg(pct).arg(speedMBs, 0, 'f', 1);
+        QString status = QString::fromUtf8("Скачивание: %1 из %2 (%3%) * Скорость: %4 МБ/с").arg(formatFileSize(received), formatFileSize(total)).arg(pct).arg(speedMBs, 0, 'f', 1);
         if(m_lblProgressStatus)
             m_lblProgressStatus->setText(status);
         if(m_lblSimpleProgressStatus)
@@ -3040,7 +3050,7 @@ void AppleIpswWidget::onRestoreProgress(int percent, const QString &stageText)
         m_progressBar->setValue(percent);
     if(m_simpleProgressBar)
         m_simpleProgressBar->setValue(percent);
-    QString text = QString("%1% • %2").arg(percent).arg(stageText);
+    QString text = QString("%1% * %2").arg(percent).arg(stageText);
     if(m_lblProgressStatus)
         m_lblProgressStatus->setText(text);
     if(m_lblSimpleProgressStatus)
@@ -3249,7 +3259,7 @@ void AppleIpswWidget::showBetaDisclaimer()
             "<p style='margin-top: 0px;'>Данный сервис находится в статусе <b>активного бета-тестирования</b> (экспериментальный модуль).</p>"
             "<p>⚠️ <b>Все действия вы принимаете исключительно на свой страх и риск!</b></p>"
             "<p>Программа полноценно поддерживает <b>скачивание официальных прошивок Apple IPSW</b> напрямую с серверов Apple и <b>проверку контрольных сумм (хешей SHA1 / MD5)</b>. "
-            "Однако для непосредственной прошивки устройства разработчик настоятельно рекомендует использовать проверенное ПО — <b>3uTools</b> или официальный <b>Apple iTunes / Finder</b>.</p>"
+            "Однако для непосредственной прошивки устройства разработчик настоятельно рекомендует использовать проверенное ПО - <b>3uTools</b> или официальный <b>Apple iTunes / Finder</b>.</p>"
             "<p style='color: #CBD5E1; background: rgba(15, 23, 42, 0.7); border-left: 3px solid #38BDF8; padding: 8px 10px; margin: 10px 0;'>"
             "ℹ️ <i>В ближайшее время модуль будет полностью финализирован. В настоящий момент у разработчика нет под рукой физического устройства iPhone/iPad для аппаратного тестирования каждого сценария. "
             "Вы можете протестировать функционал и при желании сообщить разработчику о результатах.</i></p>"
@@ -3328,7 +3338,7 @@ bool AppleIpswService::start()
             widget->resetSession();
             if(!mAppleDevice.isEmpty())
                 widget->setDevice(mAppleDevice);
-            widget->refreshDevice();
+            widget->startDeviceDetection();
         }
     }
 
@@ -3344,6 +3354,9 @@ void AppleIpswService::stop()
     {
         auto *widget = static_cast<AppleIpswWidget *>(MainWindow::current->pageWidget(AppleIpswPage));
         if(widget)
+        {
+            widget->stopDeviceDetection();
             widget->resetSession();
+        }
     }
 }

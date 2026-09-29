@@ -470,7 +470,7 @@ void RadioPlayerWidget::play()
     m_player->play();
     m_lblStatus->setText(QString::fromUtf8("СОЕДИНЕНИЕ..."));
     m_lblStatus->setStyleSheet("background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
-    m_lblTrackInfo->setText(QStringLiteral("%1 • Подключение к эфиру...").arg(station.name));
+    m_lblTrackInfo->setText(QStringLiteral("%1 * Подключение к эфиру...").arg(station.name));
     updatePlayButtonState(true);
     emit playbackStateChanged(true);
 }
@@ -641,15 +641,15 @@ void RadioPlayerWidget::onPlayerMetaDataChanged()
 
     if(!title.isEmpty() && !artist.isEmpty())
     {
-        m_lblTrackInfo->setText(QStringLiteral("%1 • %2 — %3").arg(stationName, artist, title));
+        m_lblTrackInfo->setText(QStringLiteral("%1 * %2 - %3").arg(stationName, artist, title));
     }
     else if(!title.isEmpty())
     {
-        m_lblTrackInfo->setText(QStringLiteral("%1 • %2").arg(stationName, title));
+        m_lblTrackInfo->setText(QStringLiteral("%1 * %2").arg(stationName, title));
     }
     else
     {
-        m_lblTrackInfo->setText(QStringLiteral("%1 • Прямой эфир").arg(stationName));
+        m_lblTrackInfo->setText(QStringLiteral("%1 * Прямой эфир").arg(stationName));
     }
 }
 

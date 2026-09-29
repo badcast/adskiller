@@ -33,6 +33,7 @@ QFrame#contentLayout {
 QLabel {
     background-color: transparent;
     color: #F8FAFC;
+    border: none;
 }
 
 QLabel:disabled {
@@ -985,6 +986,24 @@ QLabel#cabinetVal_status {
     font-weight: 700;
     background: transparent;
     border: none;
+}
+
+QLabel#cabinetVal_credits,
+QLabel#cabinetVal_status {
+    color: #34D399;
+}
+
+QLabel#cabinetVal_vip {
+    color: #FBBF24;
+}
+
+QLabel#cabinetVal_devices {
+    color: #38BDF8;
+}
+
+QLabel#cabinetVal_location,
+QLabel#cabinetVal_loginTime {
+    color: #94A3B8;
 }
 
 QFrame#toplevel_up_2 {

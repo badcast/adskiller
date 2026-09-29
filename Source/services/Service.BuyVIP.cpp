@@ -3,7 +3,7 @@
 #include <QJsonObject>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 constexpr auto BalanceStrFormat = "Ваш баланс: %1";
 

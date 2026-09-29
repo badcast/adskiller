@@ -145,6 +145,8 @@ public:
     explicit AppleIpswWidget(QWidget *parent = nullptr);
     ~AppleIpswWidget() override;
 
+    void startDeviceDetection();
+    void stopDeviceDetection();
     void refreshDevice();
     void setDevice(const AppleDevice &device);
     const AppleDevice &device() const

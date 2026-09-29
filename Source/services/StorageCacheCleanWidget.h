@@ -15,7 +15,7 @@
 #include <QMutex>
 
 #include "CircularCleanVisualizer.h"
-#include "adbfront.h"
+#include "AdbFront.h"
 
 class RunningAppIconsStrip : public QWidget
 {

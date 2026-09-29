@@ -34,7 +34,7 @@ QString AppleSysInfo::OSVersionString() const
 QString AppleSysInfo::StorageDesignString() const
 {
     if(diskTotal <= 0)
-        return QString("—");
+        return QString("-");
     double usedGB = diskUsed / (1024.0 * 1024.0 * 1024.0);
     double totalGB = diskTotal / (1024.0 * 1024.0 * 1024.0);
     return QString("%1 ГБ / %2 ГБ").arg(usedGB, 0, 'f', 1).arg(totalGB, 0, 'f', 1);
@@ -43,7 +43,7 @@ QString AppleSysInfo::StorageDesignString() const
 QString AppleSysInfo::BatteryDesignString() const
 {
     if(batteryLevel < 0)
-        return QString("—");
+        return QString("-");
     return QString("%1% %2").arg(batteryLevel).arg(isCharging ? QString::fromUtf8("(Зарядка)") : QString());
 }
 

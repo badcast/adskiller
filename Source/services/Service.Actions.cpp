@@ -1,7 +1,7 @@
 #include <QString>
 #include <QMessageBox>
 
-#include "mainwindow.h"
+#include "MainWindow.h"
 #include "Services.h"
 
 std::shared_ptr<Service> _CurrentService = nullptr;

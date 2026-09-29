@@ -10,7 +10,7 @@
         <file alias="banner-low">res/banner-low.png</file>
         <file alias="banner-max">res/banner-max.png</file>
         <file alias="app-logo">res/icon_std.png</file>
-        <file alias="checkbox-checked">res/checkbox-checked.svg</file>
+        <file alias="checkbox-checked">res/svg/checkbox-checked.svg</file>
         <file alias="license-gplv3">LICENSE</file>
     </qresource>
     <qresource prefix="/service-icons">
@@ -19,7 +19,6 @@
         <file alias="apk-manager">res/svg/services/apk-manager.svg</file>
         <file alias="storage-clean">res/svg/services/storage-clean.svg</file>
         <file alias="boost-ram">res/svg/services/boost-ram.svg</file>
-        <file alias="whatsapp-move">res/svg/services/whatsapp-move.svg</file>
         <file alias="contact-fixer">res/svg/services/contact-fixer.svg</file>
         <file alias="mi-unlock">res/svg/services/mi-unlock.svg</file>
         <file alias="vip-buy">res/svg/services/vip-buy.svg</file>
@@ -35,7 +34,6 @@
         <file alias="apk-manager">res/svg/services/apk-manager.svg</file>
         <file alias="storage-clean">res/svg/services/storage-clean.svg</file>
         <file alias="boost-ram">res/svg/services/boost-ram.svg</file>
-        <file alias="whatsapp-move">res/svg/services/whatsapp-move.svg</file>
         <file alias="contact-fixer">res/svg/services/contact-fixer.svg</file>
         <file alias="mi-unlock">res/svg/services/mi-unlock.svg</file>
         <file alias="vip-buy">res/svg/services/vip-buy.svg</file>
@@ -56,7 +54,6 @@
         <file alias="close">res/svg/close.svg</file>
         <file alias="radio">res/svg/radio.svg</file>
         <file alias="lock">res/svg/lock.svg</file>
-        <file alias="lock-open">res/svg/lock-open.svg</file>
         <file alias="eye">res/svg/eye.svg</file>
         <file alias="eye-off">res/svg/eye-off.svg</file>
         <file alias="send">res/svg/send.svg</file>
@@ -76,10 +73,8 @@
         <file alias="check-circle">res/svg/check-circle.svg</file>
         <file alias="wifi">res/svg/wifi.svg</file>
         <file alias="tag">res/svg/tag.svg</file>
-        <file alias="trending-down">res/svg/trending-down.svg</file>
         <file alias="clipboard">res/svg/clipboard.svg</file>
         <file alias="shuffle">res/svg/shuffle.svg</file>
-        <file alias="wrench">res/svg/wrench.svg</file>
         <file alias="settings">res/svg/settings.svg</file>
         <file alias="rocket">res/svg/rocket.svg</file>
         <file alias="lightbulb">res/svg/lightbulb.svg</file>

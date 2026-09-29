@@ -11,7 +11,7 @@
 #include <QIcon>
 #include <vector>
 
-#include "adbfront.h"
+#include "AdbFront.h"
 
 struct ContactFixerPrivate;
 

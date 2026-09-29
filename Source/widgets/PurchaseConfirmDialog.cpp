@@ -7,7 +7,7 @@
 
 PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data) : QDialog(parent)
 {
-    setWindowTitle("Подтверждение покупки — AdsKiller");
+    setWindowTitle("Подтверждение покупки - AdsKiller");
     setWindowIcon(QIcon(":/resources/app-logo"));
     setModal(true);
     setFixedWidth(460);

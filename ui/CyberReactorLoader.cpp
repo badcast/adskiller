@@ -323,7 +323,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
 
         QString teleText = m_telemetryLines.value(m_telemetryIndex);
         if(teleText.isEmpty())
-            teleText = QString::fromUtf8("• СИСТЕМА: СКАНИРОВАНИЕ ТРАФИКА •");
+            teleText = QString::fromUtf8("* СИСТЕМА: СКАНИРОВАНИЕ ТРАФИКА *");
 
         // Эффект плавного мигания текста
         int textAlpha = 150 + static_cast<int>(80.0 * std::sin(m_pulsePhase * 2.0));

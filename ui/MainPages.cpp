@@ -9,11 +9,9 @@
 #include <QButtonGroup>
 #include <QCloseEvent>
 #include <QCheckBox>
-#include <QCoreApplication>
 #include <QDate>
 #include <QDesktopServices>
 #include <QEasingCurve>
-#include <QFile>
 #include <QFontDatabase>
 #include <QStyle>
 #include <QGraphicsOpacityEffect>
@@ -37,9 +35,9 @@
 
 #include "PurchaseConfirmDialog.h"
 
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include "AdbDeviceVisualizer.h"
+#include "MainWindow.h"
+#include "ui_MainWindow.h"
+#include "DeviceVisualizer.h"
 #include "AIChatView.h"
 #include "Snowflake.h"
 #include "Strings.h"
@@ -431,10 +429,10 @@ void MainWindow::setupAiPanel()
                 "<hr style=\"border:none; border-top:1px solid #252830; margin:10px 0;\"/>"
                 "<p style=\"font-size:9.5pt;\">"
                 "<b style=\"color:#FFFFFF;\">Возможности модуля:</b><br/>"
-                "&nbsp;• Диагностика и блокировка рекламы<br/>"
-                "&nbsp;• Управление подключенными устройствами<br/>"
-                "&nbsp;• Проверка статуса подписки и кредитов<br/>"
-                "&nbsp;• Быстрые ответы и оптимизация ОС"
+                "&nbsp;* Диагностика и блокировка рекламы<br/>"
+                "&nbsp;* Управление подключенными устройствами<br/>"
+                "&nbsp;* Проверка статуса подписки и кредитов<br/>"
+                "&nbsp;* Быстрые ответы и оптимизация ОС"
                 "</p>"
                 "<hr style=\"border:none; border-top:1px solid #252830; margin:10px 0;\"/>"
                 "<p style=\"font-size:9.5pt;\">"
@@ -728,33 +726,6 @@ void MainWindow::setupRadioPlayer()
 
 void MainWindow::setupPagesDesign()
 {
-    // ==========================================
-    // 0. Load Unified Application Stylesheet
-    // ==========================================
-    QFile styleFile(":/resources/ApplicationStyle.qss");
-    if(!styleFile.open(QFile::ReadOnly | QFile::Text))
-    {
-        styleFile.setFileName(QCoreApplication::applicationDirPath() + "/ApplicationStyle.qss");
-        if(!styleFile.open(QFile::ReadOnly | QFile::Text))
-        {
-            styleFile.setFileName(QCoreApplication::applicationDirPath() + "/res/style/ApplicationStyle.qss");
-            if(!styleFile.open(QFile::ReadOnly | QFile::Text))
-            {
-                styleFile.setFileName("res/style/ApplicationStyle.qss");
-                if(!styleFile.open(QFile::ReadOnly | QFile::Text))
-                    styleFile.setFileName("ApplicationStyle.qss");
-            }
-        }
-    }
-    if(styleFile.isOpen() || styleFile.open(QFile::ReadOnly | QFile::Text))
-    {
-        QString styleSheetContent = QString::fromUtf8(styleFile.readAll());
-        styleFile.close();
-        this->setStyleSheet(styleSheetContent);
-        if(qApp)
-            qApp->setStyleSheet(styleSheetContent);
-    }
-
     if(ui->contentLayout)
         ui->contentLayout->setAttribute(Qt::WA_StyledBackground, true);
     if(ui->toplevel_up)
@@ -1215,24 +1186,21 @@ void MainWindow::setupPagesDesign()
             divider->setObjectName("cabinetHorizontalDivider");
             divider->setFrameShape(QFrame::HLine);
             divider->setFixedHeight(1);
-            divider->setStyleSheet("background-color: #1E293B; max-height: 1px; border: none;");
             f7MainLayout->addWidget(divider);
 
             // Horizontal Account Reference Bar ("Справочник аккаунта")
             QFrame *refBar = new QFrame(ui->frame_7);
             refBar->setObjectName("cabinetHorizontalRefPanel");
-            refBar->setStyleSheet("background: transparent; border: none;");
 
             QHBoxLayout *refLayout = new QHBoxLayout(refBar);
             refLayout->setContentsMargins(0, 0, 0, 0);
-            refLayout->setSpacing(6);
+            refLayout->setSpacing(0);
 
-            auto createChip = [refBar, refLayout](const QString &iconRes, const QString &caption, const QString &valObjName, const QString &initVal, const QString &valColor = "#F8FAFC")
+            auto createChip = [refBar, refLayout](const QString &iconRes, const QString &caption, const QString &valObjName, const QString &initVal)
             {
                 QFrame *chip = new QFrame(refBar);
                 chip->setObjectName("cabinetSideRow");
                 chip->setProperty("cabinetChip", true);
-                chip->setStyleSheet("QFrame#cabinetSideRow { background-color: #070B14; border: 1px solid #1E293B; border-radius: 0px; padding: 2px 6px; } QFrame#cabinetSideRow:hover { border-color: #334155; background-color: #0E1526; }");
 
                 QHBoxLayout *cl = new QHBoxLayout(chip);
                 cl->setContentsMargins(6, 3, 6, 3);
@@ -1243,7 +1211,6 @@ void MainWindow::setupPagesDesign()
                 iconLbl->setFixedSize(18, 18);
                 iconLbl->setAlignment(Qt::AlignCenter);
                 iconLbl->setPixmap(QPixmap(iconRes).scaled(14, 14, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                iconLbl->setStyleSheet("background: transparent; border: none;");
                 cl->addWidget(iconLbl);
 
                 QVBoxLayout *vl = new QVBoxLayout();
@@ -1252,25 +1219,23 @@ void MainWindow::setupPagesDesign()
 
                 QLabel *capLbl = new QLabel(caption, chip);
                 capLbl->setObjectName("cabinetSideCaption");
-                capLbl->setStyleSheet("color: #64748B; font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; background: transparent; border: none;");
                 vl->addWidget(capLbl);
 
                 QLabel *valLbl = new QLabel(initVal, chip);
                 valLbl->setObjectName(valObjName);
                 valLbl->setProperty("cabinetVal", true);
-                valLbl->setStyleSheet(QString("color: %1; font-size: 11px; font-weight: bold; background: transparent; border: none;").arg(valColor));
                 vl->addWidget(valLbl);
 
                 cl->addLayout(vl);
                 refLayout->addWidget(chip, 1);
             };
 
-            createChip(":/svg/credit-card", QString::fromUtf8("Баланс"), "cabinetVal_credits", "-", "#34D399");
-            createChip(":/svg/crown", QString::fromUtf8("VIP-статус"), "cabinetVal_vip", "-", "#FBBF24");
-            createChip(":/svg/smartphone", QString::fromUtf8("Устройства"), "cabinetVal_devices", "-", "#38BDF8");
-            createChip(":/svg/globe", QString::fromUtf8("Локация"), "cabinetVal_location", "-", "#94A3B8");
-            createChip(":/svg/shield", QString::fromUtf8("Безопасность"), "cabinetVal_status", "-", "#34D399");
-            createChip(":/svg/refresh-cw", QString::fromUtf8("Время входа"), "cabinetVal_loginTime", "-", "#94A3B8");
+            createChip(":/svg/credit-card", QString::fromUtf8("Баланс"), "cabinetVal_credits", "-");
+            createChip(":/svg/crown", QString::fromUtf8("VIP-статус"), "cabinetVal_vip", "-");
+            createChip(":/svg/smartphone", QString::fromUtf8("Устройства"), "cabinetVal_devices", "-");
+            createChip(":/svg/globe", QString::fromUtf8("Локация"), "cabinetVal_location", "-");
+            createChip(":/svg/shield", QString::fromUtf8("Безопасность"), "cabinetVal_status", "-");
+            createChip(":/svg/refresh-cw", QString::fromUtf8("Время входа"), "cabinetVal_loginTime", "-");
 
             // Hidden login reference label for findChild<QLabel*>("cabinetVal_login")
             QLabel *hiddenLogin = new QLabel(ui->frame_7);
@@ -1380,7 +1345,7 @@ void MainWindow::setupPagesDesign()
 
             QHBoxLayout *fLayout = new QHBoxLayout(filterBar);
             fLayout->setContentsMargins(14, 4, 14, 4);
-            fLayout->setSpacing(8);
+            fLayout->setSpacing(0);
 
             QButtonGroup *filterGroup = new QButtonGroup(this);
             filterGroup->setObjectName("serviceFilterGroup");
@@ -1477,7 +1442,7 @@ void MainWindow::setupPagesDesign()
             delete item;
         }
 
-        AdbDeviceVisualizer *visualizer = new AdbDeviceVisualizer(ui->page_devices);
+        DeviceVisualizer *visualizer = new DeviceVisualizer(ui->page_devices);
         visualizer->setObjectName("adbDeviceVisualizer");
         ui->device_right_group->addWidget(visualizer);
         adbVisualizer = visualizer;

@@ -1,5 +1,5 @@
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 #include <QEventLoop>
 #include <QMessageBox>
 #include <QDateTime>
@@ -101,7 +101,7 @@ void AIAgentService::sendCurrentMessage()
     btn->setEnabled(false);
     QString prevText = btn->text();
     btn->setProperty("__prev_text", prevText);
-    btn->setText("•••");
+    btn->setText("***");
 
     // Prepare request object from full conversation
     QJsonObject serviceReq;

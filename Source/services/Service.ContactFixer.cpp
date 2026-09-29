@@ -1,10 +1,10 @@
 #include "ContactFixerWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include "NumberPreview.h"
-#include "vcard.h"
-#include "text_io.h"
+#include "Vcard.h"
+#include "TextIo.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -440,12 +440,12 @@ void ContactFixerWidget::setupUi()
     QHBoxLayout *metaLayout = new QHBoxLayout();
     QLabel *cKey = new QLabel("Страна:", testerCard);
     cKey->setStyleSheet("color: #64748B; font-size: 11px;");
-    m_testCountryLabel = new QLabel("—", testerCard);
+    m_testCountryLabel = new QLabel("-", testerCard);
     m_testCountryLabel->setStyleSheet("color: #E2E8F0; font-weight: bold; font-size: 11px;");
 
     QLabel *dKey = new QLabel("Код:", testerCard);
     dKey->setStyleSheet("color: #64748B; font-size: 11px; margin-left: 6px;");
-    m_testDialCodeLabel = new QLabel("—", testerCard);
+    m_testDialCodeLabel = new QLabel("-", testerCard);
     m_testDialCodeLabel->setStyleSheet("color: #38BDF8; font-weight: bold; font-size: 11px;");
 
     metaLayout->addWidget(cKey);
@@ -454,7 +454,7 @@ void ContactFixerWidget::setupUi()
     metaLayout->addWidget(m_testDialCodeLabel);
     metaLayout->addStretch(1);
 
-    m_testValidLabel = new QLabel("—", testerCard);
+    m_testValidLabel = new QLabel("-", testerCard);
     m_testValidLabel->setStyleSheet("font-size: 11px; font-weight: 600;");
     metaLayout->addWidget(m_testValidLabel);
     cardLayout->addLayout(metaLayout);
@@ -481,7 +481,7 @@ void ContactFixerWidget::setupUi()
 
         QHBoxLayout *h = new QHBoxLayout();
         h->setSpacing(5);
-        labelPtr = new QLabel("—", w);
+        labelPtr = new QLabel("-", w);
         labelPtr->setStyleSheet("background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 3px 6px; font-family: monospace; font-size: 11px; min-height: 24px;");
         h->addWidget(labelPtr, 1);
 
@@ -582,19 +582,19 @@ void ContactFixerWidget::onTestNumberInputChanged(const QString &text)
     QString input = text.trimmed();
     if(input.isEmpty())
     {
-        m_testCountryLabel->setText("—");
-        m_testDialCodeLabel->setText("—");
-        m_testValidLabel->setText("—");
-        m_valBeautyGlobal->setText("—");
-        m_valBeautyLocal->setText("—");
-        m_valCompactGlobal->setText("—");
-        m_valCompactLocal->setText("—");
+        m_testCountryLabel->setText("-");
+        m_testDialCodeLabel->setText("-");
+        m_testValidLabel->setText("-");
+        m_valBeautyGlobal->setText("-");
+        m_valBeautyLocal->setText("-");
+        m_valCompactGlobal->setText("-");
+        m_valCompactLocal->setText("-");
         return;
     }
 
     NumberPreview np(input.toStdString());
     m_testCountryLabel->setText(np.country().empty() ? "Не определена" : QString::fromStdString(np.country()));
-    m_testDialCodeLabel->setText(np.dialCode().empty() ? "—" : QString::fromStdString(np.dialCode()));
+    m_testDialCodeLabel->setText(np.dialCode().empty() ? "-" : QString::fromStdString(np.dialCode()));
     m_testValidLabel->setText(np.isGenericNumber() ? "Корректный" : "Нестандартный");
     m_testValidLabel->setStyleSheet(np.isGenericNumber() ? "font-size: 11px; font-weight: 600; color: #10B981;" : "font-size: 11px; font-weight: 600; color: #F59E0B;");
 
@@ -980,12 +980,12 @@ void ContactFixerWidget::populateTable()
         m_table->setItem(row, 2, origItem);
 
         // Country
-        QTableWidgetItem *countryItem = new QTableWidgetItem(item.country.isEmpty() ? "—" : item.country);
+        QTableWidgetItem *countryItem = new QTableWidgetItem(item.country.isEmpty() ? "-" : item.country);
         countryItem->setForeground(QColor("#E2E8F0"));
         m_table->setItem(row, 3, countryItem);
 
         // Dial Code
-        QTableWidgetItem *codeItem = new QTableWidgetItem(item.dialCode.isEmpty() ? "—" : item.dialCode);
+        QTableWidgetItem *codeItem = new QTableWidgetItem(item.dialCode.isEmpty() ? "-" : item.dialCode);
         codeItem->setForeground(QColor("#38BDF8"));
         codeItem->setTextAlignment(Qt::AlignCenter);
         m_table->setItem(row, 4, codeItem);
@@ -1340,11 +1340,11 @@ void ContactFixerWidget::resetSession()
         m_valCompactLocal->clear();
 
     if(m_testCountryLabel)
-        m_testCountryLabel->setText(QString::fromUtf8("Страна: —"));
+        m_testCountryLabel->setText(QString::fromUtf8("Страна: -"));
     if(m_testDialCodeLabel)
-        m_testDialCodeLabel->setText(QString::fromUtf8("Код: —"));
+        m_testDialCodeLabel->setText(QString::fromUtf8("Код: -"));
     if(m_testValidLabel)
-        m_testValidLabel->setText(QString::fromUtf8("Корректный: —"));
+        m_testValidLabel->setText(QString::fromUtf8("Корректный: -"));
 
     if(m_btnSaveVcf)
         m_btnSaveVcf->setEnabled(false);

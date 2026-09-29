@@ -24,7 +24,7 @@
 
 #include "StorageCacheCleanWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 RunningAppIconsStrip::RunningAppIconsStrip(QWidget *parent) : QWidget(parent)
 {
@@ -845,7 +845,7 @@ class StorageCleanResultDialog : public QDialog
 public:
     StorageCleanResultDialog(const QString &deviceName, qint64 totalFreed, qint64 cacheFreed, int thumbCount, qint64 thumbFreed, int appsStopped, const QString &summary, QWidget *parent = nullptr) : QDialog(parent)
     {
-        setWindowTitle("Результаты очистки — AdsKiller");
+        setWindowTitle("Результаты очистки - AdsKiller");
         setWindowIcon(QIcon(":/resources/app-logo"));
         setModal(true);
         setFixedWidth(460);

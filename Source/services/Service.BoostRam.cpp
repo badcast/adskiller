@@ -4,7 +4,7 @@
 #include <chrono>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #define FORCLYQUIT_CHECK             \
     if(bCmd == CommandExecForceKill) \
@@ -127,8 +127,8 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
     QString devTitle = !device.marketingName.isEmpty() ? device.marketingName : (!device.displayName.isEmpty() ? device.displayName : device.model);
     QString vendorStr = !device.vendor.isEmpty() ? device.vendor : "Android";
     QString osStr = sysInfo ? sysInfo->OSVersionString() : "Android";
-    QString storageStr = sysInfo ? sysInfo->StorageDesignString() : "—";
-    QString ramStr = sysInfo ? sysInfo->RAMDesignString() : "—";
+    QString storageStr = sysInfo ? sysInfo->StorageDesignString() : "-";
+    QString ramStr = sysInfo ? sysInfo->RAMDesignString() : "-";
     QString kernelStr = (sysInfo && !sysInfo->kernelReleaseVersion.isEmpty()) ? sysInfo->kernelReleaseVersion.trimmed() : "Linux";
     QString archStr = (sysInfo && !sysInfo->machine.isEmpty()) ? sysInfo->machine.trimmed() : "aarch64";
     QString serialStr = !device.devId.isEmpty() ? device.devId : "USB";

@@ -2,7 +2,7 @@
 
 #include <QDialog>
 
-#include "network.h"
+#include "Network.h"
 
 class PurchaseConfirmDialog : public QDialog
 {

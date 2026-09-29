@@ -25,7 +25,7 @@ static QString formatMarkdown(const QString &raw)
 
     // Bullet points (- or * at start of line)
     static QRegularExpression bulletRe(R"((?:^|\n)[-*]\s+(.+))");
-    s.replace(bulletRe, "<br/>&nbsp;&nbsp;<span style='color:#4CC2FF;'>•</span> \\1");
+    s.replace(bulletRe, "<br/>&nbsp;&nbsp;<span style='color:#4CC2FF;'>*</span> \\1");
 
     // Numbered lists (1. , 2. at start of line)
     static QRegularExpression numRe(R"((?:^|\n)(\d+)\.\s+(.+))");
@@ -275,7 +275,7 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
 
     m_dotsLabel = new QLabel(this);
     m_dotsLabel->setTextFormat(Qt::RichText);
-    m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> • •</span>");
+    m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> * *</span>");
     m_dotsLabel->setStyleSheet("background: transparent; border: none;");
     cardLayout->addWidget(m_dotsLabel);
 
@@ -314,11 +314,11 @@ void AITypingIndicator::onTick()
 {
     m_step = (m_step + 1) % 3;
     if(m_step == 0)
-        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> • •</span>");
+        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> * *</span>");
     else if(m_step == 1)
-        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает • <b style='color:#4CC2FF;'>●</b> •</span>");
+        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает * <b style='color:#4CC2FF;'>●</b> *</span>");
     else
-        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает • • <b style='color:#4CC2FF;'>●</b></span>");
+        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает * * <b style='color:#4CC2FF;'>●</b></span>");
 }
 
 // -------------------------------------------------------------------

@@ -1,6 +1,6 @@
 #include "AITranslaterWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -172,7 +172,7 @@ static const QList<QPair<QString, QString>> kBuiltinLanguages = {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// AITranslaterWidget — ctor / dtor
+// AITranslaterWidget - ctor / dtor
 // ──────────────────────────────────────────────────────────────────────────────
 
 AITranslaterWidget::AITranslaterWidget(QWidget *parent) : QWidget(parent)
@@ -600,9 +600,9 @@ void AITranslaterWidget::setupDocumentPanel()
     hintVl->addWidget(hintTitle);
     QLabel *hintText = new QLabel(
         QString::fromUtf8(
-            "• Для документов до 2 МБ используйте синхронный перевод.\n"
-            "• Для больших файлов используйте асинхронный режим и отслеживайте прогресс на вкладке «Очередь».\n"
-            "• Поддерживаемые форматы: PDF, DOCX, DOC, TXT, XLSX, ODS, ODT, PPTX, RTF."),
+            "* Для документов до 2 МБ используйте синхронный перевод.\n"
+            "* Для больших файлов используйте асинхронный режим и отслеживайте прогресс на вкладке «Очередь».\n"
+            "* Поддерживаемые форматы: PDF, DOCX, DOC, TXT, XLSX, ODS, ODT, PPTX, RTF."),
         hintCard);
     hintText->setStyleSheet("font-size: 11.5px; color: #94A3B8;");
     hintText->setWordWrap(true);
@@ -938,7 +938,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                     m_queueTable->setItem(row, 1, new QTableWidgetItem(m_pendingDocName));
                     m_queueTable->setItem(row, 2, new QTableWidgetItem(QString("%1 → %2").arg(srcL, dstL)));
                     m_queueTable->setItem(row, 3, new QTableWidgetItem(status));
-                    m_queueTable->setItem(row, 4, new QTableWidgetItem("—"));
+                    m_queueTable->setItem(row, 4, new QTableWidgetItem("-"));
 
                     QPushButton *dlBtn = new QPushButton(QString::fromUtf8("Скачать"), m_queueTable);
                     dlBtn->setIcon(QIcon(":/svg/download"));
@@ -1100,7 +1100,7 @@ void AITranslaterWidget::pollAsyncTask()
                     if(idItem && idItem->text() == m_asyncTaskId)
                     {
                         m_queueTable->item(r, 3)->setText(status);
-                        m_queueTable->item(r, 4)->setText(progress > 0 ? QString("%1%").arg(progress) : (status == "completed" ? "100%" : "—"));
+                        m_queueTable->item(r, 4)->setText(progress > 0 ? QString("%1%").arg(progress) : (status == "completed" ? "100%" : "-"));
 
                         if(status == "completed")
                         {
@@ -1163,7 +1163,7 @@ void AITranslaterWidget::resetSession()
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  AITranslaterService  —  Service shell
+//  AITranslaterService  -  Service shell
 // ══════════════════════════════════════════════════════════════════════════════
 
 struct ATSInternalData
@@ -1201,7 +1201,7 @@ QString AITranslaterService::widgetIconName()
 
 bool AITranslaterService::canStart()
 {
-    return true; // DeviceConnectType::None — no ADB required
+    return true; // DeviceConnectType::None - no ADB required
 }
 
 bool AITranslaterService::isStarted()

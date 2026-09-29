@@ -4,7 +4,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QString>
-#include "adbfront.h"
+#include "AdbFront.h"
 
 class AdbShellDexApp
 {

@@ -11,7 +11,7 @@
 #include <QStandardItemModel>
 
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 static QIcon createBrandBadgeIcon(const QString &vendorRaw)
 {
@@ -264,17 +264,17 @@ void MyDeviceService::fillMyDevicesPage()
         modelItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         modelItem->setForeground(QBrush(QColor("#E3E5E8")));
 
-        DeviceSortItem *logTimeItem = new DeviceSortItem(item.logTime.isValid() ? item.logTime.toString("yyyy-MM-dd HH:mm") : "—");
+        DeviceSortItem *logTimeItem = new DeviceSortItem(item.logTime.isValid() ? item.logTime.toString("yyyy-MM-dd HH:mm") : "-");
         logTimeItem->setData(item.logTime, Qt::UserRole);
         logTimeItem->setTextAlignment(Qt::AlignCenter);
         logTimeItem->setForeground(QBrush(QColor("#BAC0CB")));
 
-        DeviceSortItem *lastConnItem = new DeviceSortItem(item.lastConnectTime.isValid() ? item.lastConnectTime.toString("yyyy-MM-dd HH:mm") : "—");
+        DeviceSortItem *lastConnItem = new DeviceSortItem(item.lastConnectTime.isValid() ? item.lastConnectTime.toString("yyyy-MM-dd HH:mm") : "-");
         lastConnItem->setData(item.lastConnectTime, Qt::UserRole);
         lastConnItem->setTextAlignment(Qt::AlignCenter);
         lastConnItem->setForeground(QBrush(QColor("#BAC0CB")));
 
-        DeviceSortItem *expireItem = new DeviceSortItem(item.expire.isValid() ? item.expire.toString("yyyy-MM-dd HH:mm") : "—");
+        DeviceSortItem *expireItem = new DeviceSortItem(item.expire.isValid() ? item.expire.toString("yyyy-MM-dd HH:mm") : "-");
         expireItem->setData(item.expire, Qt::UserRole);
         expireItem->setTextAlignment(Qt::AlignCenter);
         expireItem->setForeground(QBrush(QColor("#BAC0CB")));
@@ -289,7 +289,7 @@ void MyDeviceService::fillMyDevicesPage()
         connCountItem->setTextAlignment(Qt::AlignCenter);
         connCountItem->setForeground(QBrush(QColor("#E3E5E8")));
 
-        QString payStr = (item.purchasedType == 1) ? "VIP" : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "—");
+        QString payStr = (item.purchasedType == 1) ? "VIP" : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "-");
         DeviceSortItem *payItem = new DeviceSortItem(payStr);
         if(item.purchasedType == 1)
             payItem->setIcon(QIcon(":/svg/crown"));

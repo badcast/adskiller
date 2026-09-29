@@ -1,6 +1,6 @@
 #include "FileManagerWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -42,7 +42,7 @@ class FilePreviewDialog : public QDialog
 public:
     FilePreviewDialog(const QString &fileName, const QByteArray &content, QWidget *parent = nullptr) : QDialog(parent)
     {
-        setWindowTitle("Просмотр — " + fileName);
+        setWindowTitle("Просмотр - " + fileName);
         resize(720, 480);
         setStyleSheet(
             "QDialog { background-color: #0A0E1A; color: #F8FAFC; }"
@@ -330,9 +330,9 @@ void FileManagerWidget::setupUi()
 
     QHBoxLayout *badges = new QHBoxLayout();
     badges->setSpacing(6);
-    m_inspTypeBadge = new QLabel("—", card);
+    m_inspTypeBadge = new QLabel("-", card);
     m_inspTypeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
-    m_inspSizeBadge = new QLabel("—", card);
+    m_inspSizeBadge = new QLabel("-", card);
     m_inspSizeBadge->setStyleSheet("background-color: #1E293B; color: #38BDF8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
     badges->addStretch(1);
     badges->addWidget(m_inspTypeBadge);
@@ -345,7 +345,7 @@ void FileManagerWidget::setupUi()
     sep->setStyleSheet("color: #1E293B;");
     cardLayout->addWidget(sep);
 
-    m_inspPathLabel = new QLabel("—", card);
+    m_inspPathLabel = new QLabel("-", card);
     m_inspPathLabel->setStyleSheet("color: #64748B; font-size: 11px;");
     m_inspPathLabel->setWordWrap(true);
     m_inspPathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -357,7 +357,7 @@ void FileManagerWidget::setupUi()
         row->setSpacing(6);
         QLabel *titleLbl = new QLabel(title, card);
         titleLbl->setStyleSheet("color: #64748B; font-size: 11px;");
-        valLabel = new QLabel("—", card);
+        valLabel = new QLabel("-", card);
         valLabel->setStyleSheet("color: #E2E8F0; font-size: 11px; font-weight: 500;");
         row->addWidget(titleLbl);
         row->addStretch(1);
@@ -686,15 +686,15 @@ void FileManagerWidget::populateTable()
         typeUp->setTextAlignment(Qt::AlignCenter);
         m_table->setItem(row, 1, typeUp);
 
-        QTableWidgetItem *dash1 = new QTableWidgetItem("—");
+        QTableWidgetItem *dash1 = new QTableWidgetItem("-");
         dash1->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         m_table->setItem(row, 2, dash1);
 
-        QTableWidgetItem *dash2 = new QTableWidgetItem("—");
+        QTableWidgetItem *dash2 = new QTableWidgetItem("-");
         dash2->setTextAlignment(Qt::AlignCenter);
         m_table->setItem(row, 3, dash2);
 
-        QTableWidgetItem *dash3 = new QTableWidgetItem("—");
+        QTableWidgetItem *dash3 = new QTableWidgetItem("-");
         dash3->setTextAlignment(Qt::AlignCenter);
         m_table->setItem(row, 4, dash3);
         row++;
@@ -720,15 +720,15 @@ void FileManagerWidget::populateTable()
         QTableWidgetItem *typeItem = new QTableWidgetItem(getFileType(info.isDir, info.name));
         typeItem->setForeground(QColor("#94A3B8"));
 
-        QTableWidgetItem *sizeItem = new QTableWidgetItem(info.isDir ? "—" : formatBytes(info.size));
+        QTableWidgetItem *sizeItem = new QTableWidgetItem(info.isDir ? "-" : formatBytes(info.size));
         sizeItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         sizeItem->setForeground(info.isDir ? QColor("#64748B") : QColor("#38BDF8"));
 
-        QTableWidgetItem *dateItem = new QTableWidgetItem(info.modifyTime.isEmpty() ? "—" : info.modifyTime);
+        QTableWidgetItem *dateItem = new QTableWidgetItem(info.modifyTime.isEmpty() ? "-" : info.modifyTime);
         dateItem->setTextAlignment(Qt::AlignCenter);
         dateItem->setForeground(QColor("#94A3B8"));
 
-        QTableWidgetItem *permItem = new QTableWidgetItem(info.permissions.isEmpty() ? "—" : info.permissions);
+        QTableWidgetItem *permItem = new QTableWidgetItem(info.permissions.isEmpty() ? "-" : info.permissions);
         permItem->setTextAlignment(Qt::AlignCenter);
         permItem->setForeground(QColor("#64748B"));
 
@@ -749,7 +749,7 @@ void FileManagerWidget::populateTable()
         row++;
     }
 
-    m_statusSummary->setText(QString("%1 папок  •  %2 файлов  •  %3").arg(dirCount).arg(fileCount).arg(formatBytes(totalSize)));
+    m_statusSummary->setText(QString("%1 папок  *  %2 файлов  *  %3").arg(dirCount).arg(fileCount).arg(formatBytes(totalSize)));
     onSelectionChanged();
 }
 
@@ -765,11 +765,11 @@ void FileManagerWidget::updateInspector()
     {
         m_inspIcon->setPixmap(getFileIcon(true, "folder").pixmap(48, 48));
         m_inspName->setText("Объект не выбран");
-        m_inspTypeBadge->setText("—");
-        m_inspSizeBadge->setText("—");
+        m_inspTypeBadge->setText("-");
+        m_inspSizeBadge->setText("-");
         m_inspPathLabel->setText("Текущий каталог: " + m_currentPath);
-        m_inspDateVal->setText("—");
-        m_inspPermsVal->setText("—");
+        m_inspDateVal->setText("-");
+        m_inspPermsVal->setText("-");
 
         m_btnDownload->setEnabled(false);
         m_btnPreview->setEnabled(false);
@@ -789,10 +789,10 @@ void FileManagerWidget::updateInspector()
         m_inspIcon->setPixmap(getFileIcon(true, "..").pixmap(48, 48));
         m_inspName->setText(".. [На уровень выше]");
         m_inspTypeBadge->setText("Папка");
-        m_inspSizeBadge->setText("—");
+        m_inspSizeBadge->setText("-");
         m_inspPathLabel->setText("Переход в родительский каталог");
-        m_inspDateVal->setText("—");
-        m_inspPermsVal->setText("—");
+        m_inspDateVal->setText("-");
+        m_inspPermsVal->setText("-");
 
         m_btnDownload->setEnabled(false);
         m_btnPreview->setEnabled(false);
@@ -1135,9 +1135,9 @@ void FileManagerWidget::resetSession()
     if(m_inspName)
         m_inspName->setText(QString::fromUtf8("Файл не выбран"));
     if(m_inspTypeBadge)
-        m_inspTypeBadge->setText("—");
+        m_inspTypeBadge->setText("-");
     if(m_inspSizeBadge)
-        m_inspSizeBadge->setText("—");
+        m_inspSizeBadge->setText("-");
     if(m_inspPathLabel)
         m_inspPathLabel->clear();
     if(m_inspDateVal)

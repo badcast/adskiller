@@ -38,7 +38,7 @@
 
 #include "ApkManagerWidget.h"
 #include "Services.h"
-#include "mainwindow.h"
+#include "MainWindow.h"
 
 QIcon extractAppIcon(AdbShell &shell, const QString &apkPath, const QString &pkgName, const QString &appName, bool isSystem, QMap<QString, QIcon> &cache)
 {
@@ -208,7 +208,7 @@ void ApkManagerWidget::setupUi()
 
     QHBoxLayout *pkgRow = new QHBoxLayout();
     pkgRow->setSpacing(6);
-    m_packageIdLabel = new QLabel("—", appCard);
+    m_packageIdLabel = new QLabel("-", appCard);
     m_packageIdLabel->setStyleSheet("color: #38BDF8; font-size: 11.5px; font-weight: 600; border: none;");
     m_packageIdLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
@@ -226,13 +226,13 @@ void ApkManagerWidget::setupUi()
     QHBoxLayout *badgesLayout = new QHBoxLayout();
     badgesLayout->setSpacing(6);
 
-    m_typeBadge = new QLabel("—", appCard);
+    m_typeBadge = new QLabel("-", appCard);
     m_typeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
 
-    m_statusBadge = new QLabel("—", appCard);
+    m_statusBadge = new QLabel("-", appCard);
     m_statusBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
 
-    m_installerBadge = new QLabel("—", appCard);
+    m_installerBadge = new QLabel("-", appCard);
     m_installerBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
 
     badgesLayout->addWidget(m_typeBadge);
@@ -531,10 +531,10 @@ void ApkManagerWidget::clearInspector()
 {
     m_appIconLabel->clear();
     m_appNameLabel->setText("Приложение не выбрано");
-    m_packageIdLabel->setText("—");
-    m_typeBadge->setText("—");
-    m_statusBadge->setText("—");
-    m_installerBadge->setText("—");
+    m_packageIdLabel->setText("-");
+    m_typeBadge->setText("-");
+    m_statusBadge->setText("-");
+    m_installerBadge->setText("-");
     m_overviewTable->setRowCount(0);
     m_permTable->setRowCount(0);
     m_compTable->setRowCount(0);
@@ -615,7 +615,7 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
     m_currentDetails.isSystem = pkgInfo.isSystem;
     m_currentDetails.isDisabled = pkgInfo.isDisabled;
 
-    if(m_currentDetails.codePath.isEmpty() || m_currentDetails.codePath == "—")
+    if(m_currentDetails.codePath.isEmpty() || m_currentDetails.codePath == "-")
         m_currentDetails.codePath = pkgInfo.apkPath;
 
     QString instText = m_currentDetails.installer;
@@ -623,7 +623,7 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
         instText = "Google Play Store";
     else if(instText.contains("packageinstaller"))
         instText = "Пакетный установщик";
-    else if(instText.isEmpty() || instText == "—")
+    else if(instText.isEmpty() || instText == "-")
         instText = "Прямая установка / ADB";
 
     m_installerBadge->setText(instText);
@@ -663,7 +663,7 @@ void ApkManagerWidget::fillOverviewTab(const AppDetails &d)
     addRow("Номер сборки (versionCode)", d.versionCode);
     addRow("Целевая версия ОС (targetSdk)", d.targetSdk + " (" + AdbShell::sdkToAndroidVersion(d.targetSdk.toInt()) + ")");
     addRow("Минимальная версия ОС (minSdk)", d.minSdk + " (" + AdbShell::sdkToAndroidVersion(d.minSdk.toInt()) + ")");
-    addRow("Размер файла APK", d.apkSize > 0 ? Generic::formatSizes(d.apkSize) : "—");
+    addRow("Размер файла APK", d.apkSize > 0 ? Generic::formatSizes(d.apkSize) : "-");
     addRow("Путь к APK на устройстве", d.codePath);
     addRow("Каталог данных (dataDir)", d.dataDir);
     addRow("Архитектура CPU (primaryCpuAbi)", d.primaryCpuAbi);
