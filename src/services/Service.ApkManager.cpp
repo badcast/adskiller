@@ -40,110 +40,42 @@
 #include "Services.h"
 #include "mainwindow.h"
 
-namespace
+QIcon extractAppIcon(AdbShell &shell, const QString &apkPath, const QString &pkgName, const QString &appName, bool isSystem, QMap<QString, QIcon> &cache)
 {
-    QString formatBytes(qint64 bytes)
+    if(cache.contains(pkgName))
+        return cache.value(pkgName);
+
+    QString cacheDir = QDir::tempPath() + "/adskiller_apk_icons";
+    QString cacheFile = cacheDir + "/" + pkgName + ".png";
+    if(QFile::exists(cacheFile))
     {
-        if(bytes >= 1024ULL * 1024ULL * 1024ULL)
-            return QString::number(bytes / (1024.0 * 1024.0 * 1024.0), 'f', 2) + " ГБ";
-        if(bytes >= 1024ULL * 1024ULL)
-            return QString::number(bytes / (1024.0 * 1024.0), 'f', 1) + " МБ";
-        if(bytes >= 1024ULL)
-            return QString::number(bytes / 1024.0, 'f', 1) + " КБ";
-        if(bytes > 0)
-            return QString::number(bytes) + " Б";
-        return "0 Б";
+        QPixmap diskPix(cacheFile);
+        if(!diskPix.isNull())
+        {
+            QIcon icon(diskPix);
+            cache[pkgName] = icon;
+            return icon;
+        }
     }
 
-    QIcon generateFallbackIcon(const QString &appName, const QString &pkgName, bool isSystem)
+    QByteArray rawData = shell.extractPackageIconData(apkPath, pkgName);
+    if(!rawData.isEmpty())
     {
-        const int size = 64;
-        QPixmap pixmap(size, size);
-        pixmap.fill(Qt::transparent);
-
-        QPainter p(&pixmap);
-        p.setRenderHint(QPainter::Antialiasing);
-
-        QRectF rect(1, 1, size - 2, size - 2);
-        QPainterPath path;
-        path.addRoundedRect(rect, 15, 15);
-
-        QLinearGradient grad(0, 0, 0, size);
-        if(isSystem)
+        QPixmap pix;
+        if(pix.loadFromData(rawData))
         {
-            grad.setColorAt(0.0, QColor(51, 65, 85));
-            grad.setColorAt(1.0, QColor(30, 41, 59));
+            QDir().mkpath(cacheDir);
+            pix.save(cacheFile, "PNG");
+            QIcon icon(pix);
+            cache[pkgName] = icon;
+            return icon;
         }
-        else
-        {
-            uint h = qHash(pkgName);
-            int hue = h % 360;
-            grad.setColorAt(0.0, QColor::fromHsv(hue, 180, 220));
-            grad.setColorAt(1.0, QColor::fromHsv((hue + 45) % 360, 210, 150));
-        }
-
-        p.fillPath(path, grad);
-
-        QPen borderPen(QColor(255, 255, 255, 45), 1.5);
-        p.setPen(borderPen);
-        p.drawPath(path);
-
-        QString monogram = "?";
-        if(!appName.trimmed().isEmpty())
-        {
-            QString clean = appName.trimmed();
-            if(clean.size() >= 2 && clean[0].isLetter() && clean[1].isLetter())
-                monogram = clean.left(2).toUpper();
-            else
-                monogram = clean.left(1).toUpper();
-        }
-
-        QFont font("Segoe UI", 16, QFont::Bold);
-        p.setFont(font);
-        p.setPen(Qt::white);
-        p.drawText(rect, Qt::AlignCenter, monogram);
-
-        p.end();
-        return QIcon(pixmap);
     }
 
-    QIcon extractAppIcon(AdbShell &shell, const QString &apkPath, const QString &pkgName, const QString &appName, bool isSystem, QMap<QString, QIcon> &cache)
-    {
-        if(cache.contains(pkgName))
-            return cache.value(pkgName);
-
-        QString cacheDir = QDir::tempPath() + "/adskiller_apk_icons";
-        QString cacheFile = cacheDir + "/" + pkgName + ".png";
-        if(QFile::exists(cacheFile))
-        {
-            QPixmap diskPix(cacheFile);
-            if(!diskPix.isNull())
-            {
-                QIcon icon(diskPix);
-                cache[pkgName] = icon;
-                return icon;
-            }
-        }
-
-        QByteArray rawData = shell.extractPackageIconData(apkPath, pkgName);
-        if(!rawData.isEmpty())
-        {
-            QPixmap pix;
-            if(pix.loadFromData(rawData))
-            {
-                QDir().mkpath(cacheDir);
-                pix.save(cacheFile, "PNG");
-                QIcon icon(pix);
-                cache[pkgName] = icon;
-                return icon;
-            }
-        }
-
-        QIcon fallback = generateFallbackIcon(appName, pkgName, isSystem);
-        cache[pkgName] = fallback;
-        return fallback;
-    }
-} // namespace
+    QIcon fallback = Generic::generateFallbackIcon(appName, pkgName, isSystem);
+    cache[pkgName] = fallback;
+    return fallback;
+}
 
 ApkManagerWidget::ApkManagerWidget(QWidget *parent) : QWidget(parent)
 {
@@ -507,7 +439,7 @@ void ApkManagerWidget::loadPackages()
     {
         AppPackageInfo info;
         static_cast<AdbPackageInfo &>(info) = p;
-        info.icon = generateFallbackIcon(info.appName, info.packageName, info.isSystem);
+        info.icon = Generic::generateFallbackIcon(info.appName, info.packageName, info.isSystem);
         m_allPackages.append(info);
     }
 
@@ -731,7 +663,7 @@ void ApkManagerWidget::fillOverviewTab(const AppDetails &d)
     addRow("Номер сборки (versionCode)", d.versionCode);
     addRow("Целевая версия ОС (targetSdk)", d.targetSdk + " (" + AdbShell::sdkToAndroidVersion(d.targetSdk.toInt()) + ")");
     addRow("Минимальная версия ОС (minSdk)", d.minSdk + " (" + AdbShell::sdkToAndroidVersion(d.minSdk.toInt()) + ")");
-    addRow("Размер файла APK", d.apkSize > 0 ? formatBytes(d.apkSize) : "—");
+    addRow("Размер файла APK", d.apkSize > 0 ? Generic::formatSizes(d.apkSize) : "—");
     addRow("Путь к APK на устройстве", d.codePath);
     addRow("Каталог данных (dataDir)", d.dataDir);
     addRow("Архитектура CPU (primaryCpuAbi)", d.primaryCpuAbi);

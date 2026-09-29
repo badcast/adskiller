@@ -26,64 +26,6 @@
 #include "Services.h"
 #include "mainwindow.h"
 
-namespace
-{
-    QString formatByteSize(qint64 bytes)
-    {
-        if(bytes >= 1024ULL * 1024ULL * 1024ULL)
-            return QString::number(bytes / (1024.0 * 1024.0 * 1024.0), 'f', 2) + " ГБ";
-        if(bytes >= 1024ULL * 1024ULL)
-            return QString::number(bytes / (1024.0 * 1024.0), 'f', 1) + " МБ";
-        if(bytes >= 1024ULL)
-            return QString::number(bytes / 1024.0, 'f', 1) + " КБ";
-        if(bytes > 0)
-            return QString::number(bytes) + " Б";
-        return "0 Б";
-    }
-
-    QPixmap generateFallbackAppIcon(const QString &appName, const QString &pkgName)
-    {
-        const int size = 64;
-        QPixmap pix(size, size);
-        pix.fill(Qt::transparent);
-
-        QPainter p(&pix);
-        p.setRenderHint(QPainter::Antialiasing);
-
-        QRectF r(2, 2, size - 4, size - 4);
-        QPainterPath path;
-        path.addRoundedRect(r, 14, 14);
-
-        uint h = qHash(pkgName);
-        int hue = h % 360;
-        QLinearGradient grad(0, 0, 0, size);
-        grad.setColorAt(0.0, QColor::fromHsv(hue, 190, 220));
-        grad.setColorAt(1.0, QColor::fromHsv((hue + 40) % 360, 220, 150));
-
-        p.fillPath(path, grad);
-        p.setPen(QPen(QColor(255, 255, 255, 60), 1.5));
-        p.drawPath(path);
-
-        QString monogram = "?";
-        QString clean = appName.trimmed();
-        if(!clean.isEmpty())
-        {
-            if(clean.size() >= 2 && clean[0].isLetter() && clean[1].isLetter())
-                monogram = clean.left(2).toUpper();
-            else
-                monogram = clean.left(1).toUpper();
-        }
-
-        QFont font("Segoe UI", 16, QFont::Bold);
-        p.setFont(font);
-        p.setPen(Qt::white);
-        p.drawText(r, Qt::AlignCenter, monogram);
-        p.end();
-
-        return pix;
-    }
-} // namespace
-
 RunningAppIconsStrip::RunningAppIconsStrip(QWidget *parent) : QWidget(parent)
 {
     setFixedHeight(64);
@@ -326,7 +268,7 @@ public slots:
             }
             if(appIcon.isNull())
             {
-                appIcon = generateFallbackAppIcon(friendly, pkg.packageName);
+                appIcon = Generic::generateFallbackIcon(friendly, pkg.packageName, false);
             }
 
             emit sigAppIconDiscovered(pkg.packageName, appIcon);
@@ -422,7 +364,7 @@ public slots:
                     if(ok || !fileIO.exists(dir))
                     {
                         fileIO.makeDir(dir); // recreate clean folder
-                        emit sigLog(QString("  [✓] Удалены миниатюры: <b style='color:#34D399;'>%1</b> (%2 файлов, %3)").arg(dir).arg(dirCount).arg(formatByteSize(dirBytes)), 1);
+                        emit sigLog(QString("  [✓] Удалены миниатюры: <b style='color:#34D399;'>%1</b> (%2 файлов, %3)").arg(dir).arg(dirCount).arg(Generic::formatSizes(dirBytes)), 1);
                     }
                 }
 
@@ -471,7 +413,7 @@ public slots:
         emit sigProgress(100, "Готово", "", QPixmap(), "Очистка успешно завершена!");
 
         auto elapsedSec = duration_cast<seconds>(steady_clock::now() - startTime).count();
-        QString summary = QString("Освобождено %1 | Остановлено: %2 | Время: %3 с.").arg(formatByteSize(appCacheFreed + thumbnailsFreed)).arg(stoppedCount).arg(elapsedSec);
+        QString summary = QString("Освобождено %1 | Остановлено: %2 | Время: %3 с.").arg(Generic::formatSizes(appCacheFreed + thumbnailsFreed)).arg(stoppedCount).arg(elapsedSec);
 
         emit sigLog(QString("🎉 <b style='color:#34D399;'>Очистка успешно завершена за %1 сек!</b>").arg(elapsedSec), 1);
         emit sigFinished(true, summary);
@@ -542,7 +484,7 @@ void StorageCacheCleanWidget::updateDeviceHeader()
 
 QString StorageCacheCleanWidget::formatBytes(qint64 bytes) const
 {
-    return formatByteSize(bytes);
+    return Generic::formatSizes(bytes);
 }
 
 void StorageCacheCleanWidget::setupUi()
@@ -960,7 +902,7 @@ public:
         heroTitle->setAlignment(Qt::AlignCenter);
         heroLay->addWidget(heroTitle);
 
-        QLabel *heroVal = new QLabel(formatByteSize(totalFreed), heroFrame);
+        QLabel *heroVal = new QLabel(Generic::formatSizes(totalFreed), heroFrame);
         heroVal->setStyleSheet("color: #34D399; font-size: 26px; font-weight: bold; font-family: 'Segoe UI', sans-serif;");
         heroVal->setAlignment(Qt::AlignCenter);
         heroLay->addWidget(heroVal);
@@ -991,8 +933,8 @@ public:
             grid->addWidget(vLbl, row, 2);
         };
 
-        addRow(0, ":/svg/folder", "Кэш приложений:", formatByteSize(cacheFreed), "#38BDF8");
-        addRow(1, ":/svg/hard-drive", "Миниатюры (Thumbnails):", QString("%1 ф. (%2)").arg(thumbCount).arg(formatByteSize(thumbFreed)), "#00E5FF");
+        addRow(0, ":/svg/folder", "Кэш приложений:", Generic::formatSizes(cacheFreed), "#38BDF8");
+        addRow(1, ":/svg/hard-drive", "Миниатюры (Thumbnails):", QString("%1 ф. (%2)").arg(thumbCount).arg(Generic::formatSizes(thumbFreed)), "#00E5FF");
         addRow(2, ":/svg/zap", "Фоновые процессы:", QString("%1 остановлено").arg(appsStopped), "#FBBF24");
         if(!summary.isEmpty())
             addRow(3, ":/svg/check", "Итог:", summary, "#34D399");

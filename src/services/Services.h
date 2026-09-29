@@ -52,6 +52,14 @@ constexpr auto IDServiceFileManagerString = "44b598b1-a969-42fa-8192-d59e2522542
 constexpr auto IDServiceAITranslaterString = "92bcdf30-c410-4a0b-88f9-516c29f7ee8a";
 constexpr auto IDServiceAppleIpswString = "a9f1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c";
 
+namespace Generic
+{
+    QString formatSizes(qint64 bytes);
+
+    QPixmap generateFallbackIcon(const QString &appName, const QString &pkgName, bool isSystem);
+
+} // namespace Generic
+
 enum PageIndex
 {
     AuthPage = 0,
