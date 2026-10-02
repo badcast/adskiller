@@ -1,16 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <!-- Device outline -->
-  <rect x="7" y="7" width="22" height="34" rx="3.5" stroke="#38BDF8" stroke-width="2.5" fill="rgba(56, 189, 248, 0.1)"/>
-  <line x1="15" y1="11" x2="21" y2="11" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round"/>
-  <circle cx="18" cy="36.5" r="1.5" fill="#38BDF8"/>
-  <!-- IMEI Data lines -->
-  <line x1="12" y1="16" x2="24" y2="16" stroke="#00AFCA" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="12" y1="20" x2="19" y2="20" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="12" y1="24" x2="23" y2="24" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="12" y1="28" x2="18" y2="28" stroke="#00AFCA" stroke-width="1.5" stroke-linecap="round"/>
-  <!-- KZ Verification Shield -->
-  <path d="M33 16 L43 20.5 V29 C43 35.5 38.5 40.5 33 43 C27.5 40.5 23 35.5 23 29 V20.5 Z" fill="#0B132B" stroke="#00AFCA" stroke-width="2.5" stroke-linejoin="round"/>
-  <circle cx="33" cy="24" r="2.5" fill="#FBBF24"/>
-  <!-- Verified checkmark -->
-  <path d="M28 31.5 L32 35.5 L38.5 28.5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Smartphone Outline -->
+  <rect x="6" y="8" width="22" height="33" rx="3.5" stroke="#FFFFFF" stroke-width="2.5" fill="rgba(56, 189, 248, 0.1)"/>
+  <line x1="13" y1="12" x2="19" y2="12" stroke="#64748B" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="16" cy="37" r="1.3" fill="#64748B"/>
+  <!-- IMEI Barcode Stripes on Screen -->
+  <line x1="10" y1="17" x2="10" y2="29" stroke="#00AFCA" stroke-width="2" stroke-linecap="round"/>
+  <line x1="13" y1="17" x2="13" y2="29" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round"/>
+  <line x1="15.5" y1="17" x2="15.5" y2="29" stroke="#00AFCA" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18.5" y1="17" x2="18.5" y2="29" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="21.5" y1="17" x2="21.5" y2="29" stroke="#00AFCA" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- IMEI Number Indicator Under Barcode -->
+  <line x1="10" y1="32" x2="22" y2="32" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Kazakhstan Verification Shield -->
+  <path d="M33 14 L43 18.5 V27.5 C43 34.5 38.5 39.5 33 42 C27.5 39.5 23 34.5 23 27.5 V18.5 Z" fill="#0F172A" stroke="#00AFCA" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- KZ Golden Sun Ornament -->
+  <circle cx="33" cy="22" r="2.5" fill="#FBBF24"/>
+  <!-- Verified Checkmark -->
+  <path d="M28 29.5 L31.5 33.5 L38 26.5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

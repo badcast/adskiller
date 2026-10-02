@@ -1,10 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <path d="M10 14 C10 10 38 10 38 14 C38 18 10 18 10 14" stroke="#FFFFFF" stroke-width="2.5" fill="rgba(56, 189, 248, 0.15)"/>
-  <path d="M10 14 V32 C10 36 38 36 38 32 V14" stroke="#FFFFFF" stroke-width="2.5"/>
-  <path d="M10 23 C10 27 38 27 38 23" stroke="#38BDF8" stroke-width="2"/>
-  <circle cx="15" cy="30" r="1.5" fill="#34D399"/>
-  <circle cx="20" cy="30" r="1.5" fill="#38BDF8"/>
-  <path d="M38 5 L39.5 9.5 L44 11 L39.5 12.5 L38 17 L36.5 12.5 L32 11 L36.5 9.5 Z" fill="#38BDF8" stroke="#38BDF8" stroke-width="1" stroke-linejoin="round"/>
-  <path d="M7 26 L8 28.5 L10.5 29.5 L8 30.5 L7 33 L6 30.5 L3.5 29.5 L6 28.5 Z" fill="#67E8F9"/>
-  <path d="M26 29 C29 27 33 28 35 30" stroke="#34D399" stroke-width="2" stroke-linecap="round"/>
+  <!-- Broom Handle -->
+  <line x1="39" y1="9" x2="24" y2="24" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Handle Grip Cap -->
+  <line x1="41" y1="7" x2="37" y2="11" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>
+  <!-- Broom Bristle Cap / Band -->
+  <path d="M26 21 L19 28 L23 32 L30 25 Z" fill="#F59E0B" stroke="#FBBF24" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Broom Sweeping Bristles -->
+  <path d="M19 28 L11 36 C9.5 37.5 10.5 40 12.5 40 L25 40 C26.5 40 27.5 38.5 27 37 L23 32 Z" fill="rgba(56, 189, 248, 0.2)" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+  <line x1="16" y1="35" x2="15" y2="40" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="21" y1="33" x2="21" y2="40" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Sweep Motion Wind Lines -->
+  <path d="M6 41 C10 43 16 43 19 42" stroke="#34D399" stroke-width="2" stroke-linecap="round"/>
+  <path d="M7 37 C9 38 12 38.5 14 38" stroke="#34D399" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Clean Sparkle Stars -->
+  <!-- Sparkle 1 (Large top-left) -->
+  <path d="M12 9 L13.5 13 L17.5 14.5 L13.5 16 L12 20 L10.5 16 L6.5 14.5 L10.5 13 Z" fill="#34D399"/>
+  <!-- Sparkle 2 (Large right) -->
+  <path d="M37 27 L38.5 31 L42.5 32.5 L38.5 34 L37 38 L35.5 34 L31.5 32.5 L35.5 31 Z" fill="#38BDF8"/>
+  <!-- Small Star (top right) -->
+  <circle cx="28" cy="11" r="1.5" fill="#FBBF24"/>
 </svg>
