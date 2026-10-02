@@ -58,7 +58,7 @@ DeviceConnectType Service::deviceConnectType() const
 bool Service::isOnlineService() const
 {
     const QString id = uuid();
-    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString || id == IDServiceAIAgentString || id == IDServiceAITranslaterString || id == IDServiceImeiVerificationKzString;
+    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString || id == IDServiceAIAgentString || id == IDServiceAITranslaterString || id == IDServiceImeiVerificationKzString || id == IDServiceMiUnlockString || id == IDServiceSamsungFrpString;
 }
 
 void Service::sendCheckPull() const
@@ -91,6 +91,7 @@ std::list<std::shared_ptr<Service>> Service::EnumAppServices(QObject *parent)
     services.emplace_back(std::move(std::make_shared<ApkManagerService>(parent)));
     services.emplace_back(std::move(std::make_shared<AITranslaterService>(parent)));
     services.emplace_back(std::move(std::make_shared<ImeiVerificationKzService>(parent)));
+    services.emplace_back(std::move(std::make_shared<SamsungFrpService>(parent)));
     return services;
 }
 

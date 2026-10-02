@@ -1,4 +1,4 @@
-#include "MiAccountWidget.h"
+#include "SamsungFrpWidget.h"
 #include "MainWindow.h"
 #include "Services.h"
 
@@ -6,26 +6,26 @@
 #include <QIcon>
 
 // ============================================================================
-// MiAccountWidget Implementation
+// SamsungFrpWidget Implementation
 // ============================================================================
 
-MiAccountWidget::MiAccountWidget(QWidget *parent) : QWidget(parent)
+SamsungFrpWidget::SamsungFrpWidget(QWidget *parent) : QWidget(parent)
 {
     setAttribute(Qt::WA_StyledBackground, true);
-    setStyleSheet("MiAccountWidget { background-color: #0A0E1A; }");
+    setStyleSheet("SamsungFrpWidget { background-color: #0A0E1A; }");
     setupUi();
 }
 
-void MiAccountWidget::setDevice(const AdbDevice &device)
+void SamsungFrpWidget::setDevice(const AdbDevice &device)
 {
     Q_UNUSED(device);
 }
 
-void MiAccountWidget::resetSession()
+void SamsungFrpWidget::resetSession()
 {
 }
 
-void MiAccountWidget::setupUi()
+void SamsungFrpWidget::setupUi()
 {
     QVBoxLayout *rootLayout = new QVBoxLayout(this);
     rootLayout->setContentsMargins(20, 20, 20, 20);
@@ -55,7 +55,7 @@ void MiAccountWidget::setupUi()
     m_titleLabel->setAlignment(Qt::AlignCenter);
     cardLayout->addWidget(m_titleLabel);
 
-    m_subLabel = new QLabel(QString::fromUtf8("Сервис MI Account временно недоступен."), centerCard);
+    m_subLabel = new QLabel(QString::fromUtf8("Сервис Samsung FRP временно недоступен."), centerCard);
     m_subLabel->setStyleSheet("font-size: 12px; color: #94A3B8;");
     m_subLabel->setAlignment(Qt::AlignCenter);
     cardLayout->addWidget(m_subLabel);
@@ -76,65 +76,65 @@ void MiAccountWidget::setupUi()
         "  background-color: #0369A1;"
         "  border-color: #7DD3FC;"
         "}");
-    connect(m_btnBack, &QPushButton::clicked, this, &MiAccountWidget::onBackToCabinet);
+    connect(m_btnBack, &QPushButton::clicked, this, &SamsungFrpWidget::onBackToCabinet);
     cardLayout->addWidget(m_btnBack, 0, Qt::AlignCenter);
 
     rootLayout->addWidget(centerCard, 0, Qt::AlignCenter);
 }
 
-void MiAccountWidget::onBackToCabinet()
+void SamsungFrpWidget::onBackToCabinet()
 {
     if(MainWindow::current)
         MainWindow::current->closeService(ServiceProvider::currentService());
 }
 
 // ============================================================================
-// MiDeviceUnlockService (MI Account) Implementation
+// SamsungFrpService Implementation
 // ============================================================================
 
-MiDeviceUnlockService::MiDeviceUnlockService(QObject *parent) : Service(DeviceConnectType::None, parent)
+SamsungFrpService::SamsungFrpService(QObject *parent) : Service(DeviceConnectType::None, parent)
 {
-    title = QString::fromUtf8("MI Account");
-    m_sortScore = 200;
+    title = QString::fromUtf8("Samsung FRP");
+    m_sortScore = 180;
     m_flag = ServiceFlag::NewBeta;
 }
 
-MiDeviceUnlockService::~MiDeviceUnlockService()
+SamsungFrpService::~SamsungFrpService()
 {
     stop();
 }
 
-QString MiDeviceUnlockService::uuid() const
+QString SamsungFrpService::uuid() const
 {
-    return IDServiceMiUnlockString;
+    return IDServiceSamsungFrpString;
 }
 
-PageIndex MiDeviceUnlockService::targetPage()
+PageIndex SamsungFrpService::targetPage()
 {
-    return MiAccountPage;
+    return SamsungFrpPage;
 }
 
-bool MiDeviceUnlockService::canStart()
+bool SamsungFrpService::canStart()
 {
     return Service::canStart();
 }
 
-bool MiDeviceUnlockService::isStarted()
+bool SamsungFrpService::isStarted()
 {
     return m_started;
 }
 
-bool MiDeviceUnlockService::isFinish()
+bool SamsungFrpService::isFinish()
 {
     return m_finished;
 }
 
-QString MiDeviceUnlockService::widgetIconName()
+QString SamsungFrpService::widgetIconName()
 {
-    return "mi-unlock";
+    return "samsung-frp";
 }
 
-bool MiDeviceUnlockService::start()
+bool SamsungFrpService::start()
 {
     sendCheckPull();
     if(!canStart())
@@ -145,7 +145,7 @@ bool MiDeviceUnlockService::start()
 
     if(MainWindow::current)
     {
-        auto *widget = static_cast<MiAccountWidget *>(MainWindow::current->pageWidget(MiAccountPage));
+        auto *widget = static_cast<SamsungFrpWidget *>(MainWindow::current->pageWidget(SamsungFrpPage));
         if(widget)
         {
             widget->resetSession();
@@ -157,14 +157,14 @@ bool MiDeviceUnlockService::start()
     return true;
 }
 
-void MiDeviceUnlockService::stop()
+void SamsungFrpService::stop()
 {
     m_started = false;
     m_finished = true;
 
     if(MainWindow::current)
     {
-        auto *widget = static_cast<MiAccountWidget *>(MainWindow::current->pageWidget(MiAccountPage));
+        auto *widget = static_cast<SamsungFrpWidget *>(MainWindow::current->pageWidget(SamsungFrpPage));
         if(widget)
             widget->resetSession();
     }

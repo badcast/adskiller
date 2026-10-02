@@ -21,12 +21,14 @@
         <file alias="boost-ram">res/svg/services/boost-ram.svg</file>
         <file alias="contact-fixer">res/svg/services/contact-fixer.svg</file>
         <file alias="mi-unlock">res/svg/services/mi-unlock.svg</file>
+        <file alias="mi-account">res/svg/services/mi-unlock.svg</file>
         <file alias="vip-buy">res/svg/services/vip-buy.svg</file>
         <file alias="ai-agent">res/svg/services/ai-agent.svg</file>
         <file alias="file-manager">res/svg/services/file-manager.svg</file>
         <file alias="ai-translator">res/svg/services/ai-translator.svg</file>
         <file alias="apple">res/svg/services/apple.svg</file>
         <file alias="imei-verification-kz">res/svg/services/imei-verification-kz.svg</file>
+        <file alias="samsung-frp">res/svg/services/samsung-frp.svg</file>
         <file alias="unavailable">res/svg/services/unavailable.svg</file>
     </qresource>
     <qresource prefix="/svg/services">
@@ -37,12 +39,14 @@
         <file alias="boost-ram">res/svg/services/boost-ram.svg</file>
         <file alias="contact-fixer">res/svg/services/contact-fixer.svg</file>
         <file alias="mi-unlock">res/svg/services/mi-unlock.svg</file>
+        <file alias="mi-account">res/svg/services/mi-unlock.svg</file>
         <file alias="vip-buy">res/svg/services/vip-buy.svg</file>
         <file alias="ai-agent">res/svg/services/ai-agent.svg</file>
         <file alias="file-manager">res/svg/services/file-manager.svg</file>
         <file alias="ai-translator">res/svg/services/ai-translator.svg</file>
         <file alias="apple">res/svg/services/apple.svg</file>
         <file alias="imei-verification-kz">res/svg/services/imei-verification-kz.svg</file>
+        <file alias="samsung-frp">res/svg/services/samsung-frp.svg</file>
         <file alias="unavailable">res/svg/services/unavailable.svg</file>
     </qresource>
     <qresource prefix="/svg">

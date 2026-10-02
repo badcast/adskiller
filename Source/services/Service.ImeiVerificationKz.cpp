@@ -96,6 +96,7 @@ ImeiVerificationKzService::ImeiVerificationKzService(QObject *parent) : Service(
 {
     title = QString::fromUtf8("IMEI Verification KZ");
     m_sortScore = 250;
+    m_flag = ServiceFlag::NewBeta;
 }
 
 ImeiVerificationKzService::~ImeiVerificationKzService()

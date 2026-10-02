@@ -56,6 +56,8 @@
 #include "AppleIpswWidget.h"
 #include "StorageCacheCleanWidget.h"
 #include "ImeiVerificationKzWidget.h"
+#include "MiAccountWidget.h"
+#include "SamsungFrpWidget.h"
 #include "DeviceVisualizer.h"
 #include "CyberReactorLoader.h"
 #include "PurchaseConfirmDialog.h"
@@ -321,6 +323,27 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     connBadge->setFixedHeight(22);
     connBadge->setStyleSheet(QStringLiteral("background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-size: 10px; font-weight: bold; border-radius: 2px;"));
     badgesLayout->addWidget(connBadge);
+
+    if(m_details.flag != ServiceFlag::None)
+    {
+        if((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::New)) != 0)
+        {
+            QLabel *flagBadgeNew = new QLabel(this);
+            flagBadgeNew->setFixedHeight(22);
+            flagBadgeNew->setText(QString::fromUtf8("  NEW  "));
+            flagBadgeNew->setStyleSheet(QStringLiteral("background: #2D0B0B; border: 1px solid #DC2626; color: #F87171; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+            badgesLayout->addWidget(flagBadgeNew);
+        }
+        if((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::Beta)) != 0)
+        {
+            QLabel *flagBadgeBeta = new QLabel(this);
+            flagBadgeBeta->setFixedHeight(22);
+            flagBadgeBeta->setText(QString::fromUtf8("  BETA  "));
+            flagBadgeBeta->setStyleSheet(QStringLiteral("background: #2D1A04; border: 1px solid #D97706; color: #FBBF24; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+            badgesLayout->addWidget(flagBadgeBeta);
+        }
+    }
+
     badgesLayout->addStretch(1);
 
     titleLayout->addLayout(badgesLayout);
@@ -534,13 +557,34 @@ void ServiceInfoDialog::onAskAiClicked()
 
 bool ServiceTileButton::s_isAnyLaunching = false;
 
+ServiceTileButton::ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, QWidget *parent) : ServiceTileButton(icon, title, badgeText, tier, ServiceFlag::None, parent)
+{
+}
+
+ServiceTileButton::ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, ServiceFlag flag, QWidget *parent)
+    : ServiceTileButton(icon, title, badgeText, tier, flag != ServiceFlag::None, (flag == ServiceFlag::Beta ? QString::fromUtf8("BETA") : QString::fromUtf8("NEW")), parent)
+{
+    m_flag = flag;
+    m_details.flag = flag;
+}
+
 ServiceTileButton::ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, bool showRibbon, const QString &ribbonText, QWidget *parent)
     : QPushButton(parent), m_title(title), m_badgeText(badgeText), m_tier(tier), m_showRibbon(showRibbon), m_ribbonText(ribbonText)
 {
+    if(!showRibbon)
+        m_flag = ServiceFlag::None;
+    else if(ribbonText.contains("BETA", Qt::CaseInsensitive) && ribbonText.contains("NEW", Qt::CaseInsensitive))
+        m_flag = ServiceFlag::NewBeta;
+    else if(ribbonText.compare("BETA", Qt::CaseInsensitive) == 0)
+        m_flag = ServiceFlag::Beta;
+    else
+        m_flag = ServiceFlag::New;
+
     m_details.title = title;
     m_details.badgeText = badgeText;
     m_details.tier = tier;
     m_details.icon = icon;
+    m_details.flag = m_flag;
 
     setIcon(icon);
     setAttribute(Qt::WA_Hover, true);
@@ -675,7 +719,35 @@ void ServiceTileButton::setServiceDetails(const Details &details)
     m_details = details;
     m_serviceActive = details.isActive;
     m_sortScore = details.sortScore;
+    if(details.flag != ServiceFlag::None)
+        setFlag(details.flag);
     setCursor((!m_serviceActive || m_tier == Tier::Disabled) ? Qt::ForbiddenCursor : Qt::PointingHandCursor);
+    update();
+}
+
+void ServiceTileButton::setFlag(ServiceFlag flag)
+{
+    m_flag = flag;
+    switch(flag)
+    {
+        case ServiceFlag::None:
+            m_showRibbon = false;
+            m_ribbonText.clear();
+            break;
+        case ServiceFlag::New:
+            m_showRibbon = true;
+            m_ribbonText = QString::fromUtf8("NEW");
+            break;
+        case ServiceFlag::Beta:
+            m_showRibbon = true;
+            m_ribbonText = QString::fromUtf8("BETA");
+            break;
+        case ServiceFlag::NewBeta:
+            m_showRibbon = true;
+            m_ribbonText = QString::fromUtf8("NEW");
+            break;
+    }
+    m_details.flag = flag;
     update();
 }
 
@@ -1057,66 +1129,139 @@ void ServiceTileButton::paintEvent(QPaintEvent *)
         painter.drawText(pillRect, Qt::AlignCenter, elidedBadge);
     }
 
-    // 6. Top-Right Red Ribbon Banner with "NEW" or "BETA" Inscription
+    // 6. Top-Right Ribbons (Vertical list if multiple flags are present)
     if(m_showRibbon)
     {
-        const int ribbonW = 58;
-        const int ribbonH = 21;
-        const int notch = 8;
+        struct RibbonEntry
+        {
+            QString text;
+            bool isBeta;
+        };
+        QVector<RibbonEntry> ribbons;
+
+        const bool hasNew = (static_cast<int>(m_flag) & static_cast<int>(ServiceFlag::New)) != 0;
+        const bool hasBeta = (static_cast<int>(m_flag) & static_cast<int>(ServiceFlag::Beta)) != 0;
+
+        if(hasNew && hasBeta)
+        {
+            ribbons.append({QString::fromUtf8("NEW"), false});
+            ribbons.append({QString::fromUtf8("BETA"), true});
+        }
+        else if(hasBeta)
+        {
+            ribbons.append({QString::fromUtf8("BETA"), true});
+        }
+        else if(hasNew)
+        {
+            ribbons.append({QString::fromUtf8("NEW"), false});
+        }
+        else if(!m_ribbonText.isEmpty())
+        {
+            if(m_ribbonText.contains("BETA", Qt::CaseInsensitive) && m_ribbonText.contains("NEW", Qt::CaseInsensitive))
+            {
+                ribbons.append({QString::fromUtf8("NEW"), false});
+                ribbons.append({QString::fromUtf8("BETA"), true});
+            }
+            else if(m_ribbonText.compare("BETA", Qt::CaseInsensitive) == 0)
+            {
+                ribbons.append({QString::fromUtf8("BETA"), true});
+            }
+            else
+            {
+                ribbons.append({m_ribbonText, false});
+            }
+        }
+
+        const bool isMulti = ribbons.size() > 1;
+        const int ribbonW = isMulti ? 52 : 56;
+        const int ribbonH = isMulti ? 18 : 20;
+        const int notch = isMulti ? 6 : 7;
+        const int gap = 3;
         const int rx = w - ribbonW;
-        const int ry = 0;
 
-        // Physical drop shadow behind ribbon
-        QPolygon shadowPoly;
-        shadowPoly << QPoint(w, ry + 2) << QPoint(rx + 1, ry + 2) << QPoint(rx + notch + 1, ry + ribbonH / 2 + 1) << QPoint(rx + 1, ry + ribbonH + 2) << QPoint(w, ry + ribbonH + 2);
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(0, 0, 0, 110));
-        painter.drawPolygon(shadowPoly);
-
-        // Ribbon polygon with decorative swallowtail notch cut on the left
-        QPolygon ribbonPoly;
-        ribbonPoly << QPoint(w, ry) << QPoint(rx, ry) << QPoint(rx + notch, ry + ribbonH / 2) << QPoint(rx, ry + ribbonH) << QPoint(w, ry + ribbonH);
-
-        // Rich crimson gradient
-        QLinearGradient ribbonGrad(rx, ry, w, ry + ribbonH);
-        if(hovered)
-        {
-            ribbonGrad.setColorAt(0.0, QColor(254, 120, 120));
-            ribbonGrad.setColorAt(0.3, QColor(248, 113, 113));
-            ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));
-            ribbonGrad.setColorAt(1.0, QColor(185, 28, 28));
-        }
-        else
-        {
-            ribbonGrad.setColorAt(0.0, QColor(248, 113, 113)); // #F87171 Ruby highlight
-            ribbonGrad.setColorAt(0.35, QColor(239, 68, 68));  // #EF4444 Vivid red
-            ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));   // #DC2626 Deep red
-            ribbonGrad.setColorAt(1.0, QColor(153, 27, 27));   // #991B1B Crimson shadow
-        }
-
-        painter.setPen(QPen(QColor(185, 28, 28), 1));
-        painter.setBrush(ribbonGrad);
-        painter.drawPolygon(ribbonPoly);
-
-        // Fine glossy highlight line along top edge
-        painter.setPen(QPen(QColor(255, 255, 255, 90), 1));
-        painter.drawLine(rx + 1, ry + 1, w - 1, ry + 1);
-
-        // Ribbon Inscription "NEW"
-        QFont ribbonFont("Segoe UI", 8, QFont::Black);
+        QFont ribbonFont("Segoe UI", isMulti ? 7 : 8, QFont::Black);
         ribbonFont.setBold(true);
-        ribbonFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.2);
-        painter.setFont(ribbonFont);
+        ribbonFont.setLetterSpacing(QFont::AbsoluteSpacing, isMulti ? 1.0 : 1.2);
 
-        const QRect textRect(rx + notch / 2, ry, ribbonW - notch / 2, ribbonH);
+        for(int i = 0; i < ribbons.size(); ++i)
+        {
+            const auto &entry = ribbons.at(i);
+            const int ry = i * (ribbonH + gap);
 
-        // Embossed 3D shadow for text
-        painter.setPen(QColor(127, 29, 29)); // #7F1D1D
-        painter.drawText(textRect.translated(0, 1), Qt::AlignCenter, m_ribbonText);
+            // Physical drop shadow behind ribbon
+            QPolygon shadowPoly;
+            shadowPoly << QPoint(w, ry + 2) << QPoint(rx + 1, ry + 2) << QPoint(rx + notch + 1, ry + ribbonH / 2 + 1) << QPoint(rx + 1, ry + ribbonH + 2) << QPoint(w, ry + ribbonH + 2);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QColor(0, 0, 0, 110));
+            painter.drawPolygon(shadowPoly);
 
-        // Pure white foreground
-        painter.setPen(Qt::white);
-        painter.drawText(textRect, Qt::AlignCenter, m_ribbonText);
+            // Ribbon polygon with decorative swallowtail notch cut on the left
+            QPolygon ribbonPoly;
+            ribbonPoly << QPoint(w, ry) << QPoint(rx, ry) << QPoint(rx + notch, ry + ribbonH / 2) << QPoint(rx, ry + ribbonH) << QPoint(w, ry + ribbonH);
+
+            QLinearGradient ribbonGrad(rx, ry, w, ry + ribbonH);
+            QColor strokeColor;
+            QColor shadowTextColor;
+
+            if(entry.isBeta)
+            {
+                if(hovered)
+                {
+                    ribbonGrad.setColorAt(0.0, QColor(253, 224, 71)); // #FDE047 Amber highlight
+                    ribbonGrad.setColorAt(0.3, QColor(251, 191, 36)); // #FBBF24 Amber
+                    ribbonGrad.setColorAt(0.8, QColor(217, 119, 6));  // #D97706 Deep amber
+                    ribbonGrad.setColorAt(1.0, QColor(180, 83, 9));   // #B45309 Amber shadow
+                }
+                else
+                {
+                    ribbonGrad.setColorAt(0.0, QColor(251, 191, 36));  // #FBBF24 Amber
+                    ribbonGrad.setColorAt(0.35, QColor(245, 158, 11)); // #F59E0B Gold
+                    ribbonGrad.setColorAt(0.8, QColor(217, 119, 6));   // #D97706
+                    ribbonGrad.setColorAt(1.0, QColor(146, 64, 14));   // #92400E
+                }
+                strokeColor = QColor(180, 83, 9);
+                shadowTextColor = QColor(120, 53, 15);
+            }
+            else
+            {
+                if(hovered)
+                {
+                    ribbonGrad.setColorAt(0.0, QColor(254, 120, 120));
+                    ribbonGrad.setColorAt(0.3, QColor(248, 113, 113));
+                    ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));
+                    ribbonGrad.setColorAt(1.0, QColor(185, 28, 28));
+                }
+                else
+                {
+                    ribbonGrad.setColorAt(0.0, QColor(248, 113, 113)); // #F87171 Ruby highlight
+                    ribbonGrad.setColorAt(0.35, QColor(239, 68, 68));  // #EF4444 Vivid red
+                    ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));   // #DC2626 Deep red
+                    ribbonGrad.setColorAt(1.0, QColor(153, 27, 27));   // #991B1B Crimson shadow
+                }
+                strokeColor = QColor(185, 28, 28);
+                shadowTextColor = QColor(127, 29, 29);
+            }
+
+            painter.setPen(QPen(strokeColor, 1));
+            painter.setBrush(ribbonGrad);
+            painter.drawPolygon(ribbonPoly);
+
+            // Fine glossy highlight line along top edge
+            painter.setPen(QPen(QColor(255, 255, 255, 90), 1));
+            painter.drawLine(rx + 1, ry + 1, w - 1, ry + 1);
+
+            // Ribbon Inscription
+            painter.setFont(ribbonFont);
+            const QRect textRect(rx + notch / 2, ry, ribbonW - notch / 2, ribbonH);
+
+            // Embossed 3D shadow for text
+            painter.setPen(shadowTextColor);
+            painter.drawText(textRect.translated(0, 1), Qt::AlignCenter, entry.text);
+
+            // Pure white foreground
+            painter.setPen(Qt::white);
+            painter.drawText(textRect, Qt::AlignCenter, entry.text);
+        }
     }
 
     // 7. Click / Activation Pulse Animation
@@ -1478,11 +1623,8 @@ void MainWindow::initServiceModules()
             if(svcIcon.isNull())
                 svcIcon = QIcon(":/service-icons/" + instance->widgetIconName());
 
-            bool isApple = (remoteService->uuid == IDServiceAppleIpswString || instance->uuid() == IDServiceAppleIpswString);
-            QString ribbonText = isApple ? QString::fromUtf8("BETA") : QString::fromUtf8("NEW");
-            bool showRibbon = isApple || instance->active;
-
-            ServiceTileButton *button = new ServiceTileButton(svcIcon, remoteService->name, badgeText, tier, showRibbon, ribbonText, ui->serviceContents);
+            ServiceFlag flag = instance->flag();
+            ServiceTileButton *button = new ServiceTileButton(svcIcon, remoteService->name, badgeText, tier, flag, ui->serviceContents);
             button->setServiceActive(instance->active);
 
             ServiceTileButton::Details details;
@@ -1497,6 +1639,7 @@ void MainWindow::initServiceModules()
             details.currency = network.authedId.currencyType;
             details.icon = svcIcon;
             details.sortScore = instance->sort_score();
+            details.flag = flag;
 
             if(instance->deviceConnectType() == DeviceConnectType::ADB)
                 details.connectTypeName = QString::fromUtf8("Android (ADB)");
@@ -1778,6 +1921,16 @@ void MainWindow::initServiceModules()
                 svcName = QString::fromUtf8("IMEI Verification KZ");
                 svcDesc = QString::fromUtf8("Верификация и регистрация IMEI устройств в Республике Казахстан с подачей ЭЦП");
             }
+            else if(remaining->uuid() == IDServiceMiUnlockString)
+            {
+                svcName = QString::fromUtf8("MI Account");
+                svcDesc = QString::fromUtf8("Удаление, сброс и проверка привязки аккаунта Xiaomi (Mi Account)");
+            }
+            else if(remaining->uuid() == IDServiceSamsungFrpString)
+            {
+                svcName = QString::fromUtf8("Samsung FRP");
+                svcDesc = QString::fromUtf8("Сброс блокировки Google FRP (Factory Reset Protection) на устройствах Samsung");
+            }
             else if(!remaining->title.isEmpty())
             {
                 svcName = remaining->title;
@@ -1799,8 +1952,8 @@ void MainWindow::initServiceModules()
             if(svcIcon.isNull())
                 svcIcon = QIcon(":/svg/apple");
 
-            QString ribbonText = (remaining->uuid() == IDServiceAppleIpswString) ? QString::fromUtf8("BETA") : QString::fromUtf8("NEW");
-            ServiceTileButton *button = new ServiceTileButton(svcIcon, svcName, QString::fromUtf8("БЕСПЛАТНО"), ServiceTileButton::Tier::Free, true, ribbonText, ui->serviceContents);
+            ServiceFlag flag = remaining->flag();
+            ServiceTileButton *button = new ServiceTileButton(svcIcon, svcName, QString::fromUtf8("БЕСПЛАТНО"), ServiceTileButton::Tier::Free, flag, ui->serviceContents);
             button->setServiceActive(true);
             button->setCursor(Qt::PointingHandCursor);
 
@@ -1816,6 +1969,7 @@ void MainWindow::initServiceModules()
             details.currency = network.authedId.currencyType;
             details.icon = svcIcon;
             details.sortScore = remaining->sort_score();
+            details.flag = flag;
 
             if(remaining->deviceConnectType() == DeviceConnectType::ADB)
                 details.connectTypeName = QString::fromUtf8("Android (ADB)");
@@ -2535,6 +2689,12 @@ void MainWindow::showPage(PageIndex pageNum)
             case ImeiVerificationKzPage:
                 ui->label_8->setText("IMEI Verification KZ");
                 break;
+            case MiAccountPage:
+                ui->label_8->setText("MI Account");
+                break;
+            case SamsungFrpPage:
+                ui->label_8->setText("Samsung FRP");
+                break;
             default:
                 ui->label_8->setText("Назад в личный кабинет");
                 break;
@@ -2897,6 +3057,36 @@ void MainWindow::pageShownPreStart(int page)
             if(pages.contains(ImeiVerificationKzPage))
             {
                 auto *widget = static_cast<ImeiVerificationKzWidget *>(pages.value(ImeiVerificationKzPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
+                }
+            }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
+            break;
+        }
+        case MiAccountPage:
+        {
+            if(pages.contains(MiAccountPage))
+            {
+                auto *widget = static_cast<MiAccountWidget *>(pages.value(MiAccountPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
+                }
+            }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
+            break;
+        }
+        case SamsungFrpPage:
+        {
+            if(pages.contains(SamsungFrpPage))
+            {
+                auto *widget = static_cast<SamsungFrpWidget *>(pages.value(SamsungFrpPage));
                 if(widget)
                 {
                     if(!connectPhone.adbDevice.isEmpty())

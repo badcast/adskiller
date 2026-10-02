@@ -51,6 +51,8 @@
 #include "AppleIpswWidget.h"
 #include "StorageCacheCleanWidget.h"
 #include "ImeiVerificationKzWidget.h"
+#include "MiAccountWidget.h"
+#include "SamsungFrpWidget.h"
 #include <QToolBar>
 #include "RadioPlayerWidget.h"
 
@@ -209,6 +211,18 @@ void MainWindow::setupWindowLayoutAndAnim()
     imeiWidget->setVisible(false);
     ui->contentLayout->layout()->addWidget(imeiWidget);
     pages.insert(ImeiVerificationKzPage, imeiWidget);
+
+    MiAccountWidget *miAccountWidget = new MiAccountWidget(this);
+    miAccountWidget->setObjectName("page_miaccount");
+    miAccountWidget->setVisible(false);
+    ui->contentLayout->layout()->addWidget(miAccountWidget);
+    pages.insert(MiAccountPage, miAccountWidget);
+
+    SamsungFrpWidget *samsungFrpWidget = new SamsungFrpWidget(this);
+    samsungFrpWidget->setObjectName("page_samsungfrp");
+    samsungFrpWidget->setVisible(false);
+    ui->contentLayout->layout()->addWidget(samsungFrpWidget);
+    pages.insert(SamsungFrpPage, samsungFrpWidget);
 
     ui->tabWidget->deleteLater();
 

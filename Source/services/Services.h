@@ -52,6 +52,8 @@ constexpr auto IDServiceFileManagerString = "44b598b1-a969-42fa-8192-d59e2522542
 constexpr auto IDServiceAITranslaterString = "92bcdf30-c410-4a0b-88f9-516c29f7ee8a";
 constexpr auto IDServiceAppleIpswString = "a9f1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c";
 constexpr auto IDServiceImeiVerificationKzString = "ef469f7e-6aa3-4f3e-8851-9ae03e418237";
+constexpr auto IDServiceMiAccountString = IDServiceMiUnlockString;
+constexpr auto IDServiceSamsungFrpString = "88117553-ba0c-45bd-b80c-155e42a7fe7e";
 
 namespace Generic
 {
@@ -77,9 +79,29 @@ enum PageIndex
     AppleIpswPage,
     StorageCacheCleanPage,
     ImeiVerificationKzPage,
+    MiAccountPage,
+    SamsungFrpPage,
 
     LengthPages
 };
+
+enum class ServiceFlag
+{
+    None = 0,
+    New = 1 << 0,
+    Beta = 1 << 1,
+    NewBeta = (1 << 0) | (1 << 1)
+};
+
+inline constexpr ServiceFlag operator|(ServiceFlag a, ServiceFlag b)
+{
+    return static_cast<ServiceFlag>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline constexpr ServiceFlag operator&(ServiceFlag a, ServiceFlag b)
+{
+    return static_cast<ServiceFlag>(static_cast<int>(a) & static_cast<int>(b));
+}
 
 class Service;
 class UnavailableService;
@@ -93,6 +115,7 @@ class FileManagerService;
 class AITranslaterService;
 class AppleIpswService;
 class ImeiVerificationKzService;
+class SamsungFrpService;
 class ServiceProvider;
 
 class ServiceProvider
@@ -113,18 +136,22 @@ class Service : public QObject
 {
     Q_OBJECT
 
+public:
+    using Flag = ServiceFlag;
+
 protected:
     DeviceConnectType mDeviceConnectType;
     AdbDevice mAdbDevice;
     AppleDevice mAppleDevice;
     int m_sortScore = 100;
+    ServiceFlag m_flag = ServiceFlag::None;
 
 public:
     QString title;
     QWidget *ownerWidget;
     bool active;
 
-    inline Service(DeviceConnectType deviceConnectType, QObject *parent = nullptr) : QObject(parent), ownerWidget(nullptr), title(), active(false), mDeviceConnectType(deviceConnectType), m_sortScore(100)
+    inline Service(DeviceConnectType deviceConnectType, QObject *parent = nullptr) : QObject(parent), ownerWidget(nullptr), title(), active(false), mDeviceConnectType(deviceConnectType), m_sortScore(100), m_flag(ServiceFlag::None)
     {
     }
 
@@ -146,6 +173,15 @@ public:
     void setSortScore(int score)
     {
         m_sortScore = score;
+    }
+
+    virtual ServiceFlag flag() const
+    {
+        return m_flag;
+    }
+    void setFlag(ServiceFlag flag)
+    {
+        m_flag = flag;
     }
 
     virtual QString uuid() const = 0;
@@ -239,6 +275,16 @@ public:
     StorageCacheCleanService(QObject *parent = nullptr);
     ~StorageCacheCleanService() override;
 
+    int sort_score() const override
+    {
+        return 101;
+    }
+
+    ServiceFlag flag() const override
+    {
+        return ServiceFlag::New;
+    }
+
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
@@ -265,7 +311,7 @@ public:
 
     int sort_score() const override
     {
-        return 400;
+        return 100;
     }
 
     QString uuid() const override;
@@ -347,6 +393,16 @@ public:
     BoostRamService(QObject *parent = nullptr);
     ~BoostRamService();
 
+    int sort_score() const override
+    {
+        return 101;
+    }
+
+    ServiceFlag flag() const override
+    {
+        return ServiceFlag::New;
+    }
+
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
@@ -380,20 +436,41 @@ public:
     QString widgetIconName() override;
 };
 
+class MiAccountWidget;
+
 class MiDeviceUnlockService : public Service
 {
     Q_OBJECT
 
 public:
     MiDeviceUnlockService(QObject *parent = nullptr);
+    ~MiDeviceUnlockService() override;
+
+    int sort_score() const override
+    {
+        return 200;
+    }
+
+    ServiceFlag flag() const override
+    {
+        return ServiceFlag::NewBeta;
+    }
+
     QString uuid() const override;
+    PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
     bool start() override;
     void stop() override;
     QString widgetIconName() override;
+
+private:
+    bool m_started = false;
+    bool m_finished = false;
 };
+
+using MiAccountService = MiDeviceUnlockService;
 
 class AIAgentService : public Service
 {
@@ -512,6 +589,11 @@ public:
         return 300;
     }
 
+    ServiceFlag flag() const override
+    {
+        return ServiceFlag::Beta;
+    }
+
     QString uuid() const override;
     PageIndex targetPage() override;
     bool canStart() override;
@@ -539,6 +621,45 @@ public:
     int sort_score() const override
     {
         return 250;
+    }
+
+    ServiceFlag flag() const override
+    {
+        return ServiceFlag::NewBeta;
+    }
+
+    QString uuid() const override;
+    PageIndex targetPage() override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    QString widgetIconName() override;
+
+private:
+    bool m_started = false;
+    bool m_finished = false;
+};
+
+class SamsungFrpWidget;
+
+class SamsungFrpService : public Service
+{
+    Q_OBJECT
+
+public:
+    SamsungFrpService(QObject *parent = nullptr);
+    ~SamsungFrpService() override;
+
+    int sort_score() const override
+    {
+        return 180;
+    }
+
+    ServiceFlag flag() const override
+    {
+        return ServiceFlag::NewBeta;
     }
 
     QString uuid() const override;

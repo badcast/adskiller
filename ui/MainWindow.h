@@ -72,6 +72,9 @@ class StorageCacheCleanWidget;
 class StorageCacheCleanService;
 class ImeiVerificationKzWidget;
 class ImeiVerificationKzService;
+class MiAccountWidget;
+class SamsungFrpWidget;
+class SamsungFrpService;
 class RadioPlayerWidget;
 class CyberReactorLoader;
 class QToolBar;
@@ -106,9 +109,12 @@ public:
         QString connectTypeName = QString::fromUtf8("Не требуется");
         QIcon icon;
         int sortScore = 100;
+        ServiceFlag flag = ServiceFlag::None;
     };
 
-    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, bool showRibbon = true, const QString &ribbonText = QString::fromUtf8("NEW"), QWidget *parent = nullptr);
+    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, QWidget *parent = nullptr);
+    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, ServiceFlag flag, QWidget *parent = nullptr);
+    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, bool showRibbon, const QString &ribbonText = QString::fromUtf8("NEW"), QWidget *parent = nullptr);
 
     int sort_score() const
     {
@@ -135,6 +141,12 @@ public:
     QString badgeText() const
     {
         return m_badgeText;
+    }
+
+    void setFlag(ServiceFlag flag);
+    ServiceFlag flag() const
+    {
+        return m_flag;
     }
 
     void setShowRibbon(bool show);
@@ -209,6 +221,7 @@ private:
     Tier m_tier;
     bool m_showRibbon;
     QString m_ribbonText;
+    ServiceFlag m_flag = ServiceFlag::None;
     bool m_isLaunching = false;
     static bool s_isAnyLaunching;
 
@@ -290,6 +303,10 @@ class MainWindow : public QMainWindow
     friend class StorageCacheCleanService;
     friend class ImeiVerificationKzWidget;
     friend class ImeiVerificationKzService;
+    friend class MiAccountWidget;
+    friend class MiDeviceUnlockService;
+    friend class SamsungFrpWidget;
+    friend class SamsungFrpService;
     friend class ServiceTileButton;
     friend class ServiceInfoDialog;
 

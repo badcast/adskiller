@@ -3287,6 +3287,8 @@ void AppleIpswWidget::showBetaDisclaimer()
 // -------------------------------------------------------------
 AppleIpswService::AppleIpswService(QObject *parent) : Service(DeviceConnectType::Apple, parent)
 {
+    m_sortScore = 300;
+    m_flag = ServiceFlag::Beta;
 }
 
 AppleIpswService::~AppleIpswService()
