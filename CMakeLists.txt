@@ -6,7 +6,7 @@ string(STRIP "${APPVERSION}" APPVERSION)
 
 project(adskiller VERSION ${APPVERSION} LANGUAGES C CXX)
 
-set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -18,7 +18,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
 
 set(PROJECT_SOURCES
         ui/MainWindow.h
-        ui/MainWindow.ui
+        ui/ui_MainWindow.h
         ui/MainWindow.cpp
         ui/MainPages.cpp
         ui/RadioPlayerWidget.h
@@ -49,7 +49,6 @@ set(UPDATE_SOURCES
         update/UpdateManager.h
         ui/UpdateWindow.cpp
         ui/UpdateWindow.h
-        ui/update_window.ui
 )
 
 if(WIN32)

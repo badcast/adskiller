@@ -55,6 +55,7 @@
 #include "ContactFixerWidget.h"
 #include "AppleIpswWidget.h"
 #include "StorageCacheCleanWidget.h"
+#include "ImeiVerificationKzWidget.h"
 #include "DeviceVisualizer.h"
 #include "CyberReactorLoader.h"
 #include "PurchaseConfirmDialog.h"
@@ -673,6 +674,7 @@ void ServiceTileButton::setServiceDetails(const Details &details)
 {
     m_details = details;
     m_serviceActive = details.isActive;
+    m_sortScore = details.sortScore;
     setCursor((!m_serviceActive || m_tier == Tier::Disabled) ? Qt::ForbiddenCursor : Qt::PointingHandCursor);
     update();
 }
@@ -1494,6 +1496,7 @@ void MainWindow::initServiceModules()
             details.price = effectivePrice;
             details.currency = network.authedId.currencyType;
             details.icon = svcIcon;
+            details.sortScore = instance->sort_score();
 
             if(instance->deviceConnectType() == DeviceConnectType::ADB)
                 details.connectTypeName = QString::fromUtf8("Android (ADB)");
@@ -1503,6 +1506,8 @@ void MainWindow::initServiceModules()
                 details.connectTypeName = QString::fromUtf8("Автономный");
 
             button->setServiceDetails(details);
+            button->setSortScore(instance->sort_score());
+            button->setProperty("sort_score", instance->sort_score());
 
             QString tip = remoteService->name;
             if(!remoteService->description.isEmpty())
@@ -1528,7 +1533,6 @@ void MainWindow::initServiceModules()
             }
             button->setToolTip(tip);
             button->setProperty("serviceUuid", remoteService->uuid);
-            button->setProperty("isAdsKiller", remoteService->uuid == IDServiceAdsString);
             button->setProperty("isFree", isFree);
             button->setProperty("isPaid", !isFree);
             button->setProperty("isActive", instance->active);
@@ -1769,6 +1773,11 @@ void MainWindow::initServiceModules()
                 svcName = QString::fromUtf8("Прошивки APPLE");
                 svcDesc = QString::fromUtf8("Официальные прошивки IPSW, восстановление и чистая установка для iPhone/iPad");
             }
+            else if(remaining->uuid() == IDServiceImeiVerificationKzString)
+            {
+                svcName = QString::fromUtf8("IMEI Verification KZ");
+                svcDesc = QString::fromUtf8("Верификация и регистрация IMEI устройств в Республике Казахстан с подачей ЭЦП");
+            }
             else if(!remaining->title.isEmpty())
             {
                 svcName = remaining->title;
@@ -1806,6 +1815,7 @@ void MainWindow::initServiceModules()
             details.price = 0;
             details.currency = network.authedId.currencyType;
             details.icon = svcIcon;
+            details.sortScore = remaining->sort_score();
 
             if(remaining->deviceConnectType() == DeviceConnectType::ADB)
                 details.connectTypeName = QString::fromUtf8("Android (ADB)");
@@ -1815,6 +1825,8 @@ void MainWindow::initServiceModules()
                 details.connectTypeName = QString::fromUtf8("Автономный");
 
             button->setServiceDetails(details);
+            button->setSortScore(remaining->sort_score());
+            button->setProperty("sort_score", remaining->sort_score());
 
             QString tip = svcName;
             if(!svcDesc.isEmpty())
@@ -1823,8 +1835,6 @@ void MainWindow::initServiceModules()
             button->setToolTip(tip);
 
             button->setProperty("serviceUuid", remaining->uuid());
-            button->setProperty("isAdsKiller", remaining->uuid() == IDServiceAdsString);
-            button->setProperty("isAppleFirmware", remaining->uuid() == IDServiceAppleIpswString);
             button->setProperty("isFree", true);
             button->setProperty("isPaid", false);
             button->setProperty("isActive", true);
@@ -1872,11 +1882,15 @@ void MainWindow::initServiceModules()
         std::end(services),
         [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs)
         {
-            bool lhsIsAds = (lhs && lhs->uuid() == IDServiceAdsString);
-            bool rhsIsAds = (rhs && rhs->uuid() == IDServiceAdsString);
-            if(lhsIsAds != rhsIsAds)
-                return lhsIsAds;
-            return static_cast<int>(lhs->active) > static_cast<int>(rhs->active);
+            if(!lhs || !rhs)
+                return lhs != nullptr;
+            int scoreLhs = lhs->sort_score();
+            int scoreRhs = rhs->sort_score();
+            if(scoreLhs != scoreRhs)
+                return scoreLhs > scoreRhs;
+            if(lhs->active != rhs->active)
+                return lhs->active > rhs->active;
+            return lhs->title < rhs->title;
         });
 
     QGridLayout *layoutSpace = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
@@ -1970,53 +1984,19 @@ void MainWindow::applyServiceFilters()
     // Direct ServiceTileButton children of serviceContents
     QList<ServiceTileButton *> allButtons = ui->serviceContents->findChildren<ServiceTileButton *>(QString(), Qt::FindDirectChildrenOnly);
 
-    auto getServicePriority = [](ServiceTileButton *btn) -> int
-    {
-        bool isUnderDev = btn->property("isUnderDev").toBool();
-        bool isActive = btn->property("isActive").toBool();
-        bool isUnavail = !isActive || isUnderDev || (btn->tier() == ServiceTileButton::Tier::Disabled);
-        if(isUnavail)
-            return 99; // Unavailable services always last
-
-        bool isPaid = btn->property("isPaid").toBool() || (btn->tier() == ServiceTileButton::Tier::Credit || btn->tier() == ServiceTileButton::Tier::Vip || btn->tier() == ServiceTileButton::Tier::Dynamic);
-
-        // Paid services ALWAYS have priority over free services!
-        if(isPaid)
-        {
-            if(btn->tier() == ServiceTileButton::Tier::Vip)
-                return 1;
-            if(btn->tier() == ServiceTileButton::Tier::Credit)
-                return 2;
-            return 3;
-        }
-
-        // Free services
-        if(btn->property("isAdsKiller").toBool() || btn->property("serviceUuid").toString() == IDServiceAdsString || btn->title().contains(QString::fromUtf8("реклам"), Qt::CaseInsensitive))
-        {
-            return 10;
-        }
-        if(btn->property("isAppleFirmware").toBool() || btn->property("serviceUuid").toString() == IDServiceAppleIpswString || btn->title().contains(QString::fromUtf8("APPLE"), Qt::CaseInsensitive))
-        {
-            return 11;
-        }
-        return 20;
-    };
-
-    // Sort order: Paid first (VIP, Credit), then Free (AdsKiller, Apple, rest), then Unavailable
+    // Sort order: by sort_score() descending (higher score = higher priority), then active, then title
     std::sort(
         allButtons.begin(),
         allButtons.end(),
-        [getServicePriority](ServiceTileButton *a, ServiceTileButton *b)
+        [](ServiceTileButton *a, ServiceTileButton *b)
         {
-            int prioA = getServicePriority(a);
-            int prioB = getServicePriority(b);
-            if(prioA != prioB)
-                return prioA < prioB;
+            if(!a || !b)
+                return a != nullptr;
 
-            bool aDev = a->property("isUnderDev").toBool();
-            bool bDev = b->property("isUnderDev").toBool();
-            if(aDev != bDev)
-                return !aDev;
+            int scoreA = a->sort_score();
+            int scoreB = b->sort_score();
+            if(scoreA != scoreB)
+                return scoreA > scoreB;
 
             bool aAct = a->property("isActive").toBool();
             bool bAct = b->property("isActive").toBool();
@@ -2112,7 +2092,7 @@ void MainWindow::applyServiceFilters()
         delete item;
     }
 
-    // Partition visible buttons into logical groups
+    // Partition visible buttons into logical groups (sorted by sort_score())
     QList<ServiceTileButton *> freeGroup;
     QList<ServiceTileButton *> paidGroup;
     QList<ServiceTileButton *> unavailGroup;
@@ -2134,6 +2114,27 @@ void MainWindow::applyServiceFilters()
         else
             paidGroup.append(btn);
     }
+
+    auto sortByScore = [](QList<ServiceTileButton *> &list)
+    {
+        std::sort(
+            list.begin(),
+            list.end(),
+            [](ServiceTileButton *a, ServiceTileButton *b)
+            {
+                if(!a || !b)
+                    return a != nullptr;
+                int scoreA = a->sort_score();
+                int scoreB = b->sort_score();
+                if(scoreA != scoreB)
+                    return scoreA > scoreB;
+                return a->title() < b->title();
+            });
+    };
+
+    sortByScore(paidGroup);
+    sortByScore(freeGroup);
+    sortByScore(unavailGroup);
 
     int row = 0;
     int visibleIndexFinal = 0;
@@ -2531,6 +2532,9 @@ void MainWindow::showPage(PageIndex pageNum)
             case StorageCacheCleanPage:
                 ui->label_8->setText("Очистка кэша и мусора (Clean Master)");
                 break;
+            case ImeiVerificationKzPage:
+                ui->label_8->setText("IMEI Verification KZ");
+                break;
             default:
                 ui->label_8->setText("Назад в личный кабинет");
                 break;
@@ -2878,6 +2882,21 @@ void MainWindow::pageShownPreStart(int page)
             if(pages.contains(StorageCacheCleanPage))
             {
                 auto *widget = static_cast<StorageCacheCleanWidget *>(pages.value(StorageCacheCleanPage));
+                if(widget)
+                {
+                    if(!connectPhone.adbDevice.isEmpty())
+                        widget->setDevice(connectPhone.adbDevice);
+                }
+            }
+            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+                ServiceProvider::currentService()->start();
+            break;
+        }
+        case ImeiVerificationKzPage:
+        {
+            if(pages.contains(ImeiVerificationKzPage))
+            {
+                auto *widget = static_cast<ImeiVerificationKzWidget *>(pages.value(ImeiVerificationKzPage));
                 if(widget)
                 {
                     if(!connectPhone.adbDevice.isEmpty())

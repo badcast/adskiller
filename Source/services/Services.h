@@ -51,6 +51,7 @@ constexpr auto IDServiceAIAgentString = "039bc49d-6bdc-482b-a55e-1b6e8f73ea64";
 constexpr auto IDServiceFileManagerString = "44b598b1-a969-42fa-8192-d59e2522542b";
 constexpr auto IDServiceAITranslaterString = "92bcdf30-c410-4a0b-88f9-516c29f7ee8a";
 constexpr auto IDServiceAppleIpswString = "a9f1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c";
+constexpr auto IDServiceImeiVerificationKzString = "ef469f7e-6aa3-4f3e-8851-9ae03e418237";
 
 namespace Generic
 {
@@ -75,6 +76,7 @@ enum PageIndex
     AITranslaterPage,
     AppleIpswPage,
     StorageCacheCleanPage,
+    ImeiVerificationKzPage,
 
     LengthPages
 };
@@ -90,6 +92,7 @@ class MiDeviceUnlockService;
 class FileManagerService;
 class AITranslaterService;
 class AppleIpswService;
+class ImeiVerificationKzService;
 class ServiceProvider;
 
 class ServiceProvider
@@ -114,13 +117,14 @@ protected:
     DeviceConnectType mDeviceConnectType;
     AdbDevice mAdbDevice;
     AppleDevice mAppleDevice;
+    int m_sortScore = 100;
 
 public:
     QString title;
     QWidget *ownerWidget;
     bool active;
 
-    inline Service(DeviceConnectType deviceConnectType, QObject *parent = nullptr) : QObject(parent), ownerWidget(nullptr), title(), active(false), mDeviceConnectType(deviceConnectType)
+    inline Service(DeviceConnectType deviceConnectType, QObject *parent = nullptr) : QObject(parent), ownerWidget(nullptr), title(), active(false), mDeviceConnectType(deviceConnectType), m_sortScore(100)
     {
     }
 
@@ -133,6 +137,15 @@ public:
     const AdbDevice &adbDevice() const
     {
         return mAdbDevice;
+    }
+
+    virtual int sort_score() const
+    {
+        return m_sortScore;
+    }
+    void setSortScore(int score)
+    {
+        m_sortScore = score;
     }
 
     virtual QString uuid() const = 0;
@@ -162,6 +175,11 @@ class UnavailableService : public Service
 
 public:
     UnavailableService(QObject *parent = nullptr);
+
+    int sort_score() const override
+    {
+        return 0;
+    }
 
     QString uuid() const override;
     PageIndex targetPage() override;
@@ -193,6 +211,11 @@ public:
     struct PrivateKillerRes *_priv;
     AdsKillerService(QObject *parent = nullptr);
     ~AdsKillerService();
+
+    int sort_score() const override
+    {
+        return 500;
+    }
 
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
@@ -239,6 +262,11 @@ class BuyVIPService : public Service
 public:
     BuyVIPService(QObject *parent = nullptr);
     ~BuyVIPService();
+
+    int sort_score() const override
+    {
+        return 400;
+    }
 
     QString uuid() const override;
     bool canStart() override;
@@ -478,6 +506,40 @@ class AppleIpswService : public Service
 public:
     AppleIpswService(QObject *parent = nullptr);
     ~AppleIpswService() override;
+
+    int sort_score() const override
+    {
+        return 300;
+    }
+
+    QString uuid() const override;
+    PageIndex targetPage() override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    QString widgetIconName() override;
+
+private:
+    bool m_started = false;
+    bool m_finished = false;
+};
+
+class ImeiVerificationKzWidget;
+
+class ImeiVerificationKzService : public Service
+{
+    Q_OBJECT
+
+public:
+    ImeiVerificationKzService(QObject *parent = nullptr);
+    ~ImeiVerificationKzService() override;
+
+    int sort_score() const override
+    {
+        return 250;
+    }
 
     QString uuid() const override;
     PageIndex targetPage() override;

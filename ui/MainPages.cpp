@@ -50,6 +50,7 @@
 #include "AITranslaterWidget.h"
 #include "AppleIpswWidget.h"
 #include "StorageCacheCleanWidget.h"
+#include "ImeiVerificationKzWidget.h"
 #include <QToolBar>
 #include "RadioPlayerWidget.h"
 
@@ -202,6 +203,12 @@ void MainWindow::setupWindowLayoutAndAnim()
     cleanWidget->setVisible(false);
     ui->contentLayout->layout()->addWidget(cleanWidget);
     pages.insert(StorageCacheCleanPage, cleanWidget);
+
+    ImeiVerificationKzWidget *imeiWidget = new ImeiVerificationKzWidget(this);
+    imeiWidget->setObjectName("page_imeiverificationkz");
+    imeiWidget->setVisible(false);
+    ui->contentLayout->layout()->addWidget(imeiWidget);
+    pages.insert(ImeiVerificationKzPage, imeiWidget);
 
     ui->tabWidget->deleteLater();
 

@@ -70,6 +70,8 @@ class AppleIpswWidget;
 class AppleIpswService;
 class StorageCacheCleanWidget;
 class StorageCacheCleanService;
+class ImeiVerificationKzWidget;
+class ImeiVerificationKzService;
 class RadioPlayerWidget;
 class CyberReactorLoader;
 class QToolBar;
@@ -103,9 +105,19 @@ public:
         QString currency = QString::fromUtf8("кредитов");
         QString connectTypeName = QString::fromUtf8("Не требуется");
         QIcon icon;
+        int sortScore = 100;
     };
 
     explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, bool showRibbon = true, const QString &ribbonText = QString::fromUtf8("NEW"), QWidget *parent = nullptr);
+
+    int sort_score() const
+    {
+        return m_sortScore;
+    }
+    void setSortScore(int score)
+    {
+        m_sortScore = score;
+    }
 
     void setTier(Tier tier);
     Tier tier() const
@@ -216,6 +228,8 @@ private:
     // Click / Activation Pulse Animation
     qreal m_clickProgress = 0.0;
     QVariantAnimation *m_clickAnim = nullptr;
+
+    int m_sortScore = 100;
 };
 
 class ServiceInfoDialog : public QDialog
@@ -274,6 +288,8 @@ class MainWindow : public QMainWindow
     friend class AppleIpswService;
     friend class StorageCacheCleanWidget;
     friend class StorageCacheCleanService;
+    friend class ImeiVerificationKzWidget;
+    friend class ImeiVerificationKzService;
     friend class ServiceTileButton;
     friend class ServiceInfoDialog;
 
