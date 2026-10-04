@@ -24,7 +24,6 @@ _script_path=$(dirname "$(readlink -f "$0")")
 
 format_file "${_script_path}/include"
 format_file "${_script_path}/Source"
-format_file "${_script_path}/ui"
 format_file "${_script_path}/update"
 format_file "${_script_path}/3rdParty"
 
