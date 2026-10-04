@@ -4,7 +4,7 @@ set(INCL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 file(GLOB SRC_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 
 add_library(services STATIC ${SRC_FILES})
-target_include_directories(services PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/ui)
+target_include_directories(services PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/Source/UI)
 target_include_directories(services PUBLIC $<BUILD_INTERFACE:${INCL_DIR}>
                                            $<INSTALL_INTERFACE:include>)
 

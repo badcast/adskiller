@@ -108,9 +108,9 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 
     QPixmap iconPix(QStringLiteral(":/resources/app-logo"));
     if(iconPix.isNull())
-        iconPix = QPixmap(QStringLiteral("res/icon.png"));
+        iconPix = QPixmap(QStringLiteral("Resources/res/icon.png"));
     if(iconPix.isNull())
-        iconPix = QPixmap(QStringLiteral("res/icon_std.png"));
+        iconPix = QPixmap(QStringLiteral("Resources/res/icon_std.png"));
     if(iconPix.isNull())
         iconPix = QPixmap(QStringLiteral(":/resources/banner-low"));
     setWindowIcon(QIcon(iconPix));
@@ -293,14 +293,14 @@ QWidget *AboutDialog::createHeroBannerWidget()
 
     // Tall Hero Banner Display
     QPixmap bannerPix;
-    if(QFile::exists(QStringLiteral("res/banner-max.png")))
-        bannerPix.load(QStringLiteral("res/banner-max.png"));
+    if(QFile::exists(QStringLiteral("Resources/res/banner-max.png")))
+        bannerPix.load(QStringLiteral("Resources/res/banner-max.png"));
     if(bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral(":/resources/banner-max"));
     if(bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral(":/resources/banner-low"));
     if(bannerPix.isNull())
-        bannerPix = QPixmap(QStringLiteral("res/banner-low.png"));
+        bannerPix = QPixmap(QStringLiteral("Resources/res/banner-low.png"));
     if(bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
 
@@ -327,9 +327,9 @@ QWidget *AboutDialog::createHeaderWidget()
 
     QPixmap appIconPix(QStringLiteral(":/resources/app-logo"));
     if(appIconPix.isNull())
-        appIconPix = QPixmap(QStringLiteral("res/icon.png"));
+        appIconPix = QPixmap(QStringLiteral("Resources/res/icon.png"));
     if(appIconPix.isNull())
-        appIconPix = QPixmap(QStringLiteral("res/icon_std.png"));
+        appIconPix = QPixmap(QStringLiteral("Resources/res/icon_std.png"));
     if(appIconPix.isNull())
         appIconPix = QPixmap(QStringLiteral(":/resources/icon-hello"));
 
