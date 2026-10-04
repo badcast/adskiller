@@ -1946,7 +1946,7 @@ void MainWindow::initServiceModules()
             if(svcIcon.isNull())
                 svcIcon = QIcon(":/service-icons/" + remaining->widgetIconName());
             if(svcIcon.isNull())
-                svcIcon = QIcon("res/svg/services/" + remaining->widgetIconName() + ".svg");
+                svcIcon = QIcon("Resources/res/svg/services/" + remaining->widgetIconName() + ".svg");
             if(svcIcon.isNull())
                 svcIcon = QIcon("svg/services/" + remaining->widgetIconName() + ".svg");
             if(svcIcon.isNull())
@@ -3925,7 +3925,7 @@ void MainWindow::setTheme(ThemeScheme theme)
                 styleRes.setFileName(QCoreApplication::applicationDirPath() + "/ApplicationStyle.qss");
                 if(!styleRes.open(QFile::ReadOnly | QFile::Text))
                 {
-                    styleRes.setFileName("res/style/ApplicationStyle.qss");
+                    styleRes.setFileName("Resources/res/style/ApplicationStyle.qss");
                     if(!styleRes.open(QFile::ReadOnly | QFile::Text))
                         styleRes.setFileName("ApplicationStyle.qss");
                 }

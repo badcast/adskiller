@@ -11,7 +11,7 @@
         <file alias="banner-max">res/banner-max.png</file>
         <file alias="app-logo">res/icon_std.png</file>
         <file alias="checkbox-checked">res/svg/checkbox-checked.svg</file>
-        <file alias="license-gplv3">LICENSE</file>
+        <file alias="license-gplv3">../LICENSE</file>
     </qresource>
     <qresource prefix="/service-icons">
         <file alias="ads-killer">res/svg/services/ads-killer.svg</file>

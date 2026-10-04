@@ -4,6 +4,7 @@ build
 .qtcreator
 .vscode
 .cache
+.env
 MIGRATE.md
 INFO.md 
 INFO_SHORT.md
