@@ -400,7 +400,7 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
                             "* <b>Стоимость:</b> <span style='color: #38BDF8; font-weight: bold;'>%1 %2</span> "
                             "или <span style='color: #FBBF24; font-weight: bold;'>БЕСПЛАТНО с подпиской VIP</span>.<br/>"
                             "* Обладатели активного VIP-аккаунта пользуются сервисом безлимитно.")
-                            .arg(m_details.price)
+                            .arg(Generic::beautifyNumber(m_details.price))
                             .arg(m_details.currency);
     }
     else if(m_details.tier == ServiceTileButton::Tier::Dynamic)
@@ -414,7 +414,7 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
         priceTextHtml = QString::fromUtf8(
                             "* <b>Стоимость:</b> <span style='color: #38BDF8; font-weight: bold;'>%1 %2</span>.<br/>"
                             "* Списание кредитов производится только после успешного выполнения операции.")
-                            .arg(m_details.price)
+                            .arg(Generic::beautifyNumber(m_details.price))
                             .arg(m_details.currency);
     }
 
@@ -1608,13 +1608,13 @@ void MainWindow::initServiceModules()
         {
             // Service supports VIP, but user has NO VIP -> Show price in credits with VIP alternative
             tier = ServiceTileButton::Tier::Vip;
-            badgeText = QString("%1 %2 (или VIP)").arg(effectivePrice).arg(network.authedId.currencyType);
+            badgeText = QString("%1 %2 (или VIP)").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
         }
         else
         {
             // Service does NOT require/support VIP -> Standard credit price for all users
             tier = ServiceTileButton::Tier::Credit;
-            badgeText = QString("%1 %2").arg(effectivePrice).arg(network.authedId.currencyType);
+            badgeText = QString("%1 %2").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
         }
 
         if(instance->uuid() != IDServiceAIAgentString)
@@ -1667,11 +1667,11 @@ void MainWindow::initServiceModules()
                 }
                 else if(remoteService->needVIP)
                 {
-                    tip += QString("\n\n* Стоимость: %1 %2 (или бесплатно с активным VIP-аккаунтом)").arg(effectivePrice).arg(network.authedId.currencyType);
+                    tip += QString("\n\n* Стоимость: %1 %2 (или бесплатно с активным VIP-аккаунтом)").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
                 }
                 else if(!isDynamic)
                 {
-                    tip += QString("\n\n* Стоимость: %1 %2 (оплата кредитами)").arg(effectivePrice).arg(network.authedId.currencyType);
+                    tip += QString("\n\n* Стоимость: %1 %2 (оплата кредитами)").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
                 }
             }
             button->setToolTip(tip);
@@ -1712,10 +1712,10 @@ void MainWindow::initServiceModules()
                                                "%6"
                                                "</div>")
                                                .arg(name)
-                                               .arg(effectivePrice)
+                                               .arg(Generic::beautifyNumber(effectivePrice))
                                                .arg(currency)
-                                               .arg(network.authedId.credits)
-                                               .arg(shortage > 0 ? shortage : 0)
+                                               .arg(Generic::beautifyNumber(network.authedId.credits))
+                                               .arg(Generic::beautifyNumber(shortage > 0 ? shortage : 0))
                                                .arg(
                                                    needVIP ? QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Вы можете активировать <b>VIP-статус</b> для безлимитного доступа без списания кредитов, либо пополнить баланс через службу поддержки.</i></p>")
                                                            : QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Данная услуга оплачивается только кредитами (VIP-статус не поддерживается). Пополните баланс через раздел Поддержка.</i></p>"));
@@ -3244,7 +3244,7 @@ void MainWindow::fillAuthInfoPage()
     }
 
     ui->labelLoginAuthed->setText(network.authedId.idName);
-    ui->labelCredits->setText(QString("%1 %2\nБаланс").arg(network.authedId.credits).arg(network.authedId.currencyType));
+    ui->labelCredits->setText(QString("%1 %2\nБаланс").arg(Generic::beautifyNumber(network.authedId.credits)).arg(network.authedId.currencyType));
     if(network.authedId.hasVipAccount())
         ui->labelVipDays->setText(QString("%1 ДНЕЙ\nVIP активен").arg(network.authedId.vipDays));
     else
@@ -3259,7 +3259,7 @@ void MainWindow::fillAuthInfoPage()
         sLbl->setText(QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm"));
 
     if((sLbl = findChild<QLabel *>("cabinetVal_credits")))
-        sLbl->setText(QString("%1 %2").arg(network.authedId.credits).arg(network.authedId.currencyType));
+        sLbl->setText(QString("%1 %2").arg(Generic::beautifyNumber(network.authedId.credits)).arg(network.authedId.currencyType));
 
     if((sLbl = findChild<QLabel *>("cabinetVal_vip")))
     {

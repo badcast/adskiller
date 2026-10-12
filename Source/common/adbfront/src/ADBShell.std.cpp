@@ -2,25 +2,9 @@
 
 #include <QTextStream>
 
+#include "Extension.h"
 #include "AdbCmds.h"
 #include "AdbFront.h"
-
-const std::array<const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
-
-std::pair<int, QString> dataSizeToDesignView(std::uint64_t bytes)
-{
-    int x = 1, power = 0;
-    while(bytes >= 1000 && power < ConstDataSizes.size())
-    {
-        bytes /= 1000;
-        ++power;
-    }
-    while(x < bytes)
-    {
-        x *= 2;
-    }
-    return {x, ConstDataSizes[power]};
-}
 
 std::shared_ptr<AdbSysInfo> AdbShell::getInfo()
 {
@@ -84,12 +68,12 @@ QString AdbSysInfo::OSVersionString() const
 
 QString AdbSysInfo::StorageDesignString() const
 {
-    auto ret = dataSizeToDesignView(diskTotal);
+    auto ret = Generic::formatDesignSize(diskTotal);
     return QString("%1%2").arg(ret.first).arg(ret.second);
 }
 
 QString AdbSysInfo::RAMDesignString() const
 {
-    auto ret = dataSizeToDesignView(ramTotal);
+    auto ret = Generic::formatDesignSize(ramTotal);
     return QString("%1%2").arg(ret.first).arg(ret.second);
 }

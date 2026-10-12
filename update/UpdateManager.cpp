@@ -1,7 +1,7 @@
 #include "UpdateManager.h"
 
 #ifndef NREMOTEADDR
-#define NREMOTEADDR "https://adskiller.imister.tech/api"
+#define NREMOTEADDR "http://localhost:8000/api"
 #endif
 
 constexpr int MaxTimeout = 10000;

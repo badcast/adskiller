@@ -26,17 +26,6 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
-QString FileManagerWidget::formatBytes(qint64 bytes)
-{
-    if(bytes < 1024)
-        return QString("%1 Б").arg(bytes);
-    if(bytes < 1024 * 1024)
-        return QString("%1 КБ").arg(QString::number(bytes / 1024.0, 'f', 1));
-    if(bytes < 1024 * 1024 * 1024)
-        return QString("%1 МБ").arg(QString::number(bytes / (1024.0 * 1024.0), 'f', 1));
-    return QString("%1 ГБ").arg(QString::number(bytes / (1024.0 * 1024.0 * 1024.0), 'f', 2));
-}
-
 class FilePreviewDialog : public QDialog
 {
 public:
@@ -58,7 +47,7 @@ public:
         QLabel *title = new QLabel("<img src=\":/svg/clipboard\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> " + fileName, this);
         title->setTextFormat(Qt::RichText);
         title->setStyleSheet("font-size: 14px; font-weight: bold; color: #38BDF8;");
-        QLabel *sizeLbl = new QLabel(QString("Размер: %1").arg(FileManagerWidget::formatBytes(content.size())), this);
+        QLabel *sizeLbl = new QLabel(QString("Размер: %1").arg(Generic::formatSizes(content.size())), this);
         sizeLbl->setStyleSheet("color: #94A3B8; font-size: 12px;");
         topInfo->addWidget(title);
         topInfo->addStretch(1);
@@ -720,7 +709,7 @@ void FileManagerWidget::populateTable()
         QTableWidgetItem *typeItem = new QTableWidgetItem(getFileType(info.isDir, info.name));
         typeItem->setForeground(QColor("#94A3B8"));
 
-        QTableWidgetItem *sizeItem = new QTableWidgetItem(info.isDir ? "-" : formatBytes(info.size));
+        QTableWidgetItem *sizeItem = new QTableWidgetItem(info.isDir ? "-" : Generic::formatSizes(info.size));
         sizeItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         sizeItem->setForeground(info.isDir ? QColor("#64748B") : QColor("#38BDF8"));
 
@@ -749,7 +738,7 @@ void FileManagerWidget::populateTable()
         row++;
     }
 
-    m_statusSummary->setText(QString("%1 папок  *  %2 файлов  *  %3").arg(dirCount).arg(fileCount).arg(formatBytes(totalSize)));
+    m_statusSummary->setText(QString("%1 папок  *  %2 файлов  *  %3").arg(dirCount).arg(fileCount).arg(Generic::formatSizes(totalSize)));
     onSelectionChanged();
 }
 

@@ -55,14 +55,6 @@ constexpr auto IDServiceImeiVerificationKzString = "ef469f7e-6aa3-4f3e-8851-9ae0
 constexpr auto IDServiceMiAccountString = IDServiceMiUnlockString;
 constexpr auto IDServiceSamsungFrpString = "88117553-ba0c-45bd-b80c-155e42a7fe7e";
 
-namespace Generic
-{
-    QString formatSizes(qint64 bytes);
-
-    QPixmap generateFallbackIcon(const QString &appName, const QString &pkgName, bool isSystem);
-
-} // namespace Generic
-
 enum PageIndex
 {
     AuthPage = 0,

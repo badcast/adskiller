@@ -70,6 +70,8 @@ qt_add_executable(update
     Resources/update.qrc
 )
 
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 # Widgets UI
 add_subdirectory(Source/widgets)
 # Adb Shell I/O
@@ -98,6 +100,8 @@ target_compile_definitions(adskiller_build_config INTERFACE ${APP_COMPILE_DEFINI
 target_link_libraries(services PRIVATE adskiller_build_config adbfront applefront widgets)
 target_link_libraries(application PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Multimedia adbfront applefront services widgets)
 target_link_libraries(update PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
+
+target_link_libraries(adbfront PUBLIC adskiller_build_config)
 
 set(NREMOTEADDR_VALUE "")
 if(DEFINED ENV{NREMOTEADDR} AND NOT "$ENV{NREMOTEADDR}" STREQUAL "")

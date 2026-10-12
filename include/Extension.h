@@ -8,7 +8,6 @@
 #include <QString>
 #include <QVariant>
 
-#include "AdbFront.h"
 #include "Begin.h"
 
 enum DeviceConnectType
@@ -17,6 +16,18 @@ enum DeviceConnectType
     ADB = 1,
     Apple = 2
 };
+
+namespace Generic
+{
+    QString beautifyNumber(std::uint64_t number, const QString &symbol = " ");
+
+    std::pair<int, QString> formatDesignSize(std::uint64_t bytes);
+
+    QString formatSizes(std::uint64_t bytes);
+
+    QPixmap generateFallbackIcon(const QString &appName, const QString &pkgName, bool isSystem);
+
+} // namespace Generic
 
 class CipherAlgoCrypto
 {

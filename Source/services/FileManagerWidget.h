@@ -25,8 +25,6 @@ public:
     void navigateTo(const QString &path);
     void resetSession();
 
-    static QString formatBytes(qint64 bytes);
-
 private slots:
     void navigateUp();
     void navigateBack();
