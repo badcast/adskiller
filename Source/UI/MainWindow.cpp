@@ -105,24 +105,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     value = AppSetting::networkTimeout(&paramCheck);
-    if(paramCheck)
+    if(paramCheck && value.toInt() >= 1000)
     {
-        value = value.toInt() < 1000 ? 1000 : value.toInt() > 60000 ? 60000 : value;
+        value = value.toInt() > 60000 ? 60000 : value.toInt();
     }
     else
     {
         value = NetworkTimeoutDefault;
     }
+    AppSetting::networkTimeout(nullptr, value);
+    network.setTimeout(value.toInt());
 
-    value = AppSetting::analyticsEnabled(&paramCheck);
+    AppSetting::analyticsEnabled(&paramCheck);
     if(!paramCheck)
     {
         // Default is TRUE
         AppSetting::analyticsEnabled(nullptr, (true));
     }
-
-    AppSetting::networkTimeout(nullptr, value);
-    network.setTimeout(value.toInt());
 
     // Setup window layout, animated containers, and progress circles
     setupWindowLayoutAndAnim();
