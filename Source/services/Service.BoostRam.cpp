@@ -91,6 +91,18 @@ QString BoostRamService::uuid() const
     return IDServiceBoostRamString;
 }
 
+QString BoostRamService::getInternalData()
+{
+    QStringList data {"Device = " + mAdbDevice.devId, "Progress = " + QString::number(bProgress) + "%"};
+    if(processLogStatus)
+    {
+        auto *model = qobject_cast<QStringListModel *>(processLogStatus->model());
+        if(model)
+            data << "Log = " + model->stringList().join('\t');
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 QString BoostRamService::widgetIconName()
 {
     return "boost-ram";

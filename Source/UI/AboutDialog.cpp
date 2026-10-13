@@ -1152,7 +1152,6 @@ QPixmap AboutDialog::createAvatarPixmap(const QString &initials, const QColor &s
 
 QString AboutDialog::loadLicenseText()
 {
-    // 1. Try reading from compiled Qt resource
     QFile resFile(QStringLiteral(":/resources/license-gplv3"));
     if(resFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -1164,8 +1163,7 @@ QString AboutDialog::loadLicenseText()
         }
     }
 
-    // 2. Try reading LICENSE from current directory or application directory
-    const QStringList candidatePaths = {QStringLiteral("LICENSE"), QCoreApplication::applicationDirPath() + QStringLiteral("/LICENSE"), QCoreApplication::applicationDirPath() + QStringLiteral("/../LICENSE"), QStringLiteral("/media/dev/adskiller/LICENSE")};
+    const QStringList candidatePaths = {QCoreApplication::applicationDirPath() + QStringLiteral("/LICENSE")};
 
     for(const QString &path : candidatePaths)
     {
@@ -1180,37 +1178,7 @@ QString AboutDialog::loadLicenseText()
             }
         }
     }
-
-    // 3. Fallback header text
-    return QStringLiteral(
-        "GNU GENERAL PUBLIC LICENSE\n"
-        "Version 3, 29 June 2007\n\n"
-        "Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>\n"
-        "Everyone is permitted to copy and distribute verbatim copies\n"
-        "of this license document, but changing it is not allowed.\n\n"
-        "Preamble\n\n"
-        "The GNU General Public License is a free, copyleft license for\n"
-        "software and other kinds of works.\n\n"
-        "The licenses for most software and other practical works are designed\n"
-        "to take away your freedom to share and change the works.  By contrast,\n"
-        "the GNU General Public License is intended to guarantee your freedom to\n"
-        "share and change all versions of a program--to make sure it remains free\n"
-        "software for all its users.  We, the Free Software Foundation, use the\n"
-        "GNU General Public License for most of our software; it applies also to\n"
-        "any other work released this way by its authors.  You can apply it to\n"
-        "your programs, too.\n\n"
-        "When we speak of free software, we are referring to freedom, not\n"
-        "price.  Our General Public Licenses are designed to make sure that you\n"
-        "have the freedom to distribute copies of free software (and charge for\n"
-        "them if you wish), that you receive source code or can get it if you\n"
-        "want it, that you can change the software or use pieces of it in new\n"
-        "free programs, and that you know you can do these things.\n\n"
-        "To protect your rights, we need to prevent others from denying you\n"
-        "these rights or asking you to surrender the rights.  Therefore, you have\n"
-        "certain responsibilities if you distribute copies of the software, or if\n"
-        "you modify it: responsibilities to respect the freedom of others.\n\n"
-        "Подробная информация о лицензии доступна по адресу:\n"
-        "https://www.gnu.org/licenses/gpl-3.0.html\n");
+    return {"No license text found."};
 }
 
 void AboutDialog::copyLicenseToClipboard()

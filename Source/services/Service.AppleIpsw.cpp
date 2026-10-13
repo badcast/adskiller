@@ -3301,6 +3301,18 @@ QString AppleIpswService::uuid() const
     return IDServiceAppleIpswString;
 }
 
+QString AppleIpswService::getInternalData()
+{
+    QStringList data;
+    auto *widget = MainWindow::current ? static_cast<AppleIpswWidget *>(MainWindow::current->pageWidget(AppleIpswPage)) : nullptr;
+    if(widget)
+    {
+        data << "Device = " + widget->m_device.devId << "Model = " + widget->m_currentSelectedModelId << "Firmware file = " + widget->m_selectedIpswPath << "Firmware version = " + widget->m_selectedFirmware.version
+             << "Checksum status = " + QString::number(static_cast<int>(widget->m_checksumStatus));
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 PageIndex AppleIpswService::targetPage()
 {
     return AppleIpswPage;

@@ -60,6 +60,7 @@ private:
 class StorageCacheCleanWidget : public QWidget
 {
     Q_OBJECT
+    friend class StorageCacheCleanService;
 
 public:
     explicit StorageCacheCleanWidget(QWidget *parent = nullptr);

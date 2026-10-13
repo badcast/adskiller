@@ -15,6 +15,7 @@
 class FileManagerWidget : public QWidget
 {
     Q_OBJECT
+    friend class FileManagerService;
 
 public:
     explicit FileManagerWidget(QWidget *parent = nullptr);

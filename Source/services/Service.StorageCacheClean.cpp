@@ -1013,6 +1013,19 @@ QString StorageCacheCleanService::uuid() const
     return IDServiceStorageCleanString;
 }
 
+QString StorageCacheCleanService::getInternalData()
+{
+    QStringList data {"Device = " + mAdbDevice.devId};
+    auto *widget = MainWindow::current ? static_cast<StorageCacheCleanWidget *>(MainWindow::current->pageWidget(StorageCacheCleanPage)) : nullptr;
+    if(widget)
+    {
+        data << "Clear app cache = " + QString(widget->m_chkAppCache && widget->m_chkAppCache->isChecked() ? "on" : "off") << "Clear thumbnails = " + QString(widget->m_chkThumbnails && widget->m_chkThumbnails->isChecked() ? "on" : "off")
+             << "Stop apps = " + QString(widget->m_chkStopApps && widget->m_chkStopApps->isChecked() ? "on" : "off") << "Clear temporary files = " + QString(widget->m_chkTempFiles && widget->m_chkTempFiles->isChecked() ? "on" : "off") << "Freed bytes = " + QString::number(widget->m_totalFreedBytes)
+             << "Thumbnails removed = " + QString::number(widget->m_thumbnailsCount) << "Apps stopped = " + QString::number(widget->m_appsStoppedCount);
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 PageIndex StorageCacheCleanService::targetPage()
 {
     return StorageCacheCleanPage;

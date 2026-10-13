@@ -16,6 +16,11 @@ QString AIAgentService::uuid() const
     return IDServiceAIAgentString;
 }
 
+QString AIAgentService::getInternalData()
+{
+    return Service::getInternalData() + ":User accepting analytics = " + QString(sendAnalitics ? "on" : "off");
+}
+
 AIAgentService::AIAgentService(QObject *parent) : Service(DeviceConnectType::None, parent)
 {
 }
@@ -107,6 +112,14 @@ void AIAgentService::sendCurrentMessage()
     QJsonObject serviceReq;
     if(aiSessionId >= 0)
         serviceReq["session_id"] = aiSessionId;
+
+    if(AppSetting::analyticsEnabled())
+    {
+        QString data;
+        serviceReq["analytics"] = true;
+        MainWindow::current->getAnalyticsData(data);
+        serviceReq["analytics_data"] = data;
+    }
 
     serviceReq["message"] = aiMessages.last();
 

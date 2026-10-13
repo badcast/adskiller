@@ -185,6 +185,7 @@ public:
     virtual bool start() = 0;
     virtual void stop() = 0;
     virtual QString widgetIconName();
+    virtual QString getInternalData();
 
     bool restart();
     void close();
@@ -210,6 +211,7 @@ public:
     }
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -248,6 +250,7 @@ public:
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -280,6 +283,7 @@ public:
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -307,6 +311,7 @@ public:
     }
 
     QString uuid() const override;
+    QString getInternalData() override;
     bool canStart() override;
     bool isStarted() override;
     PageIndex targetPage() override;
@@ -339,6 +344,7 @@ public:
     ~MyDeviceService();
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -359,7 +365,7 @@ private:
     QDateEdit *dateEditBegin;
     QDateEdit *dateEditEnd;
     QPushButton *refreshButton;
-    QCheckBox *quaranteeFilter;
+    QCheckBox *guaranteeFilter;
     std::shared_ptr<QList<DeviceItemInfo>> actual;
     std::shared_ptr<QList<DeviceItemInfo>> expired;
 
@@ -398,6 +404,7 @@ public:
     void setAndroidArgs(const AdbDevice &adbDevice) override;
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -419,6 +426,7 @@ public:
     ~ContactFixerService();
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -449,6 +457,7 @@ public:
     }
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -474,10 +483,12 @@ protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
 
 public:
+    bool sendAnalitics = true;
     AIAgentService(QObject *parent = nullptr);
     ~AIAgentService();
 
     QString uuid() const override;
+    QString getInternalData() override;
     bool canStart() override;
     bool isStarted() override;
     bool isFinish() override;
@@ -512,6 +523,7 @@ public:
     ~FileManagerService() override;
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -534,6 +546,7 @@ public:
     ~ApkManagerService() override;
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -559,6 +572,7 @@ public:
     ~AITranslaterService();
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -587,6 +601,7 @@ public:
     }
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -621,6 +636,7 @@ public:
     }
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;
@@ -655,6 +671,7 @@ public:
     }
 
     QString uuid() const override;
+    QString getInternalData() override;
     PageIndex targetPage() override;
     bool canStart() override;
     bool isStarted() override;

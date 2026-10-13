@@ -16,6 +16,7 @@
 class AITranslaterWidget : public QWidget
 {
     Q_OBJECT
+    friend class AITranslaterService;
 
 public:
     explicit AITranslaterWidget(QWidget *parent = nullptr);

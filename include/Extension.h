@@ -55,9 +55,9 @@ public:
     static void removeKey(const QString &key);
     static void removeEncToken();
 
-    static QString encryptedToken(bool *contains = nullptr, const QVariant &set = {});
     static std::tuple<QString, QString> loginAndPass(bool *contains = nullptr, const QVariant &login = {}, const QVariant &pass = {});
     static bool autoLogin(bool *contains = nullptr, const QVariant &set = {});
     static int themeIndex(bool *contains = nullptr, const QVariant &set = {});
     static int networkTimeout(bool *contains = nullptr, const QVariant &set = {});
+    static bool analyticsEnabled(bool *contains = nullptr, const QVariant &set = {});
 };

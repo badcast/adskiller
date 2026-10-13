@@ -26,6 +26,7 @@ struct AppDetails : public AdbPackageDetails
 class ApkManagerWidget : public QWidget
 {
     Q_OBJECT
+    friend class ApkManagerService;
 
 public:
     explicit ApkManagerWidget(QWidget *parent = nullptr);

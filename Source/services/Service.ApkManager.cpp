@@ -1039,6 +1039,24 @@ QString ApkManagerService::uuid() const
     return IDServiceAPKManagerString;
 }
 
+QString ApkManagerService::getInternalData()
+{
+    QStringList data {"Device = " + mAdbDevice.devId};
+    auto *widget = MainWindow::current ? static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage)) : nullptr;
+    if(widget)
+    {
+        data << "Search = " + widget->m_searchEdit->text() << "Filter = " + widget->m_filterCombo->currentText();
+        QStringList packages;
+        for(int row = 0; row < widget->m_table->rowCount(); ++row)
+        {
+            if(auto *item = widget->m_table->item(row, 2))
+                packages << item->text();
+        }
+        data << "Packages = " + packages.join('\t');
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 PageIndex ApkManagerService::targetPage()
 {
     return ApkManagerPage;

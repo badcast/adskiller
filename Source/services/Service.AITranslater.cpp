@@ -1189,6 +1189,18 @@ QString AITranslaterService::uuid() const
     return IDServiceAITranslaterString;
 }
 
+QString AITranslaterService::getInternalData()
+{
+    QStringList data;
+    auto *widget = MainWindow::current ? static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage)) : nullptr;
+    if(widget)
+    {
+        data << "Source language = " + widget->selectedSourceLang() << "Target language = " + widget->selectedTargetLang() << "Input text = " + widget->m_editInput->toPlainText() << "Output text = " + widget->m_editOutput->toPlainText() << "Document = " + widget->m_editDocPath->text()
+             << "Target format = " + widget->m_cbTargetFmt->currentText() << "Async task = " + widget->m_asyncTaskId;
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 PageIndex AITranslaterService::targetPage()
 {
     return AITranslaterPage;

@@ -79,6 +79,8 @@ jobs:
           cache: true
 
       - name: Configure CMake
+        env:
+          NREMOTEADDR: ${{ vars.NREMOTEADDR }}
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_flags }}
 
       - name: Build Application and Update

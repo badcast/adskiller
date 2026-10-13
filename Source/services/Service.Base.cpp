@@ -35,6 +35,11 @@ QString Service::widgetIconName()
     return DefaultIconWidget;
 }
 
+QString Service::getInternalData()
+{
+    return "Service title = " + title + ": Service UUID = " + uuid();
+}
+
 bool Service::restart()
 {
     stop();
@@ -93,44 +98,4 @@ std::list<std::shared_ptr<Service>> Service::EnumAppServices(QObject *parent)
     services.emplace_back(std::move(std::make_shared<ImeiVerificationKzService>(parent)));
     services.emplace_back(std::move(std::make_shared<SamsungFrpService>(parent)));
     return services;
-}
-
-// ------------ UNAVAILABLE SERVICE  ------------
-
-UnavailableService::UnavailableService(QObject *parent) : Service(DeviceConnectType::None, parent)
-{
-}
-
-QString UnavailableService::uuid() const
-{
-    return {};
-}
-
-PageIndex UnavailableService::targetPage()
-{
-    return {};
-}
-
-bool UnavailableService::canStart()
-{
-    return false;
-}
-
-bool UnavailableService::isStarted()
-{
-    return false;
-}
-
-bool UnavailableService::isFinish()
-{
-    return false;
-}
-
-bool UnavailableService::start()
-{
-    return false;
-}
-
-void UnavailableService::stop()
-{
 }

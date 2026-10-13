@@ -109,6 +109,11 @@ QString MiDeviceUnlockService::uuid() const
     return IDServiceMiUnlockString;
 }
 
+QString MiDeviceUnlockService::getInternalData()
+{
+    return Service::getInternalData() + ":" + QStringList {"Device = " + mAdbDevice.devId}.join('\t');
+}
+
 PageIndex MiDeviceUnlockService::targetPage()
 {
     return MiAccountPage;

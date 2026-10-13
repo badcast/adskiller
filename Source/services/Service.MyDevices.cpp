@@ -115,6 +115,17 @@ QString MyDeviceService::uuid() const
     return IDServiceMyDeviceString;
 }
 
+QString MyDeviceService::getInternalData()
+{
+    QStringList data {"Request pending = " + QString((mInternalData & 2) ? "yes" : "no")};
+    if(dateEditBegin && dateEditEnd)
+        data << "Date range = " + dateEditBegin->date().toString(Qt::ISODate) + " to " + dateEditEnd->date().toString(Qt::ISODate);
+    if(guaranteeFilter)
+        data << "Guarantee filter = " + QString(guaranteeFilter->isChecked() ? "on" : "off");
+    data << "Active devices = " + QString::number(actual ? actual->size() : 0) << "Expired devices = " + QString::number(expired ? expired->size() : 0);
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 QString MyDeviceService::widgetIconName()
 {
     return "my-devices";
@@ -137,7 +148,7 @@ void MyDeviceService::slotRefresh()
         actual->clear();
     if(expired)
         expired->clear();
-    quaranteeFilter->setEnabled(false);
+    guaranteeFilter->setEnabled(false);
     refreshButton->setEnabled(false);
 
     // Take fake delay
@@ -244,7 +255,7 @@ void MyDeviceService::fillMyDevicesPage()
     int idx = 0;
     for(const DeviceItemInfo &item : std::as_const(items))
     {
-        if(quaranteeFilter->isChecked() && !item.serverQuarantee)
+        if(guaranteeFilter->isChecked() && !item.serverQuarantee)
             continue;
 
         model->insertRow(idx);
@@ -384,7 +395,7 @@ void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QSt
         clearMyDevicesPage("Ошибка при загрузке.");
     }
 
-    quaranteeFilter->setEnabled(true);
+    guaranteeFilter->setEnabled(true);
     refreshButton->setEnabled(true);
 }
 
@@ -397,7 +408,7 @@ void MyDeviceService::slotQuaranteeUpdate()
     fillMyDevicesPage();
 }
 
-MyDeviceService::MyDeviceService(QObject *parent) : Service(None, parent), mInternalData(0), table(nullptr), dateEditBegin(nullptr), dateEditEnd(nullptr), refreshButton(nullptr), quaranteeFilter(nullptr)
+MyDeviceService::MyDeviceService(QObject *parent) : Service(None, parent), mInternalData(0), table(nullptr), dateEditBegin(nullptr), dateEditEnd(nullptr), refreshButton(nullptr), guaranteeFilter(nullptr)
 {
 }
 
@@ -422,7 +433,7 @@ bool MyDeviceService::isFinish()
 
 bool MyDeviceService::start()
 {
-    if(!canStart() || isStarted() || !MainWindow::current->accessUi_page_devices(table, dateEditBegin, dateEditEnd, refreshButton, quaranteeFilter) || !(table && dateEditBegin && dateEditEnd && refreshButton && quaranteeFilter))
+    if(!canStart() || isStarted() || !MainWindow::current->accessUi_page_devices(table, dateEditBegin, dateEditEnd, refreshButton, guaranteeFilter) || !(table && dateEditBegin && dateEditEnd && refreshButton && guaranteeFilter))
         return false;
 
     mInternalData |= 1;
@@ -431,15 +442,15 @@ bool MyDeviceService::start()
     // Set maximum as default current date.
     dateEditEnd->setDate(QDate::currentDate());
 
-    quaranteeFilter->setChecked(true);
+    guaranteeFilter->setChecked(true);
 
     QObject::disconnect(&MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
     QObject::connect(&MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
 
     QObject::disconnect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
     QObject::connect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
-    QObject::disconnect(quaranteeFilter, &QCheckBox::clicked, this, &MyDeviceService::slotQuaranteeUpdate);
-    QObject::connect(quaranteeFilter, &QCheckBox::clicked, this, &MyDeviceService::slotQuaranteeUpdate);
+    QObject::disconnect(guaranteeFilter, &QCheckBox::clicked, this, &MyDeviceService::slotQuaranteeUpdate);
+    QObject::connect(guaranteeFilter, &QCheckBox::clicked, this, &MyDeviceService::slotQuaranteeUpdate);
     slotRefresh();
     return true;
 }

@@ -20,6 +20,10 @@ set(PROJECT_SOURCES
         Source/UI/MainWindow.h
         Source/UI/ui_MainWindow.h
         Source/UI/MainWindow.cpp
+        Source/UI/Analytics.h
+        Source/UI/Analytics.cpp
+        Source/UI/ServiceTileButton.h
+        Source/UI/ServiceTileButton.cpp
         Source/UI/MainPages.cpp
         Source/UI/RadioPlayerWidget.h
         Source/UI/RadioPlayerWidget.cpp
@@ -108,6 +112,8 @@ if(DEFINED ENV{NREMOTEADDR} AND NOT "$ENV{NREMOTEADDR}" STREQUAL "")
     set(NREMOTEADDR_VALUE "$ENV{NREMOTEADDR}")
 elseif(DEFINED ENV{REMOTEADDR} AND NOT "$ENV{REMOTEADDR}" STREQUAL "")
     set(NREMOTEADDR_VALUE "$ENV{REMOTEADDR}")
+elseif(DEFINED NREMOTEADDR AND NOT "${NREMOTEADDR}" STREQUAL "")
+    set(NREMOTEADDR_VALUE "${NREMOTEADDR}")
 elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.env")
     file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/.env" ENV_LINES ENCODING UTF-8)
     set(LEGACY_ENV_VALUE "")

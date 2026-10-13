@@ -140,6 +140,7 @@ private:
 class AppleIpswWidget : public QWidget
 {
     Q_OBJECT
+    friend class AppleIpswService;
 
 public:
     explicit AppleIpswWidget(QWidget *parent = nullptr);

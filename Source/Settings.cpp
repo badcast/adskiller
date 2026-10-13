@@ -2,12 +2,13 @@
 
 std::shared_ptr<QSettings> AppSetting::settings;
 
-constexpr auto ParamEncryptedToken = "encrypted_token";
+constexpr auto ParamOldEncryptedToken = "encrypted_token";
 constexpr auto ParamAutoLogin = "autologin";
 constexpr auto ParamThemeIndex = "theme";
 constexpr auto ParamNetworkTimeout = "network_timeout";
 constexpr auto ParamLogin = "auth_login";
 constexpr auto ParamPassword = "auth_pass_enc";
+constexpr auto ParamAnalyticsEnabled = "analytics_enabled";
 
 inline QVariant GenericValue(const QString &key, bool *contains, const QVariant &set)
 {
@@ -61,14 +62,7 @@ void AppSetting::removeKey(const QString &key)
 
 void AppSetting::removeEncToken()
 {
-    removeKey(ParamEncryptedToken);
-}
-
-QString AppSetting::encryptedToken(bool *contains, const QVariant &set)
-{
-    QVariant retval;
-    retval = GenericValue(ParamEncryptedToken, contains, set);
-    return retval.toString();
+    removeKey(ParamOldEncryptedToken);
 }
 
 std::tuple<QString, QString> AppSetting::loginAndPass(bool *contains, const QVariant &login, const QVariant &pass)
@@ -104,8 +98,15 @@ int AppSetting::themeIndex(bool *contains, const QVariant &set)
 int AppSetting::networkTimeout(bool *contains, const QVariant &set)
 {
     QVariant retval;
-    // REMOVE OLD
+    // REMOVE OLD Params
     settings->remove("networkTimeout");
     retval = GenericValue(ParamNetworkTimeout, contains, set);
     return retval.toInt();
+}
+
+bool AppSetting::analyticsEnabled(bool *contains, const QVariant &set)
+{
+    QVariant retval;
+    retval = GenericValue(ParamAnalyticsEnabled, contains, set);
+    return retval.toBool();
 }

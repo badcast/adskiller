@@ -125,6 +125,18 @@ QString AdsKillerService::uuid() const
     return IDServiceAdsString;
 }
 
+QString AdsKillerService::getInternalData()
+{
+    QStringList data {"Device = " + mAdbDevice.devId, "Progress = " + QString::number(mProgress) + "%"};
+    if(processLogStatus)
+    {
+        auto *model = qobject_cast<QStringListModel *>(processLogStatus->model());
+        if(model)
+            data << "Log = " + model->stringList().join(';');
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 QString AdsKillerService::widgetIconName()
 {
     return "ads-killer";

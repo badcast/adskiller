@@ -15,6 +15,7 @@
 #include <QFontDatabase>
 #include <QStyle>
 #include <QGraphicsOpacityEffect>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QHash>
 #include <QHeaderView>
@@ -466,6 +467,26 @@ void MainWindow::setupAiPanel()
                 "</p>"
                 "</body></html>");
         }
+
+        QCheckBox *analyticsConsent = new QCheckBox(QString::fromUtf8("Отправлять аналитику"), ui->aiToolBoxPage2);
+        analyticsConsent->setObjectName("analyticsConsentCheckBox");
+        analyticsConsent->setToolTip(QString::fromUtf8("Разрешить передачу сведений об ОС и взаимодействии с окном вместе с запросом к ИИ"));
+        analyticsConsent->setChecked(AppSetting::analyticsEnabled());
+        analyticsConsent->setStyleSheet("QCheckBox { color: #CBD5E1; spacing: 8px; padding: 6px 8px; } QCheckBox::indicator { width: 16px; height: 16px; }");
+        if(auto *infoLayout = qobject_cast<QGridLayout *>(ui->aiToolBoxPage2->layout()))
+        {
+            infoLayout->addWidget(analyticsConsent, 1, 0);
+            infoLayout->setRowStretch(0, 1);
+        }
+        connect(
+            analyticsConsent,
+            &QCheckBox::toggled,
+            this,
+            [](bool enabled)
+            {
+                AppSetting::analyticsEnabled(nullptr, enabled);
+                AppSetting::save();
+            });
 
         // Setup Page 1: Chat interface
         ui->aiToolBoxPage1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

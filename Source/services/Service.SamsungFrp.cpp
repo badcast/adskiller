@@ -109,6 +109,11 @@ QString SamsungFrpService::uuid() const
     return IDServiceSamsungFrpString;
 }
 
+QString SamsungFrpService::getInternalData()
+{
+    return Service::getInternalData() + ":" + QStringList {"Device = " + mAdbDevice.devId}.join('\t');
+}
+
 PageIndex SamsungFrpService::targetPage()
 {
     return SamsungFrpPage;

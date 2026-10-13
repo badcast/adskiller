@@ -109,6 +109,11 @@ QString ImeiVerificationKzService::uuid() const
     return IDServiceImeiVerificationKzString;
 }
 
+QString ImeiVerificationKzService::getInternalData()
+{
+    return Service::getInternalData() + ":" + QStringList {"Device = " + mAdbDevice.devId}.join('\t');
+}
+
 PageIndex ImeiVerificationKzService::targetPage()
 {
     return ImeiVerificationKzPage;

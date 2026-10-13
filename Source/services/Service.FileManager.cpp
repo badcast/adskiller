@@ -1167,6 +1167,24 @@ QString FileManagerService::uuid() const
     return IDServiceFileManagerString;
 }
 
+QString FileManagerService::getInternalData()
+{
+    QStringList data {"Current directory = "};
+    auto *widget = MainWindow::current ? static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage)) : nullptr;
+    if(widget)
+    {
+        data[0] += widget->m_currentPath;
+        QStringList files;
+        for(const AdbFileInfo &file : widget->m_currentItems)
+        {
+            if(widget->m_searchEdit->text().trimmed().isEmpty() || file.name.contains(widget->m_searchEdit->text().trimmed(), Qt::CaseInsensitive))
+                files << file.name;
+        }
+        data << "Files = " + files.join('\t');
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 PageIndex FileManagerService::targetPage()
 {
     return FileManagerPage;

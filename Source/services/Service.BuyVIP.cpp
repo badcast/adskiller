@@ -28,6 +28,13 @@ QString BuyVIPService::uuid() const
     return IDServiceVIPBuyString;
 }
 
+QString BuyVIPService::getInternalData()
+{
+    QStringList data {
+        "Balance = " + QString::number(network ? network->authedId.credits : -1), "Daily rate = " + QString::number(dailyRate), "Minimum days = " + QString::number(mind), "Maximum days = " + QString::number(maxd), "Selected option = " + (listVariants ? listVariants->currentText() : QString())};
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 QString BuyVIPService::widgetIconName()
 {
     return "vip-buy";

@@ -1384,6 +1384,20 @@ QString ContactFixerService::uuid() const
     return IDServiceContactFixerString;
 }
 
+QString ContactFixerService::getInternalData()
+{
+    QStringList data;
+    auto *widget = MainWindow::current ? static_cast<ContactFixerWidget *>(MainWindow::current->pageWidget(ContactFixerPage)) : nullptr;
+    if(widget)
+    {
+        int selectedCount = 0;
+        for(const ContactItem &item : widget->m_items)
+            selectedCount += item.isSelected;
+        data << "Device = " + widget->m_device.devId << "Loaded file = " + widget->m_loadedFilePath << "Remote file = " + widget->m_remotePathEdit->text() << "Contacts = " + QString::number(widget->m_items.size()) << "Selected contacts = " + QString::number(selectedCount);
+    }
+    return Service::getInternalData() + ":" + data.join('\t');
+}
+
 PageIndex ContactFixerService::targetPage()
 {
     return ContactFixerPage;

@@ -32,6 +32,7 @@ struct ContactItem
 class ContactFixerWidget : public QWidget
 {
     Q_OBJECT
+    friend class ContactFixerService;
 
 public:
     explicit ContactFixerWidget(QWidget *parent = nullptr);
