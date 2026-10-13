@@ -99,9 +99,6 @@ jobs:
           windeployqt --release --no-translations --compiler-runtime --multimedia (Join-Path $deployDir 'adskiller.exe')
           windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'update.exe')
 
-          if (Test-Path (Join-Path $deployDir 'networkinformation')) {
-            Remove-Item (Join-Path $deployDir 'networkinformation') -Recurse -Force
-          }
 
           if (Get-Command gcc -ErrorAction SilentlyContinue) {
             $gccDir = Split-Path (Get-Command gcc).Source
