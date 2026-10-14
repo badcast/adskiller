@@ -9,6 +9,7 @@ constexpr auto ParamNetworkTimeout = "network_timeout";
 constexpr auto ParamLogin = "auth_login";
 constexpr auto ParamPassword = "auth_pass_enc";
 constexpr auto ParamAnalyticsEnabled = "analytics_enabled";
+constexpr auto ParamPixelBlastHighScore = "pixelblast_highscore";
 
 inline QVariant GenericValue(const QString &key, bool *contains, const QVariant &set)
 {
@@ -35,6 +36,11 @@ void AppSetting::save()
         settings->sync();
 }
 
+void AppSetting::sync()
+{
+    save();
+}
+
 void AppSetting::load()
 {
     if(settings != nullptr)
@@ -42,8 +48,38 @@ void AppSetting::load()
     settings = std::make_shared<QSettings>(QString("imister.kz-app.ads"), QString("AdsKiller"));
 }
 
+std::shared_ptr<QSettings> AppSetting::raw()
+{
+    if(!settings)
+        load();
+    return settings;
+}
+
+bool AppSetting::contains(const QString &key)
+{
+    if(!settings)
+        load();
+    return settings->contains(key);
+}
+
+QVariant AppSetting::value(const QString &key, const QVariant &defaultValue)
+{
+    if(!settings)
+        load();
+    return settings->value(key, defaultValue);
+}
+
+void AppSetting::setValue(const QString &key, const QVariant &value)
+{
+    if(!settings)
+        load();
+    settings->setValue(key, value);
+}
+
 bool AppSetting::readValue(const QString &key, QVariant *value)
 {
+    if(!settings)
+        load();
     bool retval = settings->contains(key);
     if(retval && value != nullptr)
         (*value) = settings->value(key);
@@ -52,11 +88,15 @@ bool AppSetting::readValue(const QString &key, QVariant *value)
 
 void AppSetting::writeValue(const QString &key, const QVariant &value)
 {
+    if(!settings)
+        load();
     settings->setValue(key, value);
 }
 
 void AppSetting::removeKey(const QString &key)
 {
+    if(!settings)
+        load();
     settings->remove(key);
 }
 
@@ -69,6 +109,8 @@ std::tuple<QString, QString> AppSetting::loginAndPass(bool *contains, const QVar
 {
     QString lg, ps;
     QVariant retval;
+    if(!settings)
+        load();
     retval = GenericValue(ParamLogin, contains, login);
     lg = retval.toString();
 
@@ -83,6 +125,8 @@ std::tuple<QString, QString> AppSetting::loginAndPass(bool *contains, const QVar
 
 bool AppSetting::autoLogin(bool *contains, const QVariant &set)
 {
+    if(!settings)
+        load();
     QVariant retval;
     retval = GenericValue(ParamAutoLogin, contains, set);
     return retval.toBool();
@@ -90,6 +134,8 @@ bool AppSetting::autoLogin(bool *contains, const QVariant &set)
 
 int AppSetting::themeIndex(bool *contains, const QVariant &set)
 {
+    if(!settings)
+        load();
     QVariant retval;
     retval = GenericValue(ParamThemeIndex, contains, set);
     return retval.toInt();
@@ -97,6 +143,8 @@ int AppSetting::themeIndex(bool *contains, const QVariant &set)
 
 int AppSetting::networkTimeout(bool *contains, const QVariant &set)
 {
+    if(!settings)
+        load();
     QVariant retval;
     // REMOVE OLD Params
     settings->remove("networkTimeout");
@@ -106,7 +154,18 @@ int AppSetting::networkTimeout(bool *contains, const QVariant &set)
 
 bool AppSetting::analyticsEnabled(bool *contains, const QVariant &set)
 {
+    if(!settings)
+        load();
     QVariant retval;
     retval = GenericValue(ParamAnalyticsEnabled, contains, set);
     return retval.toBool();
+}
+
+int AppSetting::pixelBlastHighScore(bool *contains, const QVariant &set)
+{
+    if(!settings)
+        load();
+    QVariant retval;
+    retval = GenericValue(ParamPixelBlastHighScore, contains, set);
+    return retval.toInt();
 }

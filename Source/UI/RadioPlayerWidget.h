@@ -12,7 +12,7 @@
 #include <QList>
 #include <QString>
 #include <QUrl>
-#include <QSettings>
+#include "Extension.h"
 
 struct RadioStation
 {

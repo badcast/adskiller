@@ -47,7 +47,14 @@ private:
 
 public:
     static void save();
+    static void sync();
     static void load();
+
+    static std::shared_ptr<QSettings> raw();
+
+    static bool contains(const QString &key);
+    static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
+    static void setValue(const QString &key, const QVariant &value);
 
     static bool readValue(const QString &key, QVariant *value);
     static void writeValue(const QString &key, const QVariant &value);
@@ -60,4 +67,5 @@ public:
     static int themeIndex(bool *contains = nullptr, const QVariant &set = {});
     static int networkTimeout(bool *contains = nullptr, const QVariant &set = {});
     static bool analyticsEnabled(bool *contains = nullptr, const QVariant &set = {});
+    static int pixelBlastHighScore(bool *contains = nullptr, const QVariant &set = {});
 };

@@ -63,7 +63,7 @@ DeviceConnectType Service::deviceConnectType() const
 bool Service::isOnlineService() const
 {
     const QString id = uuid();
-    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString || id == IDServiceAIAgentString || id == IDServiceAITranslaterString || id == IDServiceImeiVerificationKzString || id == IDServiceMiUnlockString || id == IDServiceSamsungFrpString;
+    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString || id == IDServiceAIAgentString || id == IDServiceAITranslaterString || id == IDServiceImeiVerificationKzString || id == IDServiceMiAccountString || id == IDServiceSamsungFrpString;
 }
 
 void Service::sendCheckPull() const

@@ -95,6 +95,17 @@ jobs:
           Copy-Item 'build/adskiller.exe' $deployDir -Force
           Copy-Item 'build/update.exe' $deployDir -Force
 
+          # Copy pixelblast DLL next to binary
+          if (Test-Path 'build/pixelblast.dll') {
+            Copy-Item 'build/pixelblast.dll' $deployDir -Force
+          } elseif (Test-Path 'build/Source/services/pixelblast/pixelblast.dll') {
+            Copy-Item 'build/Source/services/pixelblast/pixelblast.dll' $deployDir -Force
+          } else {
+            Get-ChildItem -Path 'build' -Filter 'pixelblast.dll' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 | ForEach-Object {
+              Copy-Item $_.FullName $deployDir -Force
+            }
+          }
+
           Get-Command windeployqt -ErrorAction Stop | Out-Null
           windeployqt --release --no-translations --compiler-runtime --multimedia (Join-Path $deployDir 'adskiller.exe')
           windeployqt --release --no-translations --compiler-runtime (Join-Path $deployDir 'update.exe')
@@ -129,6 +140,7 @@ jobs:
             build/adskiller
             build/update
             build/apple/
+            build/Source/services/pixelblast/libpixelblast.so
           if-no-files-found: warn
 
       - name: Upload Artifacts (Windows)

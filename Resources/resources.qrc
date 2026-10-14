@@ -29,6 +29,7 @@
         <file alias="apple">res/svg/services/apple.svg</file>
         <file alias="imei-verification-kz">res/svg/services/imei-verification-kz.svg</file>
         <file alias="samsung-frp">res/svg/services/samsung-frp.svg</file>
+        <file alias="pixelblast">res/svg/services/pixelblast.svg</file>
         <file alias="unavailable">res/svg/services/unavailable.svg</file>
     </qresource>
     <qresource prefix="/svg/services">
@@ -47,6 +48,7 @@
         <file alias="apple">res/svg/services/apple.svg</file>
         <file alias="imei-verification-kz">res/svg/services/imei-verification-kz.svg</file>
         <file alias="samsung-frp">res/svg/services/samsung-frp.svg</file>
+        <file alias="pixelblast">res/svg/services/pixelblast.svg</file>
         <file alias="unavailable">res/svg/services/unavailable.svg</file>
     </qresource>
     <qresource prefix="/svg">

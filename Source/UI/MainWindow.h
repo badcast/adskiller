@@ -16,7 +16,6 @@
 #include <QVariantAnimation>
 #include <QMouseEvent>
 #include <QKeyEvent>
-#include <QSettings>
 #include <QSpacerItem>
 #include <QTableView>
 #include <QVersionNumber>
@@ -77,6 +76,8 @@ class ImeiVerificationKzService;
 class MiAccountWidget;
 class SamsungFrpWidget;
 class SamsungFrpService;
+class PixelBlastSideButton;
+class PixelBlastGameService;
 class RadioPlayerWidget;
 class CyberReactorLoader;
 class QToolBar;
@@ -145,6 +146,8 @@ class MainWindow : public QMainWindow
     friend class MiDeviceUnlockService;
     friend class SamsungFrpWidget;
     friend class SamsungFrpService;
+    friend class PixelBlastGameService;
+    friend class PBGInternal;
     friend class ServiceTileButton;
     friend class ServiceInfoDialog;
     friend class Analytics;
@@ -230,6 +233,8 @@ private:
     QTimer *versionChecker;
     Snowflake *snows;
     bool deviceSelectSwitched;
+    PixelBlastSideButton *m_pixelBlastSideButton = nullptr;
+    std::shared_ptr<PixelBlastGameService> m_pixelBlastService;
 
     void showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> predFalseEnd, QString text = QString {});
 

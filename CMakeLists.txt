@@ -33,6 +33,8 @@ set(PROJECT_SOURCES
         Source/UI/CyberReactorLoader.cpp
         Source/UI/AboutDialog.h
         Source/UI/AboutDialog.cpp
+        Source/UI/PixelBlastSideButton.h
+        Source/UI/PixelBlastSideButton.cpp
         include/Begin.h
         include/Extension.h
         include/Network.h
@@ -55,10 +57,69 @@ set(UPDATE_SOURCES
         Source/UI/UpdateWindow.h
 )
 
+# Windows Resource metadata generation from VERSION
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
+
+set(RC_VER_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR})
+set(RC_VER_MINOR ${CMAKE_PROJECT_VERSION_MINOR})
+set(RC_VER_PATCH ${CMAKE_PROJECT_VERSION_PATCH})
+if(NOT DEFINED CMAKE_PROJECT_VERSION_TWEAK OR "${CMAKE_PROJECT_VERSION_TWEAK}" STREQUAL "")
+    set(RC_VER_TWEAK 0)
+else()
+    set(RC_VER_TWEAK ${CMAKE_PROJECT_VERSION_TWEAK})
+endif()
+
+set(RC_VERSION_COMMA "${RC_VER_MAJOR},${RC_VER_MINOR},${RC_VER_PATCH},${RC_VER_TWEAK}")
+set(RC_VERSION_STRING "${RC_VER_MAJOR}.${RC_VER_MINOR}.${RC_VER_PATCH}.${RC_VER_TWEAK}")
+string(TIMESTAMP CURRENT_YEAR "%Y")
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/adskiller.manifest.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/Resources/adskiller.manifest"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/update.manifest.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/Resources/update.manifest"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/adskiller.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/Resources/adskiller.rc"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/update.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/Resources/update.rc"
+    @ONLY
+)
+
+# Also keep the in-source files in Resources/ in sync for editor tooling
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/adskiller.manifest.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/adskiller.manifest"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/update.manifest.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/update.manifest"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/adskiller.rc.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/adskiller.rc"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/update.rc.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/update.rc"
+    @ONLY
+)
+
 if(WIN32)
     file(COPY "${CMAKE_SOURCE_DIR}/3rdParty/adb" DESTINATION "${CMAKE_BINARY_DIR}")
-    set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_SOURCE_DIR}/Resources/adskiller.rc")
-    set(UPDATE_SOURCES ${UPDATE_SOURCES} "${CMAKE_SOURCE_DIR}/Resources/update.rc")
+    set(PROJECT_SOURCES ${PROJECT_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/Resources/adskiller.rc")
+    set(UPDATE_SOURCES ${UPDATE_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/Resources/update.rc")
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/3rdParty/apple")
@@ -98,14 +159,15 @@ set(APP_COMPILE_DEFINITIONS
     ADS_VER_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
     ADS_VER_PATCH=${CMAKE_PROJECT_VERSION_PATCH}
 )
+
 add_library(adskiller_build_config INTERFACE)
 target_compile_definitions(adskiller_build_config INTERFACE ${APP_COMPILE_DEFINITIONS})
 
+target_link_libraries(widgets PRIVATE adskiller_build_config)
+target_link_libraries(adbfront PUBLIC adskiller_build_config)
 target_link_libraries(services PRIVATE adskiller_build_config adbfront applefront widgets)
 target_link_libraries(application PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Multimedia adbfront applefront services widgets)
 target_link_libraries(update PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
-
-target_link_libraries(adbfront PUBLIC adskiller_build_config)
 
 set(NREMOTEADDR_VALUE "")
 if(DEFINED ENV{NREMOTEADDR} AND NOT "$ENV{NREMOTEADDR}" STREQUAL "")
@@ -152,13 +214,31 @@ if(NOT NREMOTEADDR_VALUE STREQUAL "")
     target_compile_definitions(update PRIVATE "NREMOTEADDR=\"${NREMOTEADDR_VALUE}\"")
 endif()
 
-if(WIN32)
+if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set_property(TARGET application PROPERTY WIN32_EXECUTABLE true)
   set_property(TARGET update PROPERTY WIN32_EXECUTABLE true)
+
+  # Ensure pixelblast runtime library (DLL) is placed next to adskiller.exe for Windows builds
+  if(TARGET pixelblast)
+    set_target_properties(pixelblast PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+      RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}"
+      RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}"
+      RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}"
+      RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}"
+    )
+
+    add_custom_command(TARGET application POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:pixelblast>
+        $<TARGET_FILE_DIR:application>
+      COMMENT "Copying pixelblast DLL next to adskiller binary"
+    )
+  endif()
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS application update
+install(TARGETS application update pixelblast
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

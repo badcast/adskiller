@@ -45,15 +45,15 @@ constexpr auto IDServiceStorageCleanString = "2ab13aa9-5051-4167-a024-3fbdcde117
 constexpr auto IDServiceBoostRamString = "be1f68f6-0f91-4472-947a-07dbe313ab73";
 constexpr auto IDServiceWhatsAppMoveString = "95bdb8a2-06f9-4d00-9625-a2da334001e6";
 constexpr auto IDServiceContactFixerString = "578f74ec-2453-4b6c-8db4-cbb92175d437";
-constexpr auto IDServiceMiUnlockString = "b05da077-dd39-4b70-980b-1b25379ec04a";
 constexpr auto IDServiceVIPBuyString = "3a8b33fa-f2b0-4c09-87fe-84c828565731";
 constexpr auto IDServiceAIAgentString = "039bc49d-6bdc-482b-a55e-1b6e8f73ea64";
 constexpr auto IDServiceFileManagerString = "44b598b1-a969-42fa-8192-d59e2522542b";
 constexpr auto IDServiceAITranslaterString = "92bcdf30-c410-4a0b-88f9-516c29f7ee8a";
 constexpr auto IDServiceAppleIpswString = "a9f1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c";
 constexpr auto IDServiceImeiVerificationKzString = "ef469f7e-6aa3-4f3e-8851-9ae03e418237";
-constexpr auto IDServiceMiAccountString = IDServiceMiUnlockString;
+constexpr auto IDServiceMiAccountString = "b05da077-dd39-4b70-980b-1b25379ec04a";
 constexpr auto IDServiceSamsungFrpString = "88117553-ba0c-45bd-b80c-155e42a7fe7e";
+constexpr auto IDServicePixelBlastString = "f829cd59-6af2-48af-a69b-5b7234dcdff5";
 
 enum PageIndex
 {
@@ -73,7 +73,6 @@ enum PageIndex
     ImeiVerificationKzPage,
     MiAccountPage,
     SamsungFrpPage,
-
     LengthPages
 };
 
@@ -471,8 +470,6 @@ private:
     bool m_finished = false;
 };
 
-using MiAccountService = MiDeviceUnlockService;
-
 class AIAgentService : public Service
 {
     Q_OBJECT
@@ -683,4 +680,26 @@ public:
 private:
     bool m_started = false;
     bool m_finished = false;
+};
+
+class PixelBlastGameService : public Service
+{
+    Q_OBJECT
+
+private:
+    class PBGInternal *mInternal;
+
+public:
+    PixelBlastGameService(QObject *parent = nullptr);
+    ~PixelBlastGameService() override;
+
+    QString uuid() const override;
+    QString getInternalData() override;
+    PageIndex targetPage() override;
+    bool canStart() override;
+    bool isStarted() override;
+    bool isFinish() override;
+    bool start() override;
+    void stop() override;
+    QString widgetIconName() override;
 };

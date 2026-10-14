@@ -58,21 +58,29 @@ void RadioPlayerWidget::populateDefaultStations()
     m_stations.append({QString::fromUtf8("Rock FM"), QStringLiteral("https://nashe1.hostingradio.ru/rock-128.mp3"), QString::fromUtf8("Classic Rock")});
     m_stations.append({QString::fromUtf8("NRJ Energy"), QStringLiteral("https://gpm.hostingradio.ru/gpm-energyfm495.aacp"), QString::fromUtf8("Modern Hits")});
 
-    // Load custom user stations from QSettings
-    QSettings settings("AdsKiller", "RadioStations");
-    int customCount = settings.beginReadArray("CustomStations");
-    for(int i = 0; i < customCount; ++i)
+    // Load custom user stations via unified AppSetting
+    auto settings = AppSetting::raw();
+    if(settings)
     {
-        settings.setArrayIndex(i);
-        QString name = settings.value("name").toString();
-        QString url = settings.value("url").toString();
-        QString genre = settings.value("genre", QString::fromUtf8("Пользовательская")).toString();
-        if(!name.isEmpty() && !url.isEmpty())
+        int customCount = settings->beginReadArray("RadioStations/CustomStations");
+        if(customCount == 0)
         {
-            m_stations.append({name, url, genre});
+            settings->endArray();
+            customCount = settings->beginReadArray("CustomStations");
         }
+        for(int i = 0; i < customCount; ++i)
+        {
+            settings->setArrayIndex(i);
+            QString name = settings->value("name").toString();
+            QString url = settings->value("url").toString();
+            QString genre = settings->value("genre", QString::fromUtf8("Пользовательская")).toString();
+            if(!name.isEmpty() && !url.isEmpty())
+            {
+                m_stations.append({name, url, genre});
+            }
+        }
+        settings->endArray();
     }
-    settings.endArray();
 }
 
 void RadioPlayerWidget::initUi()
@@ -399,10 +407,9 @@ void RadioPlayerWidget::initUi()
 
 void RadioPlayerWidget::loadSettings()
 {
-    QSettings settings("AdsKiller", "RadioPlayer");
-    int vol = settings.value("Volume", 70).toInt();
-    bool muted = settings.value("Muted", false).toBool();
-    int stationIdx = settings.value("LastStationIndex", 0).toInt();
+    int vol = AppSetting::value("RadioPlayer/Volume", 70).toInt();
+    bool muted = AppSetting::value("RadioPlayer/Muted", false).toBool();
+    int stationIdx = AppSetting::value("RadioPlayer/LastStationIndex", 0).toInt();
 
     m_sliderVolume->setValue(vol);
     m_audioOutput->setVolume(static_cast<float>(vol) / 100.0f);
@@ -424,10 +431,10 @@ void RadioPlayerWidget::loadSettings()
 
 void RadioPlayerWidget::saveSettings()
 {
-    QSettings settings("AdsKiller", "RadioPlayer");
-    settings.setValue("Volume", m_sliderVolume->value());
-    settings.setValue("Muted", m_audioOutput->isMuted());
-    settings.setValue("LastStationIndex", m_comboStations->currentIndex());
+    AppSetting::setValue("RadioPlayer/Volume", m_sliderVolume->value());
+    AppSetting::setValue("RadioPlayer/Muted", m_audioOutput->isMuted());
+    AppSetting::setValue("RadioPlayer/LastStationIndex", m_comboStations->currentIndex());
+    AppSetting::save();
 }
 
 bool RadioPlayerWidget::isPlaying() const
@@ -835,17 +842,21 @@ void RadioPlayerWidget::showAddStationDialog()
     m_stations.append(customStation);
     m_comboStations->addItem(QStringLiteral("%1 (%2)").arg(customStation.name, customStation.genre));
 
-    // Persist custom stations to QSettings
-    QSettings settings("AdsKiller", "RadioStations");
-    int customCount = settings.beginReadArray("CustomStations");
-    settings.endArray();
+    // Persist custom stations via unified AppSetting
+    auto settings = AppSetting::raw();
+    if(settings)
+    {
+        int customCount = settings->beginReadArray("RadioStations/CustomStations");
+        settings->endArray();
 
-    settings.beginWriteArray("CustomStations");
-    settings.setArrayIndex(customCount);
-    settings.setValue("name", name);
-    settings.setValue("url", url);
-    settings.setValue("genre", customStation.genre);
-    settings.endArray();
+        settings->beginWriteArray("RadioStations/CustomStations");
+        settings->setArrayIndex(customCount);
+        settings->setValue("name", name);
+        settings->setValue("url", url);
+        settings->setValue("genre", customStation.genre);
+        settings->endArray();
+        AppSetting::save();
+    }
 
     // Select the newly added station
     m_comboStations->setCurrentIndex(m_stations.size() - 1);

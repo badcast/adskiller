@@ -3,6 +3,8 @@
 #include <QPushButton>
 #include <QMessageBox>
 
+#include "Extension.h"
+
 #include "PurchaseConfirmDialog.h"
 
 PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data) : QDialog(parent)
@@ -116,7 +118,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     lblBalanceTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblBalanceTitle, 4, 0);
 
-    QLabel *lblBalanceVal = new QLabel(QString("%1 %2").arg(data.credits).arg(data.currencyType), cardFrame);
+    QLabel *lblBalanceVal = new QLabel(QString("%1 %2").arg(Generic::beautifyNumber(data.credits)).arg(data.currencyType), cardFrame);
     lblBalanceVal->setStyleSheet("color: #FBBF24; font-size: 13px; font-weight: bold;");
     lblBalanceVal->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     cardGrid->addWidget(lblBalanceVal, 4, 1);
@@ -132,7 +134,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     QLabel *lblAfterVal = new QLabel(cardFrame);
     if(hasEnough)
     {
-        lblAfterVal->setText(QString("%1 %2").arg(remainingCredits).arg(data.currencyType));
+        lblAfterVal->setText(QString("%1 %2").arg(Generic::beautifyNumber(remainingCredits)).arg(data.currencyType));
         lblAfterVal->setStyleSheet("color: #34D399; font-size: 13px; font-weight: bold;");
     }
     else

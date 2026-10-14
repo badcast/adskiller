@@ -106,7 +106,7 @@ MiDeviceUnlockService::~MiDeviceUnlockService()
 
 QString MiDeviceUnlockService::uuid() const
 {
-    return IDServiceMiUnlockString;
+    return IDServiceMiAccountString;
 }
 
 QString MiDeviceUnlockService::getInternalData()

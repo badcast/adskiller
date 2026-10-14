@@ -66,6 +66,7 @@
 #include "DeviceVisualizer.h"
 #include "CyberReactorLoader.h"
 #include "PurchaseConfirmDialog.h"
+#include "PixelBlastSideButton.h"
 
 MainWindow *MainWindow::current;
 
@@ -125,6 +126,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // Setup window layout, animated containers, and progress circles
     setupWindowLayoutAndAnim();
+
+    m_pixelBlastService = std::make_shared<PixelBlastGameService>(this);
+    m_pixelBlastSideButton = new PixelBlastSideButton(PixelBlastSideButton::Left, this);
+    m_pixelBlastSideButton->setVisible(false);
+    m_pixelBlastSideButton->updatePosition();
+    connect(
+        m_pixelBlastSideButton,
+        &PixelBlastSideButton::clicked,
+        this,
+        [this]()
+        {
+            if(m_pixelBlastService)
+                m_pixelBlastService->start();
+        });
 
     m_shockwaveOverlay = new ServiceShockwaveOverlay(this);
     m_shockwaveOverlay->setGeometry(this->rect());
@@ -1166,7 +1181,7 @@ void MainWindow::initServiceModules()
                 svcName = QString::fromUtf8("IMEI Verification KZ");
                 svcDesc = QString::fromUtf8("Верификация и регистрация IMEI устройств в Республике Казахстан с подачей ЭЦП");
             }
-            else if(remaining->uuid() == IDServiceMiUnlockString)
+            else if(remaining->uuid() == IDServiceMiAccountString)
             {
                 svcName = QString::fromUtf8("MI Account");
                 svcDesc = QString::fromUtf8("Удаление, сброс и проверка привязки аккаунта Xiaomi (Mi Account)");
@@ -1175,6 +1190,11 @@ void MainWindow::initServiceModules()
             {
                 svcName = QString::fromUtf8("Samsung FRP");
                 svcDesc = QString::fromUtf8("Сброс блокировки Google FRP (Factory Reset Protection) на устройствах Samsung");
+            }
+            else if(remaining->uuid() == IDServicePixelBlastString)
+            {
+                svcName = QString::fromUtf8("Pixel Blast");
+                svcDesc = QString::fromUtf8("Аркадная мини-игра: расставляйте фигуры из цветных блоков и очищайте поле");
             }
             else if(!remaining->title.isEmpty())
             {
@@ -1892,6 +1912,16 @@ void MainWindow::showPage(PageIndex pageNum)
 
     vPageSpacerAnimator->start();
     contentOpacityAnimator->start();
+
+    if(m_pixelBlastSideButton)
+    {
+        m_pixelBlastSideButton->setVisible(pageNum == CabinetPage);
+        if(pageNum == CabinetPage)
+        {
+            m_pixelBlastSideButton->updatePosition();
+            m_pixelBlastSideButton->raise();
+        }
+    }
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
     if(ui->toplevel_backpage->isVisible())
@@ -3132,6 +3162,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     // Recompute service tile column count when window is resized
     if(ui && ui->serviceContents && !services.isEmpty())
         applyServiceFilters();
+    if(m_pixelBlastSideButton)
+        m_pixelBlastSideButton->updatePosition();
 }
 
 void MainWindow::setTheme(ThemeScheme theme)
@@ -3339,6 +3371,8 @@ void MainWindow::updateCabinet()
 
 void MainWindow::logoutSystem()
 {
+    if(m_pixelBlastSideButton)
+        m_pixelBlastSideButton->setVisible(false);
     network.forclyExit = true;
     if(network.isAuthed())
     {

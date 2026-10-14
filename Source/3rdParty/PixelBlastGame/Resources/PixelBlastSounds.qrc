@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/pixelblastgame">
+        <file alias="block-hits">resourcepacks/sounds/block-hits.wav</file>
+        <file alias="block-click0">resourcepacks/sounds/block-click0.wav</file>
+        <file alias="block-click1">resourcepacks/sounds/block-click1.wav</file>
+        <file alias="block-click2">resourcepacks/sounds/block-click2.wav</file>
+        <file alias="block-place0">resourcepacks/sounds/block-place0.wav</file>
+        <file alias="block-place1">resourcepacks/sounds/block-place1.wav</file>
+        <file alias="block-place2">resourcepacks/sounds/block-place2.wav</file>
+        <file alias="voice0">resourcepacks/sounds/voice0.wav</file>
+        <file alias="voice1">resourcepacks/sounds/voice1.wav</file>
+        <file alias="voice2">resourcepacks/sounds/voice2.wav</file>
+        <file alias="voice3">resourcepacks/sounds/voice3.wav</file>
+        <file alias="block-destroy">resourcepacks/sounds/block-destroy.wav</file>
+        <file alias="voice-gameover">resourcepacks/sounds/voice-gameover.wav</file>
+    </qresource>
+</RCC>
