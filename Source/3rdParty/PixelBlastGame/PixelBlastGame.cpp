@@ -26,18 +26,7 @@ struct BlockResource
     QList<QPixmap> resources;
 };
 
-static const char *const comboTexts[] = {
-    "Молодец",
-    "Хорошо",
-    "Отлично",
-    "Великолепно",
-    "Фантастика",
-    "Невероятно",
-    "Потрясающе",
-    "Выдающе",
-    "Идеально",
-    "Легендарно"
-};
+static const char *const comboTexts[] = {"Молодец", "Хорошо", "Отлично", "Великолепно", "Фантастика", "Невероятно", "Потрясающе", "Выдающе", "Идеально", "Легендарно"};
 
 std::shared_ptr<QPixmap> gameLogo {};
 std::shared_ptr<QPixmap> gridCell {};
@@ -380,7 +369,7 @@ void PixelBlast::generateCandidates(bool randomOnly)
     {
         switch(w)
         {
-          // SELECTIVE
+                // SELECTIVE
             case 0:
             {
                 std::shuffle(std::begin(_shapes), std::end(_shapes), *QRandomGenerator::global());
@@ -394,7 +383,7 @@ void PixelBlast::generateCandidates(bool randomOnly)
                 }
                 break;
             }
-              // RANDOM
+                // RANDOM
             case 1:
             {
                 do
@@ -612,9 +601,9 @@ void PixelBlast::paintEvent(QPaintEvent *event)
 
     // Draw game logo
     dest.setSize(gameLogo->size().toSizeF());
-    dest.setHeight(boardRegion.width()*1.4F / (dest.width() / dest.height()));
-    dest.setWidth(boardRegion.width()*1.4F);
-    dest.moveTopLeft(boardRegion.topLeft() + QPointF((boardRegion.width() - dest.width()) / 2, -dest.height()/1.2F));
+    dest.setHeight(boardRegion.width() * 1.4F / (dest.width() / dest.height()));
+    dest.setWidth(boardRegion.width() * 1.4F);
+    dest.moveTopLeft(boardRegion.topLeft() + QPointF((boardRegion.width() - dest.width()) / 2, -dest.height() / 1.2F));
     p.drawPixmap(dest, *gameLogo, {});
 
     // Draw grid & cells (central)

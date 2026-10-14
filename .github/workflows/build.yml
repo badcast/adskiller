@@ -95,15 +95,14 @@ jobs:
           Copy-Item 'build/adskiller.exe' $deployDir -Force
           Copy-Item 'build/update.exe' $deployDir -Force
 
-          # Copy pixelblast DLL next to binary
-          if (Test-Path 'build/pixelblast.dll') {
-            Copy-Item 'build/pixelblast.dll' $deployDir -Force
-          } elseif (Test-Path 'build/Source/services/pixelblast/pixelblast.dll') {
-            Copy-Item 'build/Source/services/pixelblast/pixelblast.dll' $deployDir -Force
-          } else {
-            Get-ChildItem -Path 'build' -Filter 'pixelblast.dll' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 | ForEach-Object {
-              Copy-Item $_.FullName $deployDir -Force
-            }
+          # Copy pixelblast DLL next to binary (handles both pixelblast.dll and libpixelblast.dll)
+          Get-ChildItem -Path 'build' -Filter '*pixelblast*.dll' -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.DirectoryName -ne $deployDir } | ForEach-Object {
+            Copy-Item $_.FullName $deployDir -Force
+          }
+          if (Test-Path (Join-Path $deployDir 'pixelblast.dll')) {
+            Copy-Item (Join-Path $deployDir 'pixelblast.dll') (Join-Path $deployDir 'libpixelblast.dll') -Force
+          } elseif (Test-Path (Join-Path $deployDir 'libpixelblast.dll')) {
+            Copy-Item (Join-Path $deployDir 'libpixelblast.dll') (Join-Path $deployDir 'pixelblast.dll') -Force
           }
 
           Get-Command windeployqt -ErrorAction Stop | Out-Null

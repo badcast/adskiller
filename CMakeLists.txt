@@ -218,9 +218,15 @@ if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set_property(TARGET application PROPERTY WIN32_EXECUTABLE true)
   set_property(TARGET update PROPERTY WIN32_EXECUTABLE true)
 
+  if(MSVC)
+    target_link_options(application PRIVATE "/MANIFEST:NO")
+    target_link_options(update PRIVATE "/MANIFEST:NO")
+  endif()
+
   # Ensure pixelblast runtime library (DLL) is placed next to adskiller.exe for Windows builds
   if(TARGET pixelblast)
     set_target_properties(pixelblast PROPERTIES
+      PREFIX ""
       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
       RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}"
       RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}"
@@ -232,6 +238,12 @@ if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Windows")
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:pixelblast>
         $<TARGET_FILE_DIR:application>
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:pixelblast>
+        $<TARGET_FILE_DIR:application>/libpixelblast.dll
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:pixelblast>
+        $<TARGET_FILE_DIR:application>/pixelblast.dll
       COMMENT "Copying pixelblast DLL next to adskiller binary"
     )
   endif()
