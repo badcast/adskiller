@@ -84,7 +84,7 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
     }
 }
 
-UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent)
+UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent), m_drag(false)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -105,6 +105,7 @@ UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent)
     label = new QLabel(this);
     label->setObjectName("infoLabel");
     label->setAlignment(Qt::AlignHCenter);
+    label->setTextFormat(Qt::PlainText);
 
     jokeLabel = new QLabel(this);
     jokeLabel->setObjectName("jokeLabel");

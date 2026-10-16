@@ -22,11 +22,14 @@
 #include <QTimer>
 #include <QUrl>
 
+#include <atomic>
+
 struct FetchResult
 {
     QString remoteLink;
     QString md5hash;
-    quint64 bytes;
+    quint64 bytes = 0;
+    QCryptographicHash::Algorithm hashAlgo = QCryptographicHash::Md5;
 };
 
 struct DownloadStatus
@@ -72,11 +75,16 @@ public:
         m_simulate = simulate;
     }
 
-    int finishSuccess;
+    std::atomic<int> finishSuccess {0};
+
+    static bool isSafeRelativePath(const QString &baseDir, const QString &relativePath, QString *resolvedPath = nullptr);
 
 private:
+    void setError(const QString &error, int status = -1);
     QStringList getFilesEx(const QString &path, int flags = GetFiles, QString _special = QString(""));
     QString getFileMD5Hash(const QString &filePath);
+    QString getFileHash(const QString &filePath, QCryptographicHash::Algorithm algo);
+    static QCryptographicHash::Algorithm parseHashAlgorithm(const QString &hashType, const QString &hashHex);
     bool moveFilesTo(const QString &sourcePath, const QString &destinationPath);
 
 private:
@@ -84,7 +92,7 @@ private:
     QString m_rootUrl;
     QString m_version;
     quint64 m_totalBytes;
-    int m_forclyExit;
+    std::atomic<int> m_forclyExit {0};
     QMutex mutex;
     DownloadStatus m_statusDownload;
     int m_lastStatus;

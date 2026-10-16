@@ -47,37 +47,50 @@ int main(int argc, char **argv)
 
     parser.process(a);
 
-    QDir m;
     QString workDir = QApplication::applicationDirPath();
-
-    if(!parser.isSet(dirOption))
-    {
-        if(!QFile::exists(workDir + QDir::separator() + "adskiller.exe") && !QFile::exists(workDir + QDir::separator() + "adskiller.exe.old") && !QFile::exists(workDir + QDir::separator() + "adskiller"))
-        {
-            qDebug() << "Update manager require adskiller.exe";
-            sharedMemory.detach();
-            return 1;
-        }
-    }
-    else
+    if(parser.isSet(dirOption))
     {
         QDir dir(parser.value(dirOption));
-        workDir = dir.absolutePath();
+        workDir = QDir::cleanPath(dir.absolutePath());
     }
 
+    const bool simulate = parser.isSet(simulateOption);
+    const auto hasMainBinary = [](const QString &dirPath) -> bool
+    {
+        const QDir d(dirPath);
+        return d.exists("adskiller.exe") || d.exists("adskiller.exe.old") || d.exists("adskiller");
+    };
+
+    if(!simulate && !hasMainBinary(workDir))
+    {
+        qDebug() << "Update manager require adskiller.exe in target directory";
+        sharedMemory.detach();
+        return 1;
+    }
+
+    QString validatedExecPath;
     if(parser.isSet(execOption))
     {
-        if(!QFile::exists(parser.value(execOption)))
+        const QFileInfo execInfo(parser.value(execOption));
+        const QString execDir = QDir::cleanPath(execInfo.absolutePath());
+        const QString targetDir = QDir::cleanPath(QDir(workDir).absolutePath());
+        const QString exeName = execInfo.fileName();
+        const bool allowedName = (exeName.compare(QLatin1String("adskiller.exe"), Qt::CaseInsensitive) == 0) ||
+                                 (exeName == QLatin1String("adskiller"));
+
+        if(!execInfo.exists() || !execInfo.isFile() || execDir != targetDir || !allowedName)
         {
-            qDebug() << "Program file is not exists";
+            qDebug() << "Program file is not exists or not permitted";
             sharedMemory.detach();
             return 1;
         }
+        validatedExecPath = execInfo.absoluteFilePath();
     }
-    int exitCode = startProcessDownload(a, workDir, parser.isSet(simulateOption));
+
+    int exitCode = startProcessDownload(a, workDir, simulate);
     sharedMemory.detach();
-    if(exitCode == 0 && parser.isSet(execOption))
-        QProcess::startDetached(parser.value(execOption));
+    if(exitCode == 0 && !simulate && !validatedExecPath.isEmpty())
+        QProcess::startDetached(validatedExecPath, QStringList(), workDir);
     return exitCode;
 }
 
@@ -93,6 +106,7 @@ int startProcessDownload(QApplication &app, QString &workDir, bool simulate)
     QObject::connect(
         &downloadThread,
         &QThread::started,
+        &manager,
         [&]()
         {
             QDir existDir(workDir);
@@ -155,7 +169,7 @@ int startProcessDownload(QApplication &app, QString &workDir, bool simulate)
 
             v1 = downloads.currentDownloadBytes;
             v1 /= std::max<quint64>(downloads.currentMaxDownloadBytes, 1u);
-            if(manager.finishSuccess)
+            if(manager.finishSuccess.load())
             {
                 progressUpdateTimer->stop();
                 if(downloads.maxDownloads == 0)
