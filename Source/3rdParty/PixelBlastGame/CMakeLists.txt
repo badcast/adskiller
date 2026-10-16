@@ -23,9 +23,6 @@ qt_add_resources(APP_RESOURCES
 )
 
 add_library(pixelblast SHARED ${SOURCE_FILES} ${APP_RESOURCES})
-if(WIN32)
-    set_target_properties(pixelblast PROPERTIES PREFIX "")
-endif()
 if(CALLBACK_URL)
     target_compile_definitions(pixelblast PRIVATE CALLBACK_URL="${CALLBACK_URL}")
 endif()

@@ -9,3 +9,7 @@ MIGRATE.md
 INFO.md 
 INFO_SHORT.md
 Migrate_WEBVIEW.md
+Resources/*.rc
+Resources/*.manifest
+!Resources/*.rc.in
+!Resources/*.manifest.in

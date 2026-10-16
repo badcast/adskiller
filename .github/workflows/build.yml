@@ -95,14 +95,16 @@ jobs:
           Copy-Item 'build/adskiller.exe' $deployDir -Force
           Copy-Item 'build/update.exe' $deployDir -Force
 
-          # Copy pixelblast DLL next to binary (handles both pixelblast.dll and libpixelblast.dll)
-          Get-ChildItem -Path 'build' -Filter '*pixelblast*.dll' -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.DirectoryName -ne $deployDir } | ForEach-Object {
-            Copy-Item $_.FullName $deployDir -Force
-          }
-          if (Test-Path (Join-Path $deployDir 'pixelblast.dll')) {
-            Copy-Item (Join-Path $deployDir 'pixelblast.dll') (Join-Path $deployDir 'libpixelblast.dll') -Force
-          } elseif (Test-Path (Join-Path $deployDir 'libpixelblast.dll')) {
-            Copy-Item (Join-Path $deployDir 'libpixelblast.dll') (Join-Path $deployDir 'pixelblast.dll') -Force
+          # Copy pixelblast DLL next to binary (libpixelblast.dll for MinGW, pixelblast.dll for MSVC)
+          $dllName = if (Get-Command gcc -ErrorAction SilentlyContinue) { 'libpixelblast.dll' } else { 'pixelblast.dll' }
+          if (Test-Path "build/$dllName") {
+            Copy-Item "build/$dllName" $deployDir -Force
+          } elseif (Test-Path "build/Source/services/pixelblast/$dllName") {
+            Copy-Item "build/Source/services/pixelblast/$dllName" $deployDir -Force
+          } else {
+            Get-ChildItem -Path 'build' -Filter $dllName -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.DirectoryName -ne $deployDir } | Select-Object -First 1 | ForEach-Object {
+              Copy-Item $_.FullName $deployDir -Force
+            }
           }
 
           Get-Command windeployqt -ErrorAction Stop | Out-Null
@@ -118,10 +120,15 @@ jobs:
             }
             strip (Join-Path $deployDir 'adskiller.exe')
             strip (Join-Path $deployDir 'update.exe')
+            if (Test-Path (Join-Path $deployDir 'libpixelblast.dll')) {
+              strip (Join-Path $deployDir 'libpixelblast.dll')
+            }
           }
 
           if (Test-Path 'build/adb') {
             Copy-Item 'build/adb' (Join-Path $deployDir 'adb') -Recurse -Force
+          } elseif (Test-Path '3rdParty/adb') {
+            Copy-Item '3rdParty/adb' (Join-Path $deployDir 'adb') -Recurse -Force
           }
 
           if (Test-Path 'build/apple') {
