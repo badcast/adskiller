@@ -36,15 +36,7 @@ RadioPlayerWidget::~RadioPlayerWidget()
 void RadioPlayerWidget::populateDefaultStations()
 {
     m_stations.clear();
-    // Казахстан
-    m_stations.append({QString::fromUtf8("Казахское Радио Туркестан 101.0 FM"), QStringLiteral("https://radio-streams.kaztrk.kz/qazradio/qazradio/icecast.audio"), QString::fromUtf8("Kazakh Pop / Folk")});
-    m_stations.append({QString::fromUtf8("Tengri FM"), QStringLiteral("http://91.201.214.229:8000/tengrifm"), QString::fromUtf8("Rock / Modern Pop")});
-    m_stations.append({QString::fromUtf8("Жұлдыз FM"), QStringLiteral("http://91.201.214.229:8000/zhulduz"), QString::fromUtf8("Kazakh Pop / Folk")});
-    m_stations.append({QString::fromUtf8("Radio NS"), QStringLiteral("https://icecast.ns.kz/radions"), QString::fromUtf8("Pop / Hits")});
-    m_stations.append({QString::fromUtf8("Авторадио Казахстан"), QStringLiteral("http://178.88.167.62:8080/AVTORADIO_192"), QString::fromUtf8("Auto Radio / Hits")});
-    m_stations.append({QString::fromUtf8("Dala FM (Халық радиосы)"), QStringLiteral("http://178.88.167.62:8080/DALA_192"), QString::fromUtf8("Kazakh Folk / Hits")});
-    m_stations.append({QString::fromUtf8("Шалқар Радиосы"), QStringLiteral("https://radio-streams.kaztrk.kz/shalqar/shalqar/icecast.audio"), QString::fromUtf8("Kazakh Culture / Pop")});
-
+    
     // Россия и мир
     m_stations.append({QString::fromUtf8("Русское Радио"), QStringLiteral("https://rusradio.hostingradio.ru/rusradio128.mp3"), QString::fromUtf8("Pop Hits")});
     m_stations.append({QString::fromUtf8("Монте-Карло"), QStringLiteral("https://montecarlo.hostingradio.ru/montecarlo128.mp3"), QString::fromUtf8("Lounge Pop")});
@@ -57,6 +49,14 @@ void RadioPlayerWidget::populateDefaultStations()
     m_stations.append({QString::fromUtf8("Радио Jazz"), QStringLiteral("https://nashe1.hostingradio.ru/jazz-128.mp3"), QString::fromUtf8("Jazz & Blues")});
     m_stations.append({QString::fromUtf8("Rock FM"), QStringLiteral("https://nashe1.hostingradio.ru/rock-128.mp3"), QString::fromUtf8("Classic Rock")});
     m_stations.append({QString::fromUtf8("NRJ Energy"), QStringLiteral("https://gpm.hostingradio.ru/gpm-energyfm495.aacp"), QString::fromUtf8("Modern Hits")});
+    // Казахстан
+    m_stations.append({QString::fromUtf8("Казахское Радио 101.0 FM"), QStringLiteral("https://radio-streams.kaztrk.kz/qazradio/qazradio/icecast.audio"), QString::fromUtf8("Kazakh Pop / Folk")});
+    m_stations.append({QString::fromUtf8("Tengri FM"), QStringLiteral("http://91.201.214.229:8000/tengrifm"), QString::fromUtf8("Rock / Modern Pop")});
+    m_stations.append({QString::fromUtf8("Жұлдыз FM"), QStringLiteral("http://91.201.214.229:8000/zhulduz"), QString::fromUtf8("Kazakh Pop / Folk")});
+    m_stations.append({QString::fromUtf8("Radio NS"), QStringLiteral("https://icecast.ns.kz/radions"), QString::fromUtf8("Pop / Hits")});
+    m_stations.append({QString::fromUtf8("Авторадио Казахстан"), QStringLiteral("http://178.88.167.62:8080/AVTORADIO_192"), QString::fromUtf8("Auto Radio / Hits")});
+    m_stations.append({QString::fromUtf8("Dala FM (Халық радиосы)"), QStringLiteral("http://178.88.167.62:8080/DALA_192"), QString::fromUtf8("Kazakh Folk / Hits")});
+    m_stations.append({QString::fromUtf8("Шалқар Радиосы"), QStringLiteral("https://radio-streams.kaztrk.kz/shalqar/shalqar/icecast.audio"), QString::fromUtf8("Kazakh Culture / Pop")});
 
     // Load custom user stations via unified AppSetting
     auto settings = AppSetting::raw();
