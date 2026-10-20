@@ -13,3 +13,4 @@ Resources/*.rc
 Resources/*.manifest
 !Resources/*.rc.in
 !Resources/*.manifest.in
+IMPORT

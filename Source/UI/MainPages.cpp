@@ -796,7 +796,7 @@ void MainWindow::setupPagesDesign()
     if(ui->frame_4)
     {
         ui->frame_4->setAttribute(Qt::WA_StyledBackground, true);
-        ui->frame_4->setFixedSize(440, 610);
+        ui->frame_4->setFixedSize(400, 520);
     }
 
     if(ui->mainapplogo)
@@ -884,38 +884,38 @@ void MainWindow::setupPagesDesign()
     if(ui->frame_4 && !ui->frame_4->layout())
     {
         QVBoxLayout *cardLayout = new QVBoxLayout(ui->frame_4);
-        cardLayout->setContentsMargins(36, 32, 36, 26);
+        cardLayout->setContentsMargins(22, 18, 22, 14);
         cardLayout->setSpacing(0);
 
         // 1. App logo badge
         if(ui->mainapplogo)
             cardLayout->addWidget(ui->mainapplogo, 0, Qt::AlignHCenter);
 
-        cardLayout->addSpacing(14);
+        cardLayout->addSpacing(8);
 
         // 2. Title and Subtitle
         if(ui->label_4)
             cardLayout->addWidget(ui->label_4);
 
-        cardLayout->addSpacing(22);
+        cardLayout->addSpacing(8);
 
         // 3. Login label
         if(ui->label_12)
             cardLayout->addWidget(ui->label_12);
 
-        cardLayout->addSpacing(6);
+        cardLayout->addSpacing(4);
 
         // 4. Login input
         if(ui->lineLoginEdit)
             cardLayout->addWidget(ui->lineLoginEdit);
 
-        cardLayout->addSpacing(14);
+        cardLayout->addSpacing(8);
 
         // 5. Password label
         if(ui->label_14)
             cardLayout->addWidget(ui->label_14);
 
-        cardLayout->addSpacing(6);
+        cardLayout->addSpacing(4);
 
         // 6. Password row (input + show pass button)
         QHBoxLayout *passRow = new QHBoxLayout();
@@ -927,7 +927,7 @@ void MainWindow::setupPagesDesign()
             passRow->addWidget(ui->butShowPass, 0);
         cardLayout->addLayout(passRow);
 
-        cardLayout->addSpacing(14);
+        cardLayout->addSpacing(8);
 
         // 7. Options row (Auto login + Forgot token)
         QHBoxLayout *optRow = new QHBoxLayout();
@@ -939,7 +939,7 @@ void MainWindow::setupPagesDesign()
             optRow->addWidget(ui->label_2, 0, Qt::AlignVCenter);
         cardLayout->addLayout(optRow);
 
-        cardLayout->addSpacing(16);
+        cardLayout->addSpacing(8);
 
         // 8. Consent checkbox (Terms / Privacy / License)
         QCheckBox *checkConsent = new QCheckBox(ui->frame_4);
@@ -970,7 +970,7 @@ void MainWindow::setupPagesDesign()
         consentRow->addWidget(consentLabel, 1);
         cardLayout->addLayout(consentRow);
 
-        cardLayout->addSpacing(16);
+        cardLayout->addSpacing(6);
 
         // 9. Sign In CTA button
         if(ui->authButton)
@@ -980,7 +980,7 @@ void MainWindow::setupPagesDesign()
             connect(checkConsent, &QCheckBox::toggled, ui->authButton, &QPushButton::setEnabled);
         }
 
-        cardLayout->addSpacing(10);
+        cardLayout->addSpacing(6);
 
         // 10. Status text banner
         if(ui->statusAuthText)

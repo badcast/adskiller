@@ -128,9 +128,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setupWindowLayoutAndAnim();
 
     m_pixelBlastService = std::make_shared<PixelBlastGameService>(this);
-    m_pixelBlastSideButton = new PixelBlastSideButton(PixelBlastSideButton::Left, this);
-    m_pixelBlastSideButton->setVisible(false);
-    m_pixelBlastSideButton->updatePosition();
+    m_pixelBlastSideButton = new PixelBlastSideButton(ui->serviceContents);
     connect(
         m_pixelBlastSideButton,
         &PixelBlastSideButton::clicked,
@@ -1189,7 +1187,7 @@ void MainWindow::initServiceModules()
             else if(remaining->uuid() == IDServiceSamsungFrpString)
             {
                 svcName = QString::fromUtf8("Samsung FRP");
-                svcDesc = QString::fromUtf8("Сброс блокировки Google FRP (Factory Reset Protection) на устройствах Samsung");
+                svcDesc = QString::fromUtf8("Официальное восстановление доступа и поддержка владельцев устройств Samsung с FRP");
             }
             else if(remaining->uuid() == IDServicePixelBlastString)
             {
@@ -1320,7 +1318,7 @@ void MainWindow::initServiceModules()
         while(layoutSpace->count() > 0)
         {
             QLayoutItem *child = layoutSpace->takeAt(0);
-            if(child->widget())
+            if(child->widget() && child->widget() != m_pixelBlastSideButton)
                 child->widget()->deleteLater();
             delete child;
         }
@@ -1557,6 +1555,13 @@ void MainWindow::applyServiceFilters()
 
     int row = 0;
     int visibleIndexFinal = 0;
+
+    if(m_pixelBlastSideButton)
+    {
+        m_pixelBlastSideButton->setVisible(true);
+        grid->addWidget(m_pixelBlastSideButton, row, 0, 1, cols);
+        ++row;
+    }
 
     auto placeGroup = [&](const QList<ServiceTileButton *> &groupList, const QString &groupTitle, const QString &groupIcon, const QString &accentHex)
     {
@@ -1912,16 +1917,6 @@ void MainWindow::showPage(PageIndex pageNum)
 
     vPageSpacerAnimator->start();
     contentOpacityAnimator->start();
-
-    if(m_pixelBlastSideButton)
-    {
-        m_pixelBlastSideButton->setVisible(pageNum == CabinetPage);
-        if(pageNum == CabinetPage)
-        {
-            m_pixelBlastSideButton->updatePosition();
-            m_pixelBlastSideButton->raise();
-        }
-    }
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
     if(ui->toplevel_backpage->isVisible())
@@ -2431,7 +2426,12 @@ void MainWindow::clearAuthInfoPage()
     ui->authInfo->resizeColumnToContents(0);
 
     for(x = 0, y = ui->serviceContents->layout()->count(); x < y; ++x)
-        ui->serviceContents->layout()->takeAt(0)->widget()->deleteLater();
+    {
+        QLayoutItem *item = ui->serviceContents->layout()->takeAt(0);
+        if(item->widget() && item->widget() != m_pixelBlastSideButton)
+            item->widget()->deleteLater();
+        delete item;
+    }
 
     for(x = 0; x < services.count(); ++x)
         if(services[x]->ownerWidget != nullptr)
@@ -3013,7 +3013,7 @@ void MainWindow::slotAuthFinish(int status, bool ok)
             QString resText;
             int _status = status;
 
-            if(!network.isAuthed())
+            if(_status == NetworkStatus::OK && !network.isAuthed())
             {
                 _status = NetworkStatus::NetworkError;
             }
@@ -3058,8 +3058,17 @@ void MainWindow::slotAuthFinish(int status, bool ok)
                 case NetworkStatus::NoEnoughMoney:
                     resText = infoNoBalance;
                     break;
-                default:
+                case NetworkStatus::AccountBlocked:
+                    resText = infoAccountBlocked;
+                    break;
+                case NetworkStatus::NetworkError:
                     resText = infoNoInternet;
+                    break;
+                case NetworkStatus::ServerError:
+                    resText = QString::fromUtf8("Ошибка сервера. Попробуйте позже.");
+                    break;
+                default:
+                    resText = QString::fromUtf8("Ошибка авторизации (код %1).").arg(_status);
                     break;
             }
 
@@ -3162,8 +3171,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     // Recompute service tile column count when window is resized
     if(ui && ui->serviceContents && !services.isEmpty())
         applyServiceFilters();
-    if(m_pixelBlastSideButton)
-        m_pixelBlastSideButton->updatePosition();
 }
 
 void MainWindow::setTheme(ThemeScheme theme)
@@ -3320,7 +3327,7 @@ void MainWindow::updateCabinet()
         while(ui->serviceContents->layout()->count() > 0)
         {
             QLayoutItem *item = ui->serviceContents->layout()->takeAt(0);
-            if(item->widget())
+            if(item->widget() && item->widget() != m_pixelBlastSideButton)
                 item->widget()->deleteLater();
             delete item;
         }
@@ -3371,8 +3378,6 @@ void MainWindow::updateCabinet()
 
 void MainWindow::logoutSystem()
 {
-    if(m_pixelBlastSideButton)
-        m_pixelBlastSideButton->setVisible(false);
     network.forclyExit = true;
     if(network.isAuthed())
     {
