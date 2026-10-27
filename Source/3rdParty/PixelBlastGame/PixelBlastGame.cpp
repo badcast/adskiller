@@ -13,6 +13,8 @@
 #include <QMouseEvent>
 #include <QTextStream>
 #include <QCursor>
+#include <QCoreApplication>
+#include <QPointer>
 
 #include "PixelBlastGame.h"
 #include "PixelBlastShapes.h"
@@ -37,7 +39,8 @@ std::shared_ptr<QPixmap> gridBackground {};
 std::shared_ptr<QPixmap> gridBackgroundBg {};
 std::shared_ptr<QPixmap> uiTopHeader {};
 std::shared_ptr<QList<BlockResource>> BlockRes {};
-std::shared_ptr<SoundManager> soundManager {};
+// Owned by qApp: must be destroyed before QCoreApplication, not at DLL unload (deadlocks on Windows)
+QPointer<SoundManager> soundManager {};
 
 QPixmap adjustBright(const QPixmap &pixmap, int brightness)
 {
@@ -142,28 +145,28 @@ void prepareResources()
     gridCellBright = std::make_shared<QPixmap>(std::move(adjustBright(*gridCell, 70)));
 
     // Sounds
-    soundManager = std::make_shared<SoundManager>(nullptr);
-    soundManager->setPoolSize(24);
-    soundManager->registerSound("block-hits", QUrl::fromLocalFile(":/pixelblastgame/block-hits"), false);
+    soundManager = new SoundManager(QCoreApplication::instance());
+    soundManager->setPoolSize(3);
+    soundManager->registerSound("block-hits", QUrl("qrc:/pixelblastgame/block-hits"), false);
 
-    soundManager->registerSound("block-click0", QUrl::fromLocalFile(":/pixelblastgame/block-click0"));
-    soundManager->registerSound("block-click1", QUrl::fromLocalFile(":/pixelblastgame/block-click1"));
-    soundManager->registerSound("block-click2", QUrl::fromLocalFile(":/pixelblastgame/block-click2"));
+    soundManager->registerSound("block-click0", QUrl("qrc:/pixelblastgame/block-click0"));
+    soundManager->registerSound("block-click1", QUrl("qrc:/pixelblastgame/block-click1"));
+    soundManager->registerSound("block-click2", QUrl("qrc:/pixelblastgame/block-click2"));
 
-    soundManager->registerSound("block-place0", QUrl::fromLocalFile(":/pixelblastgame/block-place0"));
-    soundManager->registerSound("block-place1", QUrl::fromLocalFile(":/pixelblastgame/block-place1"));
-    soundManager->registerSound("block-place2", QUrl::fromLocalFile(":/pixelblastgame/block-place2"));
+    soundManager->registerSound("block-place0", QUrl("qrc:/pixelblastgame/block-place0"));
+    soundManager->registerSound("block-place1", QUrl("qrc:/pixelblastgame/block-place1"));
+    soundManager->registerSound("block-place2", QUrl("qrc:/pixelblastgame/block-place2"));
 
-    soundManager->registerSound("voice0", QUrl::fromLocalFile(":/pixelblastgame/voice0"));
-    soundManager->registerSound("voice1", QUrl::fromLocalFile(":/pixelblastgame/voice1"));
-    soundManager->registerSound("voice2", QUrl::fromLocalFile(":/pixelblastgame/voice2"));
-    soundManager->registerSound("voice3", QUrl::fromLocalFile(":/pixelblastgame/voice3"));
-    soundManager->registerSound("voice-gameover", QUrl::fromLocalFile(":/pixelblastgame/voice-gameover"));
+    soundManager->registerSound("voice0", QUrl("qrc:/pixelblastgame/voice0"));
+    soundManager->registerSound("voice1", QUrl("qrc:/pixelblastgame/voice1"));
+    soundManager->registerSound("voice2", QUrl("qrc:/pixelblastgame/voice2"));
+    soundManager->registerSound("voice3", QUrl("qrc:/pixelblastgame/voice3"));
+    soundManager->registerSound("voice-gameover", QUrl("qrc:/pixelblastgame/voice-gameover"));
 
-    soundManager->registerSound("block-destroy", QUrl::fromLocalFile(":/pixelblastgame/block-destroy"));
+    soundManager->registerSound("block-destroy", QUrl("qrc:/pixelblastgame/block-destroy"));
 }
 
-PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 328, 328), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true), lastSelectedBlock(-1)
+PixelBlast::PixelBlast(QWidget *parent) : QWidget(parent), updateTimer(this), boardRegion(0, 0, 328, 328), round(0), cellScale(1.0F, 1.0F), shapeCandidateIdx(-1), scores(0), frames(0), frameIndex(0), destroyScaler(0), mouseDownMode(true), mouseDownUpped(false), mouseBtn(0), lastSelectedBlock(-1)
 {
     prepareResources();
 
@@ -410,6 +413,7 @@ void PixelBlast::updateData()
 void PixelBlast::updateScene()
 {
     int x, y, z, w, d, i;
+    quint64 usedCells;
     QPointF tmp, tmp0;
     QRectF dest;
 
@@ -451,7 +455,7 @@ void PixelBlast::updateScene()
 
     if(currentShape)
     {
-        d = 0;
+        usedCells = 0;
         tmp.setX(mousePoint.x() - static_cast<float>(currentShape->columns * scaleFactor.width()) / 2);
         tmp.setY(mousePoint.y() - static_cast<float>(currentShape->rows * scaleFactor.height()) / 2);
         for(w = 0; w < currentShape->blocks.size(); ++w)
@@ -460,9 +464,9 @@ void PixelBlast::updateScene()
             x = cellSquare * (tmp0.x() - boardRegion.x() + scaleFactor.width() / 2) / (boardRegion.width());
             y = cellSquare * (tmp0.y() - boardRegion.y() + scaleFactor.height() / 2) / (boardRegion.height());
             z = y * cellSquare + x;
-            if(x < 0 || y < 0 || x >= cellSquare || y >= cellSquare || (grid[z] & 0x3) != 0 || ((d >> z) & 0x1) == 1)
+            if(x < 0 || y < 0 || x >= cellSquare || y >= cellSquare || (grid[z] & 0x3) != 0 || ((usedCells >> z) & 0x1) == 1)
                 break;
-            d |= 1 << z;
+            usedCells |= quint64(1) << z;
             currentShape->blocks[w].idx = z;
         }
         // verification

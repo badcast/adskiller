@@ -2,7 +2,7 @@
 
 #include "PixelSoundManager.h"
 
-SoundManager::SoundManager(QObject *parent) : QObject(parent), m_minIndex(0)
+SoundManager::SoundManager(QObject *parent) : QObject(parent)
 {
 }
 
@@ -11,83 +11,50 @@ void SoundManager::setPoolSize(int size)
     if(size <= 0)
         return;
     m_poolSize = size;
-    qDeleteAll(m_pool);
-    m_pool.clear();
-    m_nextIndex = 0;
-}
-
-void SoundManager::ensurePool()
-{
-    if(!m_pool.isEmpty())
-        return;
-    m_pool.reserve(m_poolSize);
-    for(int i = 0; i < m_poolSize; ++i)
-    {
-        QSoundEffect *se = new QSoundEffect(this);
-        se->setLoopCount(1);
-        se->setVolume(1.0);
-        m_pool.append(se);
-    }
 }
 
 void SoundManager::registerSound(const QString &name, const QUrl &url, bool asPool)
 {
-    m_registry.insert(name, std::make_tuple((asPool ? (-1) : (m_minIndex++)), url));
-    if(m_minIndex >= m_poolSize)
-        m_poolSize = m_poolSize * 2;
-    ensurePool();
-    for(int i = m_minIndex; i < m_pool.size(); ++i)
+    QVector<QSoundEffect *> &effects = m_registry[name];
+    qDeleteAll(effects);
+    effects.clear();
+
+    const int count = asPool ? m_poolSize : 1;
+    effects.reserve(count);
+    for(int i = 0; i < count; ++i)
     {
-        if(m_pool[i]->source().isEmpty())
-        {
-            m_pool[i]->setSource(url);
-            break;
-        }
+        QSoundEffect *se = new QSoundEffect(this);
+        se->setLoopCount(1);
+        se->setVolume(1.0);
+        se->setSource(url);
+        effects.append(se);
     }
+    m_nextIndex[name] = 0;
 }
 
 void SoundManager::playSound(const QString &name, qreal volume)
 {
-    if(!m_registry.contains(name))
-        return;
-    ensurePool();
-    if(m_pool.isEmpty())
+    auto it = m_registry.constFind(name);
+    if(it == m_registry.constEnd() || it->isEmpty())
         return;
 
-    const std::tuple<int, QUrl> &val = m_registry.value(name);
-    int idx = std::get<0>(val);
-    if(idx == -1)
+    const QVector<QSoundEffect *> &effects = *it;
+    QSoundEffect *effect = nullptr;
+    for(QSoundEffect *se : effects)
     {
-        int poolCount = m_pool.size() - m_minIndex;
-        if(poolCount <= 0)
-            return;
-
-        int start = m_nextIndex;
-        for(int x = 0; x < poolCount; ++x)
+        if(!se->isPlaying())
         {
-            int y = m_minIndex + (start + x) % poolCount;
-            QSoundEffect *se = m_pool[y];
-            if(!se->isPlaying())
-            {
-                idx = y;
-                break;
-            }
-        }
-        if(idx == -1)
-        {
-            idx = m_minIndex + (m_nextIndex % poolCount);
-            m_nextIndex = (m_nextIndex + 1) % poolCount;
+            effect = se;
+            break;
         }
     }
-
-    if(idx >= 0 && idx < m_pool.size())
+    if(effect == nullptr)
     {
-        QSoundEffect *effect = m_pool[idx];
-        if(effect->source() != std::get<1>(val))
-        {
-            effect->setSource(std::get<1>(val));
-        }
-        effect->setVolume(qBound<qreal>(0.0, volume, 1.0));
-        effect->play();
+        int &next = m_nextIndex[name];
+        effect = effects[next % effects.size()];
+        next = (next + 1) % effects.size();
     }
+
+    effect->setVolume(qBound<qreal>(0.0, volume, 1.0));
+    effect->play();
 }

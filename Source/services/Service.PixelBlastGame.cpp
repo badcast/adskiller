@@ -12,7 +12,6 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QFrame>
-#include <QGraphicsDropShadowEffect>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
@@ -361,12 +360,8 @@ void PBGInternal::setupUi()
 
     cardLayout->addWidget(footerCard);
 
-    // Ambient Obsidian Drop Shadow
-    QGraphicsDropShadowEffect *cardShadow = new QGraphicsDropShadowEffect(mArcadeCard);
-    cardShadow->setBlurRadius(28);
-    cardShadow->setColor(QColor(0, 0, 0, 220));
-    cardShadow->setOffset(0, 4);
-    mArcadeCard->setGraphicsEffect(cardShadow);
+    // NOTE: no QGraphicsEffect on mArcadeCard: the game inside repaints at 60 FPS, and an effect
+    // re-renders + blurs the whole card offscreen every frame, which freezes the UI on Windows.
 
     rootLayout->addWidget(mArcadeCard);
 }

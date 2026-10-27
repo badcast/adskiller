@@ -18,11 +18,9 @@ public:
     void setPoolSize(int size);
 
 private:
-    void ensurePool();
-
-    int m_poolSize = 16;
-    int m_minIndex;
-    QVector<QSoundEffect *> m_pool;
-    QHash<QString, std::tuple<int, QUrl>> m_registry;
-    int m_nextIndex = 0;
+    // Each sound owns its own preloaded effects: the source is set once and never changed,
+    // because QSoundEffect::setSource() reloads/decodes the sample (very slow on Windows).
+    int m_poolSize = 3;
+    QHash<QString, QVector<QSoundEffect *>> m_registry;
+    QHash<QString, int> m_nextIndex;
 };
