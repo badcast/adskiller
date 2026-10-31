@@ -11,7 +11,7 @@ QByteArray CipherAlgoCrypto::RandomKey()
     int x;
     QByteArray key;
     key.resize(8);
-    for(x = 0; x < key.length(); ++x)
+    for (x = 0; x < key.length(); ++x)
     {
         key[x] = static_cast<char>(QRandomGenerator::global()->bounded(256));
     }
@@ -23,7 +23,7 @@ QByteArray CipherAlgoCrypto::ConvBytes(const QByteArray &bytes, const QByteArray
     int x;
     QByteArray retval;
     retval.resize(bytes.length());
-    for(x = 0; x < bytes.length() && !key.isEmpty(); ++x)
+    for (x = 0; x < bytes.length() && !key.isEmpty(); ++x)
         retval[x] = bytes[x] ^ key[x % key.length()];
     return retval;
 }
@@ -48,7 +48,8 @@ QByteArray CipherAlgoCrypto::UnpackDC(const QString &packed)
     int keylen;
     int hashlen = QCryptographicHash::hashLength(QCryptographicHash::Sha256);
     data = QByteArray::fromBase64(packed.toLatin1());
-    if(!data.isEmpty() && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
+    if (!data.isEmpty()
+        && data.mid(0, hashlen) == QCryptographicHash::hash(data.mid(hashlen), QCryptographicHash::Sha256))
     {
         keylen = data[hashlen];
         key = QByteArray::fromHex(data.mid(hashlen + 1, keylen));

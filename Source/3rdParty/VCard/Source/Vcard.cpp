@@ -52,7 +52,7 @@ std::pair<param_iterator, param_iterator> vCardParamMap::getParams(std::string n
 std::string &vCardParamMap::operator[](std::string name)
 {
     auto search = m_params.find(name);
-    if(search != m_params.end())
+    if (search != m_params.end())
         return search->second;
     else
         throw std::runtime_error("param not found");
@@ -60,9 +60,12 @@ std::string &vCardParamMap::operator[](std::string name)
 
 // =================================================================
 
-const std::map<std::string, std::string> vCardProperty::property_types = {{"fn", "text"}, {"bday", "date"}, {"anniversary", "text"}, {"gender", "sex"},    {"lang", "language-tag"}, {"tel", "uri"},     {"geo", "uri"},       {"key", "uri"},
-                                                                          {"url", "uri"}, {"photo", "uri"}, {"impp", "uri"},         {"logo", "uri"},      {"member", "uri"},        {"related", "uri"}, {"rev", "timestamp"}, {"sound", "uri"},
-                                                                          {"uid", "uri"}, {"url", "uri"},   {"fburl", "uri"},        {"caladruri", "uri"}, {"caluri", "uri"},        {"source", "uri"},  {"adr", "text"},      {"n", "text"}};
+const std::map<std::string, std::string> vCardProperty::property_types
+    = {{"fn", "text"},    {"bday", "date"},  {"anniversary", "text"}, {"gender", "sex"},  {"lang", "language-tag"},
+       {"tel", "uri"},    {"geo", "uri"},    {"key", "uri"},          {"url", "uri"},     {"photo", "uri"},
+       {"impp", "uri"},   {"logo", "uri"},   {"member", "uri"},       {"related", "uri"}, {"rev", "timestamp"},
+       {"sound", "uri"},  {"uid", "uri"},    {"url", "uri"},          {"fburl", "uri"},   {"caladruri", "uri"},
+       {"caluri", "uri"}, {"source", "uri"}, {"adr", "text"},         {"n", "text"}};
 
 vCardProperty::vCardProperty(const std::string &name, const std::string &value)
 {
@@ -87,11 +90,11 @@ std::string vCardProperty::getValue()
     std::stringstream s;
 
     auto it = m_values.begin();
-    while(it != m_values.end())
+    while (it != m_values.end())
     {
         s << *it;
         it++;
-        if(it != m_values.end())
+        if (it != m_values.end())
             s << ";";
     }
 
@@ -104,7 +107,15 @@ vCardProperty &vCardProperty::operator<<(const vCardParamMap &p)
     return *this;
 }
 
-vCardProperty vCardProperty::createAddress(const std::string &street, const std::string &locality, const std::string &region, const std::string &postal_code, const std::string &country, const std::string &post_office_box, const std::string &ext_address, const vCardParamMap &params)
+vCardProperty vCardProperty::createAddress(
+    const std::string &street,
+    const std::string &locality,
+    const std::string &region,
+    const std::string &postal_code,
+    const std::string &country,
+    const std::string &post_office_box,
+    const std::string &ext_address,
+    const vCardParamMap &params)
 {
     std::vector<std::string> values;
     values.push_back(post_office_box);
@@ -118,7 +129,13 @@ vCardProperty vCardProperty::createAddress(const std::string &street, const std:
     return vCardProperty(VC_ADDRESS, values, params);
 }
 
-vCardProperty vCardProperty::createName(const std::string &firstname, const std::string &lastname, const std::string &additional, const std::string &prefix, const std::string &suffix, const vCardParamMap &params)
+vCardProperty vCardProperty::createName(
+    const std::string &firstname,
+    const std::string &lastname,
+    const std::string &additional,
+    const std::string &prefix,
+    const std::string &suffix,
+    const vCardParamMap &params)
 {
     std::vector<std::string> values;
     values.push_back(lastname);
@@ -130,7 +147,8 @@ vCardProperty vCardProperty::createName(const std::string &firstname, const std:
     return vCardProperty(VC_NAME, values, params);
 }
 
-vCardProperty vCardProperty::createOrganization(const std::string &name, const std::vector<std::string> &levels, const vCardParamMap &params)
+vCardProperty vCardProperty::createOrganization(
+    const std::string &name, const std::vector<std::string> &levels, const vCardParamMap &params)
 {
     std::vector<std::string> values;
     values.push_back(name);
@@ -155,9 +173,9 @@ vCardProperty vCardProperty::createEmpty()
 
 vCardProperty &vCard::operator[](const std::string &name)
 {
-    for(vCardProperty &p : m_properties)
+    for (vCardProperty &p : m_properties)
     {
-        if(p.getName() == name)
+        if (p.getName() == name)
             return p;
     }
     return addProperty({name, ""});
@@ -165,9 +183,9 @@ vCardProperty &vCard::operator[](const std::string &name)
 
 vCardProperty vCard::at(const std::string &name) const
 {
-    for(const vCardProperty &p : m_properties)
+    for (const vCardProperty &p : m_properties)
     {
-        if(p.getCName().c_str() == name)
+        if (p.getCName().c_str() == name)
             return p;
     }
     return {};
@@ -188,9 +206,9 @@ vCardProperty &vCard::addProperty(const vCardProperty &property)
 void vCard::removeProperty(std::string name)
 {
     auto it = m_properties.begin();
-    while(it != m_properties.end())
+    while (it != m_properties.end())
     {
-        if(it->getName() == name)
+        if (it->getName() == name)
             m_properties.erase(it);
         else
             it++;
@@ -199,7 +217,7 @@ void vCard::removeProperty(std::string name)
 
 std::string vCard::getVersionStr()
 {
-    switch(m_version)
+    switch (m_version)
     {
         case VC_VER_2_1:
             return "2.1";

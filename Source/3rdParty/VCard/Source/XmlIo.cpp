@@ -32,7 +32,7 @@ XmlWriter &XmlWriter::operator<<(vCard &vCard)
 {
     *m_os << "<vcard>";
 
-    for(auto it = vCard.properties().begin(); it != vCard.properties().end(); ++it)
+    for (auto it = vCard.properties().begin(); it != vCard.properties().end(); ++it)
     {
         *this << *it;
     }
@@ -47,7 +47,7 @@ XmlWriter &XmlWriter::operator<<(std::vector<vCard> &cards)
     *m_os << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     *m_os << "<vcards xmlns=\"urn:ietf:params:xml:ns:vcard-4.0\">";
 
-    for(auto card : cards)
+    for (auto card : cards)
     {
         *this << card;
     }
@@ -62,19 +62,19 @@ std::string XmlWriter::get_property_type(std::string property_name, int count)
     std::string type("text");
     tolower(property_name);
 
-    if(property_name == "adr")
+    if (property_name == "adr")
     {
-        if(count < property_adr_fields.size())
+        if (count < property_adr_fields.size())
             type = property_adr_fields[count];
     }
-    else if(property_name == "n")
+    else if (property_name == "n")
     {
-        if(count < property_name_fields.size())
+        if (count < property_name_fields.size())
             type = property_name_fields[count];
     }
     else
     {
-        if(vCardProperty::property_types.find(property_name) != vCardProperty::property_types.end())
+        if (vCardProperty::property_types.find(property_name) != vCardProperty::property_types.end())
             type = vCardProperty::property_types.at(property_name);
     }
 
@@ -85,18 +85,18 @@ XmlWriter &XmlWriter::operator<<(vCardProperty &prop)
 {
     *m_os << "<" << prop.getName() << ">";
 
-    if(prop.params().size() > 0)
+    if (prop.params().size() > 0)
     {
         *this << prop.params();
     }
 
     int count = 0;
     auto it = prop.values().begin();
-    while(it != prop.values().end())
+    while (it != prop.values().end())
     {
         std::string type = get_property_type(prop.getName(), count);
 
-        if(it->size() == 0)
+        if (it->size() == 0)
         {
             *m_os << "<" << type << "/>";
         }
@@ -116,19 +116,19 @@ XmlWriter &XmlWriter::operator<<(vCardProperty &prop)
 
 XmlWriter &XmlWriter::operator<<(vCardParamMap &p)
 {
-    if(p.size() == 0)
+    if (p.size() == 0)
         return *this;
 
     *m_os << "<parameters>";
     auto it = p.begin();
-    while(it != p.end())
+    while (it != p.end())
     {
         *m_os << "<" << it->first << ">";
 
         std::string type("text");
         std::string name(it->first);
         tolower(name);
-        if(param_types.find(name) != param_types.end())
+        if (param_types.find(name) != param_types.end())
             type = param_types[name];
         *m_os << "<" << type << ">" << it->second << "</" << type << ">";
         *m_os << "</" << it->first << ">";
@@ -149,14 +149,14 @@ std::vector<vCard> XmlReader::parseCards(std::istream *is)
 
     // auto EOF = std::streambuf::traits_type::eof();
     int c;
-    while(sb->sgetc() != EOF)
+    while (sb->sgetc() != EOF)
     {
         c = sb->sbumpc();
 
-        if(c == '<' && sb->sgetc() == '?')
+        if (c == '<' && sb->sgetc() == '?')
         {                     // skip <?...?>
             c = sb->sbumpc(); // c=?
-            while(c != EOF && !(c == '?' && sb->sgetc() == '>'))
+            while (c != EOF && !(c == '?' && sb->sgetc() == '>'))
                 c = sb->sbumpc();
 
             // we are on '>' or EOF
@@ -164,12 +164,12 @@ std::vector<vCard> XmlReader::parseCards(std::istream *is)
             continue;
         }
 
-        if(c == '<' && sb->sgetc() == '/')
+        if (c == '<' && sb->sgetc() == '/')
         { // close tag
             std::string tag_name;
             sb->sbumpc(); // skip '/'
             c = sb->sbumpc();
-            while(c != EOF && c != '>')
+            while (c != EOF && c != '>')
             {
                 tag_name += c;
                 c = sb->sbumpc();
@@ -180,12 +180,12 @@ std::vector<vCard> XmlReader::parseCards(std::istream *is)
             continue;
         }
 
-        if(c == '<')
+        if (c == '<')
         {
             // read tag name
             std::string tag_name;
             c = sb->sbumpc();
-            while(c != EOF && !std::isspace(c) && c != '/' && c != '>')
+            while (c != EOF && !std::isspace(c) && c != '/' && c != '>')
             {
                 tag_name += c;
                 c = sb->sbumpc();
@@ -194,9 +194,9 @@ std::vector<vCard> XmlReader::parseCards(std::istream *is)
             std::cout << tag_name << ", ";
 
             // if c == EOF throw exception XML format error
-            if(std::isspace(c))
+            if (std::isspace(c))
             { // skip to the end of tag - no need for attributes
-                while(c != EOF && c != '/' && c != '>')
+                while (c != EOF && c != '/' && c != '>')
                     c = sb->sbumpc();
             }
 

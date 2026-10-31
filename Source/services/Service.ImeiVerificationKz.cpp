@@ -9,7 +9,8 @@
 // ImeiVerificationKzWidget Implementation
 // ============================================================================
 
-ImeiVerificationKzWidget::ImeiVerificationKzWidget(QWidget *parent) : QWidget(parent)
+ImeiVerificationKzWidget::ImeiVerificationKzWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("ImeiVerificationKzWidget { background-color: #0A0E1A; }");
@@ -21,9 +22,7 @@ void ImeiVerificationKzWidget::setDevice(const AdbDevice &device)
     Q_UNUSED(device);
 }
 
-void ImeiVerificationKzWidget::resetSession()
-{
-}
+void ImeiVerificationKzWidget::resetSession() {}
 
 void ImeiVerificationKzWidget::setupUi()
 {
@@ -84,7 +83,7 @@ void ImeiVerificationKzWidget::setupUi()
 
 void ImeiVerificationKzWidget::onBackToCabinet()
 {
-    if(MainWindow::current)
+    if (MainWindow::current)
         MainWindow::current->closeService(ServiceProvider::currentService());
 }
 
@@ -92,7 +91,8 @@ void ImeiVerificationKzWidget::onBackToCabinet()
 // ImeiVerificationKzService Implementation
 // ============================================================================
 
-ImeiVerificationKzService::ImeiVerificationKzService(QObject *parent) : Service(DeviceConnectType::None, parent)
+ImeiVerificationKzService::ImeiVerificationKzService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
 {
     title = QString::fromUtf8("IMEI Verification KZ");
     m_sortScore = 250;
@@ -142,19 +142,19 @@ QString ImeiVerificationKzService::widgetIconName()
 bool ImeiVerificationKzService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<ImeiVerificationKzWidget *>(MainWindow::current->pageWidget(ImeiVerificationKzPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
-            if(!mAdbDevice.isEmpty())
+            if (!mAdbDevice.isEmpty())
                 widget->setDevice(mAdbDevice);
         }
     }
@@ -167,10 +167,10 @@ void ImeiVerificationKzService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<ImeiVerificationKzWidget *>(MainWindow::current->pageWidget(ImeiVerificationKzPage));
-        if(widget)
+        if (widget)
             widget->resetSession();
     }
 }

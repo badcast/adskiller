@@ -59,7 +59,8 @@ public:
     explicit IpswChecksumWorker(QObject *parent = nullptr);
     ~IpswChecksumWorker() override;
 
-    void startVerification(const QString &filePath, const QString &expectedSha1 = QString(), const QString &expectedMd5 = QString());
+    void startVerification(
+        const QString &filePath, const QString &expectedSha1 = QString(), const QString &expectedMd5 = QString());
     void cancel();
     bool isCancelRequested() const
     {
@@ -68,7 +69,12 @@ public:
 
 signals:
     void progress(int percent, double speedMBs, qint64 processedBytes, qint64 totalBytes);
-    void finished(bool matched, const QString &calculatedSha1, const QString &expectedSha1, const QString &calculatedMd5, const QString &errorStr);
+    void finished(
+        bool matched,
+        const QString &calculatedSha1,
+        const QString &expectedSha1,
+        const QString &calculatedMd5,
+        const QString &errorStr);
 
 protected:
     void run() override;
@@ -197,7 +203,8 @@ private slots:
     void onRestoreLog(const QString &line);
     void onRestoreFinished(bool success, const QString &errorStr);
     void onChecksumProgress(int percent, double speedMBs, qint64 processedBytes, qint64 totalBytes);
-    void onChecksumFinished(bool matched, const QString &calcSha1, const QString &expSha1, const QString &calcMd5, const QString &errorStr);
+    void onChecksumFinished(
+        bool matched, const QString &calcSha1, const QString &expSha1, const QString &calcMd5, const QString &errorStr);
 
 private:
     void setupUi();
@@ -214,7 +221,8 @@ private:
     void updateSimpleStepPills(int step);
     void updateAdvStepPills(int step);
     void appendLog(const QString &line, const QString &color = "#E0E0E0");
-    void startChecksumForFile(const QString &filePath, const QString &expectedSha1 = QString(), const QString &expectedMd5 = QString());
+    void startChecksumForFile(
+        const QString &filePath, const QString &expectedSha1 = QString(), const QString &expectedMd5 = QString());
     void updateChecksumUi();
 
     AppleDevice m_device;

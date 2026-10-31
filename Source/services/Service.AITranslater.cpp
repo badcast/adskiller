@@ -47,51 +47,54 @@ static const QString AITT_STYLE_CARD = "QFrame#at_card {"
                                        "  border-radius: 0px;"
                                        "}";
 
-static const QString AITT_STYLE_BTN_PRIMARY = "QPushButton {"
-                                              "  background-color: #0284C7;"
-                                              "  color: #FFFFFF;"
-                                              "  border: 1px solid #0284C7;"
-                                              "  border-radius: 0px;"
-                                              "  padding: 0px 14px;"
-                                              "  font-size: 11.5px;"
-                                              "  font-weight: 700;"
-                                              "  letter-spacing: 0.5px;"
-                                              "  min-height: 28px;"
-                                              "  max-height: 28px;"
-                                              "}"
-                                              "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
-                                              "QPushButton:pressed { background-color: #075985; }"
-                                              "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
+static const QString AITT_STYLE_BTN_PRIMARY
+    = "QPushButton {"
+      "  background-color: #0284C7;"
+      "  color: #FFFFFF;"
+      "  border: 1px solid #0284C7;"
+      "  border-radius: 0px;"
+      "  padding: 0px 14px;"
+      "  font-size: 11.5px;"
+      "  font-weight: 700;"
+      "  letter-spacing: 0.5px;"
+      "  min-height: 28px;"
+      "  max-height: 28px;"
+      "}"
+      "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
+      "QPushButton:pressed { background-color: #075985; }"
+      "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
 
-static const QString AITT_STYLE_BTN_SEC = "QPushButton {"
-                                          "  background-color: #0F172A;"
-                                          "  color: #CBD5E1;"
-                                          "  border: 1px solid #1E293B;"
-                                          "  border-radius: 0px;"
-                                          "  padding: 0px 12px;"
-                                          "  font-size: 11.5px;"
-                                          "  font-weight: 600;"
-                                          "  min-height: 28px;"
-                                          "  max-height: 28px;"
-                                          "}"
-                                          "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #38BDF8; }"
-                                          "QPushButton:pressed { background-color: #0B1120; }";
+static const QString AITT_STYLE_BTN_SEC
+    = "QPushButton {"
+      "  background-color: #0F172A;"
+      "  color: #CBD5E1;"
+      "  border: 1px solid #1E293B;"
+      "  border-radius: 0px;"
+      "  padding: 0px 12px;"
+      "  font-size: 11.5px;"
+      "  font-weight: 600;"
+      "  min-height: 28px;"
+      "  max-height: 28px;"
+      "}"
+      "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #38BDF8; }"
+      "QPushButton:pressed { background-color: #0B1120; }";
 
-static const QString AITT_STYLE_BTN_GREEN = "QPushButton {"
-                                            "  background-color: #059669;"
-                                            "  color: #FFFFFF;"
-                                            "  border: 1px solid #059669;"
-                                            "  border-radius: 0px;"
-                                            "  padding: 0px 14px;"
-                                            "  font-size: 11.5px;"
-                                            "  font-weight: 700;"
-                                            "  letter-spacing: 0.5px;"
-                                            "  min-height: 28px;"
-                                            "  max-height: 28px;"
-                                            "}"
-                                            "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
-                                            "QPushButton:pressed { background-color: #064E3B; }"
-                                            "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
+static const QString AITT_STYLE_BTN_GREEN
+    = "QPushButton {"
+      "  background-color: #059669;"
+      "  color: #FFFFFF;"
+      "  border: 1px solid #059669;"
+      "  border-radius: 0px;"
+      "  padding: 0px 14px;"
+      "  font-size: 11.5px;"
+      "  font-weight: 700;"
+      "  letter-spacing: 0.5px;"
+      "  min-height: 28px;"
+      "  max-height: 28px;"
+      "}"
+      "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
+      "QPushButton:pressed { background-color: #064E3B; }"
+      "QPushButton:disabled { background-color: #1E293B; border-color: #1E293B; color: #475569; }";
 
 static const QString AITT_STYLE_COMBO = "QComboBox {"
                                         "  background-color: #070A12;"
@@ -175,7 +178,8 @@ static const QList<QPair<QString, QString>> kBuiltinLanguages = {
 // AITranslaterWidget - ctor / dtor
 // ──────────────────────────────────────────────────────────────────────────────
 
-AITranslaterWidget::AITranslaterWidget(QWidget *parent) : QWidget(parent)
+AITranslaterWidget::AITranslaterWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("AITranslaterWidget { background-color: #070A12; }");
@@ -185,7 +189,7 @@ AITranslaterWidget::AITranslaterWidget(QWidget *parent) : QWidget(parent)
 
 AITranslaterWidget::~AITranslaterWidget()
 {
-    if(m_pollTimer)
+    if (m_pollTimer)
     {
         m_pollTimer->stop();
         m_pollTimer->deleteLater();
@@ -196,7 +200,7 @@ AITranslaterWidget::~AITranslaterWidget()
 void AITranslaterWidget::setNetwork(Network *net)
 {
     m_net = net;
-    if(m_net)
+    if (m_net)
     {
         requestLanguages();
     }
@@ -221,7 +225,8 @@ void AITranslaterWidget::setupUi()
     tabs->setStyleSheet(
         "QTabWidget::pane { border: 1px solid #1E293B; background-color: #0A0E1A; top: -1px; }"
         "QTabBar::tab { background: transparent; color: #64748B; border: none; border-bottom: 2px solid transparent;"
-        "               padding: 8px 22px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }"
+        "               padding: 8px 22px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; "
+        "letter-spacing: 0.5px; margin-right: 4px; }"
         "QTabBar::tab:selected { background-color: #0B1120; color: #38BDF8; border-bottom: 2px solid #38BDF8; }"
         "QTabBar::tab:hover:!selected { color: #CBD5E1; border-bottom: 2px solid #334155; }");
 
@@ -232,7 +237,7 @@ void AITranslaterWidget::setupUi()
     textTabLayout->setSpacing(10);
     setupTextTranslatePanel();
     // move children built in setupTextTranslatePanel into textTabLayout
-    for(auto *ch : findChildren<QWidget *>("at_textpanel_inner"))
+    for (auto *ch : findChildren<QWidget *>("at_textpanel_inner"))
     {
         textTabLayout->addWidget(ch);
         break;
@@ -245,7 +250,7 @@ void AITranslaterWidget::setupUi()
     docTabLayout->setContentsMargins(14, 14, 14, 14);
     docTabLayout->setSpacing(10);
     setupDocumentPanel();
-    for(auto *ch : findChildren<QWidget *>("at_docpanel_inner"))
+    for (auto *ch : findChildren<QWidget *>("at_docpanel_inner"))
     {
         docTabLayout->addWidget(ch);
         break;
@@ -258,7 +263,7 @@ void AITranslaterWidget::setupUi()
     queueTabLayout->setContentsMargins(14, 14, 14, 14);
     queueTabLayout->setSpacing(10);
     setupQueuePanel();
-    for(auto *ch : findChildren<QWidget *>("at_queuepanel_inner"))
+    for (auto *ch : findChildren<QWidget *>("at_queuepanel_inner"))
     {
         queueTabLayout->addWidget(ch);
         break;
@@ -290,10 +295,17 @@ void AITranslaterWidget::setupHeaderFrame()
     // Left: icon + title + subtitle
     QVBoxLayout *titleBox = new QVBoxLayout();
     titleBox->setSpacing(2);
-    QLabel *titleLbl = new QLabel(QString::fromUtf8("<img src=\":/svg/globe\" width=\"16\" height=\"16\" style=\"vertical-align: middle;\"/>  ИИ-Переводчик документов"), hdr);
+    QLabel *titleLbl = new QLabel(
+        QString::fromUtf8(
+            "<img src=\":/svg/globe\" width=\"16\" height=\"16\" style=\"vertical-align: middle;\"/>  ИИ-Переводчик "
+            "документов"),
+        hdr);
     titleLbl->setTextFormat(Qt::RichText);
     titleLbl->setStyleSheet("font-size: 15px; font-weight: bold; color: #38BDF8;");
-    QLabel *subLbl = new QLabel(QString::fromUtf8("Перевод текстов и файлов с помощью AI (Gemini). Поддерживаются PDF, DOCX, TXT и другие форматы."), hdr);
+    QLabel *subLbl = new QLabel(
+        QString::fromUtf8(
+            "Перевод текстов и файлов с помощью AI (Gemini). Поддерживаются PDF, DOCX, TXT и другие форматы."),
+        hdr);
     subLbl->setStyleSheet("font-size: 11px; color: #64748B;");
     subLbl->setWordWrap(true);
     titleBox->addWidget(titleLbl);
@@ -337,17 +349,12 @@ void AITranslaterWidget::setupTextTranslatePanel()
     m_btnSwapLang->setFixedWidth(36);
     m_btnSwapLang->setToolTip(QString::fromUtf8("Поменять языки местами"));
     m_btnSwapLang->setCursor(Qt::PointingHandCursor);
-    connect(
-        m_btnSwapLang,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            int si = m_cbSrcLang->currentIndex();
-            int di = m_cbDstLang->currentIndex();
-            m_cbSrcLang->setCurrentIndex(di);
-            m_cbDstLang->setCurrentIndex(si);
-        });
+    connect(m_btnSwapLang, &QPushButton::clicked, this, [this]() {
+        int si = m_cbSrcLang->currentIndex();
+        int di = m_cbDstLang->currentIndex();
+        m_cbSrcLang->setCurrentIndex(di);
+        m_cbDstLang->setCurrentIndex(si);
+    });
     langRow->addWidget(m_btnSwapLang);
 
     QLabel *dstLangLbl = new QLabel(QString::fromUtf8("Целевой язык:"), inner);
@@ -421,15 +428,10 @@ void AITranslaterWidget::setupTextTranslatePanel()
     btnCopyOut->setStyleSheet(AITT_STYLE_BTN_SEC);
     btnCopyOut->setFixedHeight(24);
     btnCopyOut->setCursor(Qt::PointingHandCursor);
-    connect(
-        btnCopyOut,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            QApplication::clipboard()->setText(m_editOutput->toPlainText());
-            showStatus(QString::fromUtf8("Перевод скопирован в буфер обмена."));
-        });
+    connect(btnCopyOut, &QPushButton::clicked, this, [this]() {
+        QApplication::clipboard()->setText(m_editOutput->toPlainText());
+        showStatus(QString::fromUtf8("Перевод скопирован в буфер обмена."));
+    });
     outputHeader->addWidget(btnCopyOut);
     outputVl->addLayout(outputHeader);
     m_editOutput = new QTextEdit(outputCard);
@@ -483,27 +485,28 @@ void AITranslaterWidget::setupDocumentPanel()
     m_btnChooseDoc->setStyleSheet(AITT_STYLE_BTN_SEC);
     m_btnChooseDoc->setCursor(Qt::PointingHandCursor);
     m_btnChooseDoc->setMinimumWidth(100);
-    connect(
-        m_btnChooseDoc,
-        &QPushButton::clicked,
-        this,
-        [this]()
+    connect(m_btnChooseDoc, &QPushButton::clicked, this, [this]() {
+        QString path = QFileDialog::getOpenFileName(
+            this,
+            QString::fromUtf8("Выбрать документ для перевода"),
+            QDir::homePath(),
+            QString::fromUtf8(
+                "Документы (*.pdf *.docx *.doc *.txt *.xlsx *.xls *.odt *.ods *.pptx *.ppt *.rtf);;Все файлы (*)"));
+        if (path.isEmpty())
+            return;
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly))
         {
-            QString path = QFileDialog::getOpenFileName(this, QString::fromUtf8("Выбрать документ для перевода"), QDir::homePath(), QString::fromUtf8("Документы (*.pdf *.docx *.doc *.txt *.xlsx *.xls *.odt *.ods *.pptx *.ppt *.rtf);;Все файлы (*)"));
-            if(path.isEmpty())
-                return;
-            QFile f(path);
-            if(!f.open(QIODevice::ReadOnly))
-            {
-                showStatus(QString::fromUtf8("Не удалось открыть файл: ") + path, true);
-                return;
-            }
-            m_pendingDocBytes = f.readAll();
-            f.close();
-            m_pendingDocName = QFileInfo(path).fileName();
-            m_editDocPath->setText(path);
-            showStatus(QString::fromUtf8("Файл загружен: %1 (%2 байт)").arg(m_pendingDocName).arg(m_pendingDocBytes.size()));
-        });
+            showStatus(QString::fromUtf8("Не удалось открыть файл: ") + path, true);
+            return;
+        }
+        m_pendingDocBytes = f.readAll();
+        f.close();
+        m_pendingDocName = QFileInfo(path).fileName();
+        m_editDocPath->setText(path);
+        showStatus(
+            QString::fromUtf8("Файл загружен: %1 (%2 байт)").arg(m_pendingDocName).arg(m_pendingDocBytes.size()));
+    });
     fileRow->addWidget(m_btnChooseDoc);
     fcVl->addLayout(fileRow);
 
@@ -573,7 +576,8 @@ void AITranslaterWidget::setupDocumentPanel()
     // Progress
     m_progressDoc = new QProgressBar(inner);
     m_progressDoc->setStyleSheet(
-        "QProgressBar { background-color: #0B1120; border: 1px solid #1E293B; border-radius: 0px; height: 6px; text-align: center; color: transparent; }"
+        "QProgressBar { background-color: #0B1120; border: 1px solid #1E293B; border-radius: 0px; height: 6px; "
+        "text-align: center; color: transparent; }"
         "QProgressBar::chunk { background-color: #38BDF8; }");
     m_progressDoc->setTextVisible(false);
     m_progressDoc->setRange(0, 0);
@@ -591,7 +595,9 @@ void AITranslaterWidget::setupDocumentPanel()
     // Hint card
     QFrame *hintCard = new QFrame(inner);
     hintCard->setObjectName("at_card");
-    hintCard->setStyleSheet("QFrame#at_card { background-color: #0B1120; border: 1px solid #1E293B; border-left: 3px solid #F59E0B; border-radius: 0px; }");
+    hintCard->setStyleSheet(
+        "QFrame#at_card { background-color: #0B1120; border: 1px solid #1E293B; border-left: 3px solid #F59E0B; "
+        "border-radius: 0px; }");
     QVBoxLayout *hintVl = new QVBoxLayout(hintCard);
     hintVl->setContentsMargins(14, 10, 14, 10);
     hintVl->setSpacing(4);
@@ -644,8 +650,15 @@ void AITranslaterWidget::setupQueuePanel()
         "QTableWidget::item { padding: 6px 10px; border-bottom: 1px solid #1E293B; }"
         "QTableWidget::item:selected { background-color: #0284C7; color: #FFFFFF; }"
         "QHeaderView::section { background-color: #0B1120; color: #94A3B8; border: none;"
-        "  border-bottom: 2px solid #1E293B; padding: 6px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }");
-    m_queueTable->setHorizontalHeaderLabels({QString::fromUtf8("Task ID"), QString::fromUtf8("Файл"), QString::fromUtf8("Языки"), QString::fromUtf8("Статус"), QString::fromUtf8("Прогресс"), QString::fromUtf8("Действие")});
+        "  border-bottom: 2px solid #1E293B; padding: 6px 8px; font-size: 11px; font-weight: 700; text-transform: "
+        "uppercase; }");
+    m_queueTable->setHorizontalHeaderLabels(
+        {QString::fromUtf8("Task ID"),
+         QString::fromUtf8("Файл"),
+         QString::fromUtf8("Языки"),
+         QString::fromUtf8("Статус"),
+         QString::fromUtf8("Прогресс"),
+         QString::fromUtf8("Действие")});
     m_queueTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_queueTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     m_queueTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
@@ -656,7 +669,10 @@ void AITranslaterWidget::setupQueuePanel()
     m_queueTable->setAlternatingRowColors(false);
     vl->addWidget(m_queueTable, 1);
 
-    QLabel *queueHint = new QLabel(QString::fromUtf8("Для отслеживания используйте кнопку «Обновить». Когда задача завершится, нажмите «Скачать»."), inner);
+    QLabel *queueHint = new QLabel(
+        QString::fromUtf8(
+            "Для отслеживания используйте кнопку «Обновить». Когда задача завершится, нажмите «Скачать»."),
+        inner);
     queueHint->setStyleSheet("font-size: 11px; color: #475569;");
     queueHint->setWordWrap(true);
     vl->addWidget(queueHint);
@@ -671,11 +687,11 @@ void AITranslaterWidget::fillLanguageCombo(QComboBox *cb, const QString &selectC
     cb->blockSignals(true);
     cb->clear();
     int selIdx = 0;
-    for(int i = 0; i < m_languages.size(); ++i)
+    for (int i = 0; i < m_languages.size(); ++i)
     {
         const auto &p = m_languages[i];
         cb->addItem(QString("%1 (%2)").arg(p.second, p.first), p.first);
-        if(p.first == selectCode)
+        if (p.first == selectCode)
             selIdx = i;
     }
     cb->setCurrentIndex(selIdx);
@@ -698,32 +714,36 @@ QString AITranslaterWidget::selectedTargetLang() const
 
 void AITranslaterWidget::setUiBusy(bool busy)
 {
-    if(m_btnTranslateText)
+    if (m_btnTranslateText)
         m_btnTranslateText->setEnabled(!busy);
-    if(m_btnTranslateDoc)
+    if (m_btnTranslateDoc)
         m_btnTranslateDoc->setEnabled(!busy);
-    if(m_btnTranslateDocAsync)
+    if (m_btnTranslateDocAsync)
         m_btnTranslateDocAsync->setEnabled(!busy);
-    if(m_progressDoc)
+    if (m_progressDoc)
         m_progressDoc->setVisible(busy);
 }
 
 void AITranslaterWidget::showStatus(const QString &msg, bool error)
 {
-    if(!m_lblStatus)
+    if (!m_lblStatus)
         return;
     m_lblStatus->setText(msg);
-    if(error)
-        m_lblStatus->setStyleSheet("font-size: 11.5px; color: #F87171; padding: 4px 8px; background-color: #2D0B0B; border: 1px solid #7F1D1D; border-radius: 0px;");
+    if (error)
+        m_lblStatus->setStyleSheet(
+            "font-size: 11.5px; color: #F87171; padding: 4px 8px; background-color: #2D0B0B; border: 1px solid "
+            "#7F1D1D; border-radius: 0px;");
     else
-        m_lblStatus->setStyleSheet("font-size: 11.5px; color: #94A3B8; padding: 4px 8px; background-color: #0B1120; border: 1px solid #1E293B; border-radius: 0px;");
+        m_lblStatus->setStyleSheet(
+            "font-size: 11.5px; color: #94A3B8; padding: 4px 8px; background-color: #0B1120; border: 1px solid "
+            "#1E293B; border-radius: 0px;");
 }
 
 void AITranslaterWidget::clearTextResults()
 {
-    if(m_editOutput)
+    if (m_editOutput)
         m_editOutput->clear();
-    if(m_lblTextInfo)
+    if (m_lblTextInfo)
         m_lblTextInfo->clear();
 }
 
@@ -733,7 +753,7 @@ void AITranslaterWidget::clearTextResults()
 
 void AITranslaterWidget::requestLanguages()
 {
-    if(!m_net)
+    if (!m_net)
     {
         showStatus(QString::fromUtf8("Нет соединения с сетью."), true);
         return;
@@ -744,42 +764,44 @@ void AITranslaterWidget::requestLanguages()
         net,
         &Network::sPullServiceUUID,
         this,
-        [this, net](const QJsonObject resp, const QString &, ServiceOperation so, bool ok)
-        {
+        [this, net](const QJsonObject resp, const QString &, ServiceOperation so, bool ok) {
             net->deleteLater();
-            if(!ok)
+            if (!ok)
             {
                 showStatus(QString::fromUtf8("Не удалось получить список языков."), true);
                 return;
             }
-            const QJsonObject result = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
+            const QJsonObject result
+                = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
 
             QJsonArray langs;
-            if(result.contains("languages_info") && result["languages_info"].isObject() && result["languages_info"].toObject().contains("languages"))
+            if (result.contains("languages_info") && result["languages_info"].isObject()
+                && result["languages_info"].toObject().contains("languages"))
                 langs = result["languages_info"].toObject()["languages"].toArray();
-            else if(result.contains("languages") && result["languages"].isArray())
+            else if (result.contains("languages") && result["languages"].isArray())
                 langs = result["languages"].toArray();
-            else if(result.contains("data") && result["data"].isObject() && result["data"].toObject().contains("languages"))
+            else if (
+                result.contains("data") && result["data"].isObject() && result["data"].toObject().contains("languages"))
                 langs = result["data"].toObject()["languages"].toArray();
-            else if(result.contains("data") && result["data"].isArray())
+            else if (result.contains("data") && result["data"].isArray())
                 langs = result["data"].toArray();
 
-            if(langs.isEmpty())
+            if (langs.isEmpty())
             {
                 showStatus(QString::fromUtf8("Список языков пуст. Используется встроенный список."));
                 return;
             }
             m_languages.clear();
-            for(const QJsonValue &v : langs)
+            for (const QJsonValue &v : langs)
             {
                 QJsonObject lo = v.toObject();
                 QString code = lo["code"].toString();
                 QString name = lo["name"].toString();
-                if(name.isEmpty())
+                if (name.isEmpty())
                     name = lo["name_ru"].toString();
-                if(name.isEmpty())
+                if (name.isEmpty())
                     name = lo["name_en"].toString();
-                if(!code.isEmpty() && !name.isEmpty())
+                if (!code.isEmpty() && !name.isEmpty())
                     m_languages.append({code, name});
             }
             // Refresh all combos
@@ -802,14 +824,14 @@ void AITranslaterWidget::requestLanguages()
 
 void AITranslaterWidget::sendTextTranslate()
 {
-    if(!m_net)
+    if (!m_net)
     {
         showStatus(QString::fromUtf8("Нет соединения с сетью."), true);
         return;
     }
 
     QString text = m_editInput ? m_editInput->toPlainText().trimmed() : QString();
-    if(text.isEmpty())
+    if (text.isEmpty())
     {
         showStatus(QString::fromUtf8("Введите текст для перевода."), true);
         return;
@@ -827,32 +849,36 @@ void AITranslaterWidget::sendTextTranslate()
         net,
         &Network::sPullServiceUUID,
         this,
-        [this, net](const QJsonObject resp, const QString &, ServiceOperation, bool ok)
-        {
+        [this, net](const QJsonObject resp, const QString &, ServiceOperation, bool ok) {
             net->deleteLater();
             setUiBusy(false);
-            const QJsonObject result = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
-            if(!ok || (!result["success"].isUndefined() && !result["success"].toBool()))
+            const QJsonObject result
+                = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
+            if (!ok || (!result["success"].isUndefined() && !result["success"].toBool()))
             {
                 QString err = result["error"].toString();
-                showStatus(QString::fromUtf8("Ошибка: ") + (err.isEmpty() ? QString::fromUtf8("не удалось выполнить перевод текста.") : err), true);
+                showStatus(
+                    QString::fromUtf8("Ошибка: ")
+                        + (err.isEmpty() ? QString::fromUtf8("не удалось выполнить перевод текста.") : err),
+                    true);
                 return;
             }
             QString translation = result["translation"].toString();
-            if(translation.isEmpty() && result.contains("translation_base64"))
+            if (translation.isEmpty() && result.contains("translation_base64"))
             {
                 QByteArray b64 = result["translation_base64"].toString().toLatin1();
                 translation = QString::fromUtf8(QByteArray::fromBase64(b64));
             }
-            if(m_editOutput)
+            if (m_editOutput)
                 m_editOutput->setPlainText(translation);
 
             QString provider = result["provider"].toString();
             double duration = result["duration_seconds"].toDouble();
             QString srcL = result["source_lang"].toString();
             QString dstL = result["target_lang"].toString();
-            if(m_lblTextInfo)
-                m_lblTextInfo->setText(QString::fromUtf8("Провайдер: %1 | %2→%3 | %.2f с").arg(provider, srcL, dstL).arg(duration));
+            if (m_lblTextInfo)
+                m_lblTextInfo->setText(
+                    QString::fromUtf8("Провайдер: %1 | %2→%3 | %.2f с").arg(provider, srcL, dstL).arg(duration));
             showStatus(QString::fromUtf8("Текст успешно переведён."));
         });
 
@@ -870,12 +896,12 @@ void AITranslaterWidget::sendTextTranslate()
 
 void AITranslaterWidget::sendDocumentTranslate(bool async)
 {
-    if(!m_net)
+    if (!m_net)
     {
         showStatus(QString::fromUtf8("Нет соединения с сетью."), true);
         return;
     }
-    if(m_pendingDocBytes.isEmpty() || m_pendingDocName.isEmpty())
+    if (m_pendingDocBytes.isEmpty() || m_pendingDocName.isEmpty())
     {
         showStatus(QString::fromUtf8("Сначала выберите файл документа."), true);
         return;
@@ -886,9 +912,12 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
     QString fmt = m_cbTargetFmt ? m_cbTargetFmt->currentText() : "docx";
 
     setUiBusy(true);
-    if(m_lblDocInfo)
-        m_lblDocInfo->setText(QString::fromUtf8("Отправка документа на сервер... (%1 байт)").arg(m_pendingDocBytes.size()));
-    showStatus(async ? QString::fromUtf8("Документ отправлен в очередь перевода...") : QString::fromUtf8("Синхронный перевод документа... Подождите."));
+    if (m_lblDocInfo)
+        m_lblDocInfo->setText(
+            QString::fromUtf8("Отправка документа на сервер... (%1 байт)").arg(m_pendingDocBytes.size()));
+    showStatus(
+        async ? QString::fromUtf8("Документ отправлен в очередь перевода...")
+              : QString::fromUtf8("Синхронный перевод документа... Подождите."));
 
     Network *net = new Network(*m_net);
     // Allow up to 5 minutes for large document translation
@@ -898,39 +927,49 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
         net,
         &Network::sPullServiceUUID,
         this,
-        [this, net, async](const QJsonObject resp, const QString &, ServiceOperation, bool ok)
-        {
+        [this, net, async](const QJsonObject resp, const QString &, ServiceOperation, bool ok) {
             net->deleteLater();
             setUiBusy(false);
 
-            const QJsonObject result = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
-            if(!ok || (!result["success"].isUndefined() && !result["success"].toBool()))
+            const QJsonObject result
+                = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
+            if (!ok || (!result["success"].isUndefined() && !result["success"].toBool()))
             {
                 QString err = result["error"].toString();
-                showStatus(QString::fromUtf8("Ошибка: ") + (err.isEmpty() ? QString::fromUtf8("сервер не вернул ответ или соединение прервано.") : err), true);
-                if(m_lblDocInfo)
+                showStatus(
+                    QString::fromUtf8("Ошибка: ")
+                        + (err.isEmpty() ? QString::fromUtf8("сервер не вернул ответ или соединение прервано.") : err),
+                    true);
+                if (m_lblDocInfo)
                     m_lblDocInfo->setText(err.isEmpty() ? QString::fromUtf8("Ошибка передачи документа.") : err);
                 return;
             }
 
-            if(async)
+            if (async)
             {
                 // Async: got task_id
-                QJsonObject taskObj = result.contains("task") && result["task"].isObject() ? result["task"].toObject() : result;
-                m_asyncTaskId = result.contains("task_id") ? result["task_id"].toString() : taskObj["task_id"].toString();
+                QJsonObject taskObj
+                    = result.contains("task") && result["task"].isObject() ? result["task"].toObject() : result;
+                m_asyncTaskId
+                    = result.contains("task_id") ? result["task_id"].toString() : taskObj["task_id"].toString();
                 QString status = result.contains("status") ? result["status"].toString() : taskObj["status"].toString();
-                if(status.isEmpty())
+                if (status.isEmpty())
                     status = "queued";
 
-                QString srcL = result.contains("source_lang") ? result["source_lang"].toString() : taskObj["source_lang"].toString();
-                QString dstL = result.contains("target_lang") ? result["target_lang"].toString() : taskObj["target_lang"].toString();
+                QString srcL = result.contains("source_lang") ? result["source_lang"].toString()
+                                                              : taskObj["source_lang"].toString();
+                QString dstL = result.contains("target_lang") ? result["target_lang"].toString()
+                                                              : taskObj["target_lang"].toString();
 
-                if(m_lblDocInfo)
-                    m_lblDocInfo->setText(QString::fromUtf8("Задача принята. ID: %1 | Статус: %2").arg(m_asyncTaskId, status));
-                showStatus(QString::fromUtf8("Задача #%1 добавлена в очередь. Отслеживайте прогресс на вкладке «Очередь».").arg(m_asyncTaskId));
+                if (m_lblDocInfo)
+                    m_lblDocInfo->setText(
+                        QString::fromUtf8("Задача принята. ID: %1 | Статус: %2").arg(m_asyncTaskId, status));
+                showStatus(
+                    QString::fromUtf8("Задача #%1 добавлена в очередь. Отслеживайте прогресс на вкладке «Очередь».")
+                        .arg(m_asyncTaskId));
 
                 // Add row to queue table
-                if(m_queueTable && !m_asyncTaskId.isEmpty())
+                if (m_queueTable && !m_asyncTaskId.isEmpty())
                 {
                     int row = m_queueTable->rowCount();
                     m_queueTable->insertRow(row);
@@ -946,61 +985,65 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                     dlBtn->setEnabled(false);
                     dlBtn->setStyleSheet(AITT_STYLE_BTN_PRIMARY);
                     QString capturedTaskId = m_asyncTaskId;
-                    connect(
-                        dlBtn,
-                        &QPushButton::clicked,
-                        this,
-                        [this, capturedTaskId]()
-                        {
-                            // Build get request to fetch completed file
-                            if(!m_net)
-                                return;
-                            Network *getNet = new Network(*m_net);
-                            connect(
-                                getNet,
-                                &Network::sPullServiceUUID,
-                                this,
-                                [this, getNet](const QJsonObject resp2, const QString &, ServiceOperation, bool ok2)
+                    connect(dlBtn, &QPushButton::clicked, this, [this, capturedTaskId]() {
+                        // Build get request to fetch completed file
+                        if (!m_net)
+                            return;
+                        Network *getNet = new Network(*m_net);
+                        connect(
+                            getNet,
+                            &Network::sPullServiceUUID,
+                            this,
+                            [this, getNet](const QJsonObject resp2, const QString &, ServiceOperation, bool ok2) {
+                                getNet->deleteLater();
+                                if (!ok2)
                                 {
-                                    getNet->deleteLater();
-                                    if(!ok2)
-                                    {
-                                        showStatus(QString::fromUtf8("Не удалось получить файл задачи."), true);
-                                        return;
-                                    }
-                                    const QJsonObject r2 = resp2.contains("result") && resp2["result"].isObject() ? resp2["result"].toObject() : resp2;
-                                    if(!r2["success"].toBool())
-                                    {
-                                        QString err = r2["error"].toString();
-                                        showStatus(QString::fromUtf8("Ошибка: ") + (err.isEmpty() ? QString::fromUtf8("файл ещё не готов или произошла ошибка.") : err), true);
-                                        return;
-                                    }
-                                    QString b64 = r2["file_base64"].toString();
-                                    QString fname = r2["filename"].toString();
-                                    if(b64.isEmpty())
-                                    {
-                                        showStatus(QString::fromUtf8("Сервер вернул пустой файл."), true);
-                                        return;
-                                    }
-                                    QByteArray fileData = QByteArray::fromBase64(b64.toLatin1());
-                                    QString savePath = QFileDialog::getSaveFileName(this, QString::fromUtf8("Сохранить переведённый документ"), QDir::homePath() + "/" + fname);
-                                    if(savePath.isEmpty())
-                                        return;
-                                    QFile out(savePath);
-                                    if(out.open(QIODevice::WriteOnly))
-                                    {
-                                        out.write(fileData);
-                                        out.close();
-                                        showStatus(QString::fromUtf8("Файл сохранён: ") + savePath);
-                                    }
-                                    else
-                                        showStatus(QString::fromUtf8("Не удалось сохранить файл."), true);
-                                });
-                            QJsonObject svcGet;
-                            svcGet["task_id"] = capturedTaskId;
-                            svcGet["include_file"] = true;
-                            getNet->pullServiceUUID(IDServiceAITranslaterString, svcGet, ServiceOperation::Get);
-                        });
+                                    showStatus(QString::fromUtf8("Не удалось получить файл задачи."), true);
+                                    return;
+                                }
+                                const QJsonObject r2 = resp2.contains("result") && resp2["result"].isObject()
+                                                           ? resp2["result"].toObject()
+                                                           : resp2;
+                                if (!r2["success"].toBool())
+                                {
+                                    QString err = r2["error"].toString();
+                                    showStatus(
+                                        QString::fromUtf8("Ошибка: ")
+                                            + (err.isEmpty()
+                                                   ? QString::fromUtf8("файл ещё не готов или произошла ошибка.")
+                                                   : err),
+                                        true);
+                                    return;
+                                }
+                                QString b64 = r2["file_base64"].toString();
+                                QString fname = r2["filename"].toString();
+                                if (b64.isEmpty())
+                                {
+                                    showStatus(QString::fromUtf8("Сервер вернул пустой файл."), true);
+                                    return;
+                                }
+                                QByteArray fileData = QByteArray::fromBase64(b64.toLatin1());
+                                QString savePath = QFileDialog::getSaveFileName(
+                                    this,
+                                    QString::fromUtf8("Сохранить переведённый документ"),
+                                    QDir::homePath() + "/" + fname);
+                                if (savePath.isEmpty())
+                                    return;
+                                QFile out(savePath);
+                                if (out.open(QIODevice::WriteOnly))
+                                {
+                                    out.write(fileData);
+                                    out.close();
+                                    showStatus(QString::fromUtf8("Файл сохранён: ") + savePath);
+                                }
+                                else
+                                    showStatus(QString::fromUtf8("Не удалось сохранить файл."), true);
+                            });
+                        QJsonObject svcGet;
+                        svcGet["task_id"] = capturedTaskId;
+                        svcGet["include_file"] = true;
+                        getNet->pullServiceUUID(IDServiceAITranslaterString, svcGet, ServiceOperation::Get);
+                    });
                     m_queueTable->setCellWidget(row, 5, dlBtn);
                     m_queueTable->verticalHeader()->setSectionResizeMode(row, QHeaderView::Fixed);
                     m_queueTable->setRowHeight(row, 36);
@@ -1014,23 +1057,27 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                 int units = result["units_total"].toInt();
                 int unitsOk = result["units_translated"].toInt();
 
-                if(b64.isEmpty())
+                if (b64.isEmpty())
                 {
                     showStatus(QString::fromUtf8("Сервер вернул пустой результат."), true);
                     return;
                 }
 
                 QByteArray fileData = QByteArray::fromBase64(b64.toLatin1());
-                QString savePath = QFileDialog::getSaveFileName(this, QString::fromUtf8("Сохранить переведённый документ"), QDir::homePath() + "/" + fname, QString::fromUtf8("Документы (*.docx *.pdf *.txt *.odt);;Все файлы (*)"));
+                QString savePath = QFileDialog::getSaveFileName(
+                    this,
+                    QString::fromUtf8("Сохранить переведённый документ"),
+                    QDir::homePath() + "/" + fname,
+                    QString::fromUtf8("Документы (*.docx *.pdf *.txt *.odt);;Все файлы (*)"));
 
-                if(savePath.isEmpty())
+                if (savePath.isEmpty())
                 {
                     showStatus(QString::fromUtf8("Сохранение отменено."));
                     return;
                 }
 
                 QFile out(savePath);
-                if(!out.open(QIODevice::WriteOnly))
+                if (!out.open(QIODevice::WriteOnly))
                 {
                     showStatus(QString::fromUtf8("Не удалось создать файл: ") + savePath, true);
                     return;
@@ -1038,8 +1085,13 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                 out.write(fileData);
                 out.close();
 
-                if(m_lblDocInfo)
-                    m_lblDocInfo->setText(QString::fromUtf8("Переведено фрагментов: %1 из %2 | Файл: %3 (%4 байт)").arg(unitsOk).arg(units).arg(fname).arg(fileData.size()));
+                if (m_lblDocInfo)
+                    m_lblDocInfo->setText(
+                        QString::fromUtf8("Переведено фрагментов: %1 из %2 | Файл: %3 (%4 байт)")
+                            .arg(unitsOk)
+                            .arg(units)
+                            .arg(fname)
+                            .arg(fileData.size()));
                 showStatus(QString::fromUtf8("Документ переведён и сохранён: ") + savePath);
             }
         });
@@ -1050,7 +1102,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
     svc["source_lang"] = srcLang;
     svc["target_lang"] = dstLang;
     svc["target_format"] = fmt;
-    if(async)
+    if (async)
         svc["async"] = true;
 
     net->pullServiceUUID(IDServiceAITranslaterString, svc, ServiceOperation::Set);
@@ -1062,12 +1114,12 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
 
 void AITranslaterWidget::pollAsyncTask()
 {
-    if(m_asyncTaskId.isEmpty())
+    if (m_asyncTaskId.isEmpty())
     {
         showStatus(QString::fromUtf8("Нет активной асинхронной задачи для проверки."));
         return;
     }
-    if(!m_net)
+    if (!m_net)
         return;
 
     showStatus(QString::fromUtf8("Проверка статуса задачи #%1...").arg(m_asyncTaskId));
@@ -1077,49 +1129,55 @@ void AITranslaterWidget::pollAsyncTask()
         net,
         &Network::sPullServiceUUID,
         this,
-        [this, net](const QJsonObject resp, const QString &, ServiceOperation, bool ok)
-        {
+        [this, net](const QJsonObject resp, const QString &, ServiceOperation, bool ok) {
             net->deleteLater();
-            if(!ok)
+            if (!ok)
             {
                 showStatus(QString::fromUtf8("Ошибка проверки статуса задачи."), true);
                 return;
             }
-            const QJsonObject result = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
-            QJsonObject taskObj = result.contains("task") && result["task"].isObject() ? result["task"].toObject() : result;
+            const QJsonObject result
+                = resp.contains("result") && resp["result"].isObject() ? resp["result"].toObject() : resp;
+            QJsonObject taskObj
+                = result.contains("task") && result["task"].isObject() ? result["task"].toObject() : result;
 
             QString status = taskObj.contains("status") ? taskObj["status"].toString() : result["status"].toString();
             int progress = taskObj.contains("progress") ? taskObj["progress"].toInt(0) : result["progress"].toInt(0);
 
             // Update table row if exists
-            if(m_queueTable)
+            if (m_queueTable)
             {
-                for(int r = 0; r < m_queueTable->rowCount(); ++r)
+                for (int r = 0; r < m_queueTable->rowCount(); ++r)
                 {
                     auto *idItem = m_queueTable->item(r, 0);
-                    if(idItem && idItem->text() == m_asyncTaskId)
+                    if (idItem && idItem->text() == m_asyncTaskId)
                     {
                         m_queueTable->item(r, 3)->setText(status);
-                        m_queueTable->item(r, 4)->setText(progress > 0 ? QString("%1%").arg(progress) : (status == "completed" ? "100%" : "-"));
+                        m_queueTable->item(r, 4)->setText(
+                            progress > 0 ? QString("%1%").arg(progress) : (status == "completed" ? "100%" : "-"));
 
-                        if(status == "completed")
+                        if (status == "completed")
                         {
                             auto *dlBtn = qobject_cast<QPushButton *>(m_queueTable->cellWidget(r, 5));
-                            if(dlBtn)
+                            if (dlBtn)
                                 dlBtn->setEnabled(true);
-                            showStatus(QString::fromUtf8("Задача #%1 завершена! Нажмите «Скачать».").arg(m_asyncTaskId));
+                            showStatus(
+                                QString::fromUtf8("Задача #%1 завершена! Нажмите «Скачать».").arg(m_asyncTaskId));
                         }
                         break;
                     }
                 }
             }
 
-            if(status != "completed" && status != "failed")
+            if (status != "completed" && status != "failed")
                 showStatus(QString::fromUtf8("Статус #%1: %2 (%3%)").arg(m_asyncTaskId, status).arg(progress));
-            else if(status == "failed")
+            else if (status == "failed")
             {
                 QString err = result.contains("error") ? result["error"].toString() : taskObj["error"].toString();
-                showStatus(QString::fromUtf8("Ошибка: Задача #%1 завершилась с ошибкой: %2").arg(m_asyncTaskId, err.isEmpty() ? QString::fromUtf8("сбой") : err), true);
+                showStatus(
+                    QString::fromUtf8("Ошибка: Задача #%1 завершилась с ошибкой: %2")
+                        .arg(m_asyncTaskId, err.isEmpty() ? QString::fromUtf8("сбой") : err),
+                    true);
             }
         });
 
@@ -1131,31 +1189,31 @@ void AITranslaterWidget::pollAsyncTask()
 
 void AITranslaterWidget::resetSession()
 {
-    if(m_pollTimer && m_pollTimer->isActive())
+    if (m_pollTimer && m_pollTimer->isActive())
         m_pollTimer->stop();
 
     m_asyncTaskId.clear();
     m_pendingDocBytes.clear();
     m_pendingDocName.clear();
 
-    if(m_editInput)
+    if (m_editInput)
         m_editInput->clear();
-    if(m_editOutput)
+    if (m_editOutput)
         m_editOutput->clear();
-    if(m_lblTextInfo)
+    if (m_lblTextInfo)
         m_lblTextInfo->setText(QString::fromUtf8("Символов: 0 | Слов: 0"));
 
-    if(m_editDocPath)
+    if (m_editDocPath)
         m_editDocPath->clear();
-    if(m_lblDocInfo)
+    if (m_lblDocInfo)
         m_lblDocInfo->clear();
-    if(m_progressDoc)
+    if (m_progressDoc)
     {
         m_progressDoc->setValue(0);
         m_progressDoc->setVisible(false);
     }
 
-    if(m_queueTable)
+    if (m_queueTable)
         m_queueTable->setRowCount(0);
 
     setUiBusy(false);
@@ -1172,7 +1230,9 @@ struct ATSInternalData
     bool finished = false;
 };
 
-AITranslaterService::AITranslaterService(QObject *parent) : Service(DeviceConnectType::None, parent), mInternal(new ATSInternalData)
+AITranslaterService::AITranslaterService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
+    , mInternal(new ATSInternalData)
 {
     title = QString::fromUtf8("Переводчик документов (ИИ)");
     active = true;
@@ -1192,10 +1252,15 @@ QString AITranslaterService::uuid() const
 QString AITranslaterService::getInternalData()
 {
     QStringList data;
-    auto *widget = MainWindow::current ? static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage)) : nullptr;
-    if(widget)
+    auto *widget = MainWindow::current
+                       ? static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage))
+                       : nullptr;
+    if (widget)
     {
-        data << "Source language = " + widget->selectedSourceLang() << "Target language = " + widget->selectedTargetLang() << "Input text = " + widget->m_editInput->toPlainText() << "Output text = " + widget->m_editOutput->toPlainText() << "Document = " + widget->m_editDocPath->text()
+        data << "Source language = " + widget->selectedSourceLang()
+             << "Target language = " + widget->selectedTargetLang()
+             << "Input text = " + widget->m_editInput->toPlainText()
+             << "Output text = " + widget->m_editOutput->toPlainText() << "Document = " + widget->m_editDocPath->text()
              << "Target format = " + widget->m_cbTargetFmt->currentText() << "Async task = " + widget->m_asyncTaskId;
     }
     return Service::getInternalData() + ":" + data.join('\t');
@@ -1228,16 +1293,16 @@ bool AITranslaterService::isFinish()
 
 bool AITranslaterService::start()
 {
-    if(mInternal)
+    if (mInternal)
     {
         mInternal->started = true;
         mInternal->finished = false;
     }
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
             widget->setNetwork(&MainWindow::current->network);
@@ -1249,16 +1314,16 @@ bool AITranslaterService::start()
 
 void AITranslaterService::stop()
 {
-    if(mInternal)
+    if (mInternal)
     {
         mInternal->started = false;
         mInternal->finished = true;
     }
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<AITranslaterWidget *>(MainWindow::current->pageWidget(AITranslaterPage));
-        if(widget)
+        if (widget)
             widget->resetSession();
     }
 }

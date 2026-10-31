@@ -41,7 +41,9 @@ class CyberStreamOverlay : public QWidget
     Q_PROPERTY(qreal phase READ phase WRITE setPhase)
 
 public:
-    explicit CyberStreamOverlay(QWidget *parent = nullptr) : QWidget(parent), m_phase(0.0)
+    explicit CyberStreamOverlay(QWidget *parent = nullptr)
+        : QWidget(parent)
+        , m_phase(0.0)
     {
         setAttribute(Qt::WA_TransparentForMouseEvents);
         setAttribute(Qt::WA_NoSystemBackground);
@@ -88,9 +90,9 @@ protected:
         const qreal colSpeeds[] = {1.35, 0.95, 1.60, 1.15, 1.45, 0.85};
         const int colsCount = sizeof(colX) / sizeof(colX[0]);
 
-        for(int c = 0; c < colsCount; ++c)
+        for (int c = 0; c < colsCount; ++c)
         {
-            if(colX[c] > boundW)
+            if (colX[c] > boundW)
                 continue;
 
             qreal shift = std::fmod(m_phase * colSpeeds[c] * totalH, totalH);
@@ -112,10 +114,10 @@ protected:
             painter.setPen(QPen(QBrush(beamGrad), 1.6));
             painter.drawLine(QPointF(colX[c], pulseY + 45.0), QPointF(colX[c], pulseY - 45.0));
 
-            for(qreal y = totalH + charH; y >= -charH; y -= charH)
+            for (qreal y = totalH + charH; y >= -charH; y -= charH)
             {
                 qreal curY = y - shift;
-                while(curY < -charH)
+                while (curY < -charH)
                     curY += (totalH + charH * 2.0);
 
                 qreal normY = 1.0 - (curY / totalH);
@@ -126,9 +128,9 @@ protected:
                 QChar ch = streamData.at(charIdx);
 
                 QColor textColor;
-                if((c + charIdx) % 9 == 0)
+                if ((c + charIdx) % 9 == 0)
                     textColor = QColor(255, 75, 75);
-                else if((c + charIdx) % 5 == 0)
+                else if ((c + charIdx) % 5 == 0)
                     textColor = QColor(52, 211, 153);
                 else
                     textColor = QColor(0, 245, 255);
@@ -153,12 +155,12 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
 
     QSharedMemory sharedMemUpdate("imister.kz-app_adskiller_v1_update");
-    if(sharedMemUpdate.attach() || !checkout())
+    if (sharedMemUpdate.attach() || !checkout())
     {
         return EXIT_FAILURE;
     }
     QSharedMemory sharedMem("imister.kz-app_adskiller_v1");
-    if(sharedMem.attach())
+    if (sharedMem.attach())
     {
         sharedMem.lock();
         int len = qMin<int>(strlen(ShowCommandPipe), sharedMem.size());
@@ -167,7 +169,7 @@ int main(int argc, char **argv)
         sharedMem.detach();
         return EXIT_SUCCESS;
     }
-    if(!sharedMem.create(128))
+    if (!sharedMem.create(128))
     {
         return EXIT_FAILURE;
     }
@@ -206,61 +208,55 @@ int main(int argc, char **argv)
     MainWindow *w = new MainWindow;
     MainWindow::current = w;
     w->app = &app;
-    w->delayUICallLoop(
-        100,
-        [&sharedMem, &w]() -> bool
-        {
-            if(!sharedMem.lock())
-                return true;
-
-            const char *data = reinterpret_cast<const char *>(sharedMem.constData());
-            int len = 0;
-            while(len < sharedMem.size() && data[len] != '\0')
-            {
-                len++;
-            }
-            QString cmd = QString::fromLatin1(data, len);
-
-            if(cmd == ShowCommandPipe)
-            {
-                w->showNormal();
-            }
-            if(cmd == HideCommandPipe)
-            {
-                w->hide();
-            }
-            memset(sharedMem.data(), 0, 1);
-            sharedMem.unlock();
+    w->delayUICallLoop(100, [&sharedMem, &w]() -> bool {
+        if (!sharedMem.lock())
             return true;
-        });
 
-    QTimer::singleShot(
-        3000,
-        [&]()
+        const char *data = reinterpret_cast<const char *>(sharedMem.constData());
+        int len = 0;
+        while (len < sharedMem.size() && data[len] != '\0')
         {
-            if(w)
+            len++;
+        }
+        QString cmd = QString::fromLatin1(data, len);
+
+        if (cmd == ShowCommandPipe)
+        {
+            w->showNormal();
+        }
+        if (cmd == HideCommandPipe)
+        {
+            w->hide();
+        }
+        memset(sharedMem.data(), 0, 1);
+        sharedMem.unlock();
+        return true;
+    });
+
+    QTimer::singleShot(3000, [&]() {
+        if (w)
+        {
+            QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
+            if (!screen)
+                screen = QGuiApplication::primaryScreen();
+            if (screen)
             {
-                QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
-                if(!screen)
-                    screen = QGuiApplication::primaryScreen();
-                if(screen)
-                {
-                    QRect screenGeo = screen->availableGeometry();
-                    int x = qMax(screenGeo.x(), screenGeo.x() + (screenGeo.width() - w->width()) / 2);
-                    int y = qMax(screenGeo.y(), screenGeo.y() + (screenGeo.height() - w->height()) / 2);
-                    w->move(x, y);
-                }
-                w->show();
+                QRect screenGeo = screen->availableGeometry();
+                int x = qMax(screenGeo.x(), screenGeo.x() + (screenGeo.width() - w->width()) / 2);
+                int y = qMax(screenGeo.y(), screenGeo.y() + (screenGeo.height() - w->height()) / 2);
+                w->move(x, y);
             }
-            if(banner)
-            {
-                dismissBanner(banner);
-                banner = nullptr;
-            }
-        });
+            w->show();
+        }
+        if (banner)
+        {
+            dismissBanner(banner);
+            banner = nullptr;
+        }
+    });
 
     exitCode = app.exec();
-    if(w != nullptr)
+    if (w != nullptr)
         delete w;
     sharedMem.detach();
     return exitCode;
@@ -270,7 +266,7 @@ bool checkout()
 {
     QDir qdir;
     QString adbfile = AdbExecutableFilename();
-    if(!qdir.exists(adbfile))
+    if (!qdir.exists(adbfile))
     {
         qDebug() << "Adb not found";
         return false;
@@ -290,17 +286,17 @@ QWidget *createBanner()
     QLabel *lab = new QLabel(banner);
 
     QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
-    if(!screen)
+    if (!screen)
     {
         screen = QGuiApplication::primaryScreen();
     }
 
     QRect screenGeo = screen ? screen->availableGeometry() : QRect(0, 0, 1920, 1080);
 
-    if(!pixmap.isNull())
+    if (!pixmap.isNull())
     {
         int maxH = static_cast<int>(screenGeo.height() * 0.80);
-        if(pixmap.height() > maxH && maxH > 200)
+        if (pixmap.height() > maxH && maxH > 200)
         {
             pixmap = pixmap.scaledToHeight(maxH, Qt::SmoothTransformation);
         }
@@ -329,7 +325,7 @@ QWidget *createBanner()
 
 void dismissBanner(QWidget *banner)
 {
-    if(!banner)
+    if (!banner)
         return;
 
     banner->close();

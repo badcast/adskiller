@@ -6,7 +6,18 @@
 #include <QPainterPath>
 
 ProgressCircle::ProgressCircle(QWidget *parent)
-    : QWidget(parent), mInfinilyMode(true), mVisibleText(true), mValue(0), mMaximum(100), mInnerRadius(0.6), mOuterRadius(1.0), mColor(76, 194, 255), mVisibleValue(0), mValueAnimation(this, "visibleValue"), mInfiniteAnimation(this, "infiniteAnimationValue"), mInfiniteAnimationValue(0.0)
+    : QWidget(parent)
+    , mInfinilyMode(true)
+    , mVisibleText(true)
+    , mValue(0)
+    , mMaximum(100)
+    , mInnerRadius(0.6)
+    , mOuterRadius(1.0)
+    , mColor(76, 194, 255)
+    , mVisibleValue(0)
+    , mValueAnimation(this, "visibleValue")
+    , mInfiniteAnimation(this, "infiniteAnimationValue")
+    , mInfiniteAnimationValue(0.0)
 {
     mValueAnimation.setEasingCurve(QEasingCurve::OutCubic);
     mInfiniteAnimation.setLoopCount(-1);
@@ -53,10 +64,10 @@ bool ProgressCircle::getVisibleText() const
 
 void ProgressCircle::setValue(int value)
 {
-    if(value < 0)
+    if (value < 0)
         value = 0;
 
-    if(mValue != value)
+    if (mValue != value)
     {
         mValueAnimation.stop();
         mValueAnimation.setEndValue(value);
@@ -72,7 +83,7 @@ void ProgressCircle::setInfinilyMode(bool value)
 {
     mInfinilyMode = value;
     update();
-    if(value)
+    if (value)
     {
         mInfiniteAnimation.start();
     }
@@ -84,7 +95,7 @@ void ProgressCircle::setInfinilyMode(bool value)
 
 void ProgressCircle::setVisibleText(bool value)
 {
-    if(mVisibleText != value)
+    if (mVisibleText != value)
     {
         mVisibleText = value;
         update();
@@ -93,10 +104,10 @@ void ProgressCircle::setVisibleText(bool value)
 
 void ProgressCircle::setMaximum(int maximum)
 {
-    if(maximum < 0)
+    if (maximum < 0)
         maximum = 0;
 
-    if(mMaximum != maximum)
+    if (mMaximum != maximum)
     {
         mMaximum = maximum;
         update();
@@ -106,12 +117,12 @@ void ProgressCircle::setMaximum(int maximum)
 
 void ProgressCircle::setInnerRadius(qreal innerRadius)
 {
-    if(innerRadius > 1.0)
+    if (innerRadius > 1.0)
         innerRadius = 1.0;
-    if(innerRadius < 0.0)
+    if (innerRadius < 0.0)
         innerRadius = 0.0;
 
-    if(mInnerRadius != innerRadius)
+    if (mInnerRadius != innerRadius)
     {
         mInnerRadius = innerRadius;
         update();
@@ -120,12 +131,12 @@ void ProgressCircle::setInnerRadius(qreal innerRadius)
 
 void ProgressCircle::setOuterRadius(qreal outerRadius)
 {
-    if(outerRadius > 1.0)
+    if (outerRadius > 1.0)
         outerRadius = 1.0;
-    if(outerRadius < 0.0)
+    if (outerRadius < 0.0)
         outerRadius = 0.0;
 
-    if(mOuterRadius != outerRadius)
+    if (mOuterRadius != outerRadius)
     {
         mOuterRadius = outerRadius;
         update();
@@ -134,7 +145,7 @@ void ProgressCircle::setOuterRadius(qreal outerRadius)
 
 void ProgressCircle::setColor(QColor color)
 {
-    if(color != mColor)
+    if (color != mColor)
     {
         mColor = color;
         update();
@@ -143,7 +154,7 @@ void ProgressCircle::setColor(QColor color)
 
 static QRectF squared(QRectF rect)
 {
-    if(rect.width() > rect.height())
+    if (rect.width() > rect.height())
     {
         qreal diff = rect.width() - rect.height();
         return rect.adjusted(diff / 2, 0, -diff / 2, 0);
@@ -158,7 +169,7 @@ static QRectF squared(QRectF rect)
 void ProgressCircle::paintEvent(QPaintEvent *)
 {
     QPixmap pixmap;
-    if(!QPixmapCache::find(key(), &pixmap))
+    if (!QPixmapCache::find(key(), &pixmap))
     {
         pixmap = generatePixmap();
         QPixmapCache::insert(key(), pixmap);
@@ -176,7 +187,7 @@ void ProgressCircle::setInfiniteAnimationValue(qreal value)
 
 void ProgressCircle::setVisibleValue(int value)
 {
-    if(mVisibleValue != value)
+    if (mVisibleValue != value)
     {
         mVisibleValue = value;
         update();
@@ -185,13 +196,23 @@ void ProgressCircle::setVisibleValue(int value)
 
 QString ProgressCircle::key() const
 {
-    return QString("%1,%2,%3,%4,%5,%6,%7,%8,%9,%10").arg(mInfiniteAnimationValue).arg(mVisibleValue).arg(mMaximum).arg(mInnerRadius).arg(mOuterRadius).arg(width()).arg(height()).arg(mColor.rgb()).arg(mInfinilyMode).arg(mVisibleText);
+    return QString("%1,%2,%3,%4,%5,%6,%7,%8,%9,%10")
+        .arg(mInfiniteAnimationValue)
+        .arg(mVisibleValue)
+        .arg(mMaximum)
+        .arg(mInnerRadius)
+        .arg(mOuterRadius)
+        .arg(width())
+        .arg(height())
+        .arg(mColor.rgb())
+        .arg(mInfinilyMode)
+        .arg(mVisibleText);
 }
 
 QPixmap ProgressCircle::generatePixmap() const
 {
     QSize size = squared(rect()).size().toSize();
-    if(size.width() < 10 || size.height() < 10)
+    if (size.width() < 10 || size.height() < 10)
         return QPixmap();
 
     QPixmap pixmap(size);
@@ -209,7 +230,7 @@ QPixmap ProgressCircle::generatePixmap() const
 
     const QPointF center = circleRect.center();
     const qreal radius = circleRect.width() / 2.0;
-    if(radius <= 6.0)
+    if (radius <= 6.0)
         return pixmap;
 
     const int totalSegments = 36;
@@ -225,7 +246,7 @@ QPixmap ProgressCircle::generatePixmap() const
     painter.setBrush(Qt::NoBrush);
     painter.drawEllipse(center, outerR + 3.0, outerR + 3.0);
 
-    for(int i = 0; i < totalSegments; ++i)
+    for (int i = 0; i < totalSegments; ++i)
     {
         qreal angleDeg = -90.0 + (i * (360.0 / totalSegments));
         qreal rad = qDegreesToRadians(angleDeg);
@@ -239,14 +260,14 @@ QPixmap ProgressCircle::generatePixmap() const
         bool isActive = false;
         qreal intensity = 0.0;
 
-        if(mInfinilyMode)
+        if (mInfinilyMode)
         {
             qreal headPos = mInfiniteAnimationValue * totalSegments;
             qreal dist = std::fmod(std::abs(i - headPos), totalSegments);
-            if(dist > totalSegments / 2.0)
+            if (dist > totalSegments / 2.0)
                 dist = totalSegments - dist;
 
-            if(dist < 7.0)
+            if (dist < 7.0)
             {
                 isActive = true;
                 intensity = 1.0 - (dist / 7.0);
@@ -258,7 +279,7 @@ QPixmap ProgressCircle::generatePixmap() const
             intensity = isActive ? 1.0 : 0.0;
         }
 
-        if(isActive)
+        if (isActive)
         {
             QColor segColor = mColor.lighter(110 + static_cast<int>(intensity * 40));
             segColor.setAlpha(qBound(40, static_cast<int>(intensity * 255), 255));
@@ -273,7 +294,7 @@ QPixmap ProgressCircle::generatePixmap() const
     }
 
     qreal coreR = innerR - 6.0;
-    if(coreR > 10.0)
+    if (coreR > 10.0)
     {
         painter.setPen(QPen(QColor(mColor.red(), mColor.green(), mColor.blue(), 70), 1.0, Qt::DashLine));
         painter.setBrush(QColor(10, 14, 20, 180));
@@ -286,7 +307,7 @@ QPixmap ProgressCircle::generatePixmap() const
         painter.drawLine(QPointF(center.x() + coreR, center.y()), QPointF(center.x() + coreR - 4.0, center.y()));
     }
 
-    if(mInfinilyMode && coreR > 12.0)
+    if (mInfinilyMode && coreR > 12.0)
     {
         painter.save();
         QPainterPath clipPath;
@@ -307,32 +328,33 @@ QPixmap ProgressCircle::generatePixmap() const
         const int numCols = 5;
         const qreal startColX = center.x() - ((numCols - 1) * colSpacing) / 2.0;
 
-        for(int col = 0; col < numCols; ++col)
+        for (int col = 0; col < numCols; ++col)
         {
             qreal colX = startColX + col * colSpacing;
             qreal colCenterDist = std::abs(col - (numCols - 1) / 2.0);
             qreal colAlphaScale = 1.0 - (colCenterDist * 0.22);
             int colSeed = col * 7;
 
-            for(qreal y = center.y() + coreR + lineHeight; y >= center.y() - coreR - lineHeight; y -= lineHeight)
+            for (qreal y = center.y() + coreR + lineHeight; y >= center.y() - coreR - lineHeight; y -= lineHeight)
             {
                 qreal streamY = y - streamShift;
-                while(streamY < center.y() - coreR)
+                while (streamY < center.y() - coreR)
                     streamY += (coreR * 2.0 + lineHeight * 2.0);
 
                 qreal distFromCenter = std::sqrt(std::pow(colX - center.x(), 2) + std::pow(streamY - center.y(), 2));
-                if(distFromCenter >= coreR - 2.0)
+                if (distFromCenter >= coreR - 2.0)
                     continue;
 
-                int charIndex = std::abs(static_cast<int>((center.y() + coreR - streamY) / lineHeight) + colSeed) % binaryStream.length();
+                int charIndex = std::abs(static_cast<int>((center.y() + coreR - streamY) / lineHeight) + colSeed)
+                                % binaryStream.length();
                 QChar ch = binaryStream.at(charIndex);
 
                 qreal edgeFade = qBound(0.0, 1.0 - (distFromCenter / (coreR - 2.0)), 1.0);
 
                 QColor charColor;
-                if((col + charIndex) % 11 == 0)
+                if ((col + charIndex) % 11 == 0)
                     charColor = QColor(255, 60, 70);
-                else if((col + charIndex) % 5 == 0)
+                else if ((col + charIndex) % 5 == 0)
                     charColor = QColor(50, 230, 130);
                 else
                     charColor = QColor(0, 220, 255);
@@ -341,12 +363,13 @@ QPixmap ProgressCircle::generatePixmap() const
                 charColor.setAlpha(alpha);
 
                 painter.setPen(charColor);
-                painter.drawText(QPointF(colX - fmBin.horizontalAdvance(ch) / 2.0, streamY + fmBin.ascent() / 2.0), QString(ch));
+                painter.drawText(
+                    QPointF(colX - fmBin.horizontalAdvance(ch) / 2.0, streamY + fmBin.ascent() / 2.0), QString(ch));
             }
         }
         painter.restore();
     }
-    else if(mVisibleText && !mInfinilyMode)
+    else if (mVisibleText && !mInfinilyMode)
     {
         QString numStr = QString::number(value);
 

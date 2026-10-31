@@ -70,7 +70,11 @@
 
 MainWindow *MainWindow::current;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), timerAuthAnim(nullptr), app(qApp)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+    , timerAuthAnim(nullptr)
+    , app(qApp)
 {
     QStringListModel *model;
     ui->setupUi(this);
@@ -89,14 +93,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     AppSetting::removeEncToken();
 
     std::tuple<QString, QString> _ps = AppSetting::loginAndPass(&paramCheck);
-    if(paramCheck)
+    if (paramCheck)
     {
         ui->lineLoginEdit->setText(std::get<0>(_ps));
         ui->linePassEdit->setText(std::get<1>(_ps));
     }
 
     value = AppSetting::autoLogin(&paramCheck);
-    if(paramCheck)
+    if (paramCheck)
     {
         ui->checkAutoLogin->setChecked(value.toBool());
     }
@@ -106,7 +110,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     value = AppSetting::networkTimeout(&paramCheck);
-    if(paramCheck && value.toInt() >= 1000)
+    if (paramCheck && value.toInt() >= 1000)
     {
         value = value.toInt() > 60000 ? 60000 : value.toInt();
     }
@@ -118,7 +122,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     network.setTimeout(value.toInt());
 
     AppSetting::analyticsEnabled(&paramCheck);
-    if(!paramCheck)
+    if (!paramCheck)
     {
         // Default is TRUE
         AppSetting::analyticsEnabled(nullptr, (true));
@@ -129,21 +133,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     m_pixelBlastService = std::make_shared<PixelBlastGameService>(this);
     m_pixelBlastSideButton = new PixelBlastSideButton(ui->serviceContents);
-    connect(
-        m_pixelBlastSideButton,
-        &PixelBlastSideButton::clicked,
-        this,
-        [this]()
-        {
-            if(m_pixelBlastService)
-                m_pixelBlastService->start();
-        });
+    connect(m_pixelBlastSideButton, &PixelBlastSideButton::clicked, this, [this]() {
+        if (m_pixelBlastService)
+            m_pixelBlastService->start();
+    });
 
     m_shockwaveOverlay = new ServiceShockwaveOverlay(this);
     m_shockwaveOverlay->setGeometry(this->rect());
 
     QList<QAction *> menusTheme {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
-    for(QAction *q : menusTheme)
+    for (QAction *q : menusTheme)
     {
         q->setChecked(false);
         QObject::connect(q, &QAction::triggered, this, &MainWindow::setThemeAction);
@@ -164,14 +163,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(ui->authpageUpdate, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->buttonBackTo, &QPushButton::clicked, this, &MainWindow::updateCabinet);
     QObject::connect(ui->logoutButton, &QPushButton::clicked, this, &MainWindow::logoutSystem);
-    QObject::connect(
-        ui->malwareReRun,
-        &QPushButton::clicked,
-        [this]()
-        {
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
-                ServiceProvider::currentService()->start();
-        });
+    QObject::connect(ui->malwareReRun, &QPushButton::clicked, [this]() {
+        if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            ServiceProvider::currentService()->start();
+    });
     QObject::connect(versionChecker, &QTimer::timeout, this, [this]() { checkVersion(false); });
 
     // Set Default Theme DARK ONLY
@@ -234,7 +229,9 @@ MainWindow::~MainWindow()
 // ServiceInfoDialog Implementation
 // ============================================================================
 
-ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, QWidget *parent) : QDialog(parent), m_details(details)
+ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, QWidget *parent)
+    : QDialog(parent)
+    , m_details(details)
 {
     setWindowTitle(QString::fromUtf8("О сервисе - %1").arg(m_details.title));
     setModal(true);
@@ -297,7 +294,7 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     iconLbl->setFixedSize(40, 40);
     iconLbl->setAlignment(Qt::AlignCenter);
     QIcon icon = m_details.icon;
-    if(icon.isNull())
+    if (icon.isNull())
         icon = QIcon(":/svg/bot");
     iconLbl->setPixmap(icon.pixmap(38, 38));
     iconLayout->addWidget(iconLbl);
@@ -317,54 +314,70 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
     QLabel *tierBadge = new QLabel(this);
     tierBadge->setFixedHeight(22);
-    if(!m_details.isActive || m_details.isUnderDev || m_details.tier == ServiceTileButton::Tier::Disabled)
+    if (!m_details.isActive || m_details.isUnderDev || m_details.tier == ServiceTileButton::Tier::Disabled)
     {
         tierBadge->setText(QString::fromUtf8("  В РАЗРАБОТКЕ / ОГРАНИЧЕН  "));
-        tierBadge->setStyleSheet(QStringLiteral("background: #181E29; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+        tierBadge->setStyleSheet(QStringLiteral(
+            "background: #181E29; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: bold; "
+            "border-radius: 2px;"));
     }
-    else if(m_details.tier == ServiceTileButton::Tier::Vip)
+    else if (m_details.tier == ServiceTileButton::Tier::Vip)
     {
         tierBadge->setText(QString::fromUtf8("  VIP СЕРВИС  "));
-        tierBadge->setStyleSheet(QStringLiteral("background: #241806; border: 1px solid #92400E; color: #FBBF24; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+        tierBadge->setStyleSheet(QStringLiteral(
+            "background: #241806; border: 1px solid #92400E; color: #FBBF24; font-size: 10px; font-weight: bold; "
+            "border-radius: 2px;"));
     }
-    else if(m_details.tier == ServiceTileButton::Tier::Free)
+    else if (m_details.tier == ServiceTileButton::Tier::Free)
     {
         tierBadge->setText(QString::fromUtf8("  БЕСПЛАТНЫЙ СЕРВИС  "));
-        tierBadge->setStyleSheet(QStringLiteral("background: #062516; border: 1px solid #059669; color: #34D399; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+        tierBadge->setStyleSheet(QStringLiteral(
+            "background: #062516; border: 1px solid #059669; color: #34D399; font-size: 10px; font-weight: bold; "
+            "border-radius: 2px;"));
     }
-    else if(m_details.tier == ServiceTileButton::Tier::Dynamic)
+    else if (m_details.tier == ServiceTileButton::Tier::Dynamic)
     {
         tierBadge->setText(QString::fromUtf8("  ТАРИФ НА ВЫБОР  "));
-        tierBadge->setStyleSheet(QStringLiteral("background: #0E1B38; border: 1px solid #2563EB; color: #60A5FA; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+        tierBadge->setStyleSheet(QStringLiteral(
+            "background: #0E1B38; border: 1px solid #2563EB; color: #60A5FA; font-size: 10px; font-weight: bold; "
+            "border-radius: 2px;"));
     }
     else
     {
         tierBadge->setText(QString::fromUtf8("  ПЛАТНЫЙ СЕРВИС  "));
-        tierBadge->setStyleSheet(QStringLiteral("background: #0C2038; border: 1px solid #0284C7; color: #38BDF8; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+        tierBadge->setStyleSheet(QStringLiteral(
+            "background: #0C2038; border: 1px solid #0284C7; color: #38BDF8; font-size: 10px; font-weight: bold; "
+            "border-radius: 2px;"));
     }
     badgesLayout->addWidget(tierBadge);
 
     QLabel *connBadge = new QLabel(QString("  %1  ").arg(m_details.connectTypeName), this);
     connBadge->setFixedHeight(22);
-    connBadge->setStyleSheet(QStringLiteral("background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+    connBadge->setStyleSheet(QStringLiteral(
+        "background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-size: 10px; font-weight: bold; "
+        "border-radius: 2px;"));
     badgesLayout->addWidget(connBadge);
 
-    if(m_details.flag != ServiceFlag::None)
+    if (m_details.flag != ServiceFlag::None)
     {
-        if((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::New)) != 0)
+        if ((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::New)) != 0)
         {
             QLabel *flagBadgeNew = new QLabel(this);
             flagBadgeNew->setFixedHeight(22);
             flagBadgeNew->setText(QString::fromUtf8("  NEW  "));
-            flagBadgeNew->setStyleSheet(QStringLiteral("background: #2D0B0B; border: 1px solid #DC2626; color: #F87171; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+            flagBadgeNew->setStyleSheet(QStringLiteral(
+                "background: #2D0B0B; border: 1px solid #DC2626; color: #F87171; font-size: 10px; font-weight: bold; "
+                "border-radius: 2px;"));
             badgesLayout->addWidget(flagBadgeNew);
         }
-        if((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::Beta)) != 0)
+        if ((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::Beta)) != 0)
         {
             QLabel *flagBadgeBeta = new QLabel(this);
             flagBadgeBeta->setFixedHeight(22);
             flagBadgeBeta->setText(QString::fromUtf8("  BETA  "));
-            flagBadgeBeta->setStyleSheet(QStringLiteral("background: #2D1A04; border: 1px solid #D97706; color: #FBBF24; font-size: 10px; font-weight: bold; border-radius: 2px;"));
+            flagBadgeBeta->setStyleSheet(QStringLiteral(
+                "background: #2D1A04; border: 1px solid #D97706; color: #FBBF24; font-size: 10px; font-weight: bold; "
+                "border-radius: 2px;"));
             badgesLayout->addWidget(flagBadgeBeta);
         }
     }
@@ -395,40 +408,45 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     condLayout->setSpacing(8);
 
     QLabel *condHeader = new QLabel(QString::fromUtf8("УСЛОВИЯ И СТОИМОСТЬ"), condCard);
-    condHeader->setStyleSheet(QStringLiteral("color: #38BDF8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;"));
+    condHeader->setStyleSheet(
+        QStringLiteral("color: #38BDF8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;"));
     condLayout->addWidget(condHeader);
 
     QString priceTextHtml;
-    bool hasVip = (MainWindow::current && MainWindow::current->network.isAuthed() && MainWindow::current->network.authedId.hasVipAccount());
+    bool hasVip
+        = (MainWindow::current && MainWindow::current->network.isAuthed()
+           && MainWindow::current->network.authedId.hasVipAccount());
 
-    if(!m_details.isActive || m_details.isUnderDev || m_details.tier == ServiceTileButton::Tier::Disabled)
+    if (!m_details.isActive || m_details.isUnderDev || m_details.tier == ServiceTileButton::Tier::Disabled)
     {
         priceTextHtml = QString::fromUtf8(
             "* <b>Статус:</b> <span style='color: #F87171;'>В разработке или временно отключен на сервере</span>.<br/>"
             "* Запуск модуля в текущей версии ограничен или ожидает тестирования.");
     }
-    else if(m_details.tier == ServiceTileButton::Tier::Free || m_details.price == 0)
+    else if (m_details.tier == ServiceTileButton::Tier::Free || m_details.price == 0)
     {
         priceTextHtml = QString::fromUtf8(
             "* <b>Стоимость:</b> <span style='color: #34D399; font-weight: bold;'>0 кредитов (Бесплатно)</span>.<br/>"
             "* Сервис доступен всем пользователям без списания баланса.");
     }
-    else if(m_details.tier == ServiceTileButton::Tier::Vip && hasVip)
+    else if (m_details.tier == ServiceTileButton::Tier::Vip && hasVip)
     {
         priceTextHtml = QString::fromUtf8(
-            "* <b>VIP * Безлимитно:</b> <span style='color: #FBBF24; font-weight: bold;'>Включено в вашу активную VIP-подписку</span>.<br/>"
+            "* <b>VIP * Безлимитно:</b> <span style='color: #FBBF24; font-weight: bold;'>Включено в вашу активную "
+            "VIP-подписку</span>.<br/>"
             "* Безлимитный доступ без ограничений и без списания кредитов.");
     }
-    else if(m_details.needVip)
+    else if (m_details.needVip)
     {
-        priceTextHtml = QString::fromUtf8(
-                            "* <b>Стоимость:</b> <span style='color: #38BDF8; font-weight: bold;'>%1 %2</span> "
-                            "или <span style='color: #FBBF24; font-weight: bold;'>БЕСПЛАТНО с подпиской VIP</span>.<br/>"
-                            "* Обладатели активного VIP-аккаунта пользуются сервисом безлимитно.")
-                            .arg(Generic::beautifyNumber(m_details.price))
-                            .arg(m_details.currency);
+        priceTextHtml
+            = QString::fromUtf8(
+                  "* <b>Стоимость:</b> <span style='color: #38BDF8; font-weight: bold;'>%1 %2</span> "
+                  "или <span style='color: #FBBF24; font-weight: bold;'>БЕСПЛАТНО с подпиской VIP</span>.<br/>"
+                  "* Обладатели активного VIP-аккаунта пользуются сервисом безлимитно.")
+                  .arg(Generic::beautifyNumber(m_details.price))
+                  .arg(m_details.currency);
     }
-    else if(m_details.tier == ServiceTileButton::Tier::Dynamic)
+    else if (m_details.tier == ServiceTileButton::Tier::Dynamic)
     {
         priceTextHtml = QString::fromUtf8(
             "* <b>Тариф на выбор:</b> Стоимость рассчитывается в зависимости от выбранного режима в окне сервиса.<br/>"
@@ -454,7 +472,8 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
     // 3. Service Description Panel
     QLabel *descHeader = new QLabel(QString::fromUtf8("ОПИСАНИЕ СЕРВИСА"), this);
-    descHeader->setStyleSheet(QStringLiteral("color: #94A3B8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;"));
+    descHeader->setStyleSheet(
+        QStringLiteral("color: #94A3B8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;"));
     mainLayout->addWidget(descHeader);
 
     QFrame *descFrame = new QFrame(this);
@@ -472,7 +491,7 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     scrollDesc->setMaximumHeight(130);
 
     QString descContent = m_details.description.trimmed();
-    if(descContent.isEmpty())
+    if (descContent.isEmpty())
     {
         descContent = QString::fromUtf8(
             "Интеллектуальный сервисный модуль платформы AdsKiller. "
@@ -495,7 +514,8 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
     QPushButton *btnAskAi = new QPushButton(QString::fromUtf8("🤖 Спросить ИИ"), this);
     btnAskAi->setCursor(Qt::PointingHandCursor);
-    btnAskAi->setToolTip(QString::fromUtf8("Задать вопрос ИИ-ассистенту о возможностях и порядке работы данного сервиса"));
+    btnAskAi->setToolTip(
+        QString::fromUtf8("Задать вопрос ИИ-ассистенту о возможностях и порядке работы данного сервиса"));
     btnAskAi->setStyleSheet(QStringLiteral(
         "QPushButton {"
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #0369A1);"
@@ -548,13 +568,13 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
 void ServiceInfoDialog::onAskAiClicked()
 {
-    if(!MainWindow::current)
+    if (!MainWindow::current)
     {
         accept();
         return;
     }
 
-    if(!MainWindow::current->network.isAuthed())
+    if (!MainWindow::current->network.isAuthed())
     {
         QMessageBox msg(this);
         msg.setWindowTitle(QString::fromUtf8("Требуется авторизация"));
@@ -562,7 +582,8 @@ void ServiceInfoDialog::onAskAiClicked()
         msg.setStyleSheet(QStringLiteral(
             "QMessageBox { background-color: #0F172A; color: #F8FAFC; }"
             "QLabel { color: #E2E8F0; font-size: 12px; }"
-            "QPushButton { background-color: #1E293B; color: #FFFFFF; border: 1px solid #334155; border-radius: 3px; padding: 5px 16px; font-weight: bold; }"
+            "QPushButton { background-color: #1E293B; color: #FFFFFF; border: 1px solid #334155; border-radius: 3px; "
+            "padding: 5px 16px; font-weight: bold; }"
             "QPushButton:hover { border-color: #38BDF8; }"));
         msg.setText(QString::fromUtf8("Для общения с ИИ-ассистентом необходимо войти в свой аккаунт AdsKiller."));
         msg.exec();
@@ -572,7 +593,8 @@ void ServiceInfoDialog::onAskAiClicked()
     // Authorized! Close info dialog
     accept();
 
-    const QString query = QString::fromUtf8("Объясни подробнее, сервис \"%1\" что она делает и зачем?").arg(m_details.title);
+    const QString query
+        = QString::fromUtf8("Объясни подробнее, сервис \"%1\" что она делает и зачем?").arg(m_details.title);
     MainWindow::current->askAiQuestion(query);
 }
 
@@ -580,7 +602,8 @@ void ServiceInfoDialog::onAskAiClicked()
 // ServiceShockwaveOverlay Implementation (Window-Wide Luminous Shockwave)
 // ============================================================================
 
-ServiceShockwaveOverlay::ServiceShockwaveOverlay(QWidget *parent) : QWidget(parent)
+ServiceShockwaveOverlay::ServiceShockwaveOverlay(QWidget *parent)
+    : QWidget(parent)
 {
     setAttribute(Qt::WA_NoSystemBackground, true);
     setFocusPolicy(Qt::StrongFocus);
@@ -593,33 +616,23 @@ ServiceShockwaveOverlay::ServiceShockwaveOverlay(QWidget *parent) : QWidget(pare
     m_anim->setEndValue(1.0);
     m_anim->setEasingCurve(QEasingCurve::OutCubic);
 
-    connect(
-        m_anim,
-        &QVariantAnimation::valueChanged,
-        this,
-        [this](const QVariant &val)
-        {
-            m_progress = val.toReal();
-            update();
-        });
+    connect(m_anim, &QVariantAnimation::valueChanged, this, [this](const QVariant &val) {
+        m_progress = val.toReal();
+        update();
+    });
 
-    connect(
-        m_anim,
-        &QVariantAnimation::finished,
-        this,
-        [this]()
-        {
-            m_progress = 0.0;
-            unsetCursor();
-            hide();
-        });
+    connect(m_anim, &QVariantAnimation::finished, this, [this]() {
+        m_progress = 0.0;
+        unsetCursor();
+        hide();
+    });
 }
 
 void ServiceShockwaveOverlay::trigger(const QPoint &centerInWindow, const QColor &accentColor)
 {
     m_center = centerInWindow;
     m_accentColor = accentColor;
-    if(parentWidget())
+    if (parentWidget())
         setGeometry(parentWidget()->rect());
     setCursor(Qt::BusyCursor);
     raise();
@@ -657,7 +670,7 @@ void ServiceShockwaveOverlay::keyReleaseEvent(QKeyEvent *event)
 
 void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
 {
-    if(m_progress <= 0.0 || m_progress >= 1.0)
+    if (m_progress <= 0.0 || m_progress >= 1.0)
         return;
 
     QPainter painter(this);
@@ -665,13 +678,14 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
 
     const int w = width();
     const int h = height();
-    const qreal maxRadius = std::hypot(qMax(m_center.x(), w - m_center.x()), qMax(m_center.y(), h - m_center.y())) * 1.08;
+    const qreal maxRadius
+        = std::hypot(qMax(m_center.x(), w - m_center.x()), qMax(m_center.y(), h - m_center.y())) * 1.08;
     const qreal currentRadius = m_progress * maxRadius;
     const qreal fade = qMax<qreal>(0.0, 1.0 - m_progress);
     const qreal easedFade = std::pow(fade, 0.65);
 
     // 1. Initial Epic Energy Core Blast (0.0 to 0.4 progress)
-    if(m_progress < 0.4)
+    if (m_progress < 0.4)
     {
         const qreal burstProgress = m_progress / 0.4;
         const qreal burstFade = 1.0 - burstProgress;
@@ -697,7 +711,7 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
     }
 
     // 2. Window-Wide Expanding Radial Energy Distortion / Field ("Круг изменения по всему окну")
-    if(currentRadius > 8.0)
+    if (currentRadius > 8.0)
     {
         const qreal ringBandWidth = qMin<qreal>(currentRadius * 0.45, 220.0);
         const qreal innerRadius = qMax<qreal>(0.0, currentRadius - ringBandWidth);
@@ -713,7 +727,7 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
         fieldInner.setAlphaF(0.0);
 
         waveField.setColorAt(0.0, fieldInner);
-        if(currentRadius > 0.0)
+        if (currentRadius > 0.0)
         {
             qreal midStop = qBound<qreal>(0.0, innerRadius / currentRadius, 0.95);
             waveField.setColorAt(midStop, fieldInner);
@@ -740,24 +754,36 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
     // Ring B: Neon Corona Glow around Primary Ring (thick, soft halo)
     {
         const int haloAlpha = qBound(0, static_cast<int>(easedFade * 110), 255);
-        QPen haloPen(QColor(m_accentColor.lighter(130).red(), m_accentColor.lighter(130).green(), m_accentColor.lighter(130).blue(), haloAlpha), 9.0);
+        QPen haloPen(
+            QColor(
+                m_accentColor.lighter(130).red(),
+                m_accentColor.lighter(130).green(),
+                m_accentColor.lighter(130).blue(),
+                haloAlpha),
+            9.0);
         painter.setPen(haloPen);
         painter.drawEllipse(m_center, static_cast<int>(currentRadius), static_cast<int>(currentRadius));
     }
 
     // Ring C: Secondary Trailing Wavefront (at 82% radius)
     const qreal secondaryRadius = currentRadius * 0.82;
-    if(secondaryRadius > 10.0)
+    if (secondaryRadius > 10.0)
     {
         const int secAlpha = qBound(0, static_cast<int>(easedFade * 150), 255);
-        QPen secPen(QColor(m_accentColor.lighter(150).red(), m_accentColor.lighter(150).green(), m_accentColor.lighter(150).blue(), secAlpha), 2.2);
+        QPen secPen(
+            QColor(
+                m_accentColor.lighter(150).red(),
+                m_accentColor.lighter(150).green(),
+                m_accentColor.lighter(150).blue(),
+                secAlpha),
+            2.2);
         painter.setPen(secPen);
         painter.drawEllipse(m_center, static_cast<int>(secondaryRadius), static_cast<int>(secondaryRadius));
     }
 
     // Ring D: Tertiary Harmonic Wavefront (at 64% radius)
     const qreal tertiaryRadius = currentRadius * 0.64;
-    if(tertiaryRadius > 15.0)
+    if (tertiaryRadius > 15.0)
     {
         const int terAlpha = qBound(0, static_cast<int>(easedFade * 90), 255);
         QPen terPen(QColor(m_accentColor.red(), m_accentColor.green(), m_accentColor.blue(), terAlpha), 1.4);
@@ -766,7 +792,7 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
     }
 
     // 4. Window Border Energy Impact Flash (progress 0.15 to 0.85)
-    if(m_progress > 0.15 && m_progress < 0.85)
+    if (m_progress > 0.15 && m_progress < 0.85)
     {
         const qreal borderProgress = (m_progress - 0.15) / 0.70;
         const qreal borderIntensity = std::sin(borderProgress * 3.14159265);
@@ -781,7 +807,7 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
 
 void MainWindow::showWindowShockwave(const QPoint &globalPos, const QColor &color)
 {
-    if(!m_shockwaveOverlay)
+    if (!m_shockwaveOverlay)
     {
         m_shockwaveOverlay = new ServiceShockwaveOverlay(this);
         m_shockwaveOverlay->setGeometry(this->rect());
@@ -794,22 +820,22 @@ void MainWindow::initServiceModules()
 {
     int x, y;
 
-    if(!services.isEmpty() || !serverServices)
+    if (!services.isEmpty() || !serverServices)
         return;
 
     std::shared_ptr<Service> instance = nullptr;
     std::list<std::shared_ptr<Service>> buildServices = Service::EnumAppServices(this);
 
-    for(x = 0, y = serverServices->size(); x < y; ++x)
+    for (x = 0, y = serverServices->size(); x < y; ++x)
     {
         const ServiceItemInfo *remoteService = &(serverServices->at(x));
-        if(remoteService->hide)
+        if (remoteService->hide)
             continue;
 
         // Find build uuid service.
-        for(auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
+        for (auto iter = std::begin(buildServices); iter != std::end(buildServices); ++iter)
         {
-            if(remoteService->uuid == (*iter)->uuid())
+            if (remoteService->uuid == (*iter)->uuid())
             {
                 instance = std::move(*iter);
                 buildServices.erase(iter);
@@ -817,7 +843,7 @@ void MainWindow::initServiceModules()
             }
         }
 
-        if(!instance)
+        if (!instance)
             instance = std::make_shared<UnavailableService>(this);
 
 #if SHOW_SERVICE_BY_DEBUG
@@ -827,7 +853,8 @@ void MainWindow::initServiceModules()
 #endif
 
         QString badgeText;
-        uint32_t effectivePrice = (x == 0 && network.authedId.basePrice > 0 ? network.authedId.basePrice : remoteService->price);
+        uint32_t effectivePrice
+            = (x == 0 && network.authedId.basePrice > 0 ? network.authedId.basePrice : remoteService->price);
         bool hasVIP = network.authedId.hasVipAccount();
         bool isDynamic = (remoteService->price == static_cast<std::uint32_t>(-1));
         bool isFree = (effectivePrice == 0);
@@ -835,54 +862,59 @@ void MainWindow::initServiceModules()
 
         ServiceTileButton::Tier tier = ServiceTileButton::Tier::Credit;
 
-        if(!instance->active)
+        if (!instance->active)
         {
             tier = ServiceTileButton::Tier::Disabled;
-            if(!instance->isAvailable())
+            if (!instance->isAvailable())
                 badgeText = QString::fromUtf8("В РАЗРАБОТКЕ");
-            else if(!remoteService->active)
+            else if (!remoteService->active)
                 badgeText = QString::fromUtf8("НЕ ДОСТУПЕН");
             else
                 badgeText = QString::fromUtf8("ОТКЛЮЧЕН");
         }
-        else if(canBypassWithVip)
+        else if (canBypassWithVip)
         {
             // Service supports VIP and user HAS VIP account -> Unlimited access
             tier = ServiceTileButton::Tier::Vip;
             badgeText = QString::fromUtf8("VIP * БЕЗЛИМИТ");
         }
-        else if(isFree)
+        else if (isFree)
         {
             // Completely free service for everyone
             tier = ServiceTileButton::Tier::Free;
             badgeText = QString::fromUtf8("БЕСПЛАТНО");
         }
-        else if(isDynamic)
+        else if (isDynamic)
         {
             tier = ServiceTileButton::Tier::Dynamic;
-            badgeText = remoteService->needVIP ? QString::fromUtf8("ТАРИФ (или VIP)") : QString::fromUtf8("ТАРИФ НА ВЫБОР");
+            badgeText
+                = remoteService->needVIP ? QString::fromUtf8("ТАРИФ (или VIP)") : QString::fromUtf8("ТАРИФ НА ВЫБОР");
         }
-        else if(remoteService->needVIP)
+        else if (remoteService->needVIP)
         {
             // Service supports VIP, but user has NO VIP -> Show price in credits with VIP alternative
             tier = ServiceTileButton::Tier::Vip;
-            badgeText = QString("%1 %2 (или VIP)").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
+            badgeText = QString("%1 %2 (или VIP)")
+                            .arg(Generic::beautifyNumber(effectivePrice))
+                            .arg(network.authedId.currencyType);
         }
         else
         {
             // Service does NOT require/support VIP -> Standard credit price for all users
             tier = ServiceTileButton::Tier::Credit;
-            badgeText = QString("%1 %2").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
+            badgeText
+                = QString("%1 %2").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
         }
 
-        if(instance->uuid() != IDServiceAIAgentString)
+        if (instance->uuid() != IDServiceAIAgentString)
         {
             QIcon svcIcon(":/svg/services/" + instance->widgetIconName());
-            if(svcIcon.isNull())
+            if (svcIcon.isNull())
                 svcIcon = QIcon(":/service-icons/" + instance->widgetIconName());
 
             ServiceFlag flag = instance->flag();
-            ServiceTileButton *button = new ServiceTileButton(svcIcon, remoteService->name, badgeText, tier, flag, ui->serviceContents);
+            ServiceTileButton *button
+                = new ServiceTileButton(svcIcon, remoteService->name, badgeText, tier, flag, ui->serviceContents);
             button->setServiceActive(instance->active);
 
             ServiceTileButton::Details details;
@@ -899,9 +931,9 @@ void MainWindow::initServiceModules()
             details.sortScore = instance->sort_score();
             details.flag = flag;
 
-            if(instance->deviceConnectType() == DeviceConnectType::ADB)
+            if (instance->deviceConnectType() == DeviceConnectType::ADB)
                 details.connectTypeName = QString::fromUtf8("Android (ADB)");
-            else if(instance->deviceConnectType() == DeviceConnectType::Apple)
+            else if (instance->deviceConnectType() == DeviceConnectType::Apple)
                 details.connectTypeName = QString::fromUtf8("Apple iOS");
             else
                 details.connectTypeName = QString::fromUtf8("Автономный");
@@ -911,25 +943,29 @@ void MainWindow::initServiceModules()
             button->setProperty("sort_score", instance->sort_score());
 
             QString tip = remoteService->name;
-            if(!remoteService->description.isEmpty())
+            if (!remoteService->description.isEmpty())
                 tip += "\n" + remoteService->description;
-            if(instance->active)
+            if (instance->active)
             {
-                if(canBypassWithVip)
+                if (canBypassWithVip)
                 {
                     tip += "\n\n* Включено в VIP-подписку (безлимитно, без списания кредитов)";
                 }
-                else if(isFree)
+                else if (isFree)
                 {
                     tip += "\n\n* Бесплатная услуга (0 кредитов)";
                 }
-                else if(remoteService->needVIP)
+                else if (remoteService->needVIP)
                 {
-                    tip += QString("\n\n* Стоимость: %1 %2 (или бесплатно с активным VIP-аккаунтом)").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
+                    tip += QString("\n\n* Стоимость: %1 %2 (или бесплатно с активным VIP-аккаунтом)")
+                               .arg(Generic::beautifyNumber(effectivePrice))
+                               .arg(network.authedId.currencyType);
                 }
-                else if(!isDynamic)
+                else if (!isDynamic)
                 {
-                    tip += QString("\n\n* Стоимость: %1 %2 (оплата кредитами)").arg(Generic::beautifyNumber(effectivePrice)).arg(network.authedId.currencyType);
+                    tip += QString("\n\n* Стоимость: %1 %2 (оплата кредитами)")
+                               .arg(Generic::beautifyNumber(effectivePrice))
+                               .arg(network.authedId.currencyType);
                 }
             }
             button->setToolTip(tip);
@@ -946,10 +982,15 @@ void MainWindow::initServiceModules()
                 button,
                 &QPushButton::clicked,
                 this,
-                [this, instance, effectivePrice, isDynamic, needVIP = remoteService->needVIP, name = remoteService->name, button]()
-                {
+                [this,
+                 instance,
+                 effectivePrice,
+                 isDynamic,
+                 needVIP = remoteService->needVIP,
+                 name = remoteService->name,
+                 button]() {
                     bool bypass = (needVIP && network.authedId.hasVipAccount());
-                    if(!bypass && effectivePrice > 0 && !isDynamic && network.authedId.credits < effectivePrice)
+                    if (!bypass && effectivePrice > 0 && !isDynamic && network.authedId.credits < effectivePrice)
                     {
                         QMessageBox msgBox(this);
                         msgBox.setWindowTitle(QString::fromUtf8("Недостаточно кредитов"));
@@ -958,25 +999,45 @@ void MainWindow::initServiceModules()
                         const int shortage = effectivePrice - static_cast<int>(network.authedId.credits);
                         const QString &currency = network.authedId.currencyType;
 
-                        QString infoHtml = QString::fromUtf8(
-                                               "<div style='min-width: 330px; font-family: Segoe UI, sans-serif; font-size: 13px; color: #E2E8F0;'>"
-                                               "<p style='font-size: 15px; font-weight: bold; color: #F87171; margin-bottom: 8px;'>Недостаточно кредитов для запуска</p>"
-                                               "<p style='margin-bottom: 10px;'>Для запуска сервиса <b style='color: #38BDF8;'>«%1»</b> на вашем балансе не хватает средств.</p>"
-                                               "<table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 0px;'>"
-                                               "<tr><td style='padding: 6px 10px; color: #94A3B8;'>Стоимость услуги:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #F8FAFC;'>%2 %3</td></tr>"
-                                               "<tr><td style='padding: 6px 10px; color: #94A3B8;'>На вашем балансе:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #FBBF24;'>%4 %3</td></tr>"
-                                               "<tr style='border-top: 1px solid rgba(148, 163, 184, 0.2);'><td style='padding: 6px 10px; color: #EF4444; font-weight: bold;'>Не хватает:</td><td style='padding: 6px 10px; text-align: right; font-weight: bold; color: #EF4444;'>%5 %3</td></tr>"
-                                               "</table>"
-                                               "%6"
-                                               "</div>")
-                                               .arg(name)
-                                               .arg(Generic::beautifyNumber(effectivePrice))
-                                               .arg(currency)
-                                               .arg(Generic::beautifyNumber(network.authedId.credits))
-                                               .arg(Generic::beautifyNumber(shortage > 0 ? shortage : 0))
-                                               .arg(
-                                                   needVIP ? QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Вы можете активировать <b>VIP-статус</b> для безлимитного доступа без списания кредитов, либо пополнить баланс через службу поддержки.</i></p>")
-                                                           : QString::fromUtf8("<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Данная услуга оплачивается только кредитами (VIP-статус не поддерживается). Пополните баланс через раздел Поддержка.</i></p>"));
+                        QString infoHtml
+                            = QString::fromUtf8(
+                                  "<div style='min-width: 330px; font-family: Segoe UI, sans-serif; font-size: 13px; "
+                                  "color: #E2E8F0;'>"
+                                  "<p style='font-size: 15px; font-weight: bold; color: #F87171; margin-bottom: "
+                                  "8px;'>Недостаточно кредитов для запуска</p>"
+                                  "<p style='margin-bottom: 10px;'>Для запуска сервиса <b style='color: "
+                                  "#38BDF8;'>«%1»</b> на вашем балансе не хватает средств.</p>"
+                                  "<table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; "
+                                  "background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); "
+                                  "border-radius: 0px;'>"
+                                  "<tr><td style='padding: 6px 10px; color: #94A3B8;'>Стоимость услуги:</td><td "
+                                  "style='padding: 6px 10px; text-align: right; font-weight: bold; color: #F8FAFC;'>%2 "
+                                  "%3</td></tr>"
+                                  "<tr><td style='padding: 6px 10px; color: #94A3B8;'>На вашем балансе:</td><td "
+                                  "style='padding: 6px 10px; text-align: right; font-weight: bold; color: #FBBF24;'>%4 "
+                                  "%3</td></tr>"
+                                  "<tr style='border-top: 1px solid rgba(148, 163, 184, 0.2);'><td style='padding: 6px "
+                                  "10px; color: #EF4444; font-weight: bold;'>Не хватает:</td><td style='padding: 6px "
+                                  "10px; text-align: right; font-weight: bold; color: #EF4444;'>%5 %3</td></tr>"
+                                  "</table>"
+                                  "%6"
+                                  "</div>")
+                                  .arg(name)
+                                  .arg(Generic::beautifyNumber(effectivePrice))
+                                  .arg(currency)
+                                  .arg(Generic::beautifyNumber(network.authedId.credits))
+                                  .arg(Generic::beautifyNumber(shortage > 0 ? shortage : 0))
+                                  .arg(
+                                      needVIP
+                                          ? QString::fromUtf8(
+                                                "<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: 1.4;'><i>Вы "
+                                                "можете активировать <b>VIP-статус</b> для безлимитного доступа без "
+                                                "списания кредитов, либо пополнить баланс через службу "
+                                                "поддержки.</i></p>")
+                                          : QString::fromUtf8(
+                                                "<p style='margin: 4px 0 0 0; color: #CBD5E1; line-height: "
+                                                "1.4;'><i>Данная услуга оплачивается только кредитами (VIP-статус не "
+                                                "поддерживается). Пополните баланс через раздел Поддержка.</i></p>"));
 
                         msgBox.setText(infoHtml);
 
@@ -1012,7 +1073,7 @@ void MainWindow::initServiceModules()
                         QPushButton *btnVip = nullptr;
                         QPushButton *btnSupport = nullptr;
 
-                        if(needVIP)
+                        if (needVIP)
                         {
                             btnVip = msgBox.addButton(QString::fromUtf8("Оформить VIP"), QMessageBox::ActionRole);
                             btnVip->setIcon(QIcon(":/svg/crown"));
@@ -1063,38 +1124,43 @@ void MainWindow::initServiceModules()
                                 "}");
                         }
 
-                        QPushButton *btnClose = msgBox.addButton(needVIP ? QString::fromUtf8("Закрыть") : QString::fromUtf8("Понятно"), QMessageBox::RejectRole);
+                        QPushButton *btnClose = msgBox.addButton(
+                            needVIP ? QString::fromUtf8("Закрыть") : QString::fromUtf8("Понятно"),
+                            QMessageBox::RejectRole);
                         btnClose->setCursor(Qt::PointingHandCursor);
                         msgBox.setDefaultButton(btnVip ? btnVip : (btnSupport ? btnSupport : btnClose));
 
                         msgBox.exec();
 
-                        if(needVIP && msgBox.clickedButton() == btnVip)
+                        if (needVIP && msgBox.clickedButton() == btnVip)
                         {
-                            for(const auto &s : std::as_const(services))
+                            for (const auto &s : std::as_const(services))
                             {
-                                if(s && s->uuid() == IDServiceVIPBuyString)
+                                if (s && s->uuid() == IDServiceVIPBuyString)
                                 {
-                                    if(s->active)
+                                    if (s->active)
                                     {
                                         this->runService(s);
                                     }
                                     else
                                     {
-                                        QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP временно недоступен."));
+                                        QMessageBox::warning(
+                                            this,
+                                            QString::fromUtf8("Пополнение VIP"),
+                                            QString::fromUtf8("Сервис пополнения VIP временно недоступен."));
                                     }
                                     break;
                                 }
                             }
                         }
-                        else if(btnSupport && msgBox.clickedButton() == btnSupport)
+                        else if (btnSupport && msgBox.clickedButton() == btnSupport)
                         {
                             this->on_action_WhatsApp_triggered();
                         }
                         return;
                     }
 
-                    if(m_isServiceLaunching || button->isLaunching() || ServiceTileButton::isAnyLaunching())
+                    if (m_isServiceLaunching || button->isLaunching() || ServiceTileButton::isAnyLaunching())
                         return;
 
                     m_isServiceLaunching = true;
@@ -1103,17 +1169,13 @@ void MainWindow::initServiceModules()
                     button->triggerClickAnimation();
                     showWindowShockwave(button->mapToGlobal(button->rect().center()), button->accentColor());
 
-                    QTimer::singleShot(
-                        1000,
-                        this,
-                        [this, button, instance]()
-                        {
-                            m_isServiceLaunching = false;
-                            ServiceTileButton::setAnyLaunching(false);
-                            if(button)
-                                button->setLaunching(false);
-                            this->runService(instance);
-                        });
+                    QTimer::singleShot(1000, this, [this, button, instance]() {
+                        m_isServiceLaunching = false;
+                        ServiceTileButton::setAnyLaunching(false);
+                        if (button)
+                            button->setLaunching(false);
+                        this->runService(instance);
+                    });
                 });
 
             instance->title = remoteService->name;
@@ -1121,34 +1183,29 @@ void MainWindow::initServiceModules()
         }
         else
         {
-            if(auto *aiService = qobject_cast<AIAgentService *>(instance.get()))
+            if (auto *aiService = qobject_cast<AIAgentService *>(instance.get()))
             {
-                connect(
-                    aiService,
-                    &AIAgentService::onRunService,
-                    this,
-                    [this](const QString &service_uuid)
+                connect(aiService, &AIAgentService::onRunService, this, [this](const QString &service_uuid) {
+                    for (const auto &s : std::as_const(services))
                     {
-                        for(const auto &s : std::as_const(services))
+                        if (s && s->uuid() == service_uuid)
                         {
-                            if(s && s->uuid() == service_uuid)
+                            if (s->active)
                             {
-                                if(s->active)
-                                {
-                                    runService(s);
-                                }
-                                break;
+                                runService(s);
                             }
+                            break;
                         }
-                    });
+                    }
+                });
             }
 
-            if(!instance->active)
+            if (!instance->active)
             {
                 ui->aiChatEdit->setDisabled(true);
                 ui->aiChatSend->setDisabled(true);
                 auto *chatView = findChild<AIChatView *>("aiChatView");
-                if(chatView)
+                if (chatView)
                     chatView->addAIMessage("К сожалению Сервис ИИ не доступен. Попробуйте позднее.");
             }
             else
@@ -1160,41 +1217,45 @@ void MainWindow::initServiceModules()
         services << std::move(instance);
     }
 
-    for(auto &remaining : buildServices)
+    for (auto &remaining : buildServices)
     {
         remaining->active = true;
 
-        if(remaining->uuid() != IDServiceAIAgentString && !remaining->ownerWidget)
+        if (remaining->uuid() != IDServiceAIAgentString && !remaining->ownerWidget)
         {
             QString svcName;
             QString svcDesc;
 
-            if(remaining->uuid() == IDServiceAppleIpswString)
+            if (remaining->uuid() == IDServiceAppleIpswString)
             {
                 svcName = QString::fromUtf8("Прошивки APPLE");
-                svcDesc = QString::fromUtf8("Официальные прошивки IPSW, восстановление и чистая установка для iPhone/iPad");
+                svcDesc
+                    = QString::fromUtf8("Официальные прошивки IPSW, восстановление и чистая установка для iPhone/iPad");
             }
-            else if(remaining->uuid() == IDServiceImeiVerificationKzString)
+            else if (remaining->uuid() == IDServiceImeiVerificationKzString)
             {
                 svcName = QString::fromUtf8("IMEI Verification KZ");
-                svcDesc = QString::fromUtf8("Верификация и регистрация IMEI устройств в Республике Казахстан с подачей ЭЦП");
+                svcDesc = QString::fromUtf8(
+                    "Верификация и регистрация IMEI устройств в Республике Казахстан с подачей ЭЦП");
             }
-            else if(remaining->uuid() == IDServiceMiAccountString)
+            else if (remaining->uuid() == IDServiceMiAccountString)
             {
                 svcName = QString::fromUtf8("MI Account");
                 svcDesc = QString::fromUtf8("Удаление, сброс и проверка привязки аккаунта Xiaomi (Mi Account)");
             }
-            else if(remaining->uuid() == IDServiceSamsungFrpString)
+            else if (remaining->uuid() == IDServiceSamsungFrpString)
             {
                 svcName = QString::fromUtf8("Samsung FRP");
-                svcDesc = QString::fromUtf8("Официальное восстановление доступа и поддержка владельцев устройств Samsung с FRP");
+                svcDesc = QString::fromUtf8(
+                    "Официальное восстановление доступа и поддержка владельцев устройств Samsung с FRP");
             }
-            else if(remaining->uuid() == IDServicePixelBlastString)
+            else if (remaining->uuid() == IDServicePixelBlastString)
             {
                 svcName = QString::fromUtf8("Pixel Blast");
-                svcDesc = QString::fromUtf8("Аркадная мини-игра: расставляйте фигуры из цветных блоков и очищайте поле");
+                svcDesc
+                    = QString::fromUtf8("Аркадная мини-игра: расставляйте фигуры из цветных блоков и очищайте поле");
             }
-            else if(!remaining->title.isEmpty())
+            else if (!remaining->title.isEmpty())
             {
                 svcName = remaining->title;
             }
@@ -1206,17 +1267,23 @@ void MainWindow::initServiceModules()
             remaining->title = svcName;
 
             QIcon svcIcon(":/svg/services/" + remaining->widgetIconName());
-            if(svcIcon.isNull())
+            if (svcIcon.isNull())
                 svcIcon = QIcon(":/service-icons/" + remaining->widgetIconName());
-            if(svcIcon.isNull())
+            if (svcIcon.isNull())
                 svcIcon = QIcon("Resources/res/svg/services/" + remaining->widgetIconName() + ".svg");
-            if(svcIcon.isNull())
+            if (svcIcon.isNull())
                 svcIcon = QIcon("svg/services/" + remaining->widgetIconName() + ".svg");
-            if(svcIcon.isNull())
+            if (svcIcon.isNull())
                 svcIcon = QIcon(":/svg/apple");
 
             ServiceFlag flag = remaining->flag();
-            ServiceTileButton *button = new ServiceTileButton(svcIcon, svcName, QString::fromUtf8("БЕСПЛАТНО"), ServiceTileButton::Tier::Free, flag, ui->serviceContents);
+            ServiceTileButton *button = new ServiceTileButton(
+                svcIcon,
+                svcName,
+                QString::fromUtf8("БЕСПЛАТНО"),
+                ServiceTileButton::Tier::Free,
+                flag,
+                ui->serviceContents);
             button->setServiceActive(true);
             button->setCursor(Qt::PointingHandCursor);
 
@@ -1234,9 +1301,9 @@ void MainWindow::initServiceModules()
             details.sortScore = remaining->sort_score();
             details.flag = flag;
 
-            if(remaining->deviceConnectType() == DeviceConnectType::ADB)
+            if (remaining->deviceConnectType() == DeviceConnectType::ADB)
                 details.connectTypeName = QString::fromUtf8("Android (ADB)");
-            else if(remaining->deviceConnectType() == DeviceConnectType::Apple)
+            else if (remaining->deviceConnectType() == DeviceConnectType::Apple)
                 details.connectTypeName = QString::fromUtf8("Apple iOS");
             else
                 details.connectTypeName = QString::fromUtf8("Автономный");
@@ -1246,7 +1313,7 @@ void MainWindow::initServiceModules()
             button->setProperty("sort_score", remaining->sort_score());
 
             QString tip = svcName;
-            if(!svcDesc.isEmpty())
+            if (!svcDesc.isEmpty())
                 tip += "\n" + svcDesc;
             tip += QString::fromUtf8("\n\n* Бесплатная услуга (0 кредитов)");
             button->setToolTip(tip);
@@ -1260,33 +1327,24 @@ void MainWindow::initServiceModules()
             button->setProperty("serviceDesc", svcDesc);
 
             std::shared_ptr<Service> serviceRef = remaining;
-            QObject::connect(
-                button,
-                &QPushButton::clicked,
-                this,
-                [this, serviceRef, button]()
-                {
-                    if(m_isServiceLaunching || button->isLaunching() || ServiceTileButton::isAnyLaunching())
-                        return;
+            QObject::connect(button, &QPushButton::clicked, this, [this, serviceRef, button]() {
+                if (m_isServiceLaunching || button->isLaunching() || ServiceTileButton::isAnyLaunching())
+                    return;
 
-                    m_isServiceLaunching = true;
-                    ServiceTileButton::setAnyLaunching(true);
-                    button->setLaunching(true);
-                    button->triggerClickAnimation();
-                    showWindowShockwave(button->mapToGlobal(button->rect().center()), button->accentColor());
+                m_isServiceLaunching = true;
+                ServiceTileButton::setAnyLaunching(true);
+                button->setLaunching(true);
+                button->triggerClickAnimation();
+                showWindowShockwave(button->mapToGlobal(button->rect().center()), button->accentColor());
 
-                    QTimer::singleShot(
-                        1000,
-                        this,
-                        [this, button, serviceRef]()
-                        {
-                            m_isServiceLaunching = false;
-                            ServiceTileButton::setAnyLaunching(false);
-                            if(button)
-                                button->setLaunching(false);
-                            this->runService(serviceRef);
-                        });
+                QTimer::singleShot(1000, this, [this, button, serviceRef]() {
+                    m_isServiceLaunching = false;
+                    ServiceTileButton::setAnyLaunching(false);
+                    if (button)
+                        button->setLaunching(false);
+                    this->runService(serviceRef);
                 });
+            });
 
             remaining->ownerWidget = button;
         }
@@ -1297,38 +1355,37 @@ void MainWindow::initServiceModules()
     std::sort(
         std::begin(services),
         std::end(services),
-        [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs)
-        {
-            if(!lhs || !rhs)
+        [](const std::shared_ptr<Service> &lhs, const std::shared_ptr<Service> &rhs) {
+            if (!lhs || !rhs)
                 return lhs != nullptr;
             int scoreLhs = lhs->sort_score();
             int scoreRhs = rhs->sort_score();
-            if(scoreLhs != scoreRhs)
+            if (scoreLhs != scoreRhs)
                 return scoreLhs > scoreRhs;
-            if(lhs->active != rhs->active)
+            if (lhs->active != rhs->active)
                 return lhs->active > rhs->active;
             return lhs->title < rhs->title;
         });
 
     QGridLayout *layoutSpace = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
-    if(layoutSpace)
+    if (layoutSpace)
     {
         layoutSpace->setSpacing(14);
         layoutSpace->setContentsMargins(10, 10, 10, 10);
-        while(layoutSpace->count() > 0)
+        while (layoutSpace->count() > 0)
         {
             QLayoutItem *child = layoutSpace->takeAt(0);
-            if(child->widget() && child->widget() != m_pixelBlastSideButton)
+            if (child->widget() && child->widget() != m_pixelBlastSideButton)
                 child->widget()->deleteLater();
             delete child;
         }
     }
 
     x = 0;
-    for(const std::shared_ptr<Service> &item : std::as_const(services))
+    for (const std::shared_ptr<Service> &item : std::as_const(services))
     {
         // Adds widget to a grid
-        if(item->uuid() != IDServiceAIAgentString)
+        if (item->uuid() != IDServiceAIAgentString)
         {
             static_cast<QGridLayout *>(ui->serviceContents->layout())->addWidget(item->ownerWidget, x / 2, x % 2);
             ++x;
@@ -1339,7 +1396,8 @@ void MainWindow::initServiceModules()
     applyServiceFilters();
 }
 
-static QWidget *createServiceGroupDivider(const QString &title, const QString &iconPath, int count, const QString &accentHex, QWidget *parent)
+static QWidget *createServiceGroupDivider(
+    const QString &title, const QString &iconPath, int count, const QString &accentHex, QWidget *parent)
 {
     QWidget *divider = new QWidget(parent);
     divider->setObjectName(QStringLiteral("serviceGroupDivider"));
@@ -1350,19 +1408,22 @@ static QWidget *createServiceGroupDivider(const QString &title, const QString &i
     layout->setContentsMargins(4, 10, 4, 4);
     layout->setSpacing(8);
 
-    if(!iconPath.isEmpty())
+    if (!iconPath.isEmpty())
     {
         QLabel *iconLbl = new QLabel(divider);
         iconLbl->setFixedSize(16, 16);
         iconLbl->setAlignment(Qt::AlignCenter);
         QPixmap pm(iconPath);
-        if(!pm.isNull())
+        if (!pm.isNull())
             iconLbl->setPixmap(pm.scaled(14, 14, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         layout->addWidget(iconLbl);
     }
 
     QLabel *titleLbl = new QLabel(title, divider);
-    titleLbl->setStyleSheet(QString("color: %1; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; background: transparent;").arg(accentHex));
+    titleLbl->setStyleSheet(QString(
+                                "color: %1; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: "
+                                "uppercase; background: transparent;")
+                                .arg(accentHex));
     layout->addWidget(titleLbl);
 
     QLabel *countBadge = new QLabel(QString("(%1)").arg(count), divider);
@@ -1374,7 +1435,10 @@ static QWidget *createServiceGroupDivider(const QString &title, const QString &i
     QFrame *line = new QFrame(divider);
     line->setFixedHeight(1);
     line->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    line->setStyleSheet(QString("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 %1, stop:0.35 #334155, stop:1 transparent); border: none;").arg(accentHex));
+    line->setStyleSheet(QString(
+                            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 %1, stop:0.35 #334155, stop:1 "
+                            "transparent); border: none;")
+                            .arg(accentHex));
     layout->addWidget(line, 1);
 
     return divider;
@@ -1382,46 +1446,44 @@ static QWidget *createServiceGroupDivider(const QString &title, const QString &i
 
 void MainWindow::applyServiceFilters()
 {
-    if(!ui || !ui->serviceContents)
+    if (!ui || !ui->serviceContents)
         return;
 
     // Search query from top-right search box
-    QLineEdit *searchEdit = ui->toplevel_up_2 ? ui->toplevel_up_2->findChild<QLineEdit *>("serviceSearchEdit") : nullptr;
+    QLineEdit *searchEdit
+        = ui->toplevel_up_2 ? ui->toplevel_up_2->findChild<QLineEdit *>("serviceSearchEdit") : nullptr;
     QString query = searchEdit ? searchEdit->text().trimmed() : QString();
 
     // Active filter from vertical filter panel
     QString currentFilter = "all";
-    if(QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
+    if (QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
     {
         QAbstractButton *checked = bg->checkedButton();
-        if(checked)
+        if (checked)
             currentFilter = checked->property("filterMode").toString();
     }
 
     // Direct ServiceTileButton children of serviceContents
-    QList<ServiceTileButton *> allButtons = ui->serviceContents->findChildren<ServiceTileButton *>(QString(), Qt::FindDirectChildrenOnly);
+    QList<ServiceTileButton *> allButtons
+        = ui->serviceContents->findChildren<ServiceTileButton *>(QString(), Qt::FindDirectChildrenOnly);
 
     // Sort order: by sort_score() descending (higher score = higher priority), then active, then title
-    std::sort(
-        allButtons.begin(),
-        allButtons.end(),
-        [](ServiceTileButton *a, ServiceTileButton *b)
-        {
-            if(!a || !b)
-                return a != nullptr;
+    std::sort(allButtons.begin(), allButtons.end(), [](ServiceTileButton *a, ServiceTileButton *b) {
+        if (!a || !b)
+            return a != nullptr;
 
-            int scoreA = a->sort_score();
-            int scoreB = b->sort_score();
-            if(scoreA != scoreB)
-                return scoreA > scoreB;
+        int scoreA = a->sort_score();
+        int scoreB = b->sort_score();
+        if (scoreA != scoreB)
+            return scoreA > scoreB;
 
-            bool aAct = a->property("isActive").toBool();
-            bool bAct = b->property("isActive").toBool();
-            if(aAct != bAct)
-                return aAct > bAct;
+        bool aAct = a->property("isActive").toBool();
+        bool bAct = b->property("isActive").toBool();
+        if (aAct != bAct)
+            return aAct > bAct;
 
-            return a->title() < b->title();
-        });
+        return a->title() < b->title();
+    });
 
     int visibleIndex = 0;
     int totalCount = allButtons.size();
@@ -1430,53 +1492,58 @@ void MainWindow::applyServiceFilters()
     int freeCount = 0;
     int paidCount = 0;
 
-    for(ServiceTileButton *btn : allButtons)
+    for (ServiceTileButton *btn : allButtons)
     {
         bool isUnderDev = btn->property("isUnderDev").toBool();
         bool isActive = btn->property("isActive").toBool();
         bool isFree = btn->property("isFree").toBool() || (btn->tier() == ServiceTileButton::Tier::Free);
-        bool isPaid = btn->property("isPaid").toBool() || (btn->tier() == ServiceTileButton::Tier::Credit || btn->tier() == ServiceTileButton::Tier::Vip || btn->tier() == ServiceTileButton::Tier::Dynamic);
+        bool isPaid = btn->property("isPaid").toBool()
+                      || (btn->tier() == ServiceTileButton::Tier::Credit || btn->tier() == ServiceTileButton::Tier::Vip
+                          || btn->tier() == ServiceTileButton::Tier::Dynamic);
         bool isAvail = isActive && !isUnderDev;
         bool isUnavail = !isActive || isUnderDev || (btn->tier() == ServiceTileButton::Tier::Disabled);
 
-        if(isAvail)
+        if (isAvail)
             ++availCount;
-        if(isUnavail)
+        if (isUnavail)
             ++unavailCount;
-        if(isFree)
+        if (isFree)
             ++freeCount;
-        if(isPaid)
+        if (isPaid)
             ++paidCount;
 
         bool matchesFilter = true;
-        if(currentFilter == "available")
+        if (currentFilter == "available")
             matchesFilter = isAvail;
-        else if(currentFilter == "unavailable")
+        else if (currentFilter == "unavailable")
             matchesFilter = isUnavail;
-        else if(currentFilter == "free")
+        else if (currentFilter == "free")
             matchesFilter = isFree;
-        else if(currentFilter == "paid")
+        else if (currentFilter == "paid")
             matchesFilter = isPaid;
 
         bool matchesSearch = true;
-        if(!query.isEmpty())
+        if (!query.isEmpty())
         {
-            matchesSearch = btn->title().contains(query, Qt::CaseInsensitive) || btn->toolTip().contains(query, Qt::CaseInsensitive) || btn->property("serviceDesc").toString().contains(query, Qt::CaseInsensitive) || btn->badgeText().contains(query, Qt::CaseInsensitive);
+            matchesSearch = btn->title().contains(query, Qt::CaseInsensitive)
+                            || btn->toolTip().contains(query, Qt::CaseInsensitive)
+                            || btn->property("serviceDesc").toString().contains(query, Qt::CaseInsensitive)
+                            || btn->badgeText().contains(query, Qt::CaseInsensitive);
         }
 
         bool visible = matchesFilter && matchesSearch;
         btn->setVisible(visible);
-        if(visible)
+        if (visible)
             ++visibleIndex;
     }
 
     // --- Responsive column calculation based on scroll area viewport ---
     int availW = 0;
-    if(ui->scrollArea_3 && ui->scrollArea_3->viewport())
+    if (ui->scrollArea_3 && ui->scrollArea_3->viewport())
         availW = ui->scrollArea_3->viewport()->width();
-    if(availW <= 100 && ui->page_cabinet)
+    if (availW <= 100 && ui->page_cabinet)
         availW = ui->page_cabinet->width();
-    if(availW <= 100)
+    if (availW <= 100)
         availW = this->width() - 80;
 
     // Side space is only layout margins (28px) + scrollbar (~24px); filters are now horizontal above the grid!
@@ -1490,7 +1557,7 @@ void MainWindow::applyServiceFilters()
     cols = qBound(1, cols, 6);
 
     QGridLayout *grid = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
-    if(!grid)
+    if (!grid)
     {
         grid = new QGridLayout(ui->serviceContents);
     }
@@ -1498,12 +1565,12 @@ void MainWindow::applyServiceFilters()
     grid->setContentsMargins(4, 4, 4, 4);
 
     // Clear existing layout items from the grid (deletes previous divider widgets, preserves buttons)
-    while(grid->count() > 0)
+    while (grid->count() > 0)
     {
         QLayoutItem *item = grid->takeAt(0);
-        if(item->widget())
+        if (item->widget())
         {
-            if(item->widget()->objectName() == "serviceGroupDivider")
+            if (item->widget()->objectName() == "serviceGroupDivider")
                 item->widget()->deleteLater();
         }
         delete item;
@@ -1514,9 +1581,9 @@ void MainWindow::applyServiceFilters()
     QList<ServiceTileButton *> paidGroup;
     QList<ServiceTileButton *> unavailGroup;
 
-    for(ServiceTileButton *btn : allButtons)
+    for (ServiceTileButton *btn : allButtons)
     {
-        if(!btn->isVisible())
+        if (!btn->isVisible())
             continue;
 
         bool isActive = btn->property("isActive").toBool();
@@ -1524,29 +1591,24 @@ void MainWindow::applyServiceFilters()
         bool isUnavail = !isActive || isUnderDev || (btn->tier() == ServiceTileButton::Tier::Disabled);
         bool isFree = btn->property("isFree").toBool() || (btn->tier() == ServiceTileButton::Tier::Free);
 
-        if(isUnavail)
+        if (isUnavail)
             unavailGroup.append(btn);
-        else if(isFree)
+        else if (isFree)
             freeGroup.append(btn);
         else
             paidGroup.append(btn);
     }
 
-    auto sortByScore = [](QList<ServiceTileButton *> &list)
-    {
-        std::sort(
-            list.begin(),
-            list.end(),
-            [](ServiceTileButton *a, ServiceTileButton *b)
-            {
-                if(!a || !b)
-                    return a != nullptr;
-                int scoreA = a->sort_score();
-                int scoreB = b->sort_score();
-                if(scoreA != scoreB)
-                    return scoreA > scoreB;
-                return a->title() < b->title();
-            });
+    auto sortByScore = [](QList<ServiceTileButton *> &list) {
+        std::sort(list.begin(), list.end(), [](ServiceTileButton *a, ServiceTileButton *b) {
+            if (!a || !b)
+                return a != nullptr;
+            int scoreA = a->sort_score();
+            int scoreB = b->sort_score();
+            if (scoreA != scoreB)
+                return scoreA > scoreB;
+            return a->title() < b->title();
+        });
     };
 
     sortByScore(paidGroup);
@@ -1556,36 +1618,39 @@ void MainWindow::applyServiceFilters()
     int row = 0;
     int visibleIndexFinal = 0;
 
-    if(m_pixelBlastSideButton)
+    if (m_pixelBlastSideButton)
     {
         m_pixelBlastSideButton->setVisible(true);
         grid->addWidget(m_pixelBlastSideButton, row, 0, 1, cols);
         ++row;
     }
 
-    auto placeGroup = [&](const QList<ServiceTileButton *> &groupList, const QString &groupTitle, const QString &groupIcon, const QString &accentHex)
-    {
-        if(groupList.isEmpty())
+    auto placeGroup = [&](const QList<ServiceTileButton *> &groupList,
+                          const QString &groupTitle,
+                          const QString &groupIcon,
+                          const QString &accentHex) {
+        if (groupList.isEmpty())
             return;
 
         // Group section divider spanning all columns
-        QWidget *divider = createServiceGroupDivider(groupTitle, groupIcon, groupList.size(), accentHex, ui->serviceContents);
+        QWidget *divider
+            = createServiceGroupDivider(groupTitle, groupIcon, groupList.size(), accentHex, ui->serviceContents);
         grid->addWidget(divider, row, 0, 1, cols);
         row++;
 
         int col = 0;
-        for(ServiceTileButton *btn : groupList)
+        for (ServiceTileButton *btn : groupList)
         {
             grid->addWidget(btn, row, col, Qt::AlignTop);
             ++visibleIndexFinal;
             col++;
-            if(col >= cols)
+            if (col >= cols)
             {
                 col = 0;
                 row++;
             }
         }
-        if(col != 0)
+        if (col != 0)
             row++;
     };
 
@@ -1594,51 +1659,54 @@ void MainWindow::applyServiceFilters()
     placeGroup(unavailGroup, QString::fromUtf8("В разработке и ограниченные"), ":/svg/services/unavailable", "#94A3B8");
 
     // Configure column stretches so columns expand evenly
-    for(int c = 0; c < cols; ++c)
+    for (int c = 0; c < cols; ++c)
         grid->setColumnStretch(c, 1);
-    for(int c = cols; c < cols + 6; ++c)
+    for (int c = cols; c < cols + 6; ++c)
         grid->setColumnStretch(c, 0);
 
     // Top-align all tile rows; bottom stretch row keeps tiles firmly at 70px height
-    for(int r = 0; r <= row; ++r)
+    for (int r = 0; r <= row; ++r)
         grid->setRowStretch(r, 0);
     grid->setRowStretch(row + 1, 1);
 
     // Update counts on filter buttons
-    if(QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
+    if (QButtonGroup *bg = this->findChild<QButtonGroup *>("serviceFilterGroup"))
     {
-        for(QAbstractButton *ab : bg->buttons())
+        for (QAbstractButton *ab : bg->buttons())
         {
             QString mode = ab->property("filterMode").toString();
-            if(mode == "all")
+            if (mode == "all")
                 ab->setText(QString::fromUtf8("Все сервисы (%1)").arg(totalCount));
-            else if(mode == "available")
+            else if (mode == "available")
                 ab->setText(QString::fromUtf8("Доступные (%1)").arg(availCount));
-            else if(mode == "unavailable")
+            else if (mode == "unavailable")
                 ab->setText(QString::fromUtf8("Не доступные (%1)").arg(unavailCount));
-            else if(mode == "free")
+            else if (mode == "free")
                 ab->setText(QString::fromUtf8("Бесплатные (%1)").arg(freeCount));
-            else if(mode == "paid")
+            else if (mode == "paid")
                 ab->setText(QString::fromUtf8("Платные (%1)").arg(paidCount));
         }
     }
 
     // Empty state message
     QLabel *emptyLbl = ui->serviceContents->findChild<QLabel *>("servicesEmptyLabel");
-    if(visibleIndexFinal == 0)
+    if (visibleIndexFinal == 0)
     {
-        if(!emptyLbl)
+        if (!emptyLbl)
         {
             emptyLbl = new QLabel(ui->serviceContents);
             emptyLbl->setObjectName("servicesEmptyLabel");
             emptyLbl->setAlignment(Qt::AlignCenter);
-            emptyLbl->setStyleSheet("color: #64748B; font-size: 13px; font-weight: 600; padding: 40px; background: transparent;");
+            emptyLbl->setStyleSheet(
+                "color: #64748B; font-size: 13px; font-weight: 600; padding: 40px; background: transparent;");
         }
-        emptyLbl->setText(query.isEmpty() ? QString::fromUtf8("В данной категории нет сервисов") : QString::fromUtf8("По запросу «%1» ничего не найдено").arg(query));
+        emptyLbl->setText(
+            query.isEmpty() ? QString::fromUtf8("В данной категории нет сервисов")
+                            : QString::fromUtf8("По запросу «%1» ничего не найдено").arg(query));
         grid->addWidget(emptyLbl, 0, 0, 1, cols, Qt::AlignCenter);
         emptyLbl->show();
     }
-    else if(emptyLbl)
+    else if (emptyLbl)
     {
         emptyLbl->hide();
     }
@@ -1677,79 +1745,72 @@ void MainWindow::checkVersion(bool firstRun)
     network.pullFetchVersion(firstRun);
 
     // Show First Page
-    if(firstRun)
+    if (firstRun)
     {
         ui->loaderPageText->setText("Проверка обновления");
-        showPageLoader(
-            startPage,
-            100,
-            [this]() -> bool
+        showPageLoader(startPage, 100, [this]() -> bool {
+            if (actualVersion.empty())
+                return false;
+            if (lastPage == AuthPage)
             {
-                if(actualVersion.empty())
-                    return false;
-                if(lastPage == AuthPage)
+                if (actualVersion.mStatus != NetworkStatus::OK)
                 {
-                    if(actualVersion.mStatus != NetworkStatus::OK)
+                    ui->loaderPageText->setText("Проблема с интернетом?");
+                    ui->loaderPageText->update();
+                    lastPage = PageIndex(-1);
+                    QTimer::singleShot(2000, this, [this]() { willTerminate(); });
+                    return false;
+                }
+                else
+                {
+                    verChansesAvailable = ChansesRunInvalid;
+                    ui->loaderPageText->setText("Ваша версия актуальная!");
+                    ui->loaderPageText->update();
+                    versionChecker->start();
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+    else if (verChansesAvailable > -1)
+    {
+        delayUICallLoop(70, [this]() {
+            if (actualVersion.empty())
+                return true;
+            if (verChansesAvailable > -1 && !isHidden())
+            {
+                if (actualVersion.mStatus != NetworkStatus::OK)
+                {
+                    if (verChansesAvailable == 0)
                     {
-                        ui->loaderPageText->setText("Проблема с интернетом?");
-                        ui->loaderPageText->update();
-                        lastPage = PageIndex(-1);
-                        QTimer::singleShot(2000, this, [this]() { willTerminate(); });
+                        // Will terminate
+                        verChansesAvailable = -1;
+                        willTerminate();
+                        versionChecker->stop();
                         return false;
                     }
                     else
                     {
-                        verChansesAvailable = ChansesRunInvalid;
-                        ui->loaderPageText->setText("Ваша версия актуальная!");
-                        ui->loaderPageText->update();
-                        versionChecker->start();
-                        return true;
+                        QString warnMessage = "У вас осталось попыток (%1), срочно восстановите связь, иначе "
+                                              "приложение аварийно завершится.";
+                        warnMessage = warnMessage.arg(verChansesAvailable);
+                        verChansesAvailable = qMax<int>(verChansesAvailable - 1, 0);
+                        QMessageBox::warning(this, "Отсутствие соединение с интернетом.", warnMessage);
                     }
                 }
-                return false;
-            });
-    }
-    else if(verChansesAvailable > -1)
-    {
-        delayUICallLoop(
-            70,
-            [this]()
-            {
-                if(actualVersion.empty())
-                    return true;
-                if(verChansesAvailable > -1 && !isHidden())
+                else
                 {
-                    if(actualVersion.mStatus != NetworkStatus::OK)
-                    {
-                        if(verChansesAvailable == 0)
-                        {
-                            // Will terminate
-                            verChansesAvailable = -1;
-                            willTerminate();
-                            versionChecker->stop();
-                            return false;
-                        }
-                        else
-                        {
-                            QString warnMessage = "У вас осталось попыток (%1), срочно восстановите связь, иначе "
-                                                  "приложение аварийно завершится.";
-                            warnMessage = warnMessage.arg(verChansesAvailable);
-                            verChansesAvailable = qMax<int>(verChansesAvailable - 1, 0);
-                            QMessageBox::warning(this, "Отсутствие соединение с интернетом.", warnMessage);
-                        }
-                    }
-                    else
-                    {
-                        verChansesAvailable = ChansesRunInvalid;
-                    }
+                    verChansesAvailable = ChansesRunInvalid;
                 }
-                versionChecker->start();
-                return false;
-            });
+            }
+            versionChecker->start();
+            return false;
+        });
     }
 
 #else
-    if(firstRun)
+    if (firstRun)
         showPageLoader(AuthPage);
 #endif
 }
@@ -1759,67 +1820,81 @@ void MainWindow::willTerminate()
     setEnabled(false);
     showMessageFromStatus(NetworkError);
     delayUICall(5000, std::bind(&MainWindow::close, this));
-    QMessageBox::critical(this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::Ok);
+    QMessageBox::critical(
+        this, "Нет соединение с интернетом", "Программа будет аварийно завершена через 5 секунд.", QMessageBox::Ok);
 }
 
 void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
 {
-    if(!ui || !ui->label)
+    if (!ui || !ui->label)
         return;
 
-    if(type == DeviceConnectType::Apple)
+    if (type == DeviceConnectType::Apple)
     {
-        if(s_adbVisualizer)
+        if (s_adbVisualizer)
         {
             s_adbVisualizer->setIsApple(true);
         }
 
         ui->label->setText(
             "<html><head/><body>"
-            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #FFFFFF; padding: 2px;\">"
+            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: "
+            "#FFFFFF; padding: 2px;\">"
             "  <div style=\"margin-bottom: 12px;\">"
-            "    <span style=\"font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px;\">Подключение устройства Apple (iOS / iPadOS)</span>"
+            "    <span style=\"font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px;\">Подключение "
+            "устройства Apple (iOS / iPadOS)</span>"
             "  </div>"
             "  <p style=\"color: #A1A1AA; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.45;\">"
             "    Для выполнения процедур прошивки и обслуживания подключите ваш iPhone или iPad к ПК:"
             "  </p>"
             "  <div style=\"border: 1px solid #27272A;\">"
             "    <span style=\"color: #FFFFFF; \">1</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Кабель Lightning или Type-C</strong>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Кабель Lightning или "
+            "Type-C</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
-            "      Подключите iPhone / iPad к компьютеру оригинальным или сертифицированным кабелем. Рекомендуется подключать напрямую в разъём системного блока без переходников и хабов."
+            "      Подключите iPhone / iPad к компьютеру оригинальным или сертифицированным кабелем. Рекомендуется "
+            "подключать напрямую в разъём системного блока без переходников и хабов."
             "    </p>"
             "  </div>"
             "  <div style=\"background-color: #18181B; \">"
             "    <span style=\"color: #FFFFFF; \">2</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Доверие этому компьютеру</strong>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Доверие этому "
+            "компьютеру</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
-            "      Разблокируйте экран устройства. В появившемся диалоговом окне нажмите <b>«Доверять»</b> и введите код-пароль разблокировки на экране iPhone/iPad."
+            "      Разблокируйте экран устройства. В появившемся диалоговом окне нажмите <b>«Доверять»</b> и введите "
+            "код-пароль разблокировки на экране iPhone/iPad."
             "    </p>"
             "  </div>"
             "  <div style=\"background-color: #18181B; \">"
             "    <span style=\"color: #FFFFFF; \">3</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режимы Recovery и DFU (при необходимости)</strong>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режимы Recovery и DFU (при "
+            "необходимости)</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
-            "      Если устройство заблокировано или зависло на яблоке, переведите его в режим <b>Recovery Mode</b> или <b>DFU</b>. Приложение автоматически определит его и откроет прошивку."
+            "      Если устройство заблокировано или зависло на яблоке, переведите его в режим <b>Recovery Mode</b> "
+            "или <b>DFU</b>. Приложение автоматически определит его и откроет прошивку."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px 12px; margin-top: 6px;\">"
-            "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Устройство не определяется?</span>"
+            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px "
+            "12px; margin-top: 6px;\">"
+            "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" "
+            "width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Устройство не определяется?</span>"
             "    <p style=\"margin: 4px 0 0 0; color: #71717A; font-size: 11px; line-height: 1.4;\">"
-            "      Проверьте исправность кабеля и разъёма USB или удерживайте комбинацию кнопок для входа в Recovery Mode."
+            "      Проверьте исправность кабеля и разъёма USB или удерживайте комбинацию кнопок для входа в Recovery "
+            "Mode."
             "    </p>"
             "  </div>"
             "</div>"
             "</body></html>");
 
-        if(ui->label_3)
+        if (ui->label_3)
         {
             ui->label_3->setText(
-                "<a style=\"color: #00E5FF; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://support.apple.com/ru-ru/109043\"><img src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Справка Apple: Как ввести iPhone/iPad в режим "
+                "<a style=\"color: #00E5FF; text-decoration: none; font-size: 12px; font-weight: 500;\" "
+                "href=\"https://support.apple.com/ru-ru/109043\"><img src=\":/svg/clipboard\" width=\"13\" "
+                "height=\"13\" style=\"vertical-align:middle;\"/> Справка Apple: Как ввести iPhone/iPad в режим "
                 "восстановления (Recovery) &rarr;</a>");
         }
-        if(ui->label_5)
+        if (ui->label_5)
         {
             ui->label_5->setStyleSheet(
                 "background-color: #18181B;"
@@ -1834,16 +1909,18 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
     }
     else
     {
-        if(s_adbVisualizer)
+        if (s_adbVisualizer)
         {
             s_adbVisualizer->setIsApple(false);
         }
 
         ui->label->setText(
             "<html><head/><body>"
-            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #FFFFFF; padding: 2px;\">"
+            "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: "
+            "#FFFFFF; padding: 2px;\">"
             "  <div style=\"margin-bottom: 12px;\">"
-            "    <span style=\"font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px;\">Подключение устройства Android (ADB)</span>"
+            "    <span style=\"font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.3px;\">Подключение "
+            "устройства Android (ADB)</span>"
             "  </div>"
             "  <p style=\"color: #A1A1AA; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.45;\">"
             "    Для выполнения процедур активируйте <b>Отладку по USB</b> на вашем Android-смартфоне:"
@@ -1852,39 +1929,49 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "    <span style=\"color: #FFFFFF; \">1</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режим разработчика</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
-            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> (или версию MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
+            "      Откройте <b>Настройки</b> &rarr; <b>О телефоне</b>. Найдите <b>Номер сборки</b> (или версию "
+            "MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
             "    </p>"
             "  </div>"
             "  <div style=\"background-color: #18181B; \">"
             "    <span style=\"color: #FFFFFF; \">2</span>"
-            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Включите отладку по USB</strong>"
+            "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Включите отладку по "
+            "USB</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
-            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте тумблер <b>Отладка по USB</b> (для Xiaomi также «Установка через USB»)."
+            "      Перейдите в <b>Настройки</b> &rarr; <b>Для разработчиков</b> и активируйте тумблер <b>Отладка по "
+            "USB</b> (для Xiaomi также «Установка через USB»)."
             "    </p>"
             "  </div>"
             "  <div style=\"background-color: #18181B; \">"
             "    <span style=\"color: #FFFFFF; \">3</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
-            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; отметьте <b>«Всегда разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
+            "      Соедините устройство кабелем. На экране телефона появится запрос &mdash; отметьте <b>«Всегда "
+            "разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px 12px; margin-top: 6px;\">"
-            "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Телефон не определяется?</span>"
+            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px "
+            "12px; margin-top: 6px;\">"
+            "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" "
+            "width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Телефон не определяется?</span>"
             "    <p style=\"margin: 4px 0 0 0; color: #71717A; font-size: 11px; line-height: 1.4;\">"
-            "      Смените режим подключения USB на <b>«Передача файлов (MTP)»</b> либо подключите кабель в другой USB-порт на ПК."
+            "      Смените режим подключения USB на <b>«Передача файлов (MTP)»</b> либо подключите кабель в другой "
+            "USB-порт на ПК."
             "    </p>"
             "  </div>"
             "</div>"
             "</body></html>");
 
-        if(ui->label_3)
+        if (ui->label_3)
         {
             ui->label_3->setText(
-                "<a style=\"color: #00E5FF; text-decoration: none; font-size: 12px; font-weight: 500;\" href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\"><img src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Подробная пошаговая "
+                "<a style=\"color: #00E5FF; text-decoration: none; font-size: 12px; font-weight: 500;\" "
+                "href=\"https://www.anymp4.com/ru/faq/enable-usb-debugging-for-android.html\"><img "
+                "src=\":/svg/clipboard\" width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Подробная "
+                "пошаговая "
                 "инструкция с иллюстрациями &rarr;</a>");
         }
-        if(ui->label_5)
+        if (ui->label_5)
         {
             ui->label_5->setStyleSheet(
                 "background-color: #18181B;"
@@ -1901,15 +1988,15 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
 
 void MainWindow::showPage(PageIndex pageNum)
 {
-    if(curPage != LoaderPage)
+    if (curPage != LoaderPage)
         lastPage = curPage;
-    if(pages.contains(curPage))
+    if (pages.contains(curPage))
     {
         pages[curPage]->setEnabled(false);
         pages[curPage]->setVisible(false);
     }
     curPage = pageNum;
-    if(pages.contains(curPage))
+    if (pages.contains(curPage))
     {
         pages[curPage]->setVisible(true);
         pages[curPage]->setEnabled(true);
@@ -1919,18 +2006,20 @@ void MainWindow::showPage(PageIndex pageNum)
     contentOpacityAnimator->start();
 
     ui->toplevel_backpage->setVisible(pageNum > CabinetPage);
-    if(ui->toplevel_backpage->isVisible())
+    if (ui->toplevel_backpage->isVisible())
     {
-        switch(pageNum)
+        switch (pageNum)
         {
             case DevicesPage:
-                if(connectPhone.connectionType == DeviceConnectType::Apple)
+                if (connectPhone.connectionType == DeviceConnectType::Apple)
                     ui->label_8->setText(QString::fromUtf8("Подключение Apple-устройства (Lightning / Type-C)"));
                 else
                     ui->label_8->setText("Подключение Android-устройства (ADB)");
                 break;
             case LongInfoPage:
-                ui->label_8->setText(ServiceProvider::currentService() ? ServiceProvider::currentService()->title : "Выполнение процедуры");
+                ui->label_8->setText(
+                    ServiceProvider::currentService() ? ServiceProvider::currentService()->title
+                                                      : "Выполнение процедуры");
                 break;
             case MyDevicesPage:
                 ui->label_8->setText("История устройств и гарантия");
@@ -1975,18 +2064,19 @@ void MainWindow::showPage(PageIndex pageNum)
 
 void MainWindow::pageShownPreStart(int page)
 {
-    switch(page)
+    switch (page)
     {
             // WELCOME
         case AuthPage:
             ui->statusAuthText->setText("Выполните аутентификацию");
             ui->authButton->setEnabled(true);
             clearAuthInfoPage();
-            if(lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty() && ui->checkAutoLogin->isChecked())
+            if (lastPage == AuthPage && AppSetting::autoLogin() && !ui->linePassEdit->text().isEmpty()
+                && ui->checkAutoLogin->isChecked())
                 ui->authButton->click();
             break;
         case DevicesPage:
-            if(ServiceProvider::currentService() == nullptr)
+            if (ServiceProvider::currentService() == nullptr)
             {
                 QMessageBox::warning(this, "Service is not connected", "Service module is no load.");
                 logoutSystem();
@@ -2002,7 +2092,7 @@ void MainWindow::pageShownPreStart(int page)
             deviceSelectSwitched = false;
             deviceLeftAnimator->setDirection(QPropertyAnimation::Forward);
 
-            if(s_adbVisualizer)
+            if (s_adbVisualizer)
             {
                 s_adbVisualizer->setStatus(UNKNOWN);
                 s_adbVisualizer->startAnimation();
@@ -2010,201 +2100,227 @@ void MainWindow::pageShownPreStart(int page)
 
             delayUI(500);
 
-            delayUICallLoop(
-                300,
-                [this]() -> bool
+            delayUICallLoop(300, [this]() -> bool {
+                auto *vis = s_adbVisualizer;
+                if (!deviceSelectSwitched)
                 {
-                    auto *vis = s_adbVisualizer;
-                    if(!deviceSelectSwitched)
+                    if (connectPhone.connectionType == DeviceConnectType::Apple)
                     {
-                        if(connectPhone.connectionType == DeviceConnectType::Apple)
+                        QList<AppleDevice> devices = Apple::getDevices();
+                        if (devices.isEmpty())
                         {
-                            QList<AppleDevice> devices = Apple::getDevices();
-                            if(devices.isEmpty())
+                            if (vis && vis->status() != UNKNOWN)
                             {
-                                if(vis && vis->status() != UNKNOWN)
-                                {
-                                    vis->setStatus(UNKNOWN);
-                                    ui->label_5->setStyleSheet(
-                                        "background-color: #18181B;"
-                                        "border: 1px solid #0284C7;"
-                                        "border-radius: 0px;"
-                                        "color: #00E5FF;"
-                                        "font-size: 12.5px;"
-                                        "font-weight: 600;"
-                                        "padding: 10px;");
-                                    ui->label_5->setText(QString::fromUtf8("Поиск подключенного устройства Apple (Lightning / Type-C)..."));
-                                }
-                            }
-                            else
-                            {
-                                bool hasAuth = false;
-                                bool hasUnauth = false;
-                                AppleDevice authDev;
-                                AppleDevice unauthDev;
-
-                                for(const AppleDevice &device : std::as_const(devices))
-                                {
-                                    AppleConStatus status = Apple::deviceStatus(device);
-                                    if(status == APPLE_DEVICE || status == APPLE_RECOVERY || status == APPLE_DFU)
-                                    {
-                                        hasAuth = true;
-                                        authDev = device;
-                                        break;
-                                    }
-                                    else if(status == APPLE_UNAUTH)
-                                    {
-                                        hasUnauth = true;
-                                        unauthDev = device;
-                                    }
-                                }
-
-                                if(hasAuth)
-                                {
-                                    connectPhone.isAuthed = true;
-                                    connectPhone.appleDevice = authDev;
-                                    ServiceProvider::currentService()->setAppleArgs(authDev);
-
-                                    QString devName = !authDev.displayName.isEmpty() ? authDev.displayName : (!authDev.marketingName.isEmpty() ? authDev.marketingName : authDev.devId);
-                                    QString modeStr = authDev.mode == AppleDeviceMode::Recovery ? QString("Recovery Mode") : (authDev.mode == AppleDeviceMode::DFU ? QString("DFU Mode") : (!authDev.productVersion.isEmpty() ? QString("iOS %1").arg(authDev.productVersion) : QString("Normal Mode")));
-                                    QString devSub = QString("Apple * %1").arg(modeStr);
-
-                                    if(vis && vis->status() != DEVICE)
-                                    {
-                                        vis->setStatus(DEVICE, devName, devSub);
-                                    }
-                                    ui->label_5->setStyleSheet(
-                                        "background-color: #0D261A;"
-                                        "border: 1px solid #059669;"
-                                        "border-radius: 0px;"
-                                        "color: #34D399;"
-                                        "font-size: 12.5px;"
-                                        "font-weight: 600;"
-                                        "padding: 10px;");
-                                    ui->label_5->setText(QString::fromUtf8("Устройство Apple подключено: %1! Запуск...").arg(devName));
-                                }
-                                else if(hasUnauth)
-                                {
-                                    QString devName = !unauthDev.displayName.isEmpty() ? unauthDev.displayName : (!unauthDev.marketingName.isEmpty() ? unauthDev.marketingName : unauthDev.devId);
-
-                                    if(vis && vis->status() != UNAUTH)
-                                    {
-                                        vis->setStatus(UNAUTH, devName);
-                                    }
-                                    ui->label_5->setStyleSheet(
-                                        "background-color: #241A08;"
-                                        "border: 1px solid #D97706;"
-                                        "border-radius: 0px;"
-                                        "color: #FBBF24;"
-                                        "font-size: 12.5px;"
-                                        "font-weight: 600;"
-                                        "padding: 10px;");
-                                    ui->label_5->setText(QString::fromUtf8("Нажмите «Доверять этому компьютеру» на экране iPhone/iPad"));
-                                }
+                                vis->setStatus(UNKNOWN);
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #18181B;"
+                                    "border: 1px solid #0284C7;"
+                                    "border-radius: 0px;"
+                                    "color: #00E5FF;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;");
+                                ui->label_5->setText(
+                                    QString::fromUtf8("Поиск подключенного устройства Apple (Lightning / Type-C)..."));
                             }
                         }
                         else
                         {
-                            QList<AdbDevice> devices = Adb::getDevices();
-                            if(devices.isEmpty())
+                            bool hasAuth = false;
+                            bool hasUnauth = false;
+                            AppleDevice authDev;
+                            AppleDevice unauthDev;
+
+                            for (const AppleDevice &device : std::as_const(devices))
                             {
-                                if(vis && vis->status() != UNKNOWN)
+                                AppleConStatus status = Apple::deviceStatus(device);
+                                if (status == APPLE_DEVICE || status == APPLE_RECOVERY || status == APPLE_DFU)
                                 {
-                                    vis->setStatus(UNKNOWN);
-                                    ui->label_5->setStyleSheet(
-                                        "background-color: #18181B;"
-                                        "border: 1px solid #0284C7;"
-                                        "border-radius: 0px;"
-                                        "color: #00E5FF;"
-                                        "font-size: 12.5px;"
-                                        "font-weight: 600;"
-                                        "padding: 10px;");
-                                    ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
+                                    hasAuth = true;
+                                    authDev = device;
+                                    break;
+                                }
+                                else if (status == APPLE_UNAUTH)
+                                {
+                                    hasUnauth = true;
+                                    unauthDev = device;
                                 }
                             }
-                            else
+
+                            if (hasAuth)
                             {
-                                bool hasAuth = false;
-                                bool hasUnauth = false;
-                                AdbDevice authDev;
-                                AdbDevice unauthDev;
+                                connectPhone.isAuthed = true;
+                                connectPhone.appleDevice = authDev;
+                                ServiceProvider::currentService()->setAppleArgs(authDev);
 
-                                for(const AdbDevice &device : std::as_const(devices))
+                                QString devName
+                                    = !authDev.displayName.isEmpty()
+                                          ? authDev.displayName
+                                          : (!authDev.marketingName.isEmpty() ? authDev.marketingName : authDev.devId);
+                                QString modeStr = authDev.mode == AppleDeviceMode::Recovery
+                                                      ? QString("Recovery Mode")
+                                                      : (authDev.mode == AppleDeviceMode::DFU
+                                                             ? QString("DFU Mode")
+                                                             : (!authDev.productVersion.isEmpty()
+                                                                    ? QString("iOS %1").arg(authDev.productVersion)
+                                                                    : QString("Normal Mode")));
+                                QString devSub = QString("Apple * %1").arg(modeStr);
+
+                                if (vis && vis->status() != DEVICE)
                                 {
-                                    AdbConStatus status = Adb::deviceStatus(device.devId);
-                                    if(status == DEVICE)
-                                    {
-                                        hasAuth = true;
-                                        authDev = device;
-                                        break;
-                                    }
-                                    else if(status == UNAUTH)
-                                    {
-                                        hasUnauth = true;
-                                        unauthDev = device;
-                                    }
+                                    vis->setStatus(DEVICE, devName, devSub);
                                 }
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #0D261A;"
+                                    "border: 1px solid #059669;"
+                                    "border-radius: 0px;"
+                                    "color: #34D399;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;");
+                                ui->label_5->setText(
+                                    QString::fromUtf8("Устройство Apple подключено: %1! Запуск...").arg(devName));
+                            }
+                            else if (hasUnauth)
+                            {
+                                QString devName = !unauthDev.displayName.isEmpty()
+                                                      ? unauthDev.displayName
+                                                      : (!unauthDev.marketingName.isEmpty() ? unauthDev.marketingName
+                                                                                            : unauthDev.devId);
 
-                                if(hasAuth)
+                                if (vis && vis->status() != UNAUTH)
                                 {
-                                    connectPhone.isAuthed = true;
-                                    connectPhone.adbDevice = authDev;
-                                    ServiceProvider::currentService()->setAndroidArgs(authDev);
-
-                                    QString devName = !authDev.marketingName.isEmpty() ? authDev.marketingName : (!authDev.displayName.isEmpty() ? authDev.displayName : (!authDev.model.isEmpty() ? authDev.model : authDev.devId));
-                                    QString devSub = !authDev.vendor.isEmpty() ? (authDev.vendor + " (" + authDev.model + ")") : authDev.devId;
-
-                                    if(vis && vis->status() != DEVICE)
-                                    {
-                                        vis->setStatus(DEVICE, devName, devSub);
-                                    }
-                                    ui->label_5->setStyleSheet(
-                                        "background-color: #0D261A;"
-                                        "border: 1px solid #059669;"
-                                        "border-radius: 0px;"
-                                        "color: #34D399;"
-                                        "font-size: 12.5px;"
-                                        "font-weight: 600;"
-                                        "padding: 10px;");
-                                    ui->label_5->setText(QString::fromUtf8("Устройство подключено: %1! Запуск...").arg(devName));
+                                    vis->setStatus(UNAUTH, devName);
                                 }
-                                else if(hasUnauth)
-                                {
-                                    QString devName = !unauthDev.marketingName.isEmpty() ? unauthDev.marketingName : (!unauthDev.displayName.isEmpty() ? unauthDev.displayName : (!unauthDev.model.isEmpty() ? unauthDev.model : unauthDev.devId));
-
-                                    if(vis && vis->status() != UNAUTH)
-                                    {
-                                        vis->setStatus(UNAUTH, devName);
-                                    }
-                                    ui->label_5->setStyleSheet(
-                                        "background-color: #241A08;"
-                                        "border: 1px solid #D97706;"
-                                        "border-radius: 0px;"
-                                        "color: #FBBF24;"
-                                        "font-size: 12.5px;"
-                                        "font-weight: 600;"
-                                        "padding: 10px;");
-                                    ui->label_5->setText(QString::fromUtf8("Нажмите «Разрешить отладку по USB» на экране телефона"));
-                                }
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #241A08;"
+                                    "border: 1px solid #D97706;"
+                                    "border-radius: 0px;"
+                                    "color: #FBBF24;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;");
+                                ui->label_5->setText(
+                                    QString::fromUtf8("Нажмите «Доверять этому компьютеру» на экране iPhone/iPad"));
                             }
                         }
                     }
-                    if(ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
+                    else
                     {
-                        deviceSelectSwitched = true;
-                        deviceLeftAnimator->start();
-                        delayUI(1800);
-                        showPageLoader(ServiceProvider::currentService()->targetPage());
+                        QList<AdbDevice> devices = Adb::getDevices();
+                        if (devices.isEmpty())
+                        {
+                            if (vis && vis->status() != UNKNOWN)
+                            {
+                                vis->setStatus(UNKNOWN);
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #18181B;"
+                                    "border: 1px solid #0284C7;"
+                                    "border-radius: 0px;"
+                                    "color: #00E5FF;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;");
+                                ui->label_5->setText(QString::fromUtf8("Поиск подключенного Android-устройства..."));
+                            }
+                        }
+                        else
+                        {
+                            bool hasAuth = false;
+                            bool hasUnauth = false;
+                            AdbDevice authDev;
+                            AdbDevice unauthDev;
+
+                            for (const AdbDevice &device : std::as_const(devices))
+                            {
+                                AdbConStatus status = Adb::deviceStatus(device.devId);
+                                if (status == DEVICE)
+                                {
+                                    hasAuth = true;
+                                    authDev = device;
+                                    break;
+                                }
+                                else if (status == UNAUTH)
+                                {
+                                    hasUnauth = true;
+                                    unauthDev = device;
+                                }
+                            }
+
+                            if (hasAuth)
+                            {
+                                connectPhone.isAuthed = true;
+                                connectPhone.adbDevice = authDev;
+                                ServiceProvider::currentService()->setAndroidArgs(authDev);
+
+                                QString devName
+                                    = !authDev.marketingName.isEmpty()
+                                          ? authDev.marketingName
+                                          : (!authDev.displayName.isEmpty()
+                                                 ? authDev.displayName
+                                                 : (!authDev.model.isEmpty() ? authDev.model : authDev.devId));
+                                QString devSub = !authDev.vendor.isEmpty()
+                                                     ? (authDev.vendor + " (" + authDev.model + ")")
+                                                     : authDev.devId;
+
+                                if (vis && vis->status() != DEVICE)
+                                {
+                                    vis->setStatus(DEVICE, devName, devSub);
+                                }
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #0D261A;"
+                                    "border: 1px solid #059669;"
+                                    "border-radius: 0px;"
+                                    "color: #34D399;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;");
+                                ui->label_5->setText(
+                                    QString::fromUtf8("Устройство подключено: %1! Запуск...").arg(devName));
+                            }
+                            else if (hasUnauth)
+                            {
+                                QString devName
+                                    = !unauthDev.marketingName.isEmpty()
+                                          ? unauthDev.marketingName
+                                          : (!unauthDev.displayName.isEmpty()
+                                                 ? unauthDev.displayName
+                                                 : (!unauthDev.model.isEmpty() ? unauthDev.model : unauthDev.devId));
+
+                                if (vis && vis->status() != UNAUTH)
+                                {
+                                    vis->setStatus(UNAUTH, devName);
+                                }
+                                ui->label_5->setStyleSheet(
+                                    "background-color: #241A08;"
+                                    "border: 1px solid #D97706;"
+                                    "border-radius: 0px;"
+                                    "color: #FBBF24;"
+                                    "font-size: 12.5px;"
+                                    "font-weight: 600;"
+                                    "padding: 10px;");
+                                ui->label_5->setText(
+                                    QString::fromUtf8("Нажмите «Разрешить отладку по USB» на экране телефона"));
+                            }
+                        }
                     }
-                    if(curPage != DevicesPage)
-                    {
-                        deviceLeftAnimator->stop();
-                        ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
-                        if(vis)
-                            vis->stopAnimation();
-                    }
-                    return curPage == DevicesPage;
-                });
+                }
+                if (ServiceProvider::currentService()->canStart() && !deviceSelectSwitched)
+                {
+                    deviceSelectSwitched = true;
+                    deviceLeftAnimator->start();
+                    delayUI(1800);
+                    showPageLoader(ServiceProvider::currentService()->targetPage());
+                }
+                if (curPage != DevicesPage)
+                {
+                    deviceLeftAnimator->stop();
+                    ui->device_left_group->setMaximumWidth(QWIDGETSIZE_MAX);
+                    if (vis)
+                        vis->stopAnimation();
+                }
+                return curPage == DevicesPage;
+            });
 
             break;
         case CabinetPage:
@@ -2228,7 +2344,7 @@ void MainWindow::pageShownPreStart(int page)
             // TODO: set auto start mode flag.
             // IF THERE AUTO_START = YES?
 
-            if(!ServiceProvider::currentService()->canStart())
+            if (!ServiceProvider::currentService()->canStart())
             {
                 place << "Внутреняя ошибка, сервис не может быть запущен. Нажмите назад "
                          "и повторите попытку.";
@@ -2245,125 +2361,125 @@ void MainWindow::pageShownPreStart(int page)
         }
         case FileManagerPage:
         {
-            if(pages.contains(FileManagerPage))
+            if (pages.contains(FileManagerPage))
             {
                 auto *widget = static_cast<FileManagerWidget *>(pages.value(FileManagerPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                     widget->refreshList();
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case ApkManagerPage:
         {
-            if(pages.contains(ApkManagerPage))
+            if (pages.contains(ApkManagerPage))
             {
                 auto *widget = static_cast<ApkManagerWidget *>(pages.value(ApkManagerPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                     widget->loadPackages();
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case ContactFixerPage:
         {
-            if(pages.contains(ContactFixerPage))
+            if (pages.contains(ContactFixerPage))
             {
                 auto *widget = static_cast<ContactFixerWidget *>(pages.value(ContactFixerPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case AppleIpswPage:
         {
-            if(pages.contains(AppleIpswPage))
+            if (pages.contains(AppleIpswPage))
             {
                 auto *widget = static_cast<AppleIpswWidget *>(pages.value(AppleIpswPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.appleDevice.isEmpty())
+                    if (!connectPhone.appleDevice.isEmpty())
                         widget->setDevice(connectPhone.appleDevice);
                     widget->refreshDevice();
                     QTimer::singleShot(50, widget, [widget]() { widget->showBetaDisclaimer(); });
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case StorageCacheCleanPage:
         {
-            if(pages.contains(StorageCacheCleanPage))
+            if (pages.contains(StorageCacheCleanPage))
             {
                 auto *widget = static_cast<StorageCacheCleanWidget *>(pages.value(StorageCacheCleanPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case ImeiVerificationKzPage:
         {
-            if(pages.contains(ImeiVerificationKzPage))
+            if (pages.contains(ImeiVerificationKzPage))
             {
                 auto *widget = static_cast<ImeiVerificationKzWidget *>(pages.value(ImeiVerificationKzPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case MiAccountPage:
         {
-            if(pages.contains(MiAccountPage))
+            if (pages.contains(MiAccountPage))
             {
                 auto *widget = static_cast<MiAccountWidget *>(pages.value(MiAccountPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
         case SamsungFrpPage:
         {
-            if(pages.contains(SamsungFrpPage))
+            if (pages.contains(SamsungFrpPage))
             {
                 auto *widget = static_cast<SamsungFrpWidget *>(pages.value(SamsungFrpPage));
-                if(widget)
+                if (widget)
                 {
-                    if(!connectPhone.adbDevice.isEmpty())
+                    if (!connectPhone.adbDevice.isEmpty())
                         widget->setDevice(connectPhone.adbDevice);
                 }
             }
-            if(ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
+            if (ServiceProvider::currentService() && !ServiceProvider::currentService()->isStarted())
                 ServiceProvider::currentService()->start();
             break;
         }
@@ -2374,7 +2490,7 @@ void MainWindow::pageShownPreStart(int page)
 
 void MainWindow::runService(std::shared_ptr<Service> service)
 {
-    if(!ServiceProvider::runService(service))
+    if (!ServiceProvider::runService(service))
     {
         QMessageBox::warning(this, "Service is shutdown", "Service module is no load or disabled by server.");
         logoutSystem();
@@ -2383,7 +2499,7 @@ void MainWindow::runService(std::shared_ptr<Service> service)
 
 void MainWindow::closeService(std::shared_ptr<Service> service)
 {
-    if(service != nullptr)
+    if (service != nullptr)
         ServiceProvider::closeService();
     updateCabinet();
 }
@@ -2425,16 +2541,16 @@ void MainWindow::clearAuthInfoPage()
     ui->authInfo->verticalHeader()->setVisible(false);
     ui->authInfo->resizeColumnToContents(0);
 
-    for(x = 0, y = ui->serviceContents->layout()->count(); x < y; ++x)
+    for (x = 0, y = ui->serviceContents->layout()->count(); x < y; ++x)
     {
         QLayoutItem *item = ui->serviceContents->layout()->takeAt(0);
-        if(item->widget() && item->widget() != m_pixelBlastSideButton)
+        if (item->widget() && item->widget() != m_pixelBlastSideButton)
             item->widget()->deleteLater();
         delete item;
     }
 
-    for(x = 0; x < services.count(); ++x)
-        if(services[x]->ownerWidget != nullptr)
+    for (x = 0; x < services.count(); ++x)
+        if (services[x]->ownerWidget != nullptr)
             services[x]->ownerWidget->deleteLater();
 
     serverServices.reset();
@@ -2442,7 +2558,7 @@ void MainWindow::clearAuthInfoPage()
 
     m_isServiceLaunching = false;
     ServiceTileButton::setAnyLaunching(false);
-    if(m_shockwaveOverlay)
+    if (m_shockwaveOverlay)
         m_shockwaveOverlay->hide();
 
     ui->aiChatEdit->clear();
@@ -2454,25 +2570,27 @@ void MainWindow::clearAuthInfoPage()
 
     // Reset Side Reference Panel labels
     QLabel *lbl = nullptr;
-    if((lbl = findChild<QLabel *>("cabinetVal_login")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_login")))
         lbl->setText("-");
-    if((lbl = findChild<QLabel *>("cabinetVal_loginTime")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_loginTime")))
         lbl->setText("-");
-    if((lbl = findChild<QLabel *>("cabinetVal_credits")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_credits")))
         lbl->setText("-");
-    if((lbl = findChild<QLabel *>("cabinetVal_vip")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_vip")))
     {
         lbl->setText("-");
-        lbl->setStyleSheet("color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+        lbl->setStyleSheet(
+            "color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
     }
-    if((lbl = findChild<QLabel *>("cabinetVal_devices")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_devices")))
         lbl->setText("-");
-    if((lbl = findChild<QLabel *>("cabinetVal_location")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_location")))
         lbl->setText("-");
-    if((lbl = findChild<QLabel *>("cabinetVal_status")))
+    if ((lbl = findChild<QLabel *>("cabinetVal_status")))
     {
         lbl->setText("-");
-        lbl->setStyleSheet("color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+        lbl->setStyleSheet(
+            "color: #F1F5F9; font-size: 12px; font-weight: bold; background: transparent; border: none;");
     }
 
     AIAgentService::resetHistory();
@@ -2483,7 +2601,7 @@ void MainWindow::clearAuthInfoPage()
     ui->aiChatSend->setDisabled(true);
 
     auto *chatView = findChild<AIChatView *>("aiChatView");
-    if(chatView)
+    if (chatView)
         chatView->showLocked();
 
     updateCabinetUserCard();
@@ -2494,7 +2612,7 @@ void MainWindow::fillAuthInfoPage()
     QString value;
     int x, y;
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(ui->authInfo->model());
-    if(model)
+    if (model)
     {
         value = network.authedId.idName;
         model->item(0, 1)->setText(value);
@@ -2519,54 +2637,62 @@ void MainWindow::fillAuthInfoPage()
     }
 
     ui->labelLoginAuthed->setText(network.authedId.idName);
-    ui->labelCredits->setText(QString("%1 %2\nБаланс").arg(Generic::beautifyNumber(network.authedId.credits)).arg(network.authedId.currencyType));
-    if(network.authedId.hasVipAccount())
+    ui->labelCredits->setText(QString("%1 %2\nБаланс")
+                                  .arg(Generic::beautifyNumber(network.authedId.credits))
+                                  .arg(network.authedId.currencyType));
+    if (network.authedId.hasVipAccount())
         ui->labelVipDays->setText(QString("%1 ДНЕЙ\nVIP активен").arg(network.authedId.vipDays));
     else
         ui->labelVipDays->setText(QString("Нет VIP\nVIP статус"));
 
     // Populate Side Reference Panel (Справочник аккаунта)
     QLabel *sLbl = nullptr;
-    if((sLbl = findChild<QLabel *>("cabinetVal_login")))
+    if ((sLbl = findChild<QLabel *>("cabinetVal_login")))
         sLbl->setText(network.authedId.idName.isEmpty() ? "-" : network.authedId.idName);
 
-    if((sLbl = findChild<QLabel *>("cabinetVal_loginTime")))
+    if ((sLbl = findChild<QLabel *>("cabinetVal_loginTime")))
         sLbl->setText(QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm"));
 
-    if((sLbl = findChild<QLabel *>("cabinetVal_credits")))
-        sLbl->setText(QString("%1 %2").arg(Generic::beautifyNumber(network.authedId.credits)).arg(network.authedId.currencyType));
+    if ((sLbl = findChild<QLabel *>("cabinetVal_credits")))
+        sLbl->setText(
+            QString("%1 %2").arg(Generic::beautifyNumber(network.authedId.credits)).arg(network.authedId.currencyType));
 
-    if((sLbl = findChild<QLabel *>("cabinetVal_vip")))
+    if ((sLbl = findChild<QLabel *>("cabinetVal_vip")))
     {
-        if(network.authedId.hasVipAccount())
+        if (network.authedId.hasVipAccount())
         {
             sLbl->setText(QString("%1 дн.").arg(network.authedId.vipDays));
-            sLbl->setStyleSheet("color: #FBBF24; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+            sLbl->setStyleSheet(
+                "color: #FBBF24; font-size: 12px; font-weight: bold; background: transparent; border: none;");
         }
         else
         {
             sLbl->setText(QString::fromUtf8("Не активен"));
-            sLbl->setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 500; background: transparent; border: none;");
+            sLbl->setStyleSheet(
+                "color: #94A3B8; font-size: 12px; font-weight: 500; background: transparent; border: none;");
         }
     }
 
-    if((sLbl = findChild<QLabel *>("cabinetVal_devices")))
+    if ((sLbl = findChild<QLabel *>("cabinetVal_devices")))
         sLbl->setText(QString("%1 шт.").arg(network.authedId.connectedDevices));
 
-    if((sLbl = findChild<QLabel *>("cabinetVal_location")))
-        sLbl->setText(network.authedId.location.isEmpty() ? QString::fromUtf8("Не определено") : network.authedId.location);
+    if ((sLbl = findChild<QLabel *>("cabinetVal_location")))
+        sLbl->setText(
+            network.authedId.location.isEmpty() ? QString::fromUtf8("Не определено") : network.authedId.location);
 
-    if((sLbl = findChild<QLabel *>("cabinetVal_status")))
+    if ((sLbl = findChild<QLabel *>("cabinetVal_status")))
     {
-        if(network.authedId.blocked)
+        if (network.authedId.blocked)
         {
             sLbl->setText(QString::fromUtf8("Заблокирован"));
-            sLbl->setStyleSheet("color: #F87171; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+            sLbl->setStyleSheet(
+                "color: #F87171; font-size: 12px; font-weight: bold; background: transparent; border: none;");
         }
         else
         {
             sLbl->setText(QString::fromUtf8("Активен"));
-            sLbl->setStyleSheet("color: #34D399; font-size: 12px; font-weight: bold; background: transparent; border: none;");
+            sLbl->setStyleSheet(
+                "color: #34D399; font-size: 12px; font-weight: bold; background: transparent; border: none;");
         }
     }
 
@@ -2576,7 +2702,7 @@ void MainWindow::fillAuthInfoPage()
 
 void MainWindow::updateCabinetUserCard()
 {
-    if(!ui->frame_7)
+    if (!ui->frame_7)
         return;
 
     bool isAuthed = !network.authedId.idName.isEmpty();
@@ -2613,7 +2739,7 @@ void MainWindow::updateCabinetUserCard()
         "    color: #000000;"
         "}");
 
-    if(!isAuthed)
+    if (!isAuthed)
     {
         // Reset to default Obsidian dark state
         ui->frame_7->setStyleSheet(QStringLiteral(
@@ -2633,34 +2759,41 @@ void MainWindow::updateCabinetUserCard()
             "    border-color: #334155;"
             "    background-color: #0E1526;"
             "}"));
-        if(ui->labelLoginAuthed)
-            ui->labelLoginAuthed->setStyleSheet("color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
-        if(roleLbl)
+        if (ui->labelLoginAuthed)
+            ui->labelLoginAuthed->setStyleSheet(
+                "color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
+        if (roleLbl)
         {
             roleLbl->setText(QString::fromUtf8("Основной аккаунт"));
-            roleLbl->setStyleSheet("color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: transparent; border: none;");
+            roleLbl->setStyleSheet(
+                "color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; "
+                "background: transparent; border: none;");
         }
-        if(onlineBadge)
-            onlineBadge->setStyleSheet("color: #34D399; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.30); border-radius: 0px;");
-        if(btnAddCredits)
+        if (onlineBadge)
+            onlineBadge->setStyleSheet(
+                "color: #34D399; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(52, "
+                "211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.30); border-radius: 0px;");
+        if (btnAddCredits)
             btnAddCredits->setStyleSheet(QString());
-        if(btnAddVip)
+        if (btnAddVip)
             btnAddVip->setStyleSheet(VIP_BUTTON_YELLOW_STYLE);
-        if(divider)
+        if (divider)
             divider->setStyleSheet("background-color: #1E293B; max-height: 1px; border: none;");
-        if(creditsLbl)
-            creditsLbl->setStyleSheet("color: #34D399; font-size: 11px; font-weight: bold; background: transparent; border: none;");
-        if(ui->labelCredits)
+        if (creditsLbl)
+            creditsLbl->setStyleSheet(
+                "color: #34D399; font-size: 11px; font-weight: bold; background: transparent; border: none;");
+        if (ui->labelCredits)
             ui->labelCredits->setStyleSheet("color: #34D399; font-weight: bold;");
         return;
     }
 
-    if(isVip)
+    if (isVip)
     {
         // 1. VIP -> Full Gradient Yellow
         ui->frame_7->setStyleSheet(QStringLiteral(
             "QFrame#frame_7 {"
-            "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0.9, stop:0 #B45309, stop:0.25 #D97706, stop:0.55 #F59E0B, stop:0.8 #FBBF24, stop:1 #D97706);"
+            "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0.9, stop:0 #B45309, stop:0.25 #D97706, stop:0.55 "
+            "#F59E0B, stop:0.8 #FBBF24, stop:1 #D97706);"
             "    border: 1.5px solid #FDE047;"
             "    border-radius: 0px;"
             "    padding: 6px 12px;"
@@ -2676,47 +2809,60 @@ void MainWindow::updateCabinetUserCard()
             "    background-color: rgba(15, 23, 42, 0.95);"
             "}"));
 
-        if(ui->labelLoginAuthed)
-            ui->labelLoginAuthed->setStyleSheet("color: #0F172A; font-size: 14px; font-weight: 800; background: transparent; border: none;");
+        if (ui->labelLoginAuthed)
+            ui->labelLoginAuthed->setStyleSheet(
+                "color: #0F172A; font-size: 14px; font-weight: 800; background: transparent; border: none;");
 
-        if(roleLbl)
+        if (roleLbl)
         {
             roleLbl->setText(QString::fromUtf8("★ VIP АККАУНТ"));
-            roleLbl->setStyleSheet("color: #78350F; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: transparent; border: none;");
+            roleLbl->setStyleSheet(
+                "color: #78350F; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; "
+                "background: transparent; border: none;");
         }
 
-        if(onlineBadge)
-            onlineBadge->setStyleSheet("color: #064E3B; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(6, 95, 70, 0.20); border: 1px solid rgba(6, 95, 70, 0.40); border-radius: 0px;");
+        if (onlineBadge)
+            onlineBadge->setStyleSheet(
+                "color: #064E3B; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(6, 95, "
+                "70, 0.20); border: 1px solid rgba(6, 95, 70, 0.40); border-radius: 0px;");
 
-        if(btnAddCredits)
-            btnAddCredits->setStyleSheet("QPushButton { background-color: #0F172A; color: #F8FAFC; border: 1px solid #334155; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 0px; } QPushButton:hover { background-color: #1E293B; border-color: #FBBF24; color: #FBBF24; }");
+        if (btnAddCredits)
+            btnAddCredits->setStyleSheet(
+                "QPushButton { background-color: #0F172A; color: #F8FAFC; border: 1px solid #334155; font-size: 11px; "
+                "font-weight: 600; padding: 2px 10px; border-radius: 0px; } QPushButton:hover { background-color: "
+                "#1E293B; border-color: #FBBF24; color: #FBBF24; }");
 
-        if(btnAddVip)
+        if (btnAddVip)
             btnAddVip->setStyleSheet(VIP_BUTTON_YELLOW_STYLE);
 
-        if(divider)
+        if (divider)
             divider->setStyleSheet("background-color: rgba(120, 53, 15, 0.45); max-height: 1px; border: none;");
 
-        if(vipLbl)
-            vipLbl->setStyleSheet("color: #FBBF24; font-size: 11px; font-weight: bold; background: transparent; border: none;");
+        if (vipLbl)
+            vipLbl->setStyleSheet(
+                "color: #FBBF24; font-size: 11px; font-weight: bold; background: transparent; border: none;");
 
         // Sub-item balance: red if 0, green if >0
-        if(creditsLbl)
+        if (creditsLbl)
         {
-            if(isZeroCredits)
-                creditsLbl->setStyleSheet("color: #EF4444; font-size: 11px; font-weight: bold; background: transparent; border: none;");
+            if (isZeroCredits)
+                creditsLbl->setStyleSheet(
+                    "color: #EF4444; font-size: 11px; font-weight: bold; background: transparent; border: none;");
             else
-                creditsLbl->setStyleSheet("color: #34D399; font-size: 11px; font-weight: bold; background: transparent; border: none;");
+                creditsLbl->setStyleSheet(
+                    "color: #34D399; font-size: 11px; font-weight: bold; background: transparent; border: none;");
         }
-        if(ui->labelCredits)
-            ui->labelCredits->setStyleSheet(isZeroCredits ? "color: #EF4444; font-weight: bold;" : "color: #34D399; font-weight: bold;");
+        if (ui->labelCredits)
+            ui->labelCredits->setStyleSheet(
+                isZeroCredits ? "color: #EF4444; font-weight: bold;" : "color: #34D399; font-weight: bold;");
     }
-    else if(isZeroCredits)
+    else if (isZeroCredits)
     {
         // 2. 0 Credits, No VIP -> Full Gradient Red (slightly transparent)
         ui->frame_7->setStyleSheet(QStringLiteral(
             "QFrame#frame_7 {"
-            "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0.9, stop:0 rgba(127, 29, 29, 0.75), stop:0.35 rgba(185, 28, 28, 0.65), stop:0.7 rgba(220, 38, 38, 0.58), stop:1 rgba(153, 27, 27, 0.75));"
+            "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0.9, stop:0 rgba(127, 29, 29, 0.75), stop:0.35 "
+            "rgba(185, 28, 28, 0.65), stop:0.7 rgba(220, 38, 38, 0.58), stop:1 rgba(153, 27, 27, 0.75));"
             "    border: 1.5px solid rgba(239, 68, 68, 0.85);"
             "    border-radius: 0px;"
             "    padding: 6px 12px;"
@@ -2732,35 +2878,45 @@ void MainWindow::updateCabinetUserCard()
             "    background-color: rgba(15, 23, 42, 0.90);"
             "}"));
 
-        if(ui->labelLoginAuthed)
-            ui->labelLoginAuthed->setStyleSheet("color: #FFFFFF; font-size: 14px; font-weight: bold; background: transparent; border: none;");
+        if (ui->labelLoginAuthed)
+            ui->labelLoginAuthed->setStyleSheet(
+                "color: #FFFFFF; font-size: 14px; font-weight: bold; background: transparent; border: none;");
 
-        if(roleLbl)
+        if (roleLbl)
         {
             roleLbl->setText(QString::fromUtf8("Основной аккаунт * 0 Кредитов"));
-            roleLbl->setStyleSheet("color: #FECACA; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: transparent; border: none;");
+            roleLbl->setStyleSheet(
+                "color: #FECACA; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; "
+                "background: transparent; border: none;");
         }
 
-        if(onlineBadge)
-            onlineBadge->setStyleSheet("color: #FCA5A5; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(239, 68, 68, 0.22); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 0px;");
+        if (onlineBadge)
+            onlineBadge->setStyleSheet(
+                "color: #FCA5A5; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(239, "
+                "68, 68, 0.22); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 0px;");
 
-        if(btnAddCredits)
-            btnAddCredits->setStyleSheet("QPushButton { background-color: #DC2626; color: #FFFFFF; border: 1px solid #EF4444; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 0px; } QPushButton:hover { background-color: #B91C1C; border-color: #FCA5A5; }");
+        if (btnAddCredits)
+            btnAddCredits->setStyleSheet(
+                "QPushButton { background-color: #DC2626; color: #FFFFFF; border: 1px solid #EF4444; font-size: 11px; "
+                "font-weight: bold; padding: 2px 10px; border-radius: 0px; } QPushButton:hover { background-color: "
+                "#B91C1C; border-color: #FCA5A5; }");
 
-        if(btnAddVip)
+        if (btnAddVip)
             btnAddVip->setStyleSheet(VIP_BUTTON_YELLOW_STYLE);
 
-        if(divider)
+        if (divider)
             divider->setStyleSheet("background-color: rgba(239, 68, 68, 0.35); max-height: 1px; border: none;");
 
-        if(vipLbl)
-            vipLbl->setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 500; background: transparent; border: none;");
+        if (vipLbl)
+            vipLbl->setStyleSheet(
+                "color: #94A3B8; font-size: 11px; font-weight: 500; background: transparent; border: none;");
 
         // Sub-item balance: red
-        if(creditsLbl)
-            creditsLbl->setStyleSheet("color: #EF4444; font-size: 11px; font-weight: bold; background: transparent; border: none;");
+        if (creditsLbl)
+            creditsLbl->setStyleSheet(
+                "color: #EF4444; font-size: 11px; font-weight: bold; background: transparent; border: none;");
 
-        if(ui->labelCredits)
+        if (ui->labelCredits)
             ui->labelCredits->setStyleSheet("color: #EF4444; font-weight: bold;");
     }
     else
@@ -2784,35 +2940,42 @@ void MainWindow::updateCabinetUserCard()
             "    background-color: #0E1526;"
             "}"));
 
-        if(ui->labelLoginAuthed)
-            ui->labelLoginAuthed->setStyleSheet("color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
+        if (ui->labelLoginAuthed)
+            ui->labelLoginAuthed->setStyleSheet(
+                "color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
 
-        if(roleLbl)
+        if (roleLbl)
         {
             roleLbl->setText(QString::fromUtf8("Основной аккаунт"));
-            roleLbl->setStyleSheet("color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: transparent; border: none;");
+            roleLbl->setStyleSheet(
+                "color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; "
+                "background: transparent; border: none;");
         }
 
-        if(onlineBadge)
-            onlineBadge->setStyleSheet("color: #34D399; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.30); border-radius: 0px;");
+        if (onlineBadge)
+            onlineBadge->setStyleSheet(
+                "color: #34D399; font-size: 9.5px; font-weight: bold; padding: 2px 7px; background-color: rgba(52, "
+                "211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.30); border-radius: 0px;");
 
-        if(btnAddCredits)
+        if (btnAddCredits)
             btnAddCredits->setStyleSheet(QString());
 
-        if(btnAddVip)
+        if (btnAddVip)
             btnAddVip->setStyleSheet(VIP_BUTTON_YELLOW_STYLE);
 
-        if(divider)
+        if (divider)
             divider->setStyleSheet("background-color: #1E293B; max-height: 1px; border: none;");
 
-        if(vipLbl)
-            vipLbl->setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 500; background: transparent; border: none;");
+        if (vipLbl)
+            vipLbl->setStyleSheet(
+                "color: #94A3B8; font-size: 11px; font-weight: 500; background: transparent; border: none;");
 
         // Sub-item balance: green
-        if(creditsLbl)
-            creditsLbl->setStyleSheet("color: #34D399; font-size: 11px; font-weight: bold; background: transparent; border: none;");
+        if (creditsLbl)
+            creditsLbl->setStyleSheet(
+                "color: #34D399; font-size: 11px; font-weight: bold; background: transparent; border: none;");
 
-        if(ui->labelCredits)
+        if (ui->labelCredits)
             ui->labelCredits->setStyleSheet("color: #34D399; font-weight: bold;");
     }
 }
@@ -2835,39 +2998,37 @@ void MainWindow::delayUICallLoop(int ms, std::function<bool()> callFalseEnd)
     qtimer->setSingleShot(false);
     qtimer->setInterval(ms);
     auto isRunning = std::make_shared<bool>(false);
-    QObject::connect(
-        qtimer,
-        &QTimer::timeout,
-        [qtimer, callFalseEnd, isRunning]()
+    QObject::connect(qtimer, &QTimer::timeout, [qtimer, callFalseEnd, isRunning]() {
+        if (*isRunning)
+            return;
+        *isRunning = true;
+        if (!callFalseEnd())
         {
-            if(*isRunning)
-                return;
-            *isRunning = true;
-            if(!callFalseEnd())
-            {
-                qtimer->stop();
-                qtimer->deleteLater();
-            }
-            else
-            {
-                *isRunning = false;
-            }
-        });
+            qtimer->stop();
+            qtimer->deleteLater();
+        }
+        else
+        {
+            *isRunning = false;
+        }
+    });
     qtimer->start();
 }
 
 void MainWindow::delayUICall(int ms, std::function<void()> call)
 {
-    delayUICallLoop(
-        ms,
-        [call]() -> bool
-        {
-            call();
-            return false;
-        });
+    delayUICallLoop(ms, [call]() -> bool {
+        call();
+        return false;
+    });
 }
 
-bool MainWindow::accessUi_page_longinfo(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun)
+bool MainWindow::accessUi_page_longinfo(
+    QListView *&processLogStatusV,
+    QLabel *&malareStatusText0V,
+    QLabel *&deviceLabelNameV,
+    QProgressBar *&processBarStatusV,
+    QPushButton *&pushButtonReRun)
 {
     processLogStatusV = ui->processLogStatus;
     malareStatusText0V = ui->malwareStatusText0;
@@ -2877,7 +3038,12 @@ bool MainWindow::accessUi_page_longinfo(QListView *&processLogStatusV, QLabel *&
     return true;
 }
 
-bool MainWindow::accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter)
+bool MainWindow::accessUi_page_devices(
+    QTableView *&tableActual,
+    QDateEdit *&dateEditStart,
+    QDateEdit *&dateEditEnd,
+    QPushButton *&refreshButton,
+    QCheckBox *&quaranteeFilter)
 {
     tableActual = ui->myDeviceActual;
     dateEditStart = ui->myDeviceFilterDateStart;
@@ -2887,7 +3053,8 @@ bool MainWindow::accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dat
     return true;
 }
 
-bool MainWindow::accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton)
+bool MainWindow::accessUi_page_buyvip(
+    QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton)
 {
     ui->comboBoxSelectVIPDays->disconnect();
     ui->labelVipBalance->disconnect();
@@ -2918,7 +3085,7 @@ AppleDevice MainWindow::currentAppleDevice() const
 
 QWidget *MainWindow::pageWidget(PageIndex page) const
 {
-    if(pages.empty())
+    if (pages.empty())
         return nullptr;
     return pages.value(page, nullptr);
 }
@@ -2926,25 +3093,26 @@ QWidget *MainWindow::pageWidget(PageIndex page) const
 void MainWindow::on_authButton_clicked()
 {
     network.forclyExit = false;
-    if(network.pending() || network.isAuthed())
+    if (network.pending() || network.isAuthed())
         return;
 
-    if(ui->lineLoginEdit->text().isEmpty() && ui->linePassEdit->text().isEmpty())
+    if (ui->lineLoginEdit->text().isEmpty() && ui->linePassEdit->text().isEmpty())
     {
         QMessageBox::warning(this, "Предупреждение", "Поле авторизаций не заполнено.");
         return;
     }
 
     network.pushLoginPass(ui->lineLoginEdit->text(), ui->linePassEdit->text());
-    ui->statusAuthText->setStyleSheet("color: #38BDF8; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
+    ui->statusAuthText->setStyleSheet(
+        "color: #38BDF8; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
     ui->statusAuthText->setText("Авторизация");
 
-    if(ui->authButton)
+    if (ui->authButton)
         ui->authButton->setEnabled(false);
     ui->lineLoginEdit->setEnabled(false);
     ui->linePassEdit->setEnabled(false);
 
-    if(timerAuthAnim != nullptr)
+    if (timerAuthAnim != nullptr)
     {
         delete timerAuthAnim;
         timerAuthAnim = nullptr;
@@ -2953,39 +3121,29 @@ void MainWindow::on_authButton_clicked()
     constexpr int Dots = 3;
     timerAuthAnim = new QTimer(this);
     timerAuthAnim->start(350);
-    QObject::connect(
-        timerAuthAnim,
-        &QTimer::timeout,
-        this,
-        [this]()
-        {
-            QString temp = ui->statusAuthText->text();
-            int dotCount = std::accumulate(temp.begin(), temp.end(), 0, [](int count, const QChar &c) { return count += (c == '.' ? 1 : 0); });
-            if(dotCount >= Dots)
-                temp.remove(temp.length() - Dots, Dots);
-            else
-                temp += '.';
-            ui->statusAuthText->setText(temp);
-        });
+    QObject::connect(timerAuthAnim, &QTimer::timeout, this, [this]() {
+        QString temp = ui->statusAuthText->text();
+        int dotCount = std::accumulate(
+            temp.begin(), temp.end(), 0, [](int count, const QChar &c) { return count += (c == '.' ? 1 : 0); });
+        if (dotCount >= Dots)
+            temp.remove(temp.length() - Dots, Dots);
+        else
+            temp += '.';
+        ui->statusAuthText->setText(temp);
+    });
 
     AppSetting::autoLogin(nullptr, ui->checkAutoLogin->isChecked());
 
-    delayUICallLoop(
-        100,
-        [this]()
+    delayUICallLoop(100, [this]() {
+        if (!network.pending() && network.isAuthed())
         {
-            if(!network.pending() && network.isAuthed())
-            {
-                delayUICall(
-                    2000,
-                    [this]()
-                    {
-                        showPage(CabinetPage);
-                        updateCabinet();
-                    });
-            }
-            return network.pending();
-        });
+            delayUICall(2000, [this]() {
+                showPage(CabinetPage);
+                updateCabinet();
+            });
+        }
+        return network.pending();
+    });
 }
 
 void MainWindow::setThemeAction()
@@ -3006,88 +3164,92 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::slotAuthFinish(int status, bool ok)
 {
-    delayUICall(
-        1000,
-        [ok, status, this]() -> void
+    delayUICall(1000, [ok, status, this]() -> void {
+        QString resText;
+        int _status = status;
+
+        if (_status == NetworkStatus::OK && !network.isAuthed())
         {
-            QString resText;
-            int _status = status;
+            _status = NetworkStatus::NetworkError;
+        }
 
-            if(_status == NetworkStatus::OK && !network.isAuthed())
-            {
-                _status = NetworkStatus::NetworkError;
-            }
+        if (timerAuthAnim)
+            timerAuthAnim->stop();
+        switch (_status)
+        {
+            case 0:
+                resText = "Авторизация прошла успешно. Добро пожаловать!";
 
-            if(timerAuthAnim)
-                timerAuthAnim->stop();
-            switch(_status)
-            {
-                case 0:
-                    resText = "Авторизация прошла успешно. Добро пожаловать!";
+                if (!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
+                {
+                    AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
 
-                    if(!ui->lineLoginEdit->text().isEmpty() && !ui->linePassEdit->text().isEmpty())
-                    {
-                        AppSetting::loginAndPass(nullptr, ui->lineLoginEdit->text(), ui->linePassEdit->text());
+                    // Only get token.
+                    break;
+                }
 
-                        // Only get token.
-                        break;
-                    }
+                if (network.authedId.isNotValidBalance())
+                {
+                    ui->statusAuthText->setStyleSheet(
+                        "color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px "
+                        "8px;");
+                    ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
+                    showMessageFromStatus(NetworkStatus::NoEnoughMoney);
+                }
+                else if (network.authedId.blocked)
+                {
+                    ui->statusAuthText->setStyleSheet(
+                        "color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px "
+                        "8px;");
+                    ui->statusAuthText->setText("Аккаунт заблокирован");
+                    showMessageFromStatus(NetworkStatus::AccountBlocked);
+                }
+                else
+                {
+                    ui->statusAuthText->setStyleSheet(
+                        "color: #34D399; font-size: 12px; font-weight: 500; background: transparent; padding: 2px "
+                        "8px;");
+                    ui->statusAuthText->setText("Аутентификация прошла успешно.");
+                }
 
-                    if(network.authedId.isNotValidBalance())
-                    {
-                        ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
-                        ui->statusAuthText->setText("Закончился баланс, пополните, чтобы продолжить.");
-                        showMessageFromStatus(NetworkStatus::NoEnoughMoney);
-                    }
-                    else if(network.authedId.blocked)
-                    {
-                        ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
-                        ui->statusAuthText->setText("Аккаунт заблокирован");
-                        showMessageFromStatus(NetworkStatus::AccountBlocked);
-                    }
-                    else
-                    {
-                        ui->statusAuthText->setStyleSheet("color: #34D399; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
-                        ui->statusAuthText->setText("Аутентификация прошла успешно.");
-                    }
+                break;
+            case 401:
+                resText = infoServer401;
+                break;
+            case NetworkStatus::NoEnoughMoney:
+                resText = infoNoBalance;
+                break;
+            case NetworkStatus::AccountBlocked:
+                resText = infoAccountBlocked;
+                break;
+            case NetworkStatus::NetworkError:
+                resText = infoNoInternet;
+                break;
+            case NetworkStatus::ServerError:
+                resText = QString::fromUtf8("Ошибка сервера. Попробуйте позже.");
+                break;
+            default:
+                resText = QString::fromUtf8("Ошибка авторизации (код %1).").arg(_status);
+                break;
+        }
 
-                    break;
-                case 401:
-                    resText = infoServer401;
-                    break;
-                case NetworkStatus::NoEnoughMoney:
-                    resText = infoNoBalance;
-                    break;
-                case NetworkStatus::AccountBlocked:
-                    resText = infoAccountBlocked;
-                    break;
-                case NetworkStatus::NetworkError:
-                    resText = infoNoInternet;
-                    break;
-                case NetworkStatus::ServerError:
-                    resText = QString::fromUtf8("Ошибка сервера. Попробуйте позже.");
-                    break;
-                default:
-                    resText = QString::fromUtf8("Ошибка авторизации (код %1).").arg(_status);
-                    break;
-            }
-
-            ui->lineLoginEdit->setEnabled(true);
-            ui->linePassEdit->setEnabled(true);
-            ui->authButton->setEnabled(true);
-            if(_status != 0)
-            {
-                ui->statusAuthText->setStyleSheet("color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
-                ui->statusAuthText->setText(resText);
-            }
-        });
+        ui->lineLoginEdit->setEnabled(true);
+        ui->linePassEdit->setEnabled(true);
+        ui->authButton->setEnabled(true);
+        if (_status != 0)
+        {
+            ui->statusAuthText->setStyleSheet(
+                "color: #F87171; font-size: 12px; font-weight: 500; background: transparent; padding: 2px 8px;");
+            ui->statusAuthText->setText(resText);
+        }
+    });
 }
 
 void MainWindow::slotPullServiceList(const QList<ServiceItemInfo> &services, bool ok)
 {
     serverServices.reset();
 
-    if(ok)
+    if (ok)
     {
         serverServices = std::move(std::make_shared<QList<ServiceItemInfo>>(services));
     }
@@ -3100,7 +3262,7 @@ void MainWindow::slotPullServiceList(const QList<ServiceItemInfo> &services, boo
 void MainWindow::slotFetchVersionFinish(int status, const QString &version, const QString &url, bool ok)
 {
     VersionInfo actualVersion = {{}, {}, status};
-    if(status == NetworkStatus::NetworkError)
+    if (status == NetworkStatus::NetworkError)
     {
         this->actualVersion = actualVersion;
         return;
@@ -3108,7 +3270,7 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 
     actualVersion = {version, url, status};
     this->actualVersion = actualVersion;
-    if(runtimeVersion.mVersion >= actualVersion.mVersion)
+    if (runtimeVersion.mVersion >= actualVersion.mVersion)
     {
         return;
     }
@@ -3136,18 +3298,23 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
     tempdir.setAutoRemove(false);
     QDir appDir(QCoreApplication::applicationDirPath());
     QStringList entries = appDir.entryList(QStringList() << "*.dll" << UpdateManagerExecute, QDir::Files);
-    for(const QString &e : entries)
+    for (const QString &e : entries)
     {
         QFile::copy(appDir.filePath(e), tempdir.filePath(e));
     }
     appDir.mkdir(tempdir.filePath("platforms"));
     QFile::copy(appDir.filePath("platforms/qwindows.dll"), tempdir.filePath("platforms/qwindows.dll"));
     appDir.mkdir(tempdir.filePath("networkinformation"));
-    QFile::copy(appDir.filePath("networkinformation/qnetworklistmanager.dll"), tempdir.filePath("networkinformation/qnetworklistmanager.dll"));
+    QFile::copy(
+        appDir.filePath("networkinformation/qnetworklistmanager.dll"),
+        tempdir.filePath("networkinformation/qnetworklistmanager.dll"));
     appDir.mkdir(tempdir.filePath("tls"));
     QFile::copy(appDir.filePath("tls/qcertonlybackend.dll"), tempdir.filePath("tls/qcertonlybackend.dll"));
     QFile::copy(appDir.filePath("tls/qschannelbackend.dll"), tempdir.filePath("tls/qschannelbackend.dll"));
-    if(QProcess::startDetached(tempdir.filePath(UpdateManagerExecute), QStringList() << QString("--dir") << appDir.path() << QString("--exec") << QCoreApplication::applicationFilePath()))
+    if (QProcess::startDetached(
+            tempdir.filePath(UpdateManagerExecute),
+            QStringList() << QString("--dir") << appDir.path() << QString("--exec")
+                          << QCoreApplication::applicationFilePath()))
     {
         QApplication::quit();
         return;
@@ -3158,7 +3325,7 @@ void MainWindow::slotFetchVersionFinish(int status, const QString &version, cons
 
 void MainWindow::showEvent(QShowEvent *event)
 {
-    if(snows)
+    if (snows)
         delayUICall(50, [this]() { snows->start(); });
     event->accept();
 }
@@ -3166,10 +3333,10 @@ void MainWindow::showEvent(QShowEvent *event)
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
-    if(m_shockwaveOverlay)
+    if (m_shockwaveOverlay)
         m_shockwaveOverlay->setGeometry(this->rect());
     // Recompute service tile column count when window is resized
-    if(ui && ui->serviceContents && !services.isEmpty())
+    if (ui && ui->serviceContents && !services.isEmpty())
         applyServiceFilters();
 }
 
@@ -3178,12 +3345,12 @@ void MainWindow::setTheme(ThemeScheme theme)
     int scheme;
     const char *resourceName;
     QList<QAction *> menus {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
-    for(scheme = (0); scheme < menus.size(); ++scheme)
+    for (scheme = (0); scheme < menus.size(); ++scheme)
     {
         menus[scheme]->setChecked(theme == scheme);
     }
 
-    switch(theme)
+    switch (theme)
     {
         case System:
             resourceName = nullptr;
@@ -3199,23 +3366,23 @@ void MainWindow::setTheme(ThemeScheme theme)
 
     QFile styleRes {};
     QString styleSheet {};
-    if(resourceName)
+    if (resourceName)
     {
         styleRes.setFileName(resourceName);
-        if(!styleRes.open(QFile::ReadOnly | QFile::Text))
+        if (!styleRes.open(QFile::ReadOnly | QFile::Text))
         {
-            if(theme == Dark)
+            if (theme == Dark)
             {
                 styleRes.setFileName(QCoreApplication::applicationDirPath() + "/ApplicationStyle.qss");
-                if(!styleRes.open(QFile::ReadOnly | QFile::Text))
+                if (!styleRes.open(QFile::ReadOnly | QFile::Text))
                 {
                     styleRes.setFileName("Resources/res/style/ApplicationStyle.qss");
-                    if(!styleRes.open(QFile::ReadOnly | QFile::Text))
+                    if (!styleRes.open(QFile::ReadOnly | QFile::Text))
                         styleRes.setFileName("ApplicationStyle.qss");
                 }
             }
         }
-        if(styleRes.isOpen() || styleRes.open(QFile::ReadOnly | QFile::Text))
+        if (styleRes.isOpen() || styleRes.open(QFile::ReadOnly | QFile::Text))
         {
             styleSheet = styleRes.readAll();
             styleRes.close();
@@ -3223,14 +3390,14 @@ void MainWindow::setTheme(ThemeScheme theme)
     }
 
     // Set application Design
-    if(!app)
+    if (!app)
         app = qApp;
-    if(app)
+    if (app)
         app->setStyleSheet(styleSheet);
-    if(qApp)
+    if (qApp)
     {
         qApp->setStyleSheet(styleSheet);
-        if(theme == Dark)
+        if (theme == Dark)
         {
             qApp->setStyle(QStyleFactory::create("Fusion"));
             QPalette darkPalette;
@@ -3270,34 +3437,34 @@ ThemeScheme MainWindow::getTheme()
 
 void MainWindow::showMessageFromStatus(int statusCode)
 {
-    if(statusCode == NetworkStatus::NetworkError)
+    if (statusCode == NetworkStatus::NetworkError)
         QMessageBox::warning(this, "Ошибка подключения", infoNoNetworkUpdate);
 
-    if(statusCode == NetworkStatus::NoEnoughMoney)
+    if (statusCode == NetworkStatus::NoEnoughMoney)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoNoBalance);
 
-    if(statusCode == NetworkStatus::AccountBlocked)
+    if (statusCode == NetworkStatus::AccountBlocked)
         QMessageBox::warning(this, "Сервер отклонил запрос", infoAccountBlocked);
 }
 
 void MainWindow::askAiQuestion(const QString &question)
 {
-    if(ui->aiToolBoxToggle && ui->aiToolBoxToggle->isVisible())
+    if (ui->aiToolBoxToggle && ui->aiToolBoxToggle->isVisible())
     {
         ui->aiToolBoxToggle->click();
     }
 
     QPushButton *tabChat = findChild<QPushButton *>("tabChatBtn");
-    if(tabChat)
+    if (tabChat)
     {
         tabChat->click();
     }
 
-    if(ui->aiChatEdit)
+    if (ui->aiChatEdit)
     {
         ui->aiChatEdit->setText(question);
     }
-    if(ui->aiChatSend)
+    if (ui->aiChatSend)
     {
         ui->aiChatSend->click();
     }
@@ -3310,7 +3477,7 @@ void MainWindow::getAnalyticsData(QString &data)
 
 void MainWindow::updateCabinet()
 {
-    if(!network.isAuthed())
+    if (!network.isAuthed())
     {
         logoutSystem();
         return;
@@ -3318,16 +3485,16 @@ void MainWindow::updateCabinet()
 
     network.pushAuthToken();
 
-    for(int i = 0; i < services.count(); ++i)
-        if(services[i]->ownerWidget != nullptr)
+    for (int i = 0; i < services.count(); ++i)
+        if (services[i]->ownerWidget != nullptr)
             services[i]->ownerWidget->deleteLater();
 
-    if(ui->serviceContents->layout())
+    if (ui->serviceContents->layout())
     {
-        while(ui->serviceContents->layout()->count() > 0)
+        while (ui->serviceContents->layout()->count() > 0)
         {
             QLayoutItem *item = ui->serviceContents->layout()->takeAt(0);
-            if(item->widget() && item->widget() != m_pixelBlastSideButton)
+            if (item->widget() && item->widget() != m_pixelBlastSideButton)
                 item->widget()->deleteLater();
             delete item;
         }
@@ -3336,50 +3503,46 @@ void MainWindow::updateCabinet()
     services.clear();
     serverServices.reset();
 
-    showPageLoader(
-        CabinetPage,
-        1000,
-        [this]() -> bool
+    showPageLoader(CabinetPage, 1000, [this]() -> bool {
+        const char *str = "Обновление странницы";
+        bool status = network.isAuthed() && !network.pending();
+
+        if (network.forclyExit)
         {
-            const char *str = "Обновление странницы";
-            bool status = network.isAuthed() && !network.pending();
+            logoutSystem();
+            return true;
+        }
 
-            if(network.forclyExit)
-            {
-                logoutSystem();
-                return true;
-            }
+        if (network.isAuthed() && !serverServices)
+        {
+            str = "Еще чуть-чуть";
+        }
 
-            if(network.isAuthed() && !serverServices)
-            {
-                str = "Еще чуть-чуть";
-            }
+        if (status && !serverServices)
+        {
+            network.pullServiceList();
+            status = !network.pending();
+        }
 
-            if(status && !serverServices)
-            {
-                network.pullServiceList();
-                status = !network.pending();
-            }
+        ui->loaderPageText->setText(str);
 
-            ui->loaderPageText->setText(str);
-
-            if(status && !serverServices)
-            {
-                delayUICall(1, [this]() { logoutSystem(); });
-            }
-            else if(status && network.authedId.vipDays < 5 && network.authedId.vipDays > 0 && !isShownedVipExp)
-            {
-                delayUICall(300, [this]() { QMessageBox::warning(this, "Уведомление", infoVipExpire); });
-                isShownedVipExp = true;
-            }
-            return status;
-        });
+        if (status && !serverServices)
+        {
+            delayUICall(1, [this]() { logoutSystem(); });
+        }
+        else if (status && network.authedId.vipDays < 5 && network.authedId.vipDays > 0 && !isShownedVipExp)
+        {
+            delayUICall(300, [this]() { QMessageBox::warning(this, "Уведомление", infoVipExpire); });
+            isShownedVipExp = true;
+        }
+        return status;
+    });
 }
 
 void MainWindow::logoutSystem()
 {
     network.forclyExit = true;
-    if(network.isAuthed())
+    if (network.isAuthed())
     {
         network._token = {};
         network.authedId = {};
@@ -3394,33 +3557,30 @@ void MainWindow::logoutSystem()
 
 void MainWindow::showPageLoader(PageIndex pageNum, int msWait, std::function<bool()> predFalseEnd, QString text)
 {
-    if(pageNum == LoaderPage)
+    if (pageNum == LoaderPage)
         return;
 
-    if(text.isEmpty())
+    if (text.isEmpty())
         text = "Ожидайте";
 
     ui->loaderPageText->setText(text);
-    if(cyberReactorLoader)
+    if (cyberReactorLoader)
         cyberReactorLoader->setStatusText(text);
 
     showPage(LoaderPage);
-    delayUICallLoop(
-        msWait,
-        [this, pageNum, predFalseEnd]()
+    delayUICallLoop(msWait, [this, pageNum, predFalseEnd]() {
+        if (predFalseEnd())
         {
-            if(predFalseEnd())
-            {
-                QTimer::singleShot(1500, this, [this, pageNum]() { showPage(pageNum); });
-                return false;
-            }
-            return true;
-        });
+            QTimer::singleShot(1500, this, [this, pageNum]() { showPage(pageNum); });
+            return false;
+        }
+        return true;
+    });
 }
 
 void MainWindow::on_butShowPass_clicked()
 {
-    if(ui->linePassEdit->echoMode() == QLineEdit::EchoMode::Password)
+    if (ui->linePassEdit->echoMode() == QLineEdit::EchoMode::Password)
     {
         ui->linePassEdit->setEchoMode(QLineEdit::EchoMode::Normal);
         ui->butShowPass->setText(QString());

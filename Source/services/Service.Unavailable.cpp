@@ -1,8 +1,8 @@
 #include "Services.h"
 
-UnavailableService::UnavailableService(QObject *parent) : Service(DeviceConnectType::None, parent)
-{
-}
+UnavailableService::UnavailableService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
+{}
 
 QString UnavailableService::uuid() const
 {
@@ -39,6 +39,4 @@ bool UnavailableService::start()
     return false;
 }
 
-void UnavailableService::stop()
-{
-}
+void UnavailableService::stop() {}

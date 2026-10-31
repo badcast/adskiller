@@ -30,7 +30,7 @@ std::pair<bool, QString> adb_send_cmd(int &exitCode, const QStringList &argument
     QProcess process;
     QString retval;
     process.start(AdbExecutableFilename(), arguments);
-    if(!process.waitForFinished(ExecWaitTime))
+    if (!process.waitForFinished(ExecWaitTime))
     {
         qDebug() << "ADB Failed";
         process.kill();
@@ -56,9 +56,10 @@ bool operator==(const AdbDevice &lhs, const AdbDevice &rhs)
     return Adb::deviceHash(lhs) == Adb::deviceHash(rhs);
 }
 
-Adb::Adb(QObject *parent) : QObject(parent), deviceWatchTimer(nullptr)
-{
-}
+Adb::Adb(QObject *parent)
+    : QObject(parent)
+    , deviceWatchTimer(nullptr)
+{}
 
 Adb::~Adb()
 {
@@ -70,12 +71,12 @@ QList<AdbDevice> Adb::getDevices()
     QList<AdbDevice> devices;
     QStringList lines;
     std::pair<bool, QString> reply = adb_send_cmd(QStringList() << "devices");
-    if(reply.first)
+    if (reply.first)
     {
         lines = reply.second.split("\n", Qt::SkipEmptyParts);
-        for(const QString &line : std::as_const(lines))
+        for (const QString &line : std::as_const(lines))
         {
-            if(line.startsWith("List of devices"))
+            if (line.startsWith("List of devices"))
                 continue;
             devices.append(getDevice(line.split('\t').first()));
         }
@@ -114,7 +115,7 @@ std::pair<bool, std::unique_ptr<AdbShell>> Adb::runShell()
 void Adb::connectFirst()
 {
     QList<AdbDevice> devs = std::move(getDevices());
-    if(!devs.isEmpty())
+    if (!devs.isEmpty())
         connect(devs.front().devId);
 }
 
@@ -123,12 +124,12 @@ void Adb::connect(const QString &devId)
     QList<AdbDevice> devs = std::move(getDevices());
     QList<AdbDevice>::ConstIterator iter;
     iter = std::find_if(devs.cbegin(), devs.cend(), [&devId](const AdbDevice &dev) { return dev.devId == devId; });
-    if(iter == devs.cend())
+    if (iter == devs.cend())
     {
         qDebug() << "No allowed device";
         return;
     }
-    if(isConnected())
+    if (isConnected())
         disconnect();
     device = *iter;
     emit onDeviceChanged(device, AdbConState::Add);
@@ -146,7 +147,7 @@ QList<PackageIO> Adb::getPackages(const QString &deviceSerial)
     std::pair<bool, QString> reply2dis;
     int pkgSeprIndx = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
-    if(!shell->isConnect())
+    if (!shell->isConnect())
     {
         qDebug() << "Device is not connected";
         return {};
@@ -157,20 +158,22 @@ QList<PackageIO> Adb::getPackages(const QString &deviceSerial)
     reply2dis = shell->commandQueueWait(
         QStringList() << "pm" << "list" << "packages"
                       << "--user" << "0" << "-3" << "-d");
-    if(reply.first && reply2dis.first)
+    if (reply.first && reply2dis.first)
     {
         reply.second.remove('\t');
         packageList = reply.second.split('\n', Qt::SkipEmptyParts);
         disableList = reply2dis.second.split('\n', Qt::SkipEmptyParts);
-        if(packageList.count() > 0)
+        if (packageList.count() > 0)
             pkgSeprIndx = packageList.first().indexOf(':') + 1;
 
-        std::function<QString(QString &)> removeSeperators = [pkgSeprIndx](QString &pkg) { return pkg.remove(0, pkgSeprIndx); };
+        std::function<QString(QString &)> removeSeperators = [pkgSeprIndx](QString &pkg) {
+            return pkg.remove(0, pkgSeprIndx);
+        };
         std::transform(std::begin(disableList), std::end(disableList), std::begin(disableList), removeSeperators);
         std::transform(std::begin(packageList), std::end(packageList), std::begin(packageList), removeSeperators);
         optimizedList = std::move(QSet<QString>(disableList.begin(), disableList.end()));
 
-        for(QString &item : packageList)
+        for (QString &item : packageList)
         {
             packages.append(PackageIO {});
             packages.last().packageName = item;
@@ -185,11 +188,11 @@ void Adb::killPackages(const QString &deviceSerial, const QList<PackageIO> &pack
 {
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
-    if(!shell->isConnect())
+    if (!shell->isConnect())
         return;
-    for(const PackageIO &package : packages)
+    for (const PackageIO &package : packages)
     {
-        if(shell->stopPackage(package.packageName))
+        if (shell->stopPackage(package.packageName))
             successCount++;
     }
 }
@@ -198,11 +201,11 @@ bool Adb::uninstallPackages(const QString &deviceSerial, const QStringList &pack
 {
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
-    if(!shell->isConnect())
+    if (!shell->isConnect())
         return false;
-    for(const QString &package : packages)
+    for (const QString &package : packages)
     {
-        if(shell->uninstallPackage(package))
+        if (shell->uninstallPackage(package))
             successCount++;
     }
     return true;
@@ -212,11 +215,11 @@ bool Adb::disablePackages(const QString &deviceSerial, const QStringList &packag
 {
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
-    if(!shell->isConnect())
+    if (!shell->isConnect())
         return false;
-    for(const QString &package : packages)
+    for (const QString &package : packages)
     {
-        if(shell->disablePackage(package))
+        if (shell->disablePackage(package))
             successCount++;
     }
     return true;
@@ -226,11 +229,11 @@ bool Adb::enablePackages(const QString &deviceSerial, const QStringList &package
 {
     successCount = 0;
     std::unique_ptr<AdbShell> shell = std::make_unique<AdbShell>(deviceSerial);
-    if(!shell->isConnect())
+    if (!shell->isConnect())
         return false;
-    for(const QString &package : packages)
+    for (const QString &package : packages)
     {
-        if(shell->enablePackage(package))
+        if (shell->enablePackage(package))
             successCount++;
     }
     return true;
@@ -239,7 +242,7 @@ bool Adb::enablePackages(const QString &deviceSerial, const QStringList &package
 void Adb::onDeviceWatch()
 {
     AdbConStatus deviceStatus = status();
-    if(deviceStatus != AdbConStatus::DEVICE)
+    if (deviceStatus != AdbConStatus::DEVICE)
     {
         AdbDevice old = device;
         cachedDevices.removeOne(device);
@@ -255,15 +258,15 @@ AdbConStatus Adb::deviceStatus(const QString &deviceId)
 {
     AdbConStatus retval = UNKNOWN;
     QString res;
-    if(!deviceId.isEmpty())
+    if (!deviceId.isEmpty())
     {
         std::pair<bool, QString> reply = adb_send_cmd(QStringList() << "-s" << deviceId << "get-state");
-        if(reply.first)
+        if (reply.first)
         {
             res = reply.second.trimmed();
-            if(res == "unauthorized" || res == "unathourized")
+            if (res == "unauthorized" || res == "unathourized")
                 retval = UNAUTH;
-            else if(res == "device")
+            else if (res == "device")
                 retval = DEVICE;
         }
         else
@@ -281,7 +284,7 @@ AdbConStatus Adb::deviceStatus(const AdbDevice &device)
 
 void Adb::disconnect()
 {
-    if(!isConnected())
+    if (!isConnected())
     {
         qDebug() << "No connected";
         return;
@@ -289,7 +292,7 @@ void Adb::disconnect()
     AdbDevice old = device;
     device = {};
     emit onDeviceChanged(old, AdbConState::Removed);
-    if(deviceWatchTimer)
+    if (deviceWatchTimer)
     {
         deviceWatchTimer->stop();
         delete deviceWatchTimer;
@@ -314,7 +317,7 @@ AdbDevice Adb::getDevice(const QString &deviceSerial)
     AdbShell shell;
     AdbDevice dev;
     dev.devId = deviceSerial;
-    if(shell.connect(deviceSerial))
+    if (shell.connect(deviceSerial))
     {
         dev.model = shell.getprop(PropProductModel);
         dev.vendor = shell.getprop(PropProductManufacturer);
@@ -336,13 +339,13 @@ bool AdbDevice::isEmpty() const
     return devId.isEmpty() && model.isEmpty() && displayName.isEmpty() && vendor.isEmpty();
 }
 
-AdbFileIO::AdbFileIO(const QString &deviceId) : AdbShell(deviceId)
-{
-}
+AdbFileIO::AdbFileIO(const QString &deviceId)
+    : AdbShell(deviceId)
+{}
 
-AdbFileIO::AdbFileIO(AdbFileIO &&other) noexcept : AdbShell(std::move(other))
-{
-}
+AdbFileIO::AdbFileIO(AdbFileIO &&other) noexcept
+    : AdbShell(std::move(other))
+{}
 
 AdbFileIO &AdbFileIO::operator=(AdbFileIO &&other) noexcept
 {
@@ -352,7 +355,7 @@ AdbFileIO &AdbFileIO::operator=(AdbFileIO &&other) noexcept
 
 bool AdbFileIO::exists(const QString &filePath)
 {
-    if(!isConnect() || filePath.isEmpty())
+    if (!isConnect() || filePath.isEmpty())
         return false;
     auto res = commandQueueWaits("[ -e \"" + filePath + "\" ] && echo __OK_EXISTS__");
     return res.first && res.second.contains("__OK_EXISTS__");
@@ -360,7 +363,7 @@ bool AdbFileIO::exists(const QString &filePath)
 
 bool AdbFileIO::deleteFile(const QString &filePath)
 {
-    if(!isConnect() || filePath.isEmpty() || filePath == "/" || filePath == "/sdcard" || filePath == "/storage")
+    if (!isConnect() || filePath.isEmpty() || filePath == "/" || filePath == "/sdcard" || filePath == "/storage")
         return false;
     commandQueueWaits("rm -rf \"" + filePath + "\"");
     return !exists(filePath);
@@ -368,7 +371,7 @@ bool AdbFileIO::deleteFile(const QString &filePath)
 
 bool AdbFileIO::makeDir(const QString &dirPath)
 {
-    if(!isConnect() || dirPath.isEmpty())
+    if (!isConnect() || dirPath.isEmpty())
         return false;
     commandQueueWaits("mkdir -p \"" + dirPath + "\"");
     return exists(dirPath);
@@ -377,17 +380,17 @@ bool AdbFileIO::makeDir(const QString &dirPath)
 QByteArray AdbFileIO::read(const QString &filePath)
 {
     QString dev = deviceId();
-    if(dev.isEmpty() || filePath.isEmpty())
+    if (dev.isEmpty() || filePath.isEmpty())
         return {};
     QTemporaryFile tempFile;
-    if(tempFile.open())
+    if (tempFile.open())
     {
         QString tempPath = tempFile.fileName();
         tempFile.close();
-        if(pullFile(filePath, tempPath))
+        if (pullFile(filePath, tempPath))
         {
             QFile file(tempPath);
-            if(file.open(QIODevice::ReadOnly))
+            if (file.open(QIODevice::ReadOnly))
             {
                 QByteArray data = file.readAll();
                 file.close();
@@ -403,10 +406,10 @@ QByteArray AdbFileIO::read(const QString &filePath)
 bool AdbFileIO::write(const QString &filePath, const QByteArray &buffer)
 {
     QString dev = deviceId();
-    if(dev.isEmpty() || filePath.isEmpty())
+    if (dev.isEmpty() || filePath.isEmpty())
         return false;
     QTemporaryFile tempFile;
-    if(tempFile.open())
+    if (tempFile.open())
     {
         tempFile.write(buffer);
         tempFile.flush();
@@ -422,25 +425,25 @@ bool AdbFileIO::write(const QString &filePath, const QByteArray &buffer)
 QStringList AdbFileIO::getFiles(const QString &dirPath, bool includeDirs)
 {
     QStringList result;
-    if(!isConnect() || dirPath.isEmpty())
+    if (!isConnect() || dirPath.isEmpty())
         return result;
 
     QString cleanDir = dirPath;
-    if(!cleanDir.endsWith('/'))
+    if (!cleanDir.endsWith('/'))
         cleanDir += '/';
 
     auto res = commandQueueWaits("ls -1p \"" + cleanDir + "\" 2>/dev/null");
-    if(!res.first)
+    if (!res.first)
         return result;
 
     QStringList lines = res.second.split('\n', Qt::SkipEmptyParts);
-    for(QString &line : lines)
+    for (QString &line : lines)
     {
         line = line.trimmed();
-        if(line.isEmpty() || line == "./" || line == "../" || line == "." || line == "..")
+        if (line.isEmpty() || line == "./" || line == "../" || line == "." || line == "..")
             continue;
         bool isDirectory = line.endsWith('/');
-        if(!includeDirs && isDirectory)
+        if (!includeDirs && isDirectory)
             continue;
         result.append(cleanDir + line);
     }
@@ -450,26 +453,26 @@ QStringList AdbFileIO::getFiles(const QString &dirPath, bool includeDirs)
 QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
 {
     QList<AdbFileInfo> list;
-    if(!isConnect() || dirPath.isEmpty())
+    if (!isConnect() || dirPath.isEmpty())
         return list;
 
     QString cleanDir = dirPath;
-    if(!cleanDir.endsWith('/'))
+    if (!cleanDir.endsWith('/'))
         cleanDir += '/';
 
     // Query detailed directory listing
     auto res = commandQueueWaits("ls -la \"" + cleanDir + "\" 2>/dev/null");
-    if(res.first && !res.second.trimmed().isEmpty())
+    if (res.first && !res.second.trimmed().isEmpty())
     {
         QStringList lines = res.second.split('\n', Qt::SkipEmptyParts);
-        for(const QString &rawLine : lines)
+        for (const QString &rawLine : lines)
         {
             QString line = rawLine.trimmed();
-            if(line.isEmpty() || line.startsWith("total ", Qt::CaseInsensitive))
+            if (line.isEmpty() || line.startsWith("total ", Qt::CaseInsensitive))
                 continue;
 
             QStringList tokens = line.split(' ', Qt::SkipEmptyParts);
-            if(tokens.size() < 4)
+            if (tokens.size() < 4)
                 continue;
 
             QString perms = tokens[0];
@@ -478,9 +481,9 @@ QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
 
             // Find filename after time token (HH:MM or YYYY)
             int nameStartIdx = -1;
-            for(int i = 3; i < tokens.size(); ++i)
+            for (int i = 3; i < tokens.size(); ++i)
             {
-                if(tokens[i].contains(':') && i + 1 < tokens.size())
+                if (tokens[i].contains(':') && i + 1 < tokens.size())
                 {
                     nameStartIdx = i + 1;
                     break;
@@ -488,10 +491,10 @@ QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
             }
 
             QString name;
-            if(nameStartIdx != -1)
+            if (nameStartIdx != -1)
             {
                 QStringList nameParts;
-                for(int i = nameStartIdx; i < tokens.size(); ++i)
+                for (int i = nameStartIdx; i < tokens.size(); ++i)
                     nameParts << tokens[i];
                 name = nameParts.join(' ');
             }
@@ -500,12 +503,12 @@ QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
                 name = tokens.last();
             }
 
-            if(isLink && name.contains(" -> "))
+            if (isLink && name.contains(" -> "))
             {
                 name = name.split(" -> ").first().trimmed();
             }
 
-            if(name == "." || name == "..")
+            if (name == "." || name == "..")
                 continue;
 
             AdbFileInfo info;
@@ -514,29 +517,29 @@ QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
             info.isDir = isDir || isLink;
             info.permissions = perms;
 
-            if(nameStartIdx >= 3)
+            if (nameStartIdx >= 3)
             {
                 // Format: ... size YYYY-MM-DD HH:MM name
                 bool ok = false;
                 qint64 sz = tokens[nameStartIdx - 3].toLongLong(&ok);
-                if(ok && sz >= 0)
+                if (ok && sz >= 0)
                 {
                     info.size = sz;
                 }
                 info.modifyTime = tokens[nameStartIdx - 2] + " " + tokens[nameStartIdx - 1];
             }
-            else if(nameStartIdx >= 2)
+            else if (nameStartIdx >= 2)
             {
                 info.modifyTime = tokens[nameStartIdx - 2] + " " + tokens[nameStartIdx - 1];
             }
 
-            if(info.size == 0)
+            if (info.size == 0)
             {
-                for(int i = 1; i < tokens.size() - 2; ++i)
+                for (int i = 1; i < tokens.size() - 2; ++i)
                 {
                     bool ok = false;
                     qint64 sz = tokens[i].toLongLong(&ok);
-                    if(ok && sz > 0)
+                    if (ok && sz > 0)
                     {
                         info.size = sz;
                         break;
@@ -548,31 +551,27 @@ QList<AdbFileInfo> AdbFileIO::getFileList(const QString &dirPath)
         }
     }
 
-    if(list.isEmpty())
+    if (list.isEmpty())
     {
         QStringList simpleFiles = getFiles(dirPath, true);
-        for(const QString &fullP : simpleFiles)
+        for (const QString &fullP : simpleFiles)
         {
             AdbFileInfo info;
             info.fullPath = fullP;
             QString base = fullP.split('/', Qt::SkipEmptyParts).last();
             info.isDir = fullP.endsWith('/');
-            if(info.isDir && base.endsWith('/'))
+            if (info.isDir && base.endsWith('/'))
                 base.chop(1);
             info.name = base;
             list.append(info);
         }
     }
 
-    std::sort(
-        list.begin(),
-        list.end(),
-        [](const AdbFileInfo &a, const AdbFileInfo &b)
-        {
-            if(a.isDir != b.isDir)
-                return a.isDir > b.isDir;
-            return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
-        });
+    std::sort(list.begin(), list.end(), [](const AdbFileInfo &a, const AdbFileInfo &b) {
+        if (a.isDir != b.isDir)
+            return a.isDir > b.isDir;
+        return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+    });
 
     return list;
 }

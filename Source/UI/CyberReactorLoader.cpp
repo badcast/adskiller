@@ -12,7 +12,8 @@
 
 static const qreal PI = 3.14159265358979323846;
 
-CyberReactorLoader::CyberReactorLoader(QWidget *parent) : QWidget(parent)
+CyberReactorLoader::CyberReactorLoader(QWidget *parent)
+    : QWidget(parent)
 {
     setAttribute(Qt::WA_Hover, false);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -22,7 +23,11 @@ CyberReactorLoader::CyberReactorLoader(QWidget *parent) : QWidget(parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     // Тексты теперь связаны с телефонами и блокировкой рекламы
-    m_telemetryLines << QString::fromUtf8("МОБИЛЬНЫЙ ЩИТ: АНАЛИЗ ТРАФИКА") << QString::fromUtf8("АНТИ-РЕКЛАМА: ПЕРЕХВАТ БАННЕРОВ") << QString::fromUtf8("ОЧИСТКА ЭКРАНА: УДАЛЕНИЕ СКРИПТОВ") << QString::fromUtf8("БЛОКИРОВКА ТРЕКЕРОВ: АКТИВНА") << QString::fromUtf8("ADSKILLER: ОПТИМИЗАЦИЯ УСТРОЙСТВА");
+    m_telemetryLines << QString::fromUtf8("МОБИЛЬНЫЙ ЩИТ: АНАЛИЗ ТРАФИКА")
+                     << QString::fromUtf8("АНТИ-РЕКЛАМА: ПЕРЕХВАТ БАННЕРОВ")
+                     << QString::fromUtf8("ОЧИСТКА ЭКРАНА: УДАЛЕНИЕ СКРИПТОВ")
+                     << QString::fromUtf8("БЛОКИРОВКА ТРЕКЕРОВ: АКТИВНА")
+                     << QString::fromUtf8("ADSKILLER: ОПТИМИЗАЦИЯ УСТРОЙСТВА");
 
     initParticles();
 
@@ -35,7 +40,7 @@ CyberReactorLoader::CyberReactorLoader(QWidget *parent) : QWidget(parent)
 
 CyberReactorLoader::~CyberReactorLoader()
 {
-    if(m_timer)
+    if (m_timer)
         m_timer->stop();
 }
 
@@ -46,7 +51,7 @@ void CyberReactorLoader::initParticles()
     const qreal speeds[] = {0.035, -0.045, 0.025, -0.030, 0.040, -0.020, 0.050, -0.035, 0.028, -0.042};
     const qreal sizes[] = {1.5, 2.0, 1.2, 2.5, 1.5, 1.8, 2.2, 1.2, 2.0, 1.4};
 
-    for(int i = 0; i < 10; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         Particle p;
         p.orbitRadius = baseRadii[i];
@@ -55,9 +60,9 @@ void CyberReactorLoader::initParticles()
         p.size = sizes[i];
 
         // Красные частицы символизируют заблокированную рекламу и трекеры
-        if(i % 3 == 0)
+        if (i % 3 == 0)
             p.color = QColor(255, 60, 60, 210); // Угроза/Реклама (Красный)
-        else if(i % 2 == 0)
+        else if (i % 2 == 0)
             p.color = QColor(0, 191, 255, 180); // Чистые данные (Глубокий синий)
         else
             p.color = QColor(0, 245, 255, 200); // Чистые данные (Голубой)
@@ -85,7 +90,7 @@ QSize CyberReactorLoader::minimumSizeHint() const
 void CyberReactorLoader::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
-    if(m_timer && !m_timer->isActive())
+    if (m_timer && !m_timer->isActive())
     {
         m_elapsed.restart();
         m_timer->start();
@@ -95,51 +100,51 @@ void CyberReactorLoader::showEvent(QShowEvent *event)
 void CyberReactorLoader::hideEvent(QHideEvent *event)
 {
     QWidget::hideEvent(event);
-    if(m_timer && m_timer->isActive())
+    if (m_timer && m_timer->isActive())
         m_timer->stop();
 }
 
 void CyberReactorLoader::onAnimationTick()
 {
     m_outerAngle += 1.2;
-    if(m_outerAngle >= 360.0)
+    if (m_outerAngle >= 360.0)
         m_outerAngle -= 360.0;
 
     m_middleAngle -= 1.8;
-    if(m_middleAngle <= -360.0)
+    if (m_middleAngle <= -360.0)
         m_middleAngle += 360.0;
 
     m_radarAngle += 3.0;
-    if(m_radarAngle >= 360.0)
+    if (m_radarAngle >= 360.0)
         m_radarAngle -= 360.0;
 
     m_pulsePhase += 0.05;
-    if(m_pulsePhase >= 2.0 * PI)
+    if (m_pulsePhase >= 2.0 * PI)
         m_pulsePhase -= 2.0 * PI;
 
     // Волна "очистки" расходится от телефона
     m_shockwaveRadius += 1.5;
-    if(m_shockwaveRadius > 130.0)
+    if (m_shockwaveRadius > 130.0)
         m_shockwaveRadius = 15.0;
 
     m_streamProgress += 0.012;
-    if(m_streamProgress > 1.0)
+    if (m_streamProgress > 1.0)
         m_streamProgress = 0.0;
 
-    for(auto &p : m_particles)
+    for (auto &p : m_particles)
     {
         p.angle += p.speed;
-        if(p.angle >= 2.0 * PI)
+        if (p.angle >= 2.0 * PI)
             p.angle -= 2.0 * PI;
-        else if(p.angle < 0)
+        else if (p.angle < 0)
             p.angle += 2.0 * PI;
     }
 
     qint64 now = m_elapsed.elapsed();
-    if(now - m_lastTelemetrySwitch > 1800)
+    if (now - m_lastTelemetrySwitch > 1800)
     {
         m_lastTelemetrySwitch = now;
-        if(!m_telemetryLines.isEmpty())
+        if (!m_telemetryLines.isEmpty())
             m_telemetryIndex = (m_telemetryIndex + 1) % m_telemetryLines.size();
     }
 
@@ -175,7 +180,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
     // 2. Волны сканера "Анти-реклама", расходящиеся от телефона
     // ========================================================================
     const qreal maxSwR = r * 1.3;
-    if(m_shockwaveRadius >= 15.0 && m_shockwaveRadius <= maxSwR)
+    if (m_shockwaveRadius >= 15.0 && m_shockwaveRadius <= maxSwR)
     {
         qreal swFade = 1.0 - ((m_shockwaveRadius - 15.0) / (maxSwR - 15.0));
         int swAlpha = qBound(0, static_cast<int>(swFade * 150), 255);
@@ -205,7 +210,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
     const qreal rotorR = r * 0.90;
     QRectF rRect(cx - rotorR, cy - rotorR, rotorR * 2.0, rotorR * 2.0);
 
-    for(int arcIdx = 0; arcIdx < 4; ++arcIdx)
+    for (int arcIdx = 0; arcIdx < 4; ++arcIdx)
     {
         const qreal startA = m_outerAngle + arcIdx * 90.0;
         const qreal spanA = 35.0;
@@ -218,14 +223,14 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
     // ========================================================================
     // 5. Рекламные трекеры (Частицы вокруг щита)
     // ========================================================================
-    for(const auto &p : m_particles)
+    for (const auto &p : m_particles)
     {
         const qreal actualR = r * (p.orbitRadius / 95.0);
         const qreal px = cx + std::cos(p.angle) * actualR;
         const qreal py = cy + std::sin(p.angle) * actualR;
 
         // Если частица красная, добавим ей легкое свечение "угрозы"
-        if(p.color.red() > 200)
+        if (p.color.red() > 200)
         {
             painter.setPen(Qt::NoPen);
             QColor glow = p.color;
@@ -254,7 +259,8 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
 
     // Динамик смартфона (верхняя полоска)
     painter.setPen(QPen(QColor(0, 245, 255, 150), 1.5, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLine(QPointF(cx - phoneW * 0.15, cy - phoneH / 2.0 + 5.0), QPointF(cx + phoneW * 0.15, cy - phoneH / 2.0 + 5.0));
+    painter.drawLine(
+        QPointF(cx - phoneW * 0.15, cy - phoneH / 2.0 + 5.0), QPointF(cx + phoneW * 0.15, cy - phoneH / 2.0 + 5.0));
 
     // Кнопка / Индикатор "Домой" (кружок внизу)
     painter.setPen(Qt::NoPen);
@@ -294,7 +300,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
     const qreal segW = (barW - (segments - 1) * 2.0) / segments;
     const qreal shimmerPos = m_streamProgress * barW;
 
-    for(int s = 0; s < segments; ++s)
+    for (int s = 0; s < segments; ++s)
     {
         const qreal sx = barX + s * (segW + 2.0);
         const qreal segCenter = sx + segW / 2.0;
@@ -302,7 +308,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
         const qreal lightIntensity = qMax<qreal>(0.0, 1.0 - (dist / 40.0));
 
         QColor segBg;
-        if(lightIntensity > 0.1)
+        if (lightIntensity > 0.1)
             segBg = QColor(0, 245, 255, static_cast<int>(lightIntensity * 255));
         else
             segBg = QColor(0, 245, 255, 30); // Заблокированный/пустой слот
@@ -314,7 +320,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
     // 9. Строка состояния мобильной защиты
     // ========================================================================
     const qreal teleY = barY + barH + 16.0;
-    if(teleY < h)
+    if (teleY < h)
     {
         QFont teleFont("Consolas", 8, QFont::Bold);
         teleFont.setStyleHint(QFont::Monospace);
@@ -322,7 +328,7 @@ void CyberReactorLoader::paintEvent(QPaintEvent *)
         painter.setFont(teleFont);
 
         QString teleText = m_telemetryLines.value(m_telemetryIndex);
-        if(teleText.isEmpty())
+        if (teleText.isEmpty())
             teleText = QString::fromUtf8("* СИСТЕМА: СКАНИРОВАНИЕ ТРАФИКА *");
 
         // Эффект плавного мигания текста

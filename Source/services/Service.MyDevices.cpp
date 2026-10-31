@@ -20,49 +20,49 @@ static QIcon createBrandBadgeIcon(const QString &vendorRaw)
     QColor bgTop, bgBot;
     QColor textColor = Qt::white;
 
-    if(vendor.contains("xiaomi") || vendor.contains("redmi") || vendor.contains("poco") || vendor.contains("mi"))
+    if (vendor.contains("xiaomi") || vendor.contains("redmi") || vendor.contains("poco") || vendor.contains("mi"))
     {
         letter = "X";
         bgTop = QColor("#FF4D4D");
         bgBot = QColor("#D32F2F"); // Red background for Xiaomi as requested
     }
-    else if(vendor.contains("samsung"))
+    else if (vendor.contains("samsung"))
     {
         letter = "S";
         bgTop = QColor("#1E88E5");
         bgBot = QColor("#0D47A1");
     }
-    else if(vendor.contains("huawei") || vendor.contains("honor"))
+    else if (vendor.contains("huawei") || vendor.contains("honor"))
     {
         letter = "H";
         bgTop = QColor("#EF5350");
         bgBot = QColor("#B71C1C");
     }
-    else if(vendor.contains("oneplus"))
+    else if (vendor.contains("oneplus"))
     {
         letter = "1+";
         bgTop = QColor("#E53935");
         bgBot = QColor("#B71C1C");
     }
-    else if(vendor.contains("oppo") || vendor.contains("realme"))
+    else if (vendor.contains("oppo") || vendor.contains("realme"))
     {
         letter = vendor.contains("realme") ? "R" : "O";
         bgTop = QColor("#43A047");
         bgBot = QColor("#1B5E20");
     }
-    else if(vendor.contains("vivo") || vendor.contains("iqoo"))
+    else if (vendor.contains("vivo") || vendor.contains("iqoo"))
     {
         letter = "V";
         bgTop = QColor("#00ACC1");
         bgBot = QColor("#006064");
     }
-    else if(vendor.contains("google") || vendor.contains("pixel"))
+    else if (vendor.contains("google") || vendor.contains("pixel"))
     {
         letter = "G";
         bgTop = QColor("#4285F4");
         bgBot = QColor("#1A73E8");
     }
-    else if(vendor.contains("apple"))
+    else if (vendor.contains("apple"))
     {
         letter = "A";
         bgTop = QColor("#757575");
@@ -80,7 +80,7 @@ static QIcon createBrandBadgeIcon(const QString &vendorRaw)
     img.fill(Qt::transparent);
 
     QPainter p;
-    if(p.begin(&img))
+    if (p.begin(&img))
     {
         p.setRenderHint(QPainter::Antialiasing);
         p.setRenderHint(QPainter::TextAntialiasing);
@@ -118,11 +118,13 @@ QString MyDeviceService::uuid() const
 QString MyDeviceService::getInternalData()
 {
     QStringList data {"Request pending = " + QString((mInternalData & 2) ? "yes" : "no")};
-    if(dateEditBegin && dateEditEnd)
-        data << "Date range = " + dateEditBegin->date().toString(Qt::ISODate) + " to " + dateEditEnd->date().toString(Qt::ISODate);
-    if(guaranteeFilter)
+    if (dateEditBegin && dateEditEnd)
+        data << "Date range = " + dateEditBegin->date().toString(Qt::ISODate) + " to "
+                    + dateEditEnd->date().toString(Qt::ISODate);
+    if (guaranteeFilter)
         data << "Guarantee filter = " + QString(guaranteeFilter->isChecked() ? "on" : "off");
-    data << "Active devices = " + QString::number(actual ? actual->size() : 0) << "Expired devices = " + QString::number(expired ? expired->size() : 0);
+    data << "Active devices = " + QString::number(actual ? actual->size() : 0)
+         << "Expired devices = " + QString::number(expired ? expired->size() : 0);
     return Service::getInternalData() + ":" + data.join('\t');
 }
 
@@ -139,14 +141,14 @@ PageIndex MyDeviceService::targetPage()
 void MyDeviceService::slotRefresh()
 {
     clearMyDevicesPage("Запрос...");
-    if(mInternalData & 0x2)
+    if (mInternalData & 0x2)
         return;
     mInternalData |= 0x2;
     QDateTime dtStart = dateEditBegin->dateTime();
     QDateTime dtEnd = dateEditEnd->dateTime();
-    if(actual)
+    if (actual)
         actual->clear();
-    if(expired)
+    if (expired)
         expired->clear();
     guaranteeFilter->setEnabled(false);
     refreshButton->setEnabled(false);
@@ -165,34 +167,36 @@ void MyDeviceService::slotRefresh()
 class DeviceSortItem : public QStandardItem
 {
 public:
-    DeviceSortItem() : QStandardItem()
-    {
-    }
-    explicit DeviceSortItem(const QString &text) : QStandardItem(text)
-    {
-    }
-    DeviceSortItem(const QIcon &icon, const QString &text) : QStandardItem(icon, text)
-    {
-    }
+    DeviceSortItem()
+        : QStandardItem()
+    {}
+    explicit DeviceSortItem(const QString &text)
+        : QStandardItem(text)
+    {}
+    DeviceSortItem(const QIcon &icon, const QString &text)
+        : QStandardItem(icon, text)
+    {}
 
     bool operator<(const QStandardItem &other) const override
     {
         const QVariant v1 = data(Qt::UserRole);
         const QVariant v2 = other.data(Qt::UserRole);
-        if(v1.isValid() && v2.isValid())
+        if (v1.isValid() && v2.isValid())
         {
-            if(v1.userType() == QMetaType::QDateTime || v2.userType() == QMetaType::QDateTime)
+            if (v1.userType() == QMetaType::QDateTime || v2.userType() == QMetaType::QDateTime)
                 return v1.toDateTime() < v2.toDateTime();
-            if(v1.userType() == QMetaType::Int || v1.userType() == QMetaType::LongLong || v1.userType() == QMetaType::Double)
+            if (v1.userType() == QMetaType::Int || v1.userType() == QMetaType::LongLong
+                || v1.userType() == QMetaType::Double)
                 return v1.toDouble() < v2.toDouble();
-            if(v1.userType() == QMetaType::Bool)
+            if (v1.userType() == QMetaType::Bool)
                 return static_cast<int>(v1.toBool()) < static_cast<int>(v2.toBool());
             return v1.toString().localeAwareCompare(v2.toString()) < 0;
         }
 
         const QVariant d1 = data(Qt::DisplayRole);
         const QVariant d2 = other.data(Qt::DisplayRole);
-        if(d1.userType() == QMetaType::Int || d1.userType() == QMetaType::LongLong || d1.userType() == QMetaType::Double)
+        if (d1.userType() == QMetaType::Int || d1.userType() == QMetaType::LongLong
+            || d1.userType() == QMetaType::Double)
             return d1.toDouble() < d2.toDouble();
         return text().localeAwareCompare(other.text()) < 0;
     }
@@ -225,11 +229,11 @@ void MyDeviceService::clearMyDevicesPage(QString text)
     table->horizontalHeader()->setSectionsClickable(true);
     table->setSortingEnabled(true);
 
-    if(text.isEmpty())
+    if (text.isEmpty())
         return;
 
     model->setRowCount(1);
-    for(int col = 0; col < 10; ++col)
+    for (int col = 0; col < 10; ++col)
     {
         QStandardItem *it = new QStandardItem(col == 1 ? text : "");
         it->setTextAlignment(Qt::AlignCenter);
@@ -241,21 +245,21 @@ void MyDeviceService::clearMyDevicesPage(QString text)
 void MyDeviceService::fillMyDevicesPage()
 {
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(table->model());
-    if(!model)
+    if (!model)
         return;
     QList<DeviceItemInfo> items;
 
-    if(actual)
+    if (actual)
         items << *actual;
-    if(expired)
+    if (expired)
         items << *expired;
 
     model->removeRows(0, model->rowCount());
 
     int idx = 0;
-    for(const DeviceItemInfo &item : std::as_const(items))
+    for (const DeviceItemInfo &item : std::as_const(items))
     {
-        if(guaranteeFilter->isChecked() && !item.serverQuarantee)
+        if (guaranteeFilter->isChecked() && !item.serverQuarantee)
             continue;
 
         model->insertRow(idx);
@@ -275,17 +279,20 @@ void MyDeviceService::fillMyDevicesPage()
         modelItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         modelItem->setForeground(QBrush(QColor("#E3E5E8")));
 
-        DeviceSortItem *logTimeItem = new DeviceSortItem(item.logTime.isValid() ? item.logTime.toString("yyyy-MM-dd HH:mm") : "-");
+        DeviceSortItem *logTimeItem
+            = new DeviceSortItem(item.logTime.isValid() ? item.logTime.toString("yyyy-MM-dd HH:mm") : "-");
         logTimeItem->setData(item.logTime, Qt::UserRole);
         logTimeItem->setTextAlignment(Qt::AlignCenter);
         logTimeItem->setForeground(QBrush(QColor("#BAC0CB")));
 
-        DeviceSortItem *lastConnItem = new DeviceSortItem(item.lastConnectTime.isValid() ? item.lastConnectTime.toString("yyyy-MM-dd HH:mm") : "-");
+        DeviceSortItem *lastConnItem = new DeviceSortItem(
+            item.lastConnectTime.isValid() ? item.lastConnectTime.toString("yyyy-MM-dd HH:mm") : "-");
         lastConnItem->setData(item.lastConnectTime, Qt::UserRole);
         lastConnItem->setTextAlignment(Qt::AlignCenter);
         lastConnItem->setForeground(QBrush(QColor("#BAC0CB")));
 
-        DeviceSortItem *expireItem = new DeviceSortItem(item.expire.isValid() ? item.expire.toString("yyyy-MM-dd HH:mm") : "-");
+        DeviceSortItem *expireItem
+            = new DeviceSortItem(item.expire.isValid() ? item.expire.toString("yyyy-MM-dd HH:mm") : "-");
         expireItem->setData(item.expire, Qt::UserRole);
         expireItem->setTextAlignment(Qt::AlignCenter);
         expireItem->setForeground(QBrush(QColor("#BAC0CB")));
@@ -300,14 +307,16 @@ void MyDeviceService::fillMyDevicesPage()
         connCountItem->setTextAlignment(Qt::AlignCenter);
         connCountItem->setForeground(QBrush(QColor("#E3E5E8")));
 
-        QString payStr = (item.purchasedType == 1) ? "VIP" : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "-");
+        QString payStr = (item.purchasedType == 1)
+                             ? "VIP"
+                             : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "-");
         DeviceSortItem *payItem = new DeviceSortItem(payStr);
-        if(item.purchasedType == 1)
+        if (item.purchasedType == 1)
             payItem->setIcon(QIcon(":/svg/crown"));
         int payRank = (item.purchasedType == 1) ? 999999 : ((item.purchasedType == 2) ? item.purchasedValue : 0);
         payItem->setData(payRank, Qt::UserRole);
         payItem->setTextAlignment(Qt::AlignCenter);
-        if(item.purchasedType == 1)
+        if (item.purchasedType == 1)
             payItem->setForeground(QBrush(QColor("#FFD700")));
         else
             payItem->setForeground(QBrush(QColor("#8E9297")));
@@ -316,7 +325,7 @@ void MyDeviceService::fillMyDevicesPage()
         guarItem->setIcon(QIcon(item.serverQuarantee == 1 ? ":/svg/check" : ":/svg/close"));
         guarItem->setData(item.serverQuarantee == 1 ? 1 : 0, Qt::UserRole);
         guarItem->setTextAlignment(Qt::AlignCenter);
-        if(item.serverQuarantee == 1)
+        if (item.serverQuarantee == 1)
             guarItem->setForeground(QBrush(QColor("#00E676")));
         else
             guarItem->setForeground(QBrush(QColor("#8E9297")));
@@ -346,10 +355,9 @@ void MyDeviceService::fillMyDevicesPage()
 void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QString guid, ServiceOperation so, bool ok)
 {
     QList<DeviceItemInfo> actual {}, expired {};
-    if(ok && !responce.isEmpty() && responce["actual"].isArray() && responce["expired"].isArray())
+    if (ok && !responce.isEmpty() && responce["actual"].isArray() && responce["expired"].isArray())
     {
-        std::function<DeviceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj)
-        {
+        std::function<DeviceItemInfo(const QJsonObject &)> convertToObj = [](const QJsonObject &obj) {
             DeviceItemInfo dit;
             dit.mdkey = obj["mdkey"].toString();
             dit.logTime = QDateTime::fromSecsSinceEpoch(obj["logTime"].toVariant().toULongLong());
@@ -366,14 +374,14 @@ void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QSt
         };
 
         QJsonArray arr = responce["actual"].toArray();
-        for(auto iter = arr.begin(); iter != arr.end(); ++iter)
+        for (auto iter = arr.begin(); iter != arr.end(); ++iter)
         {
             actual << convertToObj(iter->toObject());
             actual.last().serverQuarantee = 1;
         }
 
         arr = responce["expired"].toArray();
-        for(auto iter = arr.begin(); iter != arr.end(); ++iter)
+        for (auto iter = arr.begin(); iter != arr.end(); ++iter)
         {
             expired << convertToObj(iter->toObject());
             expired.last().serverQuarantee = 0;
@@ -383,9 +391,9 @@ void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QSt
     this->actual = std::make_shared<QList<DeviceItemInfo>>(actual);
     this->expired = std::make_shared<QList<DeviceItemInfo>>(expired);
     mInternalData &= ~2;
-    if(ok)
+    if (ok)
     {
-        if(actual.empty() && expired.empty())
+        if (actual.empty() && expired.empty())
             clearMyDevicesPage({});
         else
             fillMyDevicesPage();
@@ -402,19 +410,23 @@ void MyDeviceService::slotPullMyDeviceList(const QJsonObject responce, const QSt
 void MyDeviceService::slotQuaranteeUpdate()
 {
     QStandardItemModel *model = qobject_cast<QStandardItemModel *>(table->model());
-    if(model == nullptr || mInternalData & 2)
+    if (model == nullptr || mInternalData & 2)
         return;
     clearMyDevicesPage({});
     fillMyDevicesPage();
 }
 
-MyDeviceService::MyDeviceService(QObject *parent) : Service(None, parent), mInternalData(0), table(nullptr), dateEditBegin(nullptr), dateEditEnd(nullptr), refreshButton(nullptr), guaranteeFilter(nullptr)
-{
-}
+MyDeviceService::MyDeviceService(QObject *parent)
+    : Service(None, parent)
+    , mInternalData(0)
+    , table(nullptr)
+    , dateEditBegin(nullptr)
+    , dateEditEnd(nullptr)
+    , refreshButton(nullptr)
+    , guaranteeFilter(nullptr)
+{}
 
-MyDeviceService::~MyDeviceService()
-{
-}
+MyDeviceService::~MyDeviceService() {}
 
 bool MyDeviceService::canStart()
 {
@@ -433,7 +445,10 @@ bool MyDeviceService::isFinish()
 
 bool MyDeviceService::start()
 {
-    if(!canStart() || isStarted() || !MainWindow::current->accessUi_page_devices(table, dateEditBegin, dateEditEnd, refreshButton, guaranteeFilter) || !(table && dateEditBegin && dateEditEnd && refreshButton && guaranteeFilter))
+    if (!canStart() || isStarted()
+        || !MainWindow::current->accessUi_page_devices(
+            table, dateEditBegin, dateEditEnd, refreshButton, guaranteeFilter)
+        || !(table && dateEditBegin && dateEditEnd && refreshButton && guaranteeFilter))
         return false;
 
     mInternalData |= 1;
@@ -444,8 +459,10 @@ bool MyDeviceService::start()
 
     guaranteeFilter->setChecked(true);
 
-    QObject::disconnect(&MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
-    QObject::connect(&MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
+    QObject::disconnect(
+        &MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
+    QObject::connect(
+        &MainWindow::current->network, &Network::sPullServiceUUID, this, &MyDeviceService::slotPullMyDeviceList);
 
     QObject::disconnect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);
     QObject::connect(refreshButton, &QPushButton::clicked, this, &MyDeviceService::slotRefresh);

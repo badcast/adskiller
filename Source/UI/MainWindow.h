@@ -53,7 +53,7 @@ enum ThemeScheme
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-    class MainWindow;
+class MainWindow;
 }
 QT_END_NAMESPACE
 
@@ -180,9 +180,20 @@ public:
     QList<std::shared_ptr<Service>> services {};
     std::shared_ptr<QList<ServiceItemInfo>> serverServices {};
 
-    bool accessUi_page_longinfo(QListView *&processLogStatusV, QLabel *&malareStatusText0V, QLabel *&deviceLabelNameV, QProgressBar *&processBarStatusV, QPushButton *&pushButtonReRun);
-    bool accessUi_page_devices(QTableView *&tableActual, QDateEdit *&dateEditStart, QDateEdit *&dateEditEnd, QPushButton *&refreshButton, QCheckBox *&quaranteeFilter);
-    bool accessUi_page_buyvip(QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton);
+    bool accessUi_page_longinfo(
+        QListView *&processLogStatusV,
+        QLabel *&malareStatusText0V,
+        QLabel *&deviceLabelNameV,
+        QProgressBar *&processBarStatusV,
+        QPushButton *&pushButtonReRun);
+    bool accessUi_page_devices(
+        QTableView *&tableActual,
+        QDateEdit *&dateEditStart,
+        QDateEdit *&dateEditEnd,
+        QPushButton *&refreshButton,
+        QCheckBox *&quaranteeFilter);
+    bool accessUi_page_buyvip(
+        QComboBox *&listVariants, QLabel *&balanceText, QLabel *&infoAfterPeriod, QPushButton *&buyButton);
 
     AdbDevice currentAdbDevice() const;
     AppleDevice currentAppleDevice() const;
@@ -240,10 +251,12 @@ private:
 
     inline void showPageLoader(PageIndex pageNum, int msWait = 1000, QString text = QString {})
     {
-        if(text.isEmpty())
+        if (text.isEmpty())
             text = "Ожидайте";
 
-        std::function<bool()> everything_true = []() -> bool { return true; };
+        std::function<bool()> everything_true = []() -> bool {
+            return true;
+        };
         showPageLoader(pageNum, msWait, everything_true, text);
     }
 

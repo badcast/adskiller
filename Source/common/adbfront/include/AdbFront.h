@@ -78,9 +78,12 @@ public:
     QString vendor;
     QString marketingName;
 
-    AdbDevice() : devId(), model(), displayName(), vendor()
-    {
-    }
+    AdbDevice()
+        : devId()
+        , model()
+        , displayName()
+        , vendor()
+    {}
 
     bool isEmpty() const;
 };
@@ -179,9 +182,16 @@ public:
     bool swapEnabled;
     bool isAndroid;
 
-    AdbSysInfo() : diskTotal(-1), diskUsed(-1), ramTotal(-1), ramUsed(-1), swapTotal(-1), swapUsed(-1), osVersion(0), swapEnabled(false)
-    {
-    }
+    AdbSysInfo()
+        : diskTotal(-1)
+        , diskUsed(-1)
+        , ramTotal(-1)
+        , ramUsed(-1)
+        , swapTotal(-1)
+        , swapUsed(-1)
+        , osVersion(0)
+        , swapEnabled(false)
+    {}
 
     QString OSVersionString() const;
     QString StorageDesignString() const;

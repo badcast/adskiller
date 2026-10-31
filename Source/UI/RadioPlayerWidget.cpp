@@ -6,7 +6,8 @@
 #include <QStyle>
 #include <QFontMetrics>
 
-RadioPlayerWidget::RadioPlayerWidget(QWidget *parent) : QFrame(parent)
+RadioPlayerWidget::RadioPlayerWidget(QWidget *parent)
+    : QFrame(parent)
 {
     setObjectName("RadioPlayerWidget");
 
@@ -27,7 +28,7 @@ RadioPlayerWidget::RadioPlayerWidget(QWidget *parent) : QFrame(parent)
 RadioPlayerWidget::~RadioPlayerWidget()
 {
     saveSettings();
-    if(m_player)
+    if (m_player)
     {
         m_player->stop();
     }
@@ -36,45 +37,99 @@ RadioPlayerWidget::~RadioPlayerWidget()
 void RadioPlayerWidget::populateDefaultStations()
 {
     m_stations.clear();
-    
+
     // Россия и мир
-    m_stations.append({QString::fromUtf8("Русское Радио"), QStringLiteral("https://rusradio.hostingradio.ru/rusradio128.mp3"), QString::fromUtf8("Pop Hits")});
-    m_stations.append({QString::fromUtf8("Монте-Карло"), QStringLiteral("https://montecarlo.hostingradio.ru/montecarlo128.mp3"), QString::fromUtf8("Lounge Pop")});
-    m_stations.append({QString::fromUtf8("Lofi Beats 24/7"), QStringLiteral("https://ec3.yesstreaming.net:3755/stream"), QString::fromUtf8("Lo-Fi Beats")});
-    m_stations.append({QString::fromUtf8("Radio Record"), QStringLiteral("https://radiorecord.hostingradio.ru/rr_main96.aacp"), QString::fromUtf8("Dance / Club")});
-    m_stations.append({QString::fromUtf8("DFM"), QStringLiteral("https://dfm.hostingradio.ru/dfm128.mp3"), QString::fromUtf8("Dance / Pop")});
-    m_stations.append({QString::fromUtf8("Европа Плюс"), QStringLiteral("http://ep256.hostingradio.ru:8052/europaplus256.mp3"), QString::fromUtf8("Top 40")});
-    m_stations.append({QString::fromUtf8("Ретро FM"), QStringLiteral("http://retro.hostingradio.ru:8043/retro256.mp3"), QString::fromUtf8("Retro 80-90s")});
-    m_stations.append({QString::fromUtf8("Relax FM"), QStringLiteral("https://gpm.hostingradio.ru/gpm-relaxfm495.aacp"), QString::fromUtf8("Lounge / Chill")});
-    m_stations.append({QString::fromUtf8("Радио Jazz"), QStringLiteral("https://nashe1.hostingradio.ru/jazz-128.mp3"), QString::fromUtf8("Jazz & Blues")});
-    m_stations.append({QString::fromUtf8("Rock FM"), QStringLiteral("https://nashe1.hostingradio.ru/rock-128.mp3"), QString::fromUtf8("Classic Rock")});
-    m_stations.append({QString::fromUtf8("NRJ Energy"), QStringLiteral("https://gpm.hostingradio.ru/gpm-energyfm495.aacp"), QString::fromUtf8("Modern Hits")});
+    m_stations.append(
+        {QString::fromUtf8("Русское Радио"),
+         QStringLiteral("https://rusradio.hostingradio.ru/rusradio128.mp3"),
+         QString::fromUtf8("Pop Hits")});
+    m_stations.append(
+        {QString::fromUtf8("Монте-Карло"),
+         QStringLiteral("https://montecarlo.hostingradio.ru/montecarlo128.mp3"),
+         QString::fromUtf8("Lounge Pop")});
+    m_stations.append(
+        {QString::fromUtf8("Lofi Beats 24/7"),
+         QStringLiteral("https://ec3.yesstreaming.net:3755/stream"),
+         QString::fromUtf8("Lo-Fi Beats")});
+    m_stations.append(
+        {QString::fromUtf8("Radio Record"),
+         QStringLiteral("https://radiorecord.hostingradio.ru/rr_main96.aacp"),
+         QString::fromUtf8("Dance / Club")});
+    m_stations.append(
+        {QString::fromUtf8("DFM"),
+         QStringLiteral("https://dfm.hostingradio.ru/dfm128.mp3"),
+         QString::fromUtf8("Dance / Pop")});
+    m_stations.append(
+        {QString::fromUtf8("Европа Плюс"),
+         QStringLiteral("http://ep256.hostingradio.ru:8052/europaplus256.mp3"),
+         QString::fromUtf8("Top 40")});
+    m_stations.append(
+        {QString::fromUtf8("Ретро FM"),
+         QStringLiteral("http://retro.hostingradio.ru:8043/retro256.mp3"),
+         QString::fromUtf8("Retro 80-90s")});
+    m_stations.append(
+        {QString::fromUtf8("Relax FM"),
+         QStringLiteral("https://gpm.hostingradio.ru/gpm-relaxfm495.aacp"),
+         QString::fromUtf8("Lounge / Chill")});
+    m_stations.append(
+        {QString::fromUtf8("Радио Jazz"),
+         QStringLiteral("https://nashe1.hostingradio.ru/jazz-128.mp3"),
+         QString::fromUtf8("Jazz & Blues")});
+    m_stations.append(
+        {QString::fromUtf8("Rock FM"),
+         QStringLiteral("https://nashe1.hostingradio.ru/rock-128.mp3"),
+         QString::fromUtf8("Classic Rock")});
+    m_stations.append(
+        {QString::fromUtf8("NRJ Energy"),
+         QStringLiteral("https://gpm.hostingradio.ru/gpm-energyfm495.aacp"),
+         QString::fromUtf8("Modern Hits")});
     // Казахстан
-    m_stations.append({QString::fromUtf8("Казахское Радио 101.0 FM"), QStringLiteral("https://radio-streams.kaztrk.kz/qazradio/qazradio/icecast.audio"), QString::fromUtf8("Kazakh Pop / Folk")});
-    m_stations.append({QString::fromUtf8("Tengri FM"), QStringLiteral("http://91.201.214.229:8000/tengrifm"), QString::fromUtf8("Rock / Modern Pop")});
-    m_stations.append({QString::fromUtf8("Жұлдыз FM"), QStringLiteral("http://91.201.214.229:8000/zhulduz"), QString::fromUtf8("Kazakh Pop / Folk")});
-    m_stations.append({QString::fromUtf8("Radio NS"), QStringLiteral("https://icecast.ns.kz/radions"), QString::fromUtf8("Pop / Hits")});
-    m_stations.append({QString::fromUtf8("Авторадио Казахстан"), QStringLiteral("http://178.88.167.62:8080/AVTORADIO_192"), QString::fromUtf8("Auto Radio / Hits")});
-    m_stations.append({QString::fromUtf8("Dala FM (Халық радиосы)"), QStringLiteral("http://178.88.167.62:8080/DALA_192"), QString::fromUtf8("Kazakh Folk / Hits")});
-    m_stations.append({QString::fromUtf8("Шалқар Радиосы"), QStringLiteral("https://radio-streams.kaztrk.kz/shalqar/shalqar/icecast.audio"), QString::fromUtf8("Kazakh Culture / Pop")});
+    m_stations.append(
+        {QString::fromUtf8("Казахское Радио 101.0 FM"),
+         QStringLiteral("https://radio-streams.kaztrk.kz/qazradio/qazradio/icecast.audio"),
+         QString::fromUtf8("Kazakh Pop / Folk")});
+    m_stations.append(
+        {QString::fromUtf8("Tengri FM"),
+         QStringLiteral("http://91.201.214.229:8000/tengrifm"),
+         QString::fromUtf8("Rock / Modern Pop")});
+    m_stations.append(
+        {QString::fromUtf8("Жұлдыз FM"),
+         QStringLiteral("http://91.201.214.229:8000/zhulduz"),
+         QString::fromUtf8("Kazakh Pop / Folk")});
+    m_stations.append(
+        {QString::fromUtf8("Radio NS"),
+         QStringLiteral("https://icecast.ns.kz/radions"),
+         QString::fromUtf8("Pop / Hits")});
+    m_stations.append(
+        {QString::fromUtf8("Авторадио Казахстан"),
+         QStringLiteral("http://178.88.167.62:8080/AVTORADIO_192"),
+         QString::fromUtf8("Auto Radio / Hits")});
+    m_stations.append(
+        {QString::fromUtf8("Dala FM (Халық радиосы)"),
+         QStringLiteral("http://178.88.167.62:8080/DALA_192"),
+         QString::fromUtf8("Kazakh Folk / Hits")});
+    m_stations.append(
+        {QString::fromUtf8("Шалқар Радиосы"),
+         QStringLiteral("https://radio-streams.kaztrk.kz/shalqar/shalqar/icecast.audio"),
+         QString::fromUtf8("Kazakh Culture / Pop")});
 
     // Load custom user stations via unified AppSetting
     auto settings = AppSetting::raw();
-    if(settings)
+    if (settings)
     {
         int customCount = settings->beginReadArray("RadioStations/CustomStations");
-        if(customCount == 0)
+        if (customCount == 0)
         {
             settings->endArray();
             customCount = settings->beginReadArray("CustomStations");
         }
-        for(int i = 0; i < customCount; ++i)
+        for (int i = 0; i < customCount; ++i)
         {
             settings->setArrayIndex(i);
             QString name = settings->value("name").toString();
             QString url = settings->value("url").toString();
             QString genre = settings->value("genre", QString::fromUtf8("Пользовательская")).toString();
-            if(!name.isEmpty() && !url.isEmpty())
+            if (!name.isEmpty() && !url.isEmpty())
             {
                 m_stations.append({name, url, genre});
             }
@@ -287,9 +342,15 @@ void RadioPlayerWidget::initUi()
     setFixedHeight(32);
 
     // 1. Logo / Radio badge
-    m_lblLogo = new QLabel(QString::fromUtf8("<img src=\":/svg/radio\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> <b>FM LIVE</b>"), this);
+    m_lblLogo = new QLabel(
+        QString::fromUtf8(
+            "<img src=\":/svg/radio\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> <b>FM LIVE</b>"),
+        this);
     m_lblLogo->setObjectName("lblRadioLogo");
-    m_lblLogo->setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0B1E36, stop:1 #0F2744); color: #38BDF8; border: 1px solid #0284C7; border-radius: 0px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 0px 8px;");
+    m_lblLogo->setStyleSheet(
+        "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0B1E36, stop:1 #0F2744); color: #38BDF8; border: "
+        "1px solid #0284C7; border-radius: 0px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 0px "
+        "8px;");
     m_lblLogo->setFixedHeight(24);
     m_lblLogo->setAlignment(Qt::AlignCenter);
     layout->addWidget(m_lblLogo);
@@ -299,12 +360,16 @@ void RadioPlayerWidget::initUi()
     m_comboStations->setFixedHeight(24);
     m_comboStations->setCursor(Qt::PointingHandCursor);
     m_comboStations->blockSignals(true);
-    for(const auto &station : m_stations)
+    for (const auto &station : m_stations)
     {
         m_comboStations->addItem(QStringLiteral("%1 (%2)").arg(station.name, station.genre));
     }
     m_comboStations->blockSignals(false);
-    connect(m_comboStations, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &RadioPlayerWidget::onStationComboChanged);
+    connect(
+        m_comboStations,
+        QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this,
+        &RadioPlayerWidget::onStationComboChanged);
     layout->addWidget(m_comboStations);
 
     // 3. Add Custom Station Button
@@ -352,7 +417,9 @@ void RadioPlayerWidget::initUi()
     // 5. Status indicator badge
     m_lblStatus = new QLabel(QString::fromUtf8("СТОП"), this);
     m_lblStatus->setObjectName("lblRadioStatus");
-    m_lblStatus->setStyleSheet("background-color: #111827; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: 600; padding: 0px 7px; border-radius: 0px;");
+    m_lblStatus->setStyleSheet(
+        "background-color: #111827; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: 600; "
+        "padding: 0px 7px; border-radius: 0px;");
     m_lblStatus->setFixedHeight(24);
     m_lblStatus->setMinimumWidth(72);
     m_lblStatus->setAlignment(Qt::AlignCenter);
@@ -417,15 +484,16 @@ void RadioPlayerWidget::loadSettings()
     updateVolumeUi(vol, muted);
 
     m_comboStations->blockSignals(true);
-    if(stationIdx >= 0 && stationIdx < m_comboStations->count())
+    if (stationIdx >= 0 && stationIdx < m_comboStations->count())
     {
         m_comboStations->setCurrentIndex(stationIdx);
     }
     m_comboStations->blockSignals(false);
 
-    if(stationIdx >= 0 && stationIdx < m_stations.size())
+    if (stationIdx >= 0 && stationIdx < m_stations.size())
     {
-        m_lblTrackInfo->setText(QStringLiteral("%1 (%2)").arg(m_stations[stationIdx].name, m_stations[stationIdx].genre));
+        m_lblTrackInfo->setText(
+            QStringLiteral("%1 (%2)").arg(m_stations[stationIdx].name, m_stations[stationIdx].genre));
     }
 }
 
@@ -450,7 +518,7 @@ int RadioPlayerWidget::volume() const
 QString RadioPlayerWidget::currentStationName() const
 {
     int idx = currentStationIndex();
-    if(idx >= 0 && idx < m_stations.size())
+    if (idx >= 0 && idx < m_stations.size())
     {
         return m_stations[idx].name;
     }
@@ -465,18 +533,20 @@ int RadioPlayerWidget::currentStationIndex() const
 void RadioPlayerWidget::play()
 {
     int idx = currentStationIndex();
-    if(idx < 0 || idx >= m_stations.size())
+    if (idx < 0 || idx >= m_stations.size())
         return;
 
     const auto &station = m_stations[idx];
     QUrl url(station.url);
-    if(m_player->source() != url)
+    if (m_player->source() != url)
     {
         m_player->setSource(url);
     }
     m_player->play();
     m_lblStatus->setText(QString::fromUtf8("СОЕДИНЕНИЕ..."));
-    m_lblStatus->setStyleSheet("background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+    m_lblStatus->setStyleSheet(
+        "background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: bold; "
+        "padding: 1px 6px; border-radius: 0px;");
     m_lblTrackInfo->setText(QStringLiteral("%1 * Подключение к эфиру...").arg(station.name));
     updatePlayButtonState(true);
     emit playbackStateChanged(true);
@@ -484,28 +554,32 @@ void RadioPlayerWidget::play()
 
 void RadioPlayerWidget::pause()
 {
-    if(m_player)
+    if (m_player)
     {
         m_player->pause();
     }
     updatePlayButtonState(false);
     m_lblStatus->setText(QString::fromUtf8("ПАУЗА"));
-    m_lblStatus->setStyleSheet("background-color: #1E293B; border: 1px solid #475569; color: #94A3B8; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+    m_lblStatus->setStyleSheet(
+        "background-color: #1E293B; border: 1px solid #475569; color: #94A3B8; font-size: 10px; font-weight: bold; "
+        "padding: 1px 6px; border-radius: 0px;");
     emit playbackStateChanged(false);
 }
 
 void RadioPlayerWidget::stop()
 {
-    if(m_player)
+    if (m_player)
     {
         m_player->stop();
         m_player->setSource(QUrl());
     }
     updatePlayButtonState(false);
     m_lblStatus->setText(QString::fromUtf8("СТОП"));
-    m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+    m_lblStatus->setStyleSheet(
+        "background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; "
+        "padding: 1px 6px; border-radius: 0px;");
     int idx = currentStationIndex();
-    if(idx >= 0 && idx < m_stations.size())
+    if (idx >= 0 && idx < m_stations.size())
     {
         m_lblTrackInfo->setText(QStringLiteral("%1 (%2)").arg(m_stations[idx].name, m_stations[idx].genre));
     }
@@ -514,7 +588,7 @@ void RadioPlayerWidget::stop()
 
 void RadioPlayerWidget::togglePlay()
 {
-    if(isPlaying())
+    if (isPlaying())
     {
         pause();
     }
@@ -533,14 +607,14 @@ void RadioPlayerWidget::nextStation()
 void RadioPlayerWidget::previousStation()
 {
     int prevIdx = currentStationIndex() - 1;
-    if(prevIdx < 0)
+    if (prevIdx < 0)
         prevIdx = m_stations.size() - 1;
     m_comboStations->setCurrentIndex(prevIdx);
 }
 
 void RadioPlayerWidget::setStationIndex(int index)
 {
-    if(index >= 0 && index < m_stations.size() && m_comboStations)
+    if (index >= 0 && index < m_stations.size() && m_comboStations)
     {
         m_comboStations->setCurrentIndex(index);
     }
@@ -548,7 +622,7 @@ void RadioPlayerWidget::setStationIndex(int index)
 
 void RadioPlayerWidget::setVolume(int volume)
 {
-    if(m_sliderVolume)
+    if (m_sliderVolume)
     {
         m_sliderVolume->setValue(volume);
     }
@@ -556,7 +630,7 @@ void RadioPlayerWidget::setVolume(int volume)
 
 void RadioPlayerWidget::toggleMute()
 {
-    if(!m_audioOutput)
+    if (!m_audioOutput)
         return;
 
     bool willBeMuted = !m_audioOutput->isMuted();
@@ -568,17 +642,21 @@ void RadioPlayerWidget::onPlayerPlaybackStateChanged(QMediaPlayer::PlaybackState
 {
     bool playing = (state == QMediaPlayer::PlayingState);
     updatePlayButtonState(playing);
-    if(!playing)
+    if (!playing)
     {
-        if(state == QMediaPlayer::PausedState)
+        if (state == QMediaPlayer::PausedState)
         {
             m_lblStatus->setText(QString::fromUtf8("ПАУЗА"));
-            m_lblStatus->setStyleSheet("background-color: #1E293B; border: 1px solid #475569; color: #94A3B8; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+            m_lblStatus->setStyleSheet(
+                "background-color: #1E293B; border: 1px solid #475569; color: #94A3B8; font-size: 10px; font-weight: "
+                "bold; padding: 1px 6px; border-radius: 0px;");
         }
         else
         {
             m_lblStatus->setText(QString::fromUtf8("СТОП"));
-            m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+            m_lblStatus->setStyleSheet(
+                "background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: "
+                "bold; padding: 1px 6px; border-radius: 0px;");
         }
     }
     emit playbackStateChanged(playing);
@@ -589,32 +667,42 @@ void RadioPlayerWidget::onPlayerMediaStatusChanged(QMediaPlayer::MediaStatus sta
     int idx = currentStationIndex();
     QString stationName = (idx >= 0 && idx < m_stations.size()) ? m_stations[idx].name : QString();
 
-    switch(status)
+    switch (status)
     {
         case QMediaPlayer::LoadingMedia:
         case QMediaPlayer::BufferingMedia:
             m_lblStatus->setText(QString::fromUtf8("БУФЕР..."));
-            m_lblStatus->setStyleSheet("background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+            m_lblStatus->setStyleSheet(
+                "background-color: #2D2006; border: 1px solid #D97706; color: #FCD34D; font-size: 10px; font-weight: "
+                "bold; padding: 1px 6px; border-radius: 0px;");
             break;
         case QMediaPlayer::BufferedMedia:
         case QMediaPlayer::LoadedMedia:
-            if(isPlaying())
+            if (isPlaying())
             {
                 m_lblStatus->setText(QString::fromUtf8("В ЭФИРЕ"));
-                m_lblStatus->setStyleSheet("background-color: #062B1D; border: 1px solid #059669; color: #34D399; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+                m_lblStatus->setStyleSheet(
+                    "background-color: #062B1D; border: 1px solid #059669; color: #34D399; font-size: 10px; "
+                    "font-weight: bold; padding: 1px 6px; border-radius: 0px;");
             }
             break;
         case QMediaPlayer::StalledMedia:
             m_lblStatus->setText(QString::fromUtf8("СЕТЬ..."));
-            m_lblStatus->setStyleSheet("background-color: #331A0B; border: 1px solid #EA580C; color: #FDBA74; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+            m_lblStatus->setStyleSheet(
+                "background-color: #331A0B; border: 1px solid #EA580C; color: #FDBA74; font-size: 10px; font-weight: "
+                "bold; padding: 1px 6px; border-radius: 0px;");
             break;
         case QMediaPlayer::EndOfMedia:
             m_lblStatus->setText(QString::fromUtf8("КОНЕЦ"));
-            m_lblStatus->setStyleSheet("background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+            m_lblStatus->setStyleSheet(
+                "background-color: #0F172A; border: 1px solid #334155; color: #64748B; font-size: 10px; font-weight: "
+                "bold; padding: 1px 6px; border-radius: 0px;");
             break;
         case QMediaPlayer::InvalidMedia:
             m_lblStatus->setText(QString::fromUtf8("ОШИБКА"));
-            m_lblStatus->setStyleSheet("background-color: #2E1119; border: 1px solid #DC2626; color: #FCA5A5; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+            m_lblStatus->setStyleSheet(
+                "background-color: #2E1119; border: 1px solid #DC2626; color: #FCA5A5; font-size: 10px; font-weight: "
+                "bold; padding: 1px 6px; border-radius: 0px;");
             m_lblTrackInfo->setText(QStringLiteral("%1: Поток недоступен").arg(stationName));
             break;
         default:
@@ -626,7 +714,9 @@ void RadioPlayerWidget::onPlayerErrorOccurred(QMediaPlayer::Error error, const Q
 {
     Q_UNUSED(error);
     m_lblStatus->setText(QString::fromUtf8("ОШИБКА"));
-    m_lblStatus->setStyleSheet("background-color: #2E1119; border: 1px solid #DC2626; color: #FCA5A5; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 0px;");
+    m_lblStatus->setStyleSheet(
+        "background-color: #2E1119; border: 1px solid #DC2626; color: #FCA5A5; font-size: 10px; font-weight: bold; "
+        "padding: 1px 6px; border-radius: 0px;");
     m_lblStatus->setToolTip(errorString);
     m_lblTrackInfo->setText(QStringLiteral("Ошибка: %1").arg(errorString));
     updatePlayButtonState(false);
@@ -634,23 +724,23 @@ void RadioPlayerWidget::onPlayerErrorOccurred(QMediaPlayer::Error error, const Q
 
 void RadioPlayerWidget::onPlayerMetaDataChanged()
 {
-    if(!m_player)
+    if (!m_player)
         return;
 
     QMediaMetaData meta = m_player->metaData();
     QString title = meta.value(QMediaMetaData::Title).toString();
     QString artist = meta.value(QMediaMetaData::ContributingArtist).toString();
-    if(artist.isEmpty())
+    if (artist.isEmpty())
         artist = meta.value(QMediaMetaData::Author).toString();
 
     int idx = currentStationIndex();
     QString stationName = (idx >= 0 && idx < m_stations.size()) ? m_stations[idx].name : QString();
 
-    if(!title.isEmpty() && !artist.isEmpty())
+    if (!title.isEmpty() && !artist.isEmpty())
     {
         m_lblTrackInfo->setText(QStringLiteral("%1 * %2 - %3").arg(stationName, artist, title));
     }
-    else if(!title.isEmpty())
+    else if (!title.isEmpty())
     {
         m_lblTrackInfo->setText(QStringLiteral("%1 * %2").arg(stationName, title));
     }
@@ -662,7 +752,7 @@ void RadioPlayerWidget::onPlayerMetaDataChanged()
 
 void RadioPlayerWidget::onStationComboChanged(int index)
 {
-    if(index < 0 || index >= m_stations.size())
+    if (index < 0 || index >= m_stations.size())
         return;
 
     bool wasPlaying = isPlaying();
@@ -670,7 +760,7 @@ void RadioPlayerWidget::onStationComboChanged(int index)
 
     emit stationChanged(station.name, index);
 
-    if(wasPlaying)
+    if (wasPlaying)
     {
         m_player->setSource(QUrl(station.url));
         play();
@@ -685,10 +775,10 @@ void RadioPlayerWidget::onStationComboChanged(int index)
 void RadioPlayerWidget::onVolumeSliderChanged(int value)
 {
     float normVol = static_cast<float>(value) / 100.0f;
-    if(m_audioOutput)
+    if (m_audioOutput)
     {
         m_audioOutput->setVolume(normVol);
-        if(m_audioOutput->isMuted() && value > 0)
+        if (m_audioOutput->isMuted() && value > 0)
         {
             m_audioOutput->setMuted(false);
         }
@@ -698,10 +788,10 @@ void RadioPlayerWidget::onVolumeSliderChanged(int value)
 
 void RadioPlayerWidget::updatePlayButtonState(bool isPlaying)
 {
-    if(!m_btnPlay)
+    if (!m_btnPlay)
         return;
 
-    if(isPlaying)
+    if (isPlaying)
     {
         m_btnPlay->setText(QString());
         m_btnPlay->setIcon(QIcon(":/svg/pause"));
@@ -759,14 +849,16 @@ void RadioPlayerWidget::updatePlayButtonState(bool isPlaying)
 
 void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
 {
-    if(m_lblVolumePercent)
+    if (m_lblVolumePercent)
     {
         m_lblVolumePercent->setText(QStringLiteral("%1%").arg(muted ? 0 : value));
-        m_lblVolumePercent->setStyleSheet(muted ? "color: #EF4444; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;" : "color: #38BDF8; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;");
+        m_lblVolumePercent->setStyleSheet(
+            muted ? "color: #EF4444; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;"
+                  : "color: #38BDF8; font-size: 10px; font-weight: bold; min-width: 28px; max-width: 28px;");
     }
-    if(m_btnMute)
+    if (m_btnMute)
     {
-        if(muted || value == 0)
+        if (muted || value == 0)
         {
             m_btnMute->setText(QString());
             m_btnMute->setIcon(QIcon(":/svg/volume-x"));
@@ -826,13 +918,25 @@ void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
 void RadioPlayerWidget::showAddStationDialog()
 {
     bool okName = false;
-    QString name = QInputDialog::getText(this, QString::fromUtf8("Новая радиостанция"), QString::fromUtf8("Введите название станции:"), QLineEdit::Normal, QString(), &okName);
-    if(!okName || name.trimmed().isEmpty())
+    QString name = QInputDialog::getText(
+        this,
+        QString::fromUtf8("Новая радиостанция"),
+        QString::fromUtf8("Введите название станции:"),
+        QLineEdit::Normal,
+        QString(),
+        &okName);
+    if (!okName || name.trimmed().isEmpty())
         return;
 
     bool okUrl = false;
-    QString url = QInputDialog::getText(this, QString::fromUtf8("Адрес потока"), QString::fromUtf8("Введите URL интернет-потока (http/https):"), QLineEdit::Normal, QStringLiteral("http://"), &okUrl);
-    if(!okUrl || url.trimmed().isEmpty())
+    QString url = QInputDialog::getText(
+        this,
+        QString::fromUtf8("Адрес потока"),
+        QString::fromUtf8("Введите URL интернет-потока (http/https):"),
+        QLineEdit::Normal,
+        QStringLiteral("http://"),
+        &okUrl);
+    if (!okUrl || url.trimmed().isEmpty())
         return;
 
     name = name.trimmed();
@@ -844,7 +948,7 @@ void RadioPlayerWidget::showAddStationDialog()
 
     // Persist custom stations via unified AppSetting
     auto settings = AppSetting::raw();
-    if(settings)
+    if (settings)
     {
         int customCount = settings->beginReadArray("RadioStations/CustomStations");
         settings->endArray();

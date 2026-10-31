@@ -8,12 +8,12 @@ std::shared_ptr<Service> _CurrentService = nullptr;
 
 bool ServiceProvider::runService(std::shared_ptr<Service> service)
 {
-    if(service == nullptr || !service->active || service->isStarted())
+    if (service == nullptr || !service->active || service->isStarted())
     {
         return false;
     }
 
-    if(!service->isOnlineService())
+    if (!service->isOnlineService())
     {
         service->sendCheckPull();
     }
@@ -22,7 +22,9 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     _CurrentService = std::move(service);
     _CurrentService->stop();
 
-    if((_CurrentService->deviceConnectType() == DeviceConnectType::ADB || _CurrentService->deviceConnectType() == DeviceConnectType::Apple) && _CurrentService->uuid() != IDServiceAppleIpswString)
+    if ((_CurrentService->deviceConnectType() == DeviceConnectType::ADB
+         || _CurrentService->deviceConnectType() == DeviceConnectType::Apple)
+        && _CurrentService->uuid() != IDServiceAppleIpswString)
     {
         MainWindow::current->connectPhone = {};
         MainWindow::current->connectPhone.connectionType = _CurrentService->deviceConnectType();
@@ -36,8 +38,7 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
     MainWindow::current->showPageLoader(
         _preloadPage,
         1500,
-        []()
-        {
+        []() {
             _CurrentService->start();
             return true;
         },
@@ -47,7 +48,7 @@ bool ServiceProvider::runService(std::shared_ptr<Service> service)
 
 void ServiceProvider::closeService()
 {
-    if(_CurrentService)
+    if (_CurrentService)
     {
         currentService()->stop();
         _CurrentService.reset();

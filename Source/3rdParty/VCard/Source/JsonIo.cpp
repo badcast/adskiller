@@ -25,7 +25,7 @@ JsonWriter &JsonWriter::operator<<(vCard &vCard)
     *m_os << "[\"vcard\", [";
 
     *m_os << "[\"version\", {}, \"text\", \"4.0\"],";
-    for(auto it = vCard.properties().begin(); it != vCard.properties().end(); ++it)
+    for (auto it = vCard.properties().begin(); it != vCard.properties().end(); ++it)
     {
         *this << *it;
     }
@@ -38,7 +38,7 @@ JsonWriter &JsonWriter::operator<<(std::vector<vCard> &cards)
 {
     *m_os << "[";
 
-    for(auto card : cards)
+    for (auto card : cards)
     {
         *this << card;
     }
@@ -61,21 +61,21 @@ JsonWriter &JsonWriter::operator<<(vCardProperty &p)
 
     *m_os << "\"" << get_property_type(name) << "\", ";
 
-    if(p.values().size() > 1)
+    if (p.values().size() > 1)
         *m_os << "[";
 
     auto it = p.values().begin();
-    while(it != p.values().end())
+    while (it != p.values().end())
     {
         *m_os << "\"" << *it << "\"";
 
         it++;
 
-        if(it != p.values().end())
+        if (it != p.values().end())
             *m_os << ", ";
     }
 
-    if(p.values().size() > 1)
+    if (p.values().size() > 1)
         *m_os << "]";
 
     *m_os << "]";
@@ -87,7 +87,7 @@ std::string JsonWriter::get_property_type(std::string property_name)
     std::string type("text");
     tolower(property_name);
 
-    if(vCardProperty::property_types.find(property_name) != vCardProperty::property_types.end())
+    if (vCardProperty::property_types.find(property_name) != vCardProperty::property_types.end())
         type = vCardProperty::property_types.at(property_name);
 
     return type;
@@ -98,12 +98,12 @@ JsonWriter &JsonWriter::operator<<(vCardParamMap &p)
     *m_os << "{";
 
     auto it = p.begin();
-    while(it != p.end())
+    while (it != p.end())
     {
         *m_os << "\"" << it->first << "\": \"" << it->second << "\"";
 
         it++;
-        if(it != p.end())
+        if (it != p.end())
             *m_os << ", ";
     }
 

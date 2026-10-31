@@ -29,14 +29,17 @@
 class FilePreviewDialog : public QDialog
 {
 public:
-    FilePreviewDialog(const QString &fileName, const QByteArray &content, QWidget *parent = nullptr) : QDialog(parent)
+    FilePreviewDialog(const QString &fileName, const QByteArray &content, QWidget *parent = nullptr)
+        : QDialog(parent)
     {
         setWindowTitle("Просмотр - " + fileName);
         resize(720, 480);
         setStyleSheet(
             "QDialog { background-color: #0A0E1A; color: #F8FAFC; }"
-            "QTextEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; font-family: monospace; font-size: 12px; selection-background-color: #0284C7; }"
-            "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; padding: 6px 16px; font-weight: 600; }"
+            "QTextEdit { background-color: #070A12; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; "
+            "font-family: monospace; font-size: 12px; selection-background-color: #0284C7; }"
+            "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; "
+            "padding: 6px 16px; font-weight: 600; }"
             "QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
 
         QVBoxLayout *layout = new QVBoxLayout(this);
@@ -44,7 +47,9 @@ public:
         layout->setSpacing(10);
 
         QHBoxLayout *topInfo = new QHBoxLayout();
-        QLabel *title = new QLabel("<img src=\":/svg/clipboard\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> " + fileName, this);
+        QLabel *title = new QLabel(
+            "<img src=\":/svg/clipboard\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> " + fileName,
+            this);
         title->setTextFormat(Qt::RichText);
         title->setStyleSheet("font-size: 14px; font-weight: bold; color: #38BDF8;");
         QLabel *sizeLbl = new QLabel(QString("Размер: %1").arg(Generic::formatSizes(content.size())), this);
@@ -57,15 +62,16 @@ public:
         QString ext = QFileInfo(fileName).suffix().toLower();
         bool isImage = (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp");
 
-        if(isImage)
+        if (isImage)
         {
             QPixmap pix;
-            if(pix.loadFromData(content))
+            if (pix.loadFromData(content))
             {
                 QLabel *imgLabel = new QLabel(this);
                 imgLabel->setAlignment(Qt::AlignCenter);
-                imgLabel->setStyleSheet("background-color: #070A12; border: 1px solid #1E293B; border-radius: 0px; padding: 10px;");
-                if(pix.width() > 680 || pix.height() > 360)
+                imgLabel->setStyleSheet(
+                    "background-color: #070A12; border: 1px solid #1E293B; border-radius: 0px; padding: 10px;");
+                if (pix.width() > 680 || pix.height() > 360)
                     pix = pix.scaled(680, 360, Qt::KeepAspectRatio, Qt::SmoothTransformation);
                 imgLabel->setPixmap(pix);
                 layout->addWidget(imgLabel, 1);
@@ -95,7 +101,8 @@ public:
     }
 };
 
-FileManagerWidget::FileManagerWidget(QWidget *parent) : QWidget(parent)
+FileManagerWidget::FileManagerWidget(QWidget *parent)
+    : QWidget(parent)
 {
     m_currentPath = "/sdcard";
     setupUi();
@@ -111,19 +118,27 @@ void FileManagerWidget::setupUi()
 {
     setStyleSheet(
         "QWidget { background-color: #0A0E1A; color: #F8FAFC; font-family: 'Segoe UI', 'Noto Sans', sans-serif; }"
-        "QTableWidget { background-color: #0B0F19; alternate-background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; gridline-color: #161F33; selection-background-color: #0284C7; selection-color: #FFFFFF; font-size: 12px; }"
-        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; font-weight: bold; font-size: 11px; border: none; border-bottom: 1px solid #1E293B; padding: 6px 8px; }"
-        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 10px; font-size: 12px; }"
+        "QTableWidget { background-color: #0B0F19; alternate-background-color: #0F172A; color: #F8FAFC; border: 1px "
+        "solid #1E293B; border-radius: 0px; gridline-color: #161F33; selection-background-color: #0284C7; "
+        "selection-color: #FFFFFF; font-size: 12px; }"
+        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; font-weight: bold; font-size: 11px; border: "
+        "none; border-bottom: 1px solid #1E293B; padding: 6px 8px; }"
+        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; "
+        "padding: 5px 10px; font-size: 12px; }"
         "QLineEdit:focus { border-color: #38BDF8; }"
-        "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
+        "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; "
+        "padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
         "QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }"
         "QPushButton:pressed { background-color: #0B101D; border-color: #0284C7; }"
         "QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; }"
         "QLabel { color: #94A3B8; font-size: 11.5px; }"
-        "QListWidget { background-color: #0B0F19; border: 1px solid #1E293B; border-radius: 0px; padding: 4px; color: #E2E8F0; }"
-        "QListWidget::item { padding: 8px 10px; border-radius: 0px; font-size: 12px; font-weight: 500; margin-bottom: 2px; }"
+        "QListWidget { background-color: #0B0F19; border: 1px solid #1E293B; border-radius: 0px; padding: 4px; color: "
+        "#E2E8F0; }"
+        "QListWidget::item { padding: 8px 10px; border-radius: 0px; font-size: 12px; font-weight: 500; margin-bottom: "
+        "2px; }"
         "QListWidget::item:hover { background-color: #131E35; color: #38BDF8; }"
-        "QListWidget::item:selected { background-color: #141B2D; border: 1px solid rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: bold; }");
+        "QListWidget::item:selected { background-color: #141B2D; border: 1px solid rgba(56, 189, 248, 0.35); color: "
+        "#38BDF8; font-weight: bold; }");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(14, 10, 14, 12);
@@ -158,31 +173,21 @@ void FileManagerWidget::setupUi()
     m_pathEdit = new QLineEdit(this);
     m_pathEdit->setText(m_currentPath);
     m_pathEdit->setClearButtonEnabled(true);
-    connect(
-        m_pathEdit,
-        &QLineEdit::returnPressed,
-        this,
-        [this]()
-        {
-            QString p = m_pathEdit->text().trimmed();
-            if(!p.isEmpty())
-                navigateTo(p);
-        });
+    connect(m_pathEdit, &QLineEdit::returnPressed, this, [this]() {
+        QString p = m_pathEdit->text().trimmed();
+        if (!p.isEmpty())
+            navigateTo(p);
+    });
 
     m_btnCopyPath = new QPushButton(this);
     m_btnCopyPath->setIcon(QIcon(":/svg/copy"));
     m_btnCopyPath->setIconSize(QSize(13, 13));
     m_btnCopyPath->setToolTip("Скопировать путь");
     m_btnCopyPath->setFixedWidth(32);
-    connect(
-        m_btnCopyPath,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            QApplication::clipboard()->setText(m_currentPath);
-            m_statusMsg->setText("Путь скопирован в буфер");
-        });
+    connect(m_btnCopyPath, &QPushButton::clicked, this, [this]() {
+        QApplication::clipboard()->setText(m_currentPath);
+        m_statusMsg->setText("Путь скопирован в буфер");
+    });
 
     m_searchEdit = new QLineEdit(this);
     m_searchEdit->setPlaceholderText("Поиск файлов...");
@@ -235,12 +240,12 @@ void FileManagerWidget::setupUi()
     sidebarLayout->setSpacing(6);
 
     QLabel *sidebarTitle = new QLabel("БЫСТРЫЙ ДОСТУП", sidebarWidget);
-    sidebarTitle->setStyleSheet("color: #94A3B8; font-size: 10px; font-weight: bold; letter-spacing: 0.8px; padding: 2px 4px;");
+    sidebarTitle->setStyleSheet(
+        "color: #94A3B8; font-size: 10px; font-weight: bold; letter-spacing: 0.8px; padding: 2px 4px;");
     sidebarLayout->addWidget(sidebarTitle);
 
     m_quickAccessList = new QListWidget(sidebarWidget);
-    auto addShortcut = [this](const QString &label, const QString &path, const QString &iconPath)
-    {
+    auto addShortcut = [this](const QString &label, const QString &path, const QString &iconPath) {
         QListWidgetItem *it = new QListWidgetItem(QIcon(iconPath), label, m_quickAccessList);
         it->setData(Qt::UserRole, path);
     };
@@ -295,7 +300,9 @@ void FileManagerWidget::setupUi()
 
     QFrame *card = new QFrame(m_inspectorPane);
     card->setObjectName("fmInspectorCard");
-    card->setStyleSheet("QFrame#fmInspectorCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; padding: 8px; }");
+    card->setStyleSheet(
+        "QFrame#fmInspectorCard { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; padding: "
+        "8px; }");
     QVBoxLayout *cardLayout = new QVBoxLayout(card);
     cardLayout->setContentsMargins(10, 10, 10, 10);
     cardLayout->setSpacing(8);
@@ -320,9 +327,13 @@ void FileManagerWidget::setupUi()
     QHBoxLayout *badges = new QHBoxLayout();
     badges->setSpacing(6);
     m_inspTypeBadge = new QLabel("-", card);
-    m_inspTypeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
+    m_inspTypeBadge->setStyleSheet(
+        "background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; "
+        "font-size: 10px; font-weight: 600;");
     m_inspSizeBadge = new QLabel("-", card);
-    m_inspSizeBadge->setStyleSheet("background-color: #1E293B; color: #38BDF8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10px; font-weight: 600;");
+    m_inspSizeBadge->setStyleSheet(
+        "background-color: #1E293B; color: #38BDF8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; "
+        "font-size: 10px; font-weight: 600;");
     badges->addStretch(1);
     badges->addWidget(m_inspTypeBadge);
     badges->addWidget(m_inspSizeBadge);
@@ -340,8 +351,7 @@ void FileManagerWidget::setupUi()
     m_inspPathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     cardLayout->addWidget(m_inspPathLabel);
 
-    auto makeDetailRow = [card, cardLayout](const QString &title, QLabel *&valLabel)
-    {
+    auto makeDetailRow = [card, cardLayout](const QString &title, QLabel *&valLabel) {
         QHBoxLayout *row = new QHBoxLayout();
         row->setSpacing(6);
         QLabel *titleLbl = new QLabel(title, card);
@@ -363,7 +373,8 @@ void FileManagerWidget::setupUi()
     m_btnDownload->setIcon(QIcon(":/svg/download"));
     m_btnDownload->setIconSize(QSize(14, 14));
     m_btnDownload->setStyleSheet(
-        "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 7px; border: none; border-radius: 0px; }"
+        "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 7px; border: none; "
+        "border-radius: 0px; }"
         "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0369A1, stop:1 #38BDF8); }"
         "QPushButton:disabled { background: #1E293B; color: #475569; }");
     connect(m_btnDownload, &QPushButton::clicked, this, &FileManagerWidget::downloadSelected);
@@ -385,7 +396,8 @@ void FileManagerWidget::setupUi()
     m_btnDelete->setIcon(QIcon(":/svg/trash"));
     m_btnDelete->setIconSize(QSize(13, 13));
     m_btnDelete->setStyleSheet(
-        "QPushButton { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); font-weight: bold; padding: 6px; border-radius: 0px; }"
+        "QPushButton { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); "
+        "font-weight: bold; padding: 6px; border-radius: 0px; }"
         "QPushButton:hover { background: rgba(239, 68, 68, 0.25); color: #FFA3A3; border-color: #EF4444; }"
         "QPushButton:disabled { background: #0B101D; color: #475569; border-color: #1E293B; }");
     connect(m_btnDelete, &QPushButton::clicked, this, &FileManagerWidget::deleteSelected);
@@ -430,7 +442,7 @@ QIcon FileManagerWidget::getFileIcon(bool isDir, const QString &fileName)
     QString ext = QFileInfo(fileName).suffix().toLower();
     QString key = isDir ? (fileName == ".." ? "up" : "dir") : (ext.isEmpty() ? "file" : ext);
 
-    if(iconCache.contains(key))
+    if (iconCache.contains(key))
         return iconCache.value(key);
 
     QPixmap pixmap(28, 28);
@@ -439,9 +451,9 @@ QIcon FileManagerWidget::getFileIcon(bool isDir, const QString &fileName)
     p.setRenderHint(QPainter::Antialiasing);
     p.setRenderHint(QPainter::TextAntialiasing);
 
-    if(isDir)
+    if (isDir)
     {
-        if(fileName == "..")
+        if (fileName == "..")
         {
             p.setPen(Qt::NoPen);
             p.setBrush(QColor("#0284C7"));
@@ -466,42 +478,42 @@ QIcon FileManagerWidget::getFileIcon(bool isDir, const QString &fileName)
     {
         QColor badgeBg = QColor("#334155");
         QString badge = "DOC";
-        if(ext == "apk")
+        if (ext == "apk")
         {
             badgeBg = QColor("#059669");
             badge = "APK";
         }
-        else if(ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp")
+        else if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp")
         {
             badgeBg = QColor("#0284C7");
             badge = "IMG";
         }
-        else if(ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov")
+        else if (ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov")
         {
             badgeBg = QColor("#7C3AED");
             badge = "VID";
         }
-        else if(ext == "mp3" || ext == "wav" || ext == "flac" || ext == "ogg")
+        else if (ext == "mp3" || ext == "wav" || ext == "flac" || ext == "ogg")
         {
             badgeBg = QColor("#DB2777");
             badge = "AUD";
         }
-        else if(ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar" || ext == "gz")
+        else if (ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar" || ext == "gz")
         {
             badgeBg = QColor("#D97706");
             badge = "ZIP";
         }
-        else if(ext == "pdf")
+        else if (ext == "pdf")
         {
             badgeBg = QColor("#DC2626");
             badge = "PDF";
         }
-        else if(ext == "txt" || ext == "log" || ext == "md")
+        else if (ext == "txt" || ext == "log" || ext == "md")
         {
             badgeBg = QColor("#475569");
             badge = "TXT";
         }
-        else if(ext == "json" || ext == "xml" || ext == "prop" || ext == "conf")
+        else if (ext == "json" || ext == "xml" || ext == "prop" || ext == "conf")
         {
             badgeBg = QColor("#0891B2");
             badge = "CFG";
@@ -535,31 +547,31 @@ QIcon FileManagerWidget::getFileIcon(bool isDir, const QString &fileName)
 
 QString FileManagerWidget::getFileType(bool isDir, const QString &fileName)
 {
-    if(isDir)
+    if (isDir)
         return (fileName == "..") ? "Родительская папка" : "Папка с файлами";
 
     QString ext = QFileInfo(fileName).suffix().toLower();
-    if(ext == "apk")
+    if (ext == "apk")
         return "Пакет Android (APK)";
-    if(ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp")
+    if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "webp" || ext == "gif" || ext == "bmp")
         return "Изображение " + ext.toUpper();
-    if(ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov")
+    if (ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov")
         return "Видеофайл " + ext.toUpper();
-    if(ext == "mp3" || ext == "wav" || ext == "flac" || ext == "ogg")
+    if (ext == "mp3" || ext == "wav" || ext == "flac" || ext == "ogg")
         return "Аудиозапись " + ext.toUpper();
-    if(ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar" || ext == "gz")
+    if (ext == "zip" || ext == "rar" || ext == "7z" || ext == "tar" || ext == "gz")
         return "Архив " + ext.toUpper();
-    if(ext == "pdf")
+    if (ext == "pdf")
         return "Документ PDF";
-    if(ext == "txt" || ext == "log" || ext == "md")
+    if (ext == "txt" || ext == "log" || ext == "md")
         return "Текстовый документ";
-    if(ext == "json" || ext == "xml")
+    if (ext == "json" || ext == "xml")
         return "Файл разметки (" + ext.toUpper() + ")";
-    if(ext == "sh")
+    if (ext == "sh")
         return "Shell-скрипт";
-    if(ext == "prop")
+    if (ext == "prop")
         return "Свойства Android (build.prop)";
-    if(ext.isEmpty())
+    if (ext.isEmpty())
         return "Файл";
     return "Файл " + ext.toUpper();
 }
@@ -567,10 +579,10 @@ QString FileManagerWidget::getFileType(bool isDir, const QString &fileName)
 void FileManagerWidget::navigateTo(const QString &path)
 {
     QString target = QDir::cleanPath(path.trimmed());
-    if(target.isEmpty())
+    if (target.isEmpty())
         target = "/sdcard";
 
-    if(m_currentPath != target && !m_currentPath.isEmpty())
+    if (m_currentPath != target && !m_currentPath.isEmpty())
     {
         m_historyBack.append(m_currentPath);
         m_historyForward.clear();
@@ -584,7 +596,7 @@ void FileManagerWidget::navigateTo(const QString &path)
 
 void FileManagerWidget::navigateBack()
 {
-    if(m_historyBack.isEmpty())
+    if (m_historyBack.isEmpty())
         return;
 
     m_historyForward.append(m_currentPath);
@@ -596,7 +608,7 @@ void FileManagerWidget::navigateBack()
 
 void FileManagerWidget::navigateForward()
 {
-    if(m_historyForward.isEmpty())
+    if (m_historyForward.isEmpty())
         return;
 
     m_historyBack.append(m_currentPath);
@@ -608,7 +620,7 @@ void FileManagerWidget::navigateForward()
 
 void FileManagerWidget::navigateUp()
 {
-    if(m_currentPath == "/" || m_currentPath.isEmpty())
+    if (m_currentPath == "/" || m_currentPath.isEmpty())
         return;
 
     QString clean = QDir::cleanPath(m_currentPath);
@@ -619,13 +631,13 @@ void FileManagerWidget::navigateUp()
 
 void FileManagerWidget::refreshList()
 {
-    if(m_device.devId.isEmpty() && MainWindow::current && !MainWindow::current->currentAdbDevice().isEmpty())
+    if (m_device.devId.isEmpty() && MainWindow::current && !MainWindow::current->currentAdbDevice().isEmpty())
         setDevice(MainWindow::current->currentAdbDevice());
 
-    if(!m_fileIO.isConnect() && !m_device.devId.isEmpty())
+    if (!m_fileIO.isConnect() && !m_device.devId.isEmpty())
         m_fileIO.connect(m_device.devId);
 
-    if(!m_fileIO.isConnect())
+    if (!m_fileIO.isConnect())
     {
         m_statusMsg->setText("Нет подключения к устройству");
         return;
@@ -638,15 +650,11 @@ void FileManagerWidget::refreshList()
     m_currentItems = m_fileIO.getFileList(m_currentPath);
 
     // Sort: directories first, then files alphabetically
-    std::sort(
-        m_currentItems.begin(),
-        m_currentItems.end(),
-        [](const AdbFileInfo &a, const AdbFileInfo &b)
-        {
-            if(a.isDir != b.isDir)
-                return a.isDir > b.isDir;
-            return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
-        });
+    std::sort(m_currentItems.begin(), m_currentItems.end(), [](const AdbFileInfo &a, const AdbFileInfo &b) {
+        if (a.isDir != b.isDir)
+            return a.isDir > b.isDir;
+        return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+    });
 
     populateTable();
     m_statusMsg->setText("Готово");
@@ -661,7 +669,7 @@ void FileManagerWidget::populateTable()
     int row = 0;
 
     // Show ".." parent entry if not in root
-    if(m_currentPath != "/" && !m_currentPath.isEmpty() && filter.isEmpty())
+    if (m_currentPath != "/" && !m_currentPath.isEmpty() && filter.isEmpty())
     {
         m_table->insertRow(row);
         QTableWidgetItem *itemUp = new QTableWidgetItem(".. [Наверх]");
@@ -693,9 +701,9 @@ void FileManagerWidget::populateTable()
     int fileCount = 0;
     qint64 totalSize = 0;
 
-    for(const AdbFileInfo &info : m_currentItems)
+    for (const AdbFileInfo &info : m_currentItems)
     {
-        if(!filter.isEmpty() && !info.name.contains(filter, Qt::CaseInsensitive))
+        if (!filter.isEmpty() && !info.name.contains(filter, Qt::CaseInsensitive))
             continue;
 
         m_table->insertRow(row);
@@ -727,7 +735,7 @@ void FileManagerWidget::populateTable()
         m_table->setItem(row, 3, dateItem);
         m_table->setItem(row, 4, permItem);
 
-        if(info.isDir)
+        if (info.isDir)
             dirCount++;
         else
         {
@@ -738,7 +746,8 @@ void FileManagerWidget::populateTable()
         row++;
     }
 
-    m_statusSummary->setText(QString("%1 папок  *  %2 файлов  *  %3").arg(dirCount).arg(fileCount).arg(Generic::formatSizes(totalSize)));
+    m_statusSummary->setText(
+        QString("%1 папок  *  %2 файлов  *  %3").arg(dirCount).arg(fileCount).arg(Generic::formatSizes(totalSize)));
     onSelectionChanged();
 }
 
@@ -750,7 +759,7 @@ void FileManagerWidget::onSelectionChanged()
 void FileManagerWidget::updateInspector()
 {
     int row = m_table->currentRow();
-    if(row < 0 || row >= m_table->rowCount())
+    if (row < 0 || row >= m_table->rowCount())
     {
         m_inspIcon->setPixmap(getFileIcon(true, "folder").pixmap(48, 48));
         m_inspName->setText("Объект не выбран");
@@ -769,11 +778,11 @@ void FileManagerWidget::updateInspector()
     }
 
     QTableWidgetItem *item = m_table->item(row, 0);
-    if(!item)
+    if (!item)
         return;
 
     QString name = item->data(Qt::UserRole + 1).toString();
-    if(name == "..")
+    if (name == "..")
     {
         m_inspIcon->setPixmap(getFileIcon(true, "..").pixmap(48, 48));
         m_inspName->setText(".. [На уровень выше]");
@@ -817,15 +826,15 @@ void FileManagerWidget::updateInspector()
 void FileManagerWidget::onItemDoubleClicked(int row, int column)
 {
     Q_UNUSED(column);
-    if(row < 0 || row >= m_table->rowCount())
+    if (row < 0 || row >= m_table->rowCount())
         return;
 
     QTableWidgetItem *item = m_table->item(row, 0);
-    if(!item)
+    if (!item)
         return;
 
     QString name = item->data(Qt::UserRole + 1).toString();
-    if(name == "..")
+    if (name == "..")
     {
         navigateUp();
         return;
@@ -834,7 +843,7 @@ void FileManagerWidget::onItemDoubleClicked(int row, int column)
     bool isDir = item->data(Qt::UserRole).toBool();
     QString fullPath = item->data(Qt::UserRole + 2).toString();
 
-    if(isDir)
+    if (isDir)
     {
         navigateTo(fullPath);
     }
@@ -846,10 +855,10 @@ void FileManagerWidget::onItemDoubleClicked(int row, int column)
 
 void FileManagerWidget::onQuickAccessClicked(QListWidgetItem *item)
 {
-    if(!item)
+    if (!item)
         return;
     QString path = item->data(Qt::UserRole).toString();
-    if(!path.isEmpty())
+    if (!path.isEmpty())
         navigateTo(path);
 }
 
@@ -864,11 +873,12 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
     QTableWidgetItem *item = m_table->itemAt(pos);
     QMenu menu(this);
     menu.setStyleSheet(
-        "QMenu { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: 4px; }"
+        "QMenu { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; padding: "
+        "4px; }"
         "QMenu::item { padding: 6px 24px 6px 12px; border-radius: 0px; font-size: 11.5px; }"
         "QMenu::item:selected { background-color: #131E35; color: #38BDF8; }");
 
-    if(item)
+    if (item)
     {
         int row = item->row();
         m_table->selectRow(row);
@@ -876,15 +886,16 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
         bool isDir = m_table->item(row, 0)->data(Qt::UserRole).toBool();
         QString fullPath = m_table->item(row, 0)->data(Qt::UserRole + 2).toString();
 
-        if(name != "..")
+        if (name != "..")
         {
-            if(!isDir)
+            if (!isDir)
             {
                 menu.addAction(QIcon(":/svg/download"), "Скачать на ПК", this, &FileManagerWidget::downloadSelected);
                 menu.addAction(QIcon(":/svg/eye"), "Быстрый просмотр", this, &FileManagerWidget::previewSelected);
             }
             menu.addAction(QIcon(":/svg/edit"), "Переименовать", this, &FileManagerWidget::renameSelected);
-            menu.addAction(QIcon(":/svg/copy"), "Копировать путь", [fullPath]() { QApplication::clipboard()->setText(fullPath); });
+            menu.addAction(
+                QIcon(":/svg/copy"), "Копировать путь", [fullPath]() { QApplication::clipboard()->setText(fullPath); });
             menu.addSeparator();
             menu.addAction(QIcon(":/svg/trash"), "Удалить", this, &FileManagerWidget::deleteSelected);
             menu.addSeparator();
@@ -901,26 +912,27 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
 void FileManagerWidget::downloadSelected()
 {
     int row = m_table->currentRow();
-    if(row < 0)
+    if (row < 0)
         return;
 
     QTableWidgetItem *item = m_table->item(row, 0);
-    if(!item)
+    if (!item)
         return;
 
     QString fileName = item->data(Qt::UserRole + 1).toString();
     QString remotePath = item->data(Qt::UserRole + 2).toString();
-    if(remotePath.isEmpty() || item->data(Qt::UserRole).toBool())
+    if (remotePath.isEmpty() || item->data(Qt::UserRole).toBool())
         return;
 
-    QString localPath = QFileDialog::getSaveFileName(this, "Сохранить файл на компьютер", QDir::homePath() + "/" + fileName);
-    if(localPath.isEmpty())
+    QString localPath
+        = QFileDialog::getSaveFileName(this, "Сохранить файл на компьютер", QDir::homePath() + "/" + fileName);
+    if (localPath.isEmpty())
         return;
 
     m_statusMsg->setText("Скачивание: " + fileName + "...");
     qApp->processEvents();
 
-    if(m_fileIO.pullFile(remotePath, localPath))
+    if (m_fileIO.pullFile(remotePath, localPath))
     {
         m_statusMsg->setText("Файл сохранён");
         QMessageBox::information(this, "Успешно", "Файл успешно сохранён на компьютер:\n" + localPath);
@@ -935,19 +947,19 @@ void FileManagerWidget::downloadSelected()
 void FileManagerWidget::uploadFile()
 {
     QString localPath = QFileDialog::getOpenFileName(this, "Выберите файл для загрузки на телефон", QDir::homePath());
-    if(localPath.isEmpty())
+    if (localPath.isEmpty())
         return;
 
     QFileInfo fi(localPath);
     QString remoteTarget = m_currentPath;
-    if(!remoteTarget.endsWith('/'))
+    if (!remoteTarget.endsWith('/'))
         remoteTarget += '/';
     remoteTarget += fi.fileName();
 
     m_statusMsg->setText("Загрузка: " + fi.fileName() + "...");
     qApp->processEvents();
 
-    if(m_fileIO.pushFile(localPath, remoteTarget))
+    if (m_fileIO.pushFile(localPath, remoteTarget))
     {
         m_statusMsg->setText("Файл загружен");
         refreshList();
@@ -962,15 +974,15 @@ void FileManagerWidget::uploadFile()
 void FileManagerWidget::previewSelected()
 {
     int row = m_table->currentRow();
-    if(row < 0)
+    if (row < 0)
         return;
 
     QTableWidgetItem *item = m_table->item(row, 0);
-    if(!item)
+    if (!item)
         return;
 
     bool isDir = item->data(Qt::UserRole).toBool();
-    if(isDir)
+    if (isDir)
         return;
 
     QString fileName = item->data(Qt::UserRole + 1).toString();
@@ -988,27 +1000,28 @@ void FileManagerWidget::previewSelected()
 void FileManagerWidget::renameSelected()
 {
     int row = m_table->currentRow();
-    if(row < 0)
+    if (row < 0)
         return;
 
     QTableWidgetItem *item = m_table->item(row, 0);
-    if(!item)
+    if (!item)
         return;
 
     QString oldName = item->data(Qt::UserRole + 1).toString();
-    if(oldName == "..")
+    if (oldName == "..")
         return;
 
     QString oldPath = item->data(Qt::UserRole + 2).toString();
     bool ok = false;
-    QString newName = QInputDialog::getText(this, "Переименование", "Введите новое имя:", QLineEdit::Normal, oldName, &ok);
+    QString newName
+        = QInputDialog::getText(this, "Переименование", "Введите новое имя:", QLineEdit::Normal, oldName, &ok);
 
-    if(!ok || newName.trimmed().isEmpty() || newName.trimmed() == oldName)
+    if (!ok || newName.trimmed().isEmpty() || newName.trimmed() == oldName)
         return;
 
     newName = newName.trimmed();
     QString newPath = m_currentPath;
-    if(!newPath.endsWith('/'))
+    if (!newPath.endsWith('/'))
         newPath += '/';
     newPath += newName;
 
@@ -1016,7 +1029,7 @@ void FileManagerWidget::renameSelected()
     qApp->processEvents();
 
     auto reply = m_fileIO.commandQueueWaits(QString("mv \"%1\" \"%2\"").arg(oldPath, newPath));
-    if(reply.first)
+    if (reply.first)
     {
         m_statusMsg->setText("Переименовано в " + newName);
         refreshList();
@@ -1030,30 +1043,34 @@ void FileManagerWidget::renameSelected()
 void FileManagerWidget::deleteSelected()
 {
     int row = m_table->currentRow();
-    if(row < 0)
+    if (row < 0)
         return;
 
     QTableWidgetItem *item = m_table->item(row, 0);
-    if(!item)
+    if (!item)
         return;
 
     QString name = item->data(Qt::UserRole + 1).toString();
-    if(name == "..")
+    if (name == "..")
         return;
 
     QString fullPath = item->data(Qt::UserRole + 2).toString();
     bool isDir = item->data(Qt::UserRole).toBool();
 
-    auto ans = QMessageBox::question(this, "Удаление", QString("Вы уверены, что хотите удалить %1 \"%2\"?").arg(isDir ? "папку" : "файл", name), QMessageBox::Yes | QMessageBox::No);
+    auto ans = QMessageBox::question(
+        this,
+        "Удаление",
+        QString("Вы уверены, что хотите удалить %1 \"%2\"?").arg(isDir ? "папку" : "файл", name),
+        QMessageBox::Yes | QMessageBox::No);
 
-    if(ans != QMessageBox::Yes)
+    if (ans != QMessageBox::Yes)
         return;
 
     m_statusMsg->setText("Удаление: " + name + "...");
     qApp->processEvents();
 
     bool success = false;
-    if(isDir)
+    if (isDir)
     {
         auto reply = m_fileIO.commandQueueWaits("rm -rf \"" + fullPath + "\"");
         success = reply.first;
@@ -1063,7 +1080,7 @@ void FileManagerWidget::deleteSelected()
         success = m_fileIO.deleteFile(fullPath);
     }
 
-    if(success)
+    if (success)
     {
         m_statusMsg->setText("Удалено: " + name);
         refreshList();
@@ -1078,17 +1095,18 @@ void FileManagerWidget::deleteSelected()
 void FileManagerWidget::createDirectory()
 {
     bool ok = false;
-    QString dirName = QInputDialog::getText(this, "Новая папка", "Введите имя новой папки:", QLineEdit::Normal, "", &ok);
-    if(!ok || dirName.trimmed().isEmpty())
+    QString dirName
+        = QInputDialog::getText(this, "Новая папка", "Введите имя новой папки:", QLineEdit::Normal, "", &ok);
+    if (!ok || dirName.trimmed().isEmpty())
         return;
 
     dirName = dirName.trimmed();
     QString fullTarget = m_currentPath;
-    if(!fullTarget.endsWith('/'))
+    if (!fullTarget.endsWith('/'))
         fullTarget += '/';
     fullTarget += dirName;
 
-    if(m_fileIO.makeDir(fullTarget))
+    if (m_fileIO.makeDir(fullTarget))
     {
         m_statusMsg->setText("Папка создана: " + dirName);
         refreshList();
@@ -1107,51 +1125,52 @@ void FileManagerWidget::resetSession()
     m_historyForward.clear();
     m_currentPath = "/sdcard";
 
-    if(m_table)
+    if (m_table)
     {
         m_table->blockSignals(true);
         m_table->setRowCount(0);
         m_table->blockSignals(false);
     }
 
-    if(m_pathEdit)
+    if (m_pathEdit)
         m_pathEdit->setText("/sdcard");
-    if(m_searchEdit)
+    if (m_searchEdit)
         m_searchEdit->clear();
 
-    if(m_inspIcon)
+    if (m_inspIcon)
         m_inspIcon->clear();
-    if(m_inspName)
+    if (m_inspName)
         m_inspName->setText(QString::fromUtf8("Файл не выбран"));
-    if(m_inspTypeBadge)
+    if (m_inspTypeBadge)
         m_inspTypeBadge->setText("-");
-    if(m_inspSizeBadge)
+    if (m_inspSizeBadge)
         m_inspSizeBadge->setText("-");
-    if(m_inspPathLabel)
+    if (m_inspPathLabel)
         m_inspPathLabel->clear();
-    if(m_inspDateVal)
+    if (m_inspDateVal)
         m_inspDateVal->clear();
-    if(m_inspPermsVal)
+    if (m_inspPermsVal)
         m_inspPermsVal->clear();
 
-    if(m_btnDownload)
+    if (m_btnDownload)
         m_btnDownload->setEnabled(false);
-    if(m_btnPreview)
+    if (m_btnPreview)
         m_btnPreview->setEnabled(false);
-    if(m_btnRename)
+    if (m_btnRename)
         m_btnRename->setEnabled(false);
-    if(m_btnDelete)
+    if (m_btnDelete)
         m_btnDelete->setEnabled(false);
 
-    if(m_statusSummary)
+    if (m_statusSummary)
         m_statusSummary->setText(QString::fromUtf8("0 объектов"));
-    if(m_statusSelected)
+    if (m_statusSelected)
         m_statusSelected->setText(QString::fromUtf8("Ничего не выбрано"));
-    if(m_statusMsg)
+    if (m_statusMsg)
         m_statusMsg->clear();
 }
 
-FileManagerService::FileManagerService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
+FileManagerService::FileManagerService(QObject *parent)
+    : Service(DeviceConnectType::ADB, parent)
 {
     title = "Проводник ADB";
     active = true;
@@ -1170,14 +1189,17 @@ QString FileManagerService::uuid() const
 QString FileManagerService::getInternalData()
 {
     QStringList data {"Current directory = "};
-    auto *widget = MainWindow::current ? static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage)) : nullptr;
-    if(widget)
+    auto *widget = MainWindow::current
+                       ? static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage))
+                       : nullptr;
+    if (widget)
     {
         data[0] += widget->m_currentPath;
         QStringList files;
-        for(const AdbFileInfo &file : widget->m_currentItems)
+        for (const AdbFileInfo &file : widget->m_currentItems)
         {
-            if(widget->m_searchEdit->text().trimmed().isEmpty() || file.name.contains(widget->m_searchEdit->text().trimmed(), Qt::CaseInsensitive))
+            if (widget->m_searchEdit->text().trimmed().isEmpty()
+                || file.name.contains(widget->m_searchEdit->text().trimmed(), Qt::CaseInsensitive))
                 files << file.name;
         }
         data << "Files = " + files.join('\t');
@@ -1213,16 +1235,16 @@ bool FileManagerService::isFinish()
 bool FileManagerService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
             widget->setDevice(mAdbDevice);
@@ -1238,10 +1260,10 @@ void FileManagerService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<FileManagerWidget *>(MainWindow::current->pageWidget(FileManagerPage));
-        if(widget)
+        if (widget)
             widget->resetSession();
     }
 }

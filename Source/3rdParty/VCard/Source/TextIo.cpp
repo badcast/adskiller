@@ -33,19 +33,19 @@ std::istream *safeGetline(std::istream *is, std::string &t)
     std::istream::sentry se(*is, true);
     std::streambuf *sb = is->rdbuf();
 
-    for(;;)
+    for (;;)
     {
         int c = sb->sbumpc();
-        switch(c)
+        switch (c)
         {
             case '\n':
                 return is;
             case '\r':
-                if(sb->sgetc() == '\n')
+                if (sb->sgetc() == '\n')
                 {
                     sb->sbumpc();
                     // special case for vCard folding lines
-                    if(sb->sgetc() == ' ' || sb->sgetc() == '\t' || sb->sgetc() == '=' || sb->sgetc() == ';')
+                    if (sb->sgetc() == ' ' || sb->sgetc() == '\t' || sb->sgetc() == '=' || sb->sgetc() == ';')
                     {
                         sb->sbumpc();
                         continue;
@@ -55,7 +55,7 @@ std::istream *safeGetline(std::istream *is, std::string &t)
                 return is;
             case std::streambuf::traits_type::eof():
                 // Also handle the case when the last line has no line ending
-                if(t.empty())
+                if (t.empty())
                     is->setstate(std::ios::eofbit);
                 return is;
             default:
@@ -68,10 +68,10 @@ vCardParamMap TextReader::parseParams(std::string input)
 {
     vCardParamMap params;
     int i = 0, start_pos = 0;
-    while(i < input.size())
+    while (i < input.size())
     {
         // get params name
-        while(input[i] != '=' && i < input.size())
+        while (input[i] != '=' && i < input.size())
             i++;
 
         std::string name = input.substr(start_pos, i - start_pos);
@@ -79,18 +79,18 @@ vCardParamMap TextReader::parseParams(std::string input)
         start_pos = i;
 
         // get params values
-        while(true)
+        while (true)
         {
-            while(i < input.size() && input[i] != ';' && input[i] != ',')
+            while (i < input.size() && input[i] != ';' && input[i] != ',')
             {
-                if(input[i] == '\"')
+                if (input[i] == '\"')
                 {        // read everything inside ""
                     i++; // skip first '"'
                     start_pos = i;
-                    while(input[i] != '\"' && i < input.size())
+                    while (input[i] != '\"' && i < input.size())
                         i++;
 
-                    if(i >= input.size())
+                    if (i >= input.size())
                         throw std::runtime_error("Parsing error: not closed DQUOTE");
 
                     break;
@@ -104,21 +104,21 @@ vCardParamMap TextReader::parseParams(std::string input)
             std::string value = input.substr(start_pos, i - start_pos);
 
             std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return std::toupper(c); });
-            if(name == "TYPE" || name == "SORT-AS")
+            if (name == "TYPE" || name == "SORT-AS")
             {
                 std::vector<std::string> p = split(value, ',');
-                for(auto &s : p)
+                for (auto &s : p)
                     params.addParam(name, s);
             }
             else
                 params.addParam(name, value);
 
-            if(input[i] == '\"')
+            if (input[i] == '\"')
                 i++; // skip last '"'
             i++;     // skip ';' or ','
             start_pos = i;
 
-            if(input[i - 1] == ';' || i >= input.size())
+            if (input[i - 1] == ';' || i >= input.size())
                 break;
         }
     }
@@ -131,32 +131,32 @@ vCardProperty TextReader::parseProperty(std::string line)
     // find first nonquoted ':', first ';' and first '.'
     int i = 0, colon_pos = -1, first_semicln_pos = -1, first_point_pos = -1;
     bool quoted = false;
-    while(i < line.size())
+    while (i < line.size())
     {
-        if(line[i] == VC_ASSIGNMENT_TOKEN && !quoted)
+        if (line[i] == VC_ASSIGNMENT_TOKEN && !quoted)
             break;
 
-        if(line[i] == ';' && first_semicln_pos < 0) // first ';' could not be quoted
+        if (line[i] == ';' && first_semicln_pos < 0) // first ';' could not be quoted
             first_semicln_pos = i;
 
-        if(line[i] == '.' && first_point_pos < 0)
+        if (line[i] == '.' && first_point_pos < 0)
             first_point_pos = i;
 
-        if(line[i] == '\"')
+        if (line[i] == '\"')
             quoted = !quoted;
 
         i++;
     }
 
     colon_pos = i;
-    if(colon_pos == line.size())
+    if (colon_pos == line.size())
         throw std::runtime_error("Error parsing property, no ':' found");
 
     std::string group, name;
     vCardParamMap params;
-    if(first_semicln_pos > 0 && first_semicln_pos < colon_pos)
+    if (first_semicln_pos > 0 && first_semicln_pos < colon_pos)
     { // we have parameters in property
-        if(first_point_pos > 0 && first_point_pos < first_semicln_pos)
+        if (first_point_pos > 0 && first_point_pos < first_semicln_pos)
         {
             group = line.substr(0, first_point_pos);
             name = line.substr(first_point_pos + 1, first_semicln_pos - first_point_pos - 1);
@@ -166,20 +166,20 @@ vCardProperty TextReader::parseProperty(std::string line)
             name = line.substr(0, first_semicln_pos);
         }
 
-        if(name != VC_VERSION)
+        if (name != VC_VERSION)
         {
             std::string params_string = line.substr(first_semicln_pos + 1, colon_pos - first_semicln_pos - 1);
             // Issue: Fix error on CELL or other single type.
-            if(params_string.find("=") == std::string::npos)
+            if (params_string.find("=") == std::string::npos)
             {
                 constexpr auto TYPE_STR = "TYPE=";
                 std::string validate {};
                 i = 0;
                 first_semicln_pos = 0;
                 params_string += ';';
-                while(i < params_string.length())
+                while (i < params_string.length())
                 {
-                    if(params_string[i] == ';')
+                    if (params_string[i] == ';')
                     {
                         validate += TYPE_STR;
                         validate += params_string.substr(first_semicln_pos, i - first_semicln_pos);
@@ -197,7 +197,7 @@ vCardProperty TextReader::parseProperty(std::string line)
     }
     else
     { // we do not have parameters
-        if(first_point_pos > 0 && first_point_pos < colon_pos)
+        if (first_point_pos > 0 && first_point_pos < colon_pos)
         {
             group = line.substr(0, first_point_pos);
             name = line.substr(first_point_pos + 1, colon_pos - first_point_pos);
@@ -221,13 +221,13 @@ std::vector<vCard> TextReader::parseCards()
     bool started = false;
     bool trySkipContent = false;
     std::string line;
-    while(!safeGetline(m_is, line)->eof())
+    while (!safeGetline(m_is, line)->eof())
     {
-        if((line == VC_BEGIN_TOKEN) && !started)
+        if ((line == VC_BEGIN_TOKEN) && !started)
         {
             started = true;
         }
-        else if((line == VC_END_TOKEN) && started)
+        else if ((line == VC_END_TOKEN) && started)
         {
             vcards.push_back(current);
             trySkipContent = false;
@@ -235,30 +235,31 @@ std::vector<vCard> TextReader::parseCards()
             // Empty the current card
             current = vCard();
         }
-        else if((line.find("VERSION") != std::string::npos) && started)
+        else if ((line.find("VERSION") != std::string::npos) && started)
         {
             size_t pos = line.find(":");
-            if(pos != std::string::npos)
+            if (pos != std::string::npos)
             {
                 std::string version = line.substr(pos + 1);
                 trim(version);
-                if(version == "3.0")
+                if (version == "3.0")
                     current.setVersion(VC_VER_3_0);
-                if(version == "2.1")
+                if (version == "2.1")
                     current.setVersion(VC_VER_2_1);
             }
 
             continue;
         }
-        else if(started)
+        else if (started)
         {
             // Check data (PHOTO), (SOUND)
-            if(line.find("X-CUSTOM") != std::string::npos || line.find("PHOTO") != std::string::npos || line.find("SOUND") != std::string::npos)
+            if (line.find("X-CUSTOM") != std::string::npos || line.find("PHOTO") != std::string::npos
+                || line.find("SOUND") != std::string::npos)
             {
                 trySkipContent = true;
                 continue;
             }
-            if(line.empty() || trySkipContent && line.at(0) == ' ')
+            if (line.empty() || trySkipContent && line.at(0) == ' ')
             {
                 continue;
             }
@@ -267,7 +268,7 @@ std::vector<vCard> TextReader::parseCards()
                 vCardProperty prop = TextReader::parseProperty(line);
                 current.addProperty(prop);
             }
-            catch(std::exception)
+            catch (std::exception)
             {
                 continue;
             }
@@ -296,7 +297,7 @@ TextWriter &TextWriter::operator<<(vCard &vCard)
     *m_os << VC_BEGIN_TOKEN << VC_END_LINE_TOKEN;
     *m_os << "VERSION:" << vCard.getVersionStr() << VC_END_LINE_TOKEN;
 
-    for(auto it = vCard.properties().begin(); it != vCard.properties().end(); ++it)
+    for (auto it = vCard.properties().begin(); it != vCard.properties().end(); ++it)
     {
         // TODO make line folding (split lines with length > 75)
         *this << *it;
@@ -309,7 +310,7 @@ TextWriter &TextWriter::operator<<(vCard &vCard)
 
 TextWriter &TextWriter::operator<<(std::vector<vCard> &cards)
 {
-    for(auto card : cards)
+    for (auto card : cards)
     {
         *this << card;
     }
@@ -319,12 +320,12 @@ TextWriter &TextWriter::operator<<(std::vector<vCard> &cards)
 
 TextWriter &TextWriter::operator<<(vCardProperty &p)
 {
-    if(!p.getGroup().empty())
+    if (!p.getGroup().empty())
         *m_os << p.getGroup() << '.';
 
     *m_os << p.getName();
 
-    if(p.params().size() > 0)
+    if (p.params().size() > 0)
     {
         *m_os << ';';
         *this << p.params();
@@ -333,13 +334,13 @@ TextWriter &TextWriter::operator<<(vCardProperty &p)
     *m_os << ':';
 
     auto it = p.values().begin();
-    while(it != p.values().end())
+    while (it != p.values().end())
     {
         *m_os << *it;
 
         it++;
 
-        if(it != p.values().end())
+        if (it != p.values().end())
             *m_os << ";";
     }
 
@@ -349,17 +350,17 @@ TextWriter &TextWriter::operator<<(vCardProperty &p)
 TextWriter &TextWriter::operator<<(vCardParamMap &p)
 {
     auto it = p.begin();
-    while(it != p.end())
+    while (it != p.end())
     {
         *m_os << it->first << "=";
         size_t found = it->second.find_first_of(":;,");
-        if(found == std::string::npos)
+        if (found == std::string::npos)
             *m_os << it->second;
         else
             *m_os << "\"" << it->second << "\"";
 
         it++;
-        if(it != p.end())
+        if (it != p.end())
             *m_os << ";";
     }
 

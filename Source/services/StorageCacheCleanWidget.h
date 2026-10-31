@@ -75,7 +75,8 @@ public:
 private slots:
     void onStartClicked();
     void onStopClicked();
-    void onWorkerProgress(int percent, const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusMsg);
+    void onWorkerProgress(
+        int percent, const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusMsg);
     void onWorkerLog(const QString &message, int level);
     void onWorkerStatsUpdated(qint64 cacheBytes, int thumbnailsCount, qint64 thumbnailsBytes, int stoppedApps);
     void onWorkerFinished(bool success, const QString &summary);

@@ -29,54 +29,55 @@
 namespace
 {
 
-    class PixelBlastFrame : public QFrame
+class PixelBlastFrame : public QFrame
+{
+public:
+    explicit PixelBlastFrame(QWidget *parent = nullptr)
+        : QFrame(parent)
     {
-    public:
-        explicit PixelBlastFrame(QWidget *parent = nullptr) : QFrame(parent)
-        {
-            setAttribute(Qt::WA_StyledBackground, true);
-        }
+        setAttribute(Qt::WA_StyledBackground, true);
+    }
 
-    protected:
-        void paintEvent(QPaintEvent *event) override
-        {
-            QFrame::paintEvent(event);
+protected:
+    void paintEvent(QPaintEvent *event) override
+    {
+        QFrame::paintEvent(event);
 
-            QPainter p(this);
-            p.setRenderHint(QPainter::Antialiasing, false);
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing, false);
 
-            const int w = width();
-            const int h = height();
-            const int bLen = 14;
+        const int w = width();
+        const int h = height();
+        const int bLen = 14;
 
-            // AdsKiller signature cyber sci-fi corner bracket accents
-            p.setPen(QPen(QColor(56, 189, 248, 220), 1.5));
+        // AdsKiller signature cyber sci-fi corner bracket accents
+        p.setPen(QPen(QColor(56, 189, 248, 220), 1.5));
 
-            // Top-left
-            p.drawLine(0, 0, bLen, 0);
-            p.drawLine(0, 0, 0, bLen);
+        // Top-left
+        p.drawLine(0, 0, bLen, 0);
+        p.drawLine(0, 0, 0, bLen);
 
-            // Top-right
-            p.drawLine(w - bLen, 0, w - 1, 0);
-            p.drawLine(w - 1, 0, w - 1, bLen);
+        // Top-right
+        p.drawLine(w - bLen, 0, w - 1, 0);
+        p.drawLine(w - 1, 0, w - 1, bLen);
 
-            // Bottom-left
-            p.drawLine(0, h - 1, bLen, h - 1);
-            p.drawLine(0, h - bLen, 0, h - 1);
+        // Bottom-left
+        p.drawLine(0, h - 1, bLen, h - 1);
+        p.drawLine(0, h - bLen, 0, h - 1);
 
-            // Bottom-right
-            p.drawLine(w - bLen, h - 1, w - 1, h - 1);
-            p.drawLine(w - 1, h - bLen, w - 1, h - 1);
+        // Bottom-right
+        p.drawLine(w - bLen, h - 1, w - 1, h - 1);
+        p.drawLine(w - 1, h - bLen, w - 1, h - 1);
 
-            // Top cyan neon glow border line
-            QLinearGradient topGlow(0, 0, w, 0);
-            topGlow.setColorAt(0.0, QColor(56, 189, 248, 0));
-            topGlow.setColorAt(0.5, QColor(56, 189, 248, 180));
-            topGlow.setColorAt(1.0, QColor(56, 189, 248, 0));
-            p.setPen(QPen(QBrush(topGlow), 1));
-            p.drawLine(bLen + 2, 0, w - bLen - 2, 0);
-        }
-    };
+        // Top cyan neon glow border line
+        QLinearGradient topGlow(0, 0, w, 0);
+        topGlow.setColorAt(0.0, QColor(56, 189, 248, 0));
+        topGlow.setColorAt(0.5, QColor(56, 189, 248, 180));
+        topGlow.setColorAt(1.0, QColor(56, 189, 248, 0));
+        p.setPen(QPen(QBrush(topGlow), 1));
+        p.drawLine(bLen + 2, 0, w - bLen - 2, 0);
+    }
+};
 
 } // namespace
 
@@ -127,13 +128,15 @@ private:
     bool mFinished = false;
 };
 
-PBGInternal::PBGInternal(PixelBlastGameService *service, QWidget *parent) : QWidget(parent), mService(service)
+PBGInternal::PBGInternal(PixelBlastGameService *service, QWidget *parent)
+    : QWidget(parent)
+    , mService(service)
 {
     setObjectName("PBGInternalOverlay");
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("QWidget#PBGInternalOverlay { background-color: rgba(7, 10, 18, 0.92); }");
 
-    if(parent)
+    if (parent)
     {
         parent->installEventFilter(this);
         setGeometry(parent->rect());
@@ -149,15 +152,15 @@ PBGInternal::PBGInternal(PixelBlastGameService *service, QWidget *parent) : QWid
 
 PBGInternal::~PBGInternal()
 {
-    if(parent())
+    if (parent())
     {
         parent()->removeEventFilter(this);
     }
-    if(mScoreTimer)
+    if (mScoreTimer)
     {
         mScoreTimer->stop();
     }
-    if(mGame)
+    if (mGame)
     {
         mGame->stopGame();
     }
@@ -215,8 +218,10 @@ void PBGInternal::setupUi()
     titleLabel->setText(
         QString::fromUtf8(
             "<div style='line-height: 110%;'>"
-            "<span style='color: #38BDF8; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: 0.8px;'>PIXEL BLAST GAME</span><br/>"
-            "<span style='color: #64748B; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.5px;'>by badcast</span>"
+            "<span style='color: #38BDF8; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-weight: "
+            "800; font-size: 12.5px; letter-spacing: 0.8px;'>PIXEL BLAST GAME</span><br/>"
+            "<span style='color: #64748B; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-size: "
+            "9px; font-weight: 600; letter-spacing: 0.5px;'>by badcast</span>"
             "</div>"));
     titleLabel->setStyleSheet("background: transparent; border: none;");
     topLayout->addWidget(titleLabel);
@@ -229,7 +234,8 @@ void PBGInternal::setupUi()
     mHighScoreLabel->setText(
         QString::fromUtf8(
             "<span style='color: #FBBF24; font-size: 9.5px; font-weight: bold;'>🏆 РЕКОРД</span> "
-            "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 13px; font-weight: bold;'>%1</span>")
+            "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 13px; "
+            "font-weight: bold;'>%1</span>")
             .arg(mHighScore));
     mHighScoreLabel->setStyleSheet(
         "QLabel {"
@@ -246,7 +252,8 @@ void PBGInternal::setupUi()
     mScoresLabel->setText(
         QString::fromUtf8(
             "<span style='color: #38BDF8; font-size: 9.5px; font-weight: bold;'>⚡ СЧЁТ</span> "
-            "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 13px; font-weight: bold;'>0</span>"));
+            "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 13px; "
+            "font-weight: bold;'>0</span>"));
     mScoresLabel->setStyleSheet(
         "QLabel {"
         "  background-color: rgba(56, 189, 248, 0.08);"
@@ -350,10 +357,17 @@ void PBGInternal::setupUi()
     tipLabel->setTextFormat(Qt::RichText);
     tipLabel->setText(
         QString::fromUtf8(
-            "<span style='color: #64748B; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.5px;'>УПРАВЛЕНИЕ:</span> &nbsp;"
-            "<span style='color: #38BDF8; border: 1px solid #334155; padding: 2px 6px; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 9.5px; font-weight: bold;'>ЛКМ</span> <span style='color: #94A3B8; font-size: 10.5px;'>Блоки на поле</span> &nbsp;|&nbsp; "
-            "<span style='color: #F59E0B; border: 1px solid #334155; padding: 2px 6px; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 9.5px; font-weight: bold;'>ПКМ</span> <span style='color: #94A3B8; font-size: 10.5px;'>Сброс выбора</span> &nbsp;|&nbsp; "
-            "<span style='color: #EF4444; border: 1px solid #334155; padding: 2px 6px; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 9.5px; font-weight: bold;'>ESC</span> <span style='color: #94A3B8; font-size: 10.5px;'>Закрыть оверлей</span>"));
+            "<span style='color: #64748B; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-size: "
+            "10px; font-weight: 600; letter-spacing: 0.5px;'>УПРАВЛЕНИЕ:</span> &nbsp;"
+            "<span style='color: #38BDF8; border: 1px solid #334155; padding: 2px 6px; font-family: \"Cascadia Code\", "
+            "Consolas, monospace; font-size: 9.5px; font-weight: bold;'>ЛКМ</span> <span style='color: #94A3B8; "
+            "font-size: 10.5px;'>Блоки на поле</span> &nbsp;|&nbsp; "
+            "<span style='color: #F59E0B; border: 1px solid #334155; padding: 2px 6px; font-family: \"Cascadia Code\", "
+            "Consolas, monospace; font-size: 9.5px; font-weight: bold;'>ПКМ</span> <span style='color: #94A3B8; "
+            "font-size: 10.5px;'>Сброс выбора</span> &nbsp;|&nbsp; "
+            "<span style='color: #EF4444; border: 1px solid #334155; padding: 2px 6px; font-family: \"Cascadia Code\", "
+            "Consolas, monospace; font-size: 9.5px; font-weight: bold;'>ESC</span> <span style='color: #94A3B8; "
+            "font-size: 10.5px;'>Закрыть оверлей</span>"));
     tipLabel->setStyleSheet("background: transparent; border: none;");
     tipLabel->setAlignment(Qt::AlignCenter);
     footerLayout->addWidget(tipLabel, 1, Qt::AlignCenter);
@@ -368,10 +382,10 @@ void PBGInternal::setupUi()
 
 void PBGInternal::showEvent(QShowEvent *event)
 {
-    if(parentWidget())
+    if (parentWidget())
     {
         setGeometry(parentWidget()->rect());
-        if(mArcadeCard)
+        if (mArcadeCard)
         {
             const int targetW = qMin(640, parentWidget()->width() - 24);
             const int targetH = qBound(420, parentWidget()->height() - 20, 750);
@@ -380,28 +394,24 @@ void PBGInternal::showEvent(QShowEvent *event)
     }
     raise();
     setFocus();
-    if(mGame)
+    if (mGame)
     {
         mGame->setFocus();
-        if(!mGame->isPlaying())
+        if (!mGame->isPlaying())
         {
             mGame->startGame();
         }
     }
-    if(mScrollArea)
+    if (mScrollArea)
     {
-        QTimer::singleShot(
-            50,
-            this,
-            [this]()
+        QTimer::singleShot(50, this, [this]() {
+            if (mScrollArea->verticalScrollBar())
             {
-                if(mScrollArea->verticalScrollBar())
-                {
-                    mScrollArea->verticalScrollBar()->setValue(mScrollArea->verticalScrollBar()->maximum());
-                }
-            });
+                mScrollArea->verticalScrollBar()->setValue(mScrollArea->verticalScrollBar()->maximum());
+            }
+        });
     }
-    if(mScoreTimer && !mScoreTimer->isActive())
+    if (mScoreTimer && !mScoreTimer->isActive())
     {
         mScoreTimer->start(100);
     }
@@ -410,11 +420,11 @@ void PBGInternal::showEvent(QShowEvent *event)
 
 void PBGInternal::hideEvent(QHideEvent *event)
 {
-    if(mScoreTimer)
+    if (mScoreTimer)
     {
         mScoreTimer->stop();
     }
-    if(mGame)
+    if (mGame)
     {
         mGame->stopGame();
     }
@@ -423,7 +433,7 @@ void PBGInternal::hideEvent(QHideEvent *event)
 
 void PBGInternal::keyPressEvent(QKeyEvent *event)
 {
-    if(event->key() == Qt::Key_Escape)
+    if (event->key() == Qt::Key_Escape)
     {
         onExitClicked();
         return;
@@ -439,12 +449,12 @@ void PBGInternal::mousePressEvent(QMouseEvent *event)
 
 bool PBGInternal::eventFilter(QObject *obj, QEvent *ev)
 {
-    if(obj == parent() && ev->type() == QEvent::Resize)
+    if (obj == parent() && ev->type() == QEvent::Resize)
     {
-        if(parentWidget())
+        if (parentWidget())
         {
             setGeometry(parentWidget()->rect());
-            if(mArcadeCard)
+            if (mArcadeCard)
             {
                 const int targetW = qMin(640, parentWidget()->width() - 24);
                 const int targetH = qBound(420, parentWidget()->height() - 20, 750);
@@ -458,28 +468,30 @@ bool PBGInternal::eventFilter(QObject *obj, QEvent *ev)
 
 void PBGInternal::updateScores()
 {
-    if(!mGame)
+    if (!mGame)
         return;
 
     int currentScore = mGame->getScores();
-    if(mScoresLabel)
+    if (mScoresLabel)
     {
         mScoresLabel->setText(
             QString::fromUtf8(
                 "<span style='color: #38BDF8; font-size: 9.5px; font-weight: bold;'>⚡ СЧЁТ</span> "
-                "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 13.5px; font-weight: bold;'>%1</span>")
+                "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 13.5px; "
+                "font-weight: bold;'>%1</span>")
                 .arg(currentScore));
     }
 
-    if(currentScore > mHighScore)
+    if (currentScore > mHighScore)
     {
         mHighScore = currentScore;
-        if(mHighScoreLabel)
+        if (mHighScoreLabel)
         {
             mHighScoreLabel->setText(
                 QString::fromUtf8(
                     "<span style='color: #FBBF24; font-size: 9.5px; font-weight: bold;'>🏆 РЕКОРД</span> "
-                    "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: 12.5px; font-weight: bold;'>%1</span>")
+                    "<span style='color: #FFFFFF; font-family: \"Cascadia Code\", Consolas, monospace; font-size: "
+                    "12.5px; font-weight: bold;'>%1</span>")
                     .arg(mHighScore));
         }
         AppSetting::pixelBlastHighScore(nullptr, mHighScore);
@@ -494,13 +506,15 @@ void PBGInternal::onGameOver()
     bool isRecord = (finalScore > 0 && finalScore >= mHighScore);
 
     QString msg;
-    if(isRecord)
+    if (isRecord)
     {
         msg = QString::fromUtf8("Поздравляем! Новый рекорд: %1 очков!\n\nХотите сыграть ещё раз?").arg(finalScore);
     }
     else
     {
-        msg = QString::fromUtf8("Игра окончена!\nВаш результат: %1 очков (Рекорд: %2).\n\nХотите сыграть ещё раз?").arg(finalScore).arg(mHighScore);
+        msg = QString::fromUtf8("Игра окончена!\nВаш результат: %1 очков (Рекорд: %2).\n\nХотите сыграть ещё раз?")
+                  .arg(finalScore)
+                  .arg(mHighScore);
     }
 
     QMessageBox box(this);
@@ -561,7 +575,7 @@ void PBGInternal::onGameOver()
 
     box.exec();
 
-    if(box.clickedButton() == btnRestart)
+    if (box.clickedButton() == btnRestart)
     {
         onRestartClicked();
     }
@@ -573,7 +587,7 @@ void PBGInternal::onGameOver()
 
 void PBGInternal::onRestartClicked()
 {
-    if(mGame)
+    if (mGame)
     {
         mGame->resetGame();
         mGame->startGame();
@@ -583,7 +597,7 @@ void PBGInternal::onRestartClicked()
 
 void PBGInternal::onExitClicked()
 {
-    if(mService)
+    if (mService)
     {
         mService->stop();
     }
@@ -593,7 +607,9 @@ void PBGInternal::onExitClicked()
 // PixelBlastGameService Implementation
 // ============================================================================
 
-PixelBlastGameService::PixelBlastGameService(QObject *parent) : Service(DeviceConnectType::None, parent), mInternal(nullptr)
+PixelBlastGameService::PixelBlastGameService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
+    , mInternal(nullptr)
 {
     title = QString::fromUtf8("Pixel Blast");
     m_sortScore = 120;
@@ -612,7 +628,9 @@ QString PixelBlastGameService::uuid() const
 
 QString PixelBlastGameService::getInternalData()
 {
-    return Service::getInternalData() + ":Game = PixelBlast currentScore = " + QString::number(mInternal && mInternal->game() ? mInternal->game()->getScores() : 0) + ", highScore = " + QString::number(AppSetting::pixelBlastHighScore());
+    return Service::getInternalData() + ":Game = PixelBlast currentScore = "
+           + QString::number(mInternal && mInternal->game() ? mInternal->game()->getScores() : 0)
+           + ", highScore = " + QString::number(AppSetting::pixelBlastHighScore());
 }
 
 PageIndex PixelBlastGameService::targetPage()
@@ -638,22 +656,22 @@ bool PixelBlastGameService::isFinish()
 bool PixelBlastGameService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
-    if(!mInternal)
+    if (!mInternal)
     {
         QWidget *parentWidget = MainWindow::current;
         mInternal = new PBGInternal(this, parentWidget);
     }
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         mInternal->setGeometry(MainWindow::current->rect());
     }
     mInternal->show();
     mInternal->raise();
-    if(mInternal->game())
+    if (mInternal->game())
     {
         mInternal->game()->startGame();
     }
@@ -663,7 +681,7 @@ bool PixelBlastGameService::start()
 
 void PixelBlastGameService::stop()
 {
-    if(!mInternal)
+    if (!mInternal)
         return;
 
     PBGInternal *internal = mInternal;

@@ -32,9 +32,12 @@ struct CountryCode
 
     CountryCode() = default;
     CountryCode(const CountryCode &) = default;
-    CountryCode(CountryCode &&other) : codes(std::move(other.codes)), country(std::move(other.country)), dialcode(std::move(other.dialcode)), localCode(std::move(other.localCode))
-    {
-    }
+    CountryCode(CountryCode &&other)
+        : codes(std::move(other.codes))
+        , country(std::move(other.country))
+        , dialcode(std::move(other.dialcode))
+        , localCode(std::move(other.localCode))
+    {}
 
     CountryCode &operator=(const CountryCode &other)
     {

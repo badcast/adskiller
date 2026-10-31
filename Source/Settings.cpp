@@ -15,16 +15,16 @@ inline QVariant GenericValue(const QString &key, bool *contains, const QVariant 
 {
     QVariant retval;
     bool ret;
-    if(set.isValid())
+    if (set.isValid())
     {
         AppSetting::writeValue(key, set);
-        if(contains != nullptr)
+        if (contains != nullptr)
             (*contains) = true;
     }
     else
     {
         ret = AppSetting::readValue(key, &retval);
-        if(contains != nullptr)
+        if (contains != nullptr)
             (*contains) = ret;
     }
     return retval;
@@ -32,7 +32,7 @@ inline QVariant GenericValue(const QString &key, bool *contains, const QVariant 
 
 void AppSetting::save()
 {
-    if(settings)
+    if (settings)
         settings->sync();
 }
 
@@ -43,59 +43,59 @@ void AppSetting::sync()
 
 void AppSetting::load()
 {
-    if(settings != nullptr)
+    if (settings != nullptr)
         return;
     settings = std::make_shared<QSettings>(QString("imister.kz-app.ads"), QString("AdsKiller"));
 }
 
 std::shared_ptr<QSettings> AppSetting::raw()
 {
-    if(!settings)
+    if (!settings)
         load();
     return settings;
 }
 
 bool AppSetting::contains(const QString &key)
 {
-    if(!settings)
+    if (!settings)
         load();
     return settings->contains(key);
 }
 
 QVariant AppSetting::value(const QString &key, const QVariant &defaultValue)
 {
-    if(!settings)
+    if (!settings)
         load();
     return settings->value(key, defaultValue);
 }
 
 void AppSetting::setValue(const QString &key, const QVariant &value)
 {
-    if(!settings)
+    if (!settings)
         load();
     settings->setValue(key, value);
 }
 
 bool AppSetting::readValue(const QString &key, QVariant *value)
 {
-    if(!settings)
+    if (!settings)
         load();
     bool retval = settings->contains(key);
-    if(retval && value != nullptr)
+    if (retval && value != nullptr)
         (*value) = settings->value(key);
     return retval;
 }
 
 void AppSetting::writeValue(const QString &key, const QVariant &value)
 {
-    if(!settings)
+    if (!settings)
         load();
     settings->setValue(key, value);
 }
 
 void AppSetting::removeKey(const QString &key)
 {
-    if(!settings)
+    if (!settings)
         load();
     settings->remove(key);
 }
@@ -109,12 +109,12 @@ std::tuple<QString, QString> AppSetting::loginAndPass(bool *contains, const QVar
 {
     QString lg, ps;
     QVariant retval;
-    if(!settings)
+    if (!settings)
         load();
     retval = GenericValue(ParamLogin, contains, login);
     lg = retval.toString();
 
-    if(pass.isValid())
+    if (pass.isValid())
         retval = CipherAlgoCrypto::PackDC(pass.toByteArray(), CipherAlgoCrypto::RandomKey());
     else
         retval = {};
@@ -125,7 +125,7 @@ std::tuple<QString, QString> AppSetting::loginAndPass(bool *contains, const QVar
 
 bool AppSetting::autoLogin(bool *contains, const QVariant &set)
 {
-    if(!settings)
+    if (!settings)
         load();
     QVariant retval;
     retval = GenericValue(ParamAutoLogin, contains, set);
@@ -134,7 +134,7 @@ bool AppSetting::autoLogin(bool *contains, const QVariant &set)
 
 int AppSetting::themeIndex(bool *contains, const QVariant &set)
 {
-    if(!settings)
+    if (!settings)
         load();
     QVariant retval;
     retval = GenericValue(ParamThemeIndex, contains, set);
@@ -143,7 +143,7 @@ int AppSetting::themeIndex(bool *contains, const QVariant &set)
 
 int AppSetting::networkTimeout(bool *contains, const QVariant &set)
 {
-    if(!settings)
+    if (!settings)
         load();
     QVariant retval;
     // REMOVE OLD Params
@@ -154,7 +154,7 @@ int AppSetting::networkTimeout(bool *contains, const QVariant &set)
 
 bool AppSetting::analyticsEnabled(bool *contains, const QVariant &set)
 {
-    if(!settings)
+    if (!settings)
         load();
     QVariant retval;
     retval = GenericValue(ParamAnalyticsEnabled, contains, set);
@@ -163,7 +163,7 @@ bool AppSetting::analyticsEnabled(bool *contains, const QVariant &set)
 
 int AppSetting::pixelBlastHighScore(bool *contains, const QVariant &set)
 {
-    if(!settings)
+    if (!settings)
         load();
     QVariant retval;
     retval = GenericValue(ParamPixelBlastHighScore, contains, set);

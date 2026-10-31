@@ -10,7 +10,9 @@
 #include <numeric>
 #include <QRandomGenerator>
 
-RandomBlockProgress::RandomBlockProgress(QWidget *parent) : QWidget(parent), m_value(0)
+RandomBlockProgress::RandomBlockProgress(QWidget *parent)
+    : QWidget(parent)
+    , m_value(0)
 {
     setFixedSize(120, 120);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -24,11 +26,11 @@ RandomBlockProgress::RandomBlockProgress(QWidget *parent) : QWidget(parent), m_v
 
 void RandomBlockProgress::setValue(int value)
 {
-    if(value < 0)
+    if (value < 0)
         value = 0;
-    if(value > 100)
+    if (value > 100)
         value = 100;
-    if(m_value != value)
+    if (m_value != value)
     {
         m_value = value;
         update();
@@ -61,7 +63,7 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
 
     painter.setPen(Qt::NoPen);
 
-    for(int i = 0; i < 100; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         int index = m_randomIndices[i];
         int row = index / cols;
@@ -73,7 +75,7 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
         QPainterPath path;
         path.addRoundedRect(blockRect, 2, 2);
 
-        if(i < m_value)
+        if (i < m_value)
         {
             painter.fillPath(path, activeBrush);
         }
@@ -84,7 +86,9 @@ void RandomBlockProgress::paintEvent(QPaintEvent *event)
     }
 }
 
-UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent), m_drag(false)
+UpdateWindow::UpdateWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , m_drag(false)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -179,33 +183,28 @@ UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent), m_drag(false)
     )");
 
     // Joke timer
-    QStringList jokes = {
-        "Android: свобода. iPhone: дорогой плен.",
-        "Зарядка iPhone снова потерялась?",
-        "Android кастомизируется, iPhone просто работает.",
-        "Зеленый пузырь? Ну и что!",
-        "Снова покупаем переходник для яблока?",
-        "Твой Android умеет варить кофе?",
-        "iPhone - статус, Android - жизнь.",
-        "Продал почку ради нового iPhone.",
-        "Android: настройки, которые не трогаешь.",
-        "Экосистема Apple не отпускает!"};
+    QStringList jokes
+        = {"Android: свобода. iPhone: дорогой плен.",
+           "Зарядка iPhone снова потерялась?",
+           "Android кастомизируется, iPhone просто работает.",
+           "Зеленый пузырь? Ну и что!",
+           "Снова покупаем переходник для яблока?",
+           "Твой Android умеет варить кофе?",
+           "iPhone - статус, Android - жизнь.",
+           "Продал почку ради нового iPhone.",
+           "Android: настройки, которые не трогаешь.",
+           "Экосистема Apple не отпускает!"};
     jokeLabel->setText(jokes.first());
 
     QTimer *jokeTimer = new QTimer(this);
-    connect(
-        jokeTimer,
-        &QTimer::timeout,
-        this,
-        [this, jokes]()
-        {
-            int r = QRandomGenerator::global()->bounded(jokes.size());
-            jokeLabel->setText(jokes[r]);
-        });
+    connect(jokeTimer, &QTimer::timeout, this, [this, jokes]() {
+        int r = QRandomGenerator::global()->bounded(jokes.size());
+        jokeLabel->setText(jokes[r]);
+    });
     jokeTimer->start(3500);
 
     // Center window
-    if(const QScreen *screen = QGuiApplication::primaryScreen())
+    if (const QScreen *screen = QGuiApplication::primaryScreen())
     {
         QRect screenGeometry = screen->geometry();
         int x = (screenGeometry.width() - width()) / 2;
@@ -216,7 +215,7 @@ UpdateWindow::UpdateWindow(QWidget *parent) : QMainWindow(parent), m_drag(false)
 
 void UpdateWindow::mousePressEvent(QMouseEvent *event)
 {
-    if(event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
         m_dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
         event->accept();
@@ -225,7 +224,7 @@ void UpdateWindow::mousePressEvent(QMouseEvent *event)
 
 void UpdateWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    if(event->buttons() & Qt::LeftButton)
+    if (event->buttons() & Qt::LeftButton)
     {
         move(event->globalPosition().toPoint() - m_dragPosition);
         event->accept();
@@ -238,9 +237,7 @@ void UpdateWindow::mouseReleaseEvent(QMouseEvent *event)
     m_drag = false;
 }
 
-UpdateWindow::~UpdateWindow()
-{
-}
+UpdateWindow::~UpdateWindow() {}
 
 void UpdateWindow::setText(const QString &value)
 {
@@ -263,17 +260,13 @@ void UpdateWindow::delayPush(int ms, std::function<void()> call, bool loop)
     QTimer *qtimer = new QTimer(this);
     qtimer->setSingleShot(!loop);
     qtimer->setInterval(ms);
-    connect(
-        qtimer,
-        &QTimer::timeout,
-        [qtimer, call]()
+    connect(qtimer, &QTimer::timeout, [qtimer, call]() {
+        call();
+        if (qtimer->isSingleShot())
         {
-            call();
-            if(qtimer->isSingleShot())
-            {
-                qtimer->stop();
-                qtimer->deleteLater();
-            }
-        });
+            qtimer->stop();
+            qtimer->deleteLater();
+        }
+    });
     qtimer->start();
 }

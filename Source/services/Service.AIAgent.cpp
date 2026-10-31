@@ -21,9 +21,9 @@ QString AIAgentService::getInternalData()
     return Service::getInternalData() + ":User accepting analytics = " + QString(sendAnalitics ? "on" : "off");
 }
 
-AIAgentService::AIAgentService(QObject *parent) : Service(DeviceConnectType::None, parent)
-{
-}
+AIAgentService::AIAgentService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
+{}
 
 AIAgentService::~AIAgentService()
 {
@@ -47,10 +47,11 @@ bool AIAgentService::isFinish()
 
 bool AIAgentService::eventFilter(QObject *obj, QEvent *ev)
 {
-    if(ev->type() == QEvent::KeyPress)
+    if (ev->type() == QEvent::KeyPress)
     {
         QKeyEvent *ke = static_cast<QKeyEvent *>(ev);
-        if((ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) && !(ke->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier)))
+        if ((ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter)
+            && !(ke->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier)))
         {
             sendCurrentMessage();
             return true;
@@ -72,18 +73,18 @@ void AIAgentService::resetHistory()
 
 void AIAgentService::sendCurrentMessage()
 {
-    if(!MainWindow::current)
+    if (!MainWindow::current)
         return;
 
     auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
     auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
     auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
 
-    if(!btn || !edit || !btn->isEnabled())
+    if (!btn || !edit || !btn->isEnabled())
         return;
 
     QString text = edit->toPlainText().trimmed();
-    if(text.isEmpty())
+    if (text.isEmpty())
         return;
 
     // Store message in conversation history as compact JSON string
@@ -96,7 +97,7 @@ void AIAgentService::sendCurrentMessage()
     s_persistedAiSessionId = aiSessionId;
 
     // Add user message bubble widget
-    if(chatView)
+    if (chatView)
     {
         chatView->addUserMessage(text);
         chatView->showTyping(true);
@@ -110,10 +111,10 @@ void AIAgentService::sendCurrentMessage()
 
     // Prepare request object from full conversation
     QJsonObject serviceReq;
-    if(aiSessionId >= 0)
+    if (aiSessionId >= 0)
         serviceReq["session_id"] = aiSessionId;
 
-    if(AppSetting::analyticsEnabled())
+    if (AppSetting::analyticsEnabled())
     {
         QString data;
         serviceReq["analytics"] = true;
@@ -137,14 +138,14 @@ void AIAgentService::sendCurrentMessage()
 
 bool AIAgentService::start()
 {
-    if(!MainWindow::current)
+    if (!MainWindow::current)
         return false;
 
     auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
     auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
     auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
 
-    if(!btn || !edit)
+    if (!btn || !edit)
         return false;
 
     // Disconnect any existing connection to this slot to prevent duplicates
@@ -159,7 +160,7 @@ bool AIAgentService::start()
     aiSessionId = s_persistedAiSessionId;
 
     // Only show welcome card if there are no messages yet
-    if(chatView && aiMessages.isEmpty())
+    if (chatView && aiMessages.isEmpty())
         chatView->showWelcome();
 
     // Connect button click directly to slot with 'this' receiver context (auto-disconnected when this is destroyed)
@@ -173,16 +174,16 @@ bool AIAgentService::start()
 
 void AIAgentService::stop()
 {
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *btn = MainWindow::current->findChild<QPushButton *>("aiChatSend");
-        if(btn)
+        if (btn)
             btn->disconnect(this);
         auto *edit = MainWindow::current->findChild<QTextEdit *>("aiChatEdit");
-        if(edit)
+        if (edit)
             edit->removeEventFilter(this);
         auto *chatView = MainWindow::current->findChild<AIChatView *>("aiChatView");
-        if(chatView)
+        if (chatView)
             chatView->showTyping(false);
     }
 }
@@ -192,15 +193,15 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     Q_UNUSED(guid)
     Q_UNUSED(so)
     auto *chatView = MainWindow::current ? MainWindow::current->findChild<AIChatView *>("aiChatView") : nullptr;
-    if(chatView)
+    if (chatView)
         chatView->showTyping(false);
 
-    if(!ok || (!responce["status"].isUndefined() && responce["status"].toInteger() > 0))
+    if (!ok || (!responce["status"].isUndefined() && responce["status"].toInteger() > 0))
     {
         QMessageBox::warning(MainWindow::current, "AI Agent", "Ошибка сети или сервера при обращении к AI сервису.");
         // restore button
         auto *btn = MainWindow::current ? MainWindow::current->findChild<QPushButton *>("aiChatSend") : nullptr;
-        if(btn)
+        if (btn)
         {
             btn->setText(QString());
             btn->setIcon(QIcon(":/svg/send"));
@@ -212,16 +213,16 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
 
     // Expecting result object with fields like ai_status, response, sessionId
     QString text;
-    if(!responce["response"].isNull())
+    if (!responce["response"].isNull())
         text = responce["response"].toString();
-    else if(!responce["answer"].isNull())
+    else if (!responce["answer"].isNull())
         text = responce["answer"].toString();
 
-    if(text.isEmpty())
+    if (text.isEmpty())
         text = "(пустой ответ)";
 
     // Update sessionId if provided
-    if(!responce["session_id"].isNull())
+    if (!responce["session_id"].isNull())
     {
         aiSessionId = responce["session_id"].toInt();
     }
@@ -236,14 +237,14 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     s_persistedAiSessionId = aiSessionId;
 
     // Append AI message bubble widget
-    if(chatView)
+    if (chatView)
     {
         chatView->addAIMessage(text);
     }
 
     // Restore send button state
     auto *btn = MainWindow::current ? MainWindow::current->findChild<QPushButton *>("aiChatSend") : nullptr;
-    if(btn)
+    if (btn)
     {
         btn->setText(QString());
         btn->setIcon(QIcon(":/svg/send"));
@@ -251,7 +252,7 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
         btn->setEnabled(true);
     }
 
-    if(responce["run_service"].isString())
+    if (responce["run_service"].isString())
     {
         QString serviceRunUuid = responce["run_service"].toString();
         emit onRunService(serviceRunUuid);

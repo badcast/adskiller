@@ -142,9 +142,15 @@ public:
     QWidget *ownerWidget;
     bool active;
 
-    inline Service(DeviceConnectType deviceConnectType, QObject *parent = nullptr) : QObject(parent), ownerWidget(nullptr), title(), active(false), mDeviceConnectType(deviceConnectType), m_sortScore(100), m_flag(ServiceFlag::None)
-    {
-    }
+    inline Service(DeviceConnectType deviceConnectType, QObject *parent = nullptr)
+        : QObject(parent)
+        , ownerWidget(nullptr)
+        , title()
+        , active(false)
+        , mDeviceConnectType(deviceConnectType)
+        , m_sortScore(100)
+        , m_flag(ServiceFlag::None)
+    {}
 
     virtual void setAndroidArgs(const AdbDevice &adbDevice);
     virtual void setAppleArgs(const AppleDevice &appleDevice);

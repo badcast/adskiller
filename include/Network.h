@@ -151,13 +151,15 @@ public:
     static QString defaultUserAgent();
 
     QNetworkRequest generalCreateRequest(const QUrl &url, bool needAuth = false) const;
-    QNetworkReply *generalCreateRequest(const QUrl &url, const QJsonObject &json, int pendingFlag = 0, bool needAuth = false);
+    QNetworkReply *generalCreateRequest(
+        const QUrl &url, const QJsonObject &json, int pendingFlag = 0, bool needAuth = false);
 
     template <typename Func>
-    QNetworkReply *generalCreateRequest(const QUrl &url, const QJsonObject &json, int pendingFlag, Func slot, bool needAuth = false)
+    QNetworkReply *generalCreateRequest(
+        const QUrl &url, const QJsonObject &json, int pendingFlag, Func slot, bool needAuth = false)
     {
         QNetworkReply *reply = generalCreateRequest(url, json, pendingFlag, needAuth);
-        if(reply)
+        if (reply)
         {
             connect(reply, &QNetworkReply::finished, this, slot);
         }

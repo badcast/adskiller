@@ -77,7 +77,8 @@ public:
 
     std::atomic<int> finishSuccess {0};
 
-    static bool isSafeRelativePath(const QString &baseDir, const QString &relativePath, QString *resolvedPath = nullptr);
+    static bool isSafeRelativePath(
+        const QString &baseDir, const QString &relativePath, QString *resolvedPath = nullptr);
 
 private:
     void setError(const QString &error, int status = -1);

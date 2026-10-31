@@ -27,11 +27,11 @@ static QHash<QString, std::shared_ptr<AppleGlobal>> s_appleGlobals;
 
 static void AppleWorkerThread(AppleGlobal *global)
 {
-    if(!global)
+    if (!global)
         return;
     global->data.store(1);
 
-    while(!global->devId.isEmpty() && global->data.load() > 0)
+    while (!global->devId.isEmpty() && global->data.load() > 0)
     {
         int reqId = -1;
         QString prog;
@@ -39,7 +39,7 @@ static void AppleWorkerThread(AppleGlobal *global)
 
         {
             std::lock_guard<std::mutex> lock(global->mutex);
-            if(!global->requests.empty())
+            if (!global->requests.empty())
             {
                 auto &front = global->requests.front();
                 reqId = std::get<0>(front);
@@ -49,7 +49,7 @@ static void AppleWorkerThread(AppleGlobal *global)
             }
         }
 
-        if(reqId != -1)
+        if (reqId != -1)
         {
             int code = -1;
             auto reply = apple_send_cmd(code, prog, args);
@@ -63,19 +63,20 @@ static void AppleWorkerThread(AppleGlobal *global)
     }
 }
 
-AppleShell::AppleShell(const QString &deviceId) : ref(nullptr)
+AppleShell::AppleShell(const QString &deviceId)
+    : ref(nullptr)
 {
-    if(!deviceId.isEmpty())
+    if (!deviceId.isEmpty())
         connect(deviceId);
 }
 
-AppleShell::AppleShell(AppleShell &&other) noexcept : ref(std::move(other.ref))
-{
-}
+AppleShell::AppleShell(AppleShell &&other) noexcept
+    : ref(std::move(other.ref))
+{}
 
 AppleShell &AppleShell::operator=(AppleShell &&other) noexcept
 {
-    if(this != &other)
+    if (this != &other)
     {
         exit();
         ref = std::move(other.ref);
@@ -91,17 +92,17 @@ AppleShell::~AppleShell()
 bool AppleShell::connect(const QString &deviceId)
 {
     QString targetDev = deviceId;
-    if(targetDev.isEmpty())
+    if (targetDev.isEmpty())
     {
         QList<AppleDevice> devs = Apple::getDevices();
-        if(!devs.isEmpty())
+        if (!devs.isEmpty())
             targetDev = devs.first().devId;
         else
             return false;
     }
 
     std::lock_guard<std::mutex> lock(s_appleGlobalsMutex);
-    if(s_appleGlobals.contains(targetDev))
+    if (s_appleGlobals.contains(targetDev))
     {
         ref = s_appleGlobals.value(targetDev);
         ref->ref++;
@@ -123,15 +124,15 @@ bool AppleShell::isConnect() const
 
 void AppleShell::exit()
 {
-    if(!ref)
+    if (!ref)
         return;
 
     std::lock_guard<std::mutex> lock(s_appleGlobalsMutex);
     ref->ref--;
-    if(ref->ref <= 0)
+    if (ref->ref <= 0)
     {
         ref->data.store(0);
-        if(ref->thread && ref->thread->joinable())
+        if (ref->thread && ref->thread->joinable())
         {
             ref->thread->join();
             delete ref->thread;
@@ -144,7 +145,7 @@ void AppleShell::exit()
 
 bool AppleShell::reConnect()
 {
-    if(!ref)
+    if (!ref)
         return false;
     QString curId = ref->devId;
     exit();
@@ -164,7 +165,7 @@ std::pair<bool, QString> AppleShell::commandQueueWait(const QString &program, co
 
 int AppleShell::commandQueueAsync(const QString &program, const QStringList &args)
 {
-    if(!ref)
+    if (!ref)
         return -1;
     int reqId = QRandomGenerator::global()->bounded(1, 100000000);
     std::lock_guard<std::mutex> lock(ref->mutex);
@@ -174,16 +175,16 @@ int AppleShell::commandQueueAsync(const QString &program, const QStringList &arg
 
 std::pair<bool, QString> AppleShell::commandResult(int requestId, bool waitResult)
 {
-    if(!ref)
+    if (!ref)
         return {false, {}};
 
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(10000);
-    while(true)
+    while (true)
     {
         {
             std::lock_guard<std::mutex> lock(ref->mutex);
             auto it = ref->responses.find(requestId);
-            if(it != ref->responses.end())
+            if (it != ref->responses.end())
             {
                 bool success = (it->second.exitCode == 0);
                 QString out = it->second.output;
@@ -192,7 +193,7 @@ std::pair<bool, QString> AppleShell::commandResult(int requestId, bool waitResul
             }
         }
 
-        if(!waitResult || std::chrono::steady_clock::now() >= deadline)
+        if (!waitResult || std::chrono::steady_clock::now() >= deadline)
             break;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(25));
@@ -203,13 +204,13 @@ std::pair<bool, QString> AppleShell::commandResult(int requestId, bool waitResul
 QString AppleShell::getprop(const QString &propname, const QString &domain)
 {
     QString dev = deviceId();
-    if(dev.isEmpty())
+    if (dev.isEmpty())
         return {};
 
     QStringList args;
-    if(!dev.startsWith("Apple-"))
+    if (!dev.startsWith("Apple-"))
         args << "-u" << dev;
-    if(!domain.isEmpty())
+    if (!domain.isEmpty())
         args << "-q" << domain;
     args << "-k" << propname;
 
@@ -236,14 +237,14 @@ std::shared_ptr<AppleSysInfo> AppleShell::getInfo()
     info->passwordProtected = (getprop("PasswordProtected") == "true");
 
     QString totalDisk = getprop("TotalDiskCapacity", "com.apple.disk_usage");
-    if(!totalDisk.isEmpty())
+    if (!totalDisk.isEmpty())
         info->diskTotal = totalDisk.toLongLong();
     QString availDisk = getprop("TotalDataAvailable", "com.apple.disk_usage");
-    if(!availDisk.isEmpty() && info->diskTotal > 0)
+    if (!availDisk.isEmpty() && info->diskTotal > 0)
         info->diskUsed = info->diskTotal - availDisk.toLongLong();
 
     QString battLevel = getprop("BatteryCurrentCapacity", "com.apple.mobile.battery");
-    if(!battLevel.isEmpty())
+    if (!battLevel.isEmpty())
         info->batteryLevel = battLevel.toInt();
     QString battCharging = getprop("BatteryIsCharging", "com.apple.mobile.battery");
     info->isCharging = (battCharging == "true");
@@ -254,7 +255,7 @@ std::shared_ptr<AppleSysInfo> AppleShell::getInfo()
 bool AppleShell::validatePairing()
 {
     QString dev = deviceId();
-    if(dev.isEmpty())
+    if (dev.isEmpty())
         return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "idevicepair", QStringList() << "-u" << dev << "validate");
@@ -264,7 +265,7 @@ bool AppleShell::validatePairing()
 bool AppleShell::requestPairing()
 {
     QString dev = deviceId();
-    if(dev.isEmpty())
+    if (dev.isEmpty())
         return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "idevicepair", QStringList() << "-u" << dev << "pair");
@@ -274,7 +275,7 @@ bool AppleShell::requestPairing()
 bool AppleShell::enterRecovery()
 {
     QString dev = deviceId();
-    if(dev.isEmpty())
+    if (dev.isEmpty())
         return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "ideviceenterrecovery", QStringList() << dev);
@@ -292,10 +293,10 @@ bool AppleShell::restartDevice()
 {
     QString dev = deviceId();
     int code = -1;
-    if(!dev.isEmpty() && !dev.startsWith("Apple-Recovery") && !dev.startsWith("Apple-DFU"))
+    if (!dev.isEmpty() && !dev.startsWith("Apple-Recovery") && !dev.startsWith("Apple-DFU"))
     {
         auto reply = apple_send_cmd(code, "idevicediagnostics", QStringList() << "-u" << dev << "restart");
-        if(code == 0)
+        if (code == 0)
             return true;
     }
     auto recReply = apple_send_cmd(code, "irecovery", QStringList() << "-c" << "reboot");
@@ -305,7 +306,7 @@ bool AppleShell::restartDevice()
 bool AppleShell::shutdownDevice()
 {
     QString dev = deviceId();
-    if(dev.isEmpty())
+    if (dev.isEmpty())
         return false;
     int code = -1;
     auto reply = apple_send_cmd(code, "idevicediagnostics", QStringList() << "-u" << dev << "shutdown");

@@ -15,8 +15,8 @@
 
 #include "PurchaseConfirmDialog.h"
 
-#define FORCLYQUIT_CHECK             \
-    if(mCmd == CommandExecForceKill) \
+#define FORCLYQUIT_CHECK              \
+    if (mCmd == CommandExecForceKill) \
     break
 #define WAIT(MS) QThread::msleep(MS)
 #define WAITMODE      \
@@ -71,7 +71,7 @@ void adskiller_user_confirm(int userValue);
 inline LabStatusInfo fromJsonLabs(const QJsonValue &jroot)
 {
     LabStatusInfo retval {};
-    if(jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
+    if (jroot.isObject() && jroot["analyzeStatus"].isString() && jroot["mdKey"].isString())
     {
         retval.analyzeStatus = jroot["analyzeStatus"].toString();
         retval.mdKey = jroot["mdKey"].toString();
@@ -106,7 +106,7 @@ inline void adskiller_write_log(QString msg, int progress = -1)
     QMutexLocker locker(mutex);
     (void) locker;
     outLogs << std::move(msg.split('\n'));
-    if(progress > -1)
+    if (progress > -1)
         mProgress = progress;
 }
 
@@ -116,7 +116,7 @@ inline void adskiller_write_log_head(QString msg, int progress = -1)
     (void) locker;
     outHeads = std::move(msg);
     outLogs << outHeads;
-    if(progress > -1)
+    if (progress > -1)
         mProgress = progress;
 }
 
@@ -128,10 +128,10 @@ QString AdsKillerService::uuid() const
 QString AdsKillerService::getInternalData()
 {
     QStringList data {"Device = " + mAdbDevice.devId, "Progress = " + QString::number(mProgress) + "%"};
-    if(processLogStatus)
+    if (processLogStatus)
     {
         auto *model = qobject_cast<QStringListModel *>(processLogStatus->model());
-        if(model)
+        if (model)
             data << "Log = " + model->stringList().join(';');
     }
     return Service::getInternalData() + ":" + data.join('\t');
@@ -142,13 +142,19 @@ QString AdsKillerService::widgetIconName()
     return "ads-killer";
 }
 
-AdsKillerService::AdsKillerService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr), _priv(new PrivateKillerRes)
-{
-}
+AdsKillerService::AdsKillerService(QObject *parent)
+    : Service(DeviceConnectType::ADB, parent)
+    , processLogStatus(nullptr)
+    , malwareStatusText0(nullptr)
+    , deviceLabelName(nullptr)
+    , processBarStatus(nullptr)
+    , pushButtonReRun(nullptr)
+    , _priv(new PrivateKillerRes)
+{}
 
 AdsKillerService::~AdsKillerService()
 {
-    if(_priv)
+    if (_priv)
     {
         delete _priv;
         _priv = nullptr;
@@ -158,7 +164,8 @@ AdsKillerService::~AdsKillerService()
 void AdsKillerService::setAndroidArgs(const AdbDevice &adbDevice)
 {
     Service::setAndroidArgs(adbDevice);
-    MainWindow::current->accessUi_page_longinfo(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
+    MainWindow::current->accessUi_page_longinfo(
+        processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
 }
 
 PageIndex AdsKillerService::targetPage()
@@ -168,7 +175,8 @@ PageIndex AdsKillerService::targetPage()
 
 bool AdsKillerService::canStart()
 {
-    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus && pushButtonReRun;
+    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus
+           && pushButtonReRun;
 }
 
 bool AdsKillerService::isStarted()
@@ -183,12 +191,15 @@ bool AdsKillerService::isFinish()
 
 static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::shared_ptr<AdbSysInfo> &sysInfo)
 {
-    QString devTitle = !device.marketingName.isEmpty() ? device.marketingName : (!device.displayName.isEmpty() ? device.displayName : device.model);
+    QString devTitle = !device.marketingName.isEmpty()
+                           ? device.marketingName
+                           : (!device.displayName.isEmpty() ? device.displayName : device.model);
     QString vendorStr = !device.vendor.isEmpty() ? device.vendor : "Android";
     QString osStr = sysInfo ? sysInfo->OSVersionString() : "Android";
     QString storageStr = sysInfo ? sysInfo->StorageDesignString() : "-";
     QString ramStr = sysInfo ? sysInfo->RAMDesignString() : "-";
-    QString kernelStr = (sysInfo && !sysInfo->kernelReleaseVersion.isEmpty()) ? sysInfo->kernelReleaseVersion.trimmed() : "Linux";
+    QString kernelStr
+        = (sysInfo && !sysInfo->kernelReleaseVersion.isEmpty()) ? sysInfo->kernelReleaseVersion.trimmed() : "Linux";
     QString archStr = (sysInfo && !sysInfo->machine.isEmpty()) ? sysInfo->machine.trimmed() : "aarch64";
     QString serialStr = !device.devId.isEmpty() ? device.devId : "USB";
 
@@ -197,19 +208,25 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
                "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
                "    <tr>"
                "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
-               "        <img src=':/svg/smartphone' width='14' height='14' style='vertical-align: middle;'/> %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
+               "        <img src=':/svg/smartphone' width='14' height='14' style='vertical-align: middle;'/> %1 <span "
+               "style='font-size: 11px; color: #8E9297;'>(%2)</span>"
                "      </td>"
                "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
                "        Подключено [ %3 ]"
                "      </td>"
                "    </tr>"
                "  </table>"
-               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 0px;'>"
+               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: "
+               "#BAC0CB; background: rgba(0,0,0,0.3); border-radius: 0px;'>"
                "    <tr>"
-               "      <td><img src=':/svg/bot' width='13' height='13' style='vertical-align: middle;'/> <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
-               "      <td><img src=':/svg/hard-drive' width='13' height='13' style='vertical-align: middle;'/> <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
-               "      <td><img src=':/svg/zap' width='13' height='13' style='vertical-align: middle;'/> <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
-               "      <td><img src=':/svg/settings' width='13' height='13' style='vertical-align: middle;'/> <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
+               "      <td><img src=':/svg/bot' width='13' height='13' style='vertical-align: middle;'/> <b>ОС:</b> "
+               "<span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
+               "      <td><img src=':/svg/hard-drive' width='13' height='13' style='vertical-align: middle;'/> "
+               "<b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
+               "      <td><img src=':/svg/zap' width='13' height='13' style='vertical-align: middle;'/> <b>ОЗУ:</b> "
+               "<span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
+               "      <td><img src=':/svg/settings' width='13' height='13' style='vertical-align: middle;'/> "
+               "<b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
                "    </tr>"
                "  </table>"
                "</div>")
@@ -218,7 +235,7 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
 
 bool AdsKillerService::start()
 {
-    if(!canStart())
+    if (!canStart())
         return false;
     pushButtonReRun->setEnabled(false);
 
@@ -233,7 +250,7 @@ bool AdsKillerService::start()
     MainWindow::current->malwareProgressCircle->setValue(0);
 
     AdbDevice dev = mAdbDevice;
-    if(dev.isEmpty() && !adbDeviceSerial.isEmpty())
+    if (dev.isEmpty() && !adbDeviceSerial.isEmpty())
         dev = Adb::getDevice(adbDeviceSerial);
 
     std::shared_ptr<AdbSysInfo> initialInfo = AdbShell(dev.devId).getInfo();
@@ -243,58 +260,50 @@ bool AdsKillerService::start()
     place << "<< Не отсоединяйте устройство от компьютера >>";
     model->setStringList(place);
 
-    MainWindow::current->delayUICall(
-        500,
-        [this, deviceName]()
-        {
-            // START MALWARE
-            QTimer *malwareUpdateTimer = new QTimer(this);
-            malwareUpdateTimer->start(100);
-            QObject::connect(
-                malwareUpdateTimer,
-                &QTimer::timeout,
-                this,
-                [this, deviceName, malwareUpdateTimer]()
-                {
-                    QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
-                    QString header;
-                    QStringList from;
-                    std::pair<QStringList, int> reads;
-                    header = adskiller_read_head();
-                    reads = adskiller_read_log();
+    MainWindow::current->delayUICall(500, [this, deviceName]() {
+        // START MALWARE
+        QTimer *malwareUpdateTimer = new QTimer(this);
+        malwareUpdateTimer->start(100);
+        QObject::connect(malwareUpdateTimer, &QTimer::timeout, this, [this, deviceName, malwareUpdateTimer]() {
+            QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
+            QString header;
+            QStringList from;
+            std::pair<QStringList, int> reads;
+            header = adskiller_read_head();
+            reads = adskiller_read_log();
 
-                    malwareStatusText0->setText(header);
-                    processBarStatus->setValue(reads.second);
-                    MainWindow::current->malwareProgressCircle->setValue(reads.second);
-                    if(!reads.first.isEmpty())
-                    {
-                        from = model->stringList();
-                        from.append(reads.first);
-                        model->setStringList(from);
-                        processLogStatus->scrollToBottom();
-                    }
-                    if(status != MalwareStatus::Running)
-                    {
-                        cirlceMalwareState(status != MalwareStatus::Error);
-                        MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
-                        malwareUpdateTimer->stop();
-                        malwareUpdateTimer->deleteLater();
-                        pushButtonReRun->setEnabled(true);
-                        adskiller_clean_cmd();
-                    }
-                    else if(mUserValue == 1000)
-                    {
-                        malwareUpdateTimer->stop();
-                        UserDataInfo data = MainWindow::current->network.authedId;
-                        int num0 = PurchaseConfirmDialog::confirm(MainWindow::current, deviceName, data);
-                        adskiller_user_confirm(num0);
-                        if(status == MalwareStatus::Running)
-                            malwareUpdateTimer->start(100);
-                    }
-                });
+            malwareStatusText0->setText(header);
+            processBarStatus->setValue(reads.second);
+            MainWindow::current->malwareProgressCircle->setValue(reads.second);
+            if (!reads.first.isEmpty())
+            {
+                from = model->stringList();
+                from.append(reads.first);
+                model->setStringList(from);
+                processLogStatus->scrollToBottom();
+            }
+            if (status != MalwareStatus::Running)
+            {
+                cirlceMalwareState(status != MalwareStatus::Error);
+                MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
+                malwareUpdateTimer->stop();
+                malwareUpdateTimer->deleteLater();
+                pushButtonReRun->setEnabled(true);
+                adskiller_clean_cmd();
+            }
+            else if (mUserValue == 1000)
+            {
+                malwareUpdateTimer->stop();
+                UserDataInfo data = MainWindow::current->network.authedId;
+                int num0 = PurchaseConfirmDialog::confirm(MainWindow::current, deviceName, data);
+                adskiller_user_confirm(num0);
+                if (status == MalwareStatus::Running)
+                    malwareUpdateTimer->start(100);
+            }
         });
+    });
 
-    if(malwareThread != nullptr)
+    if (malwareThread != nullptr)
     {
         adskiller_write_log("Процесс уже запущен.");
         return false;
@@ -314,11 +323,11 @@ bool AdsKillerService::start()
 
 void AdsKillerService::stop()
 {
-    if(isStarted())
+    if (isStarted())
         adskiller_kill_proc();
-    if(isFinish())
+    if (isFinish())
         cirlceMalwareStateReset();
-    if(pushButtonReRun)
+    if (pushButtonReRun)
         pushButtonReRun->setEnabled(true);
 }
 
@@ -327,13 +336,15 @@ void AdsKillerService::cirlceMalwareState(bool success)
     MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
 
     QPropertyAnimation *animation;
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(1500);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(0.8);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(0.0);
@@ -341,7 +352,8 @@ void AdsKillerService::cirlceMalwareState(bool success)
 
     QColor color = success ? QColor(155, 219, 58) : QColor(255, 100, 100);
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(color);
@@ -351,13 +363,15 @@ void AdsKillerService::cirlceMalwareState(bool success)
 void AdsKillerService::cirlceMalwareStateReset()
 {
     QPropertyAnimation *animation;
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(1500);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(1.0);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(0.6);
@@ -365,7 +379,8 @@ void AdsKillerService::cirlceMalwareStateReset()
 
     QColor color {110, 190, 235};
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(color);
@@ -375,7 +390,7 @@ void AdsKillerService::cirlceMalwareStateReset()
 template <typename InT, typename OutT>
 constexpr inline OutT Map(const InT x, const InT in_min, const InT in_max, const OutT out_min, const OutT out_max)
 {
-    if(in_max == in_min)
+    if (in_max == in_min)
     {
         return out_min;
     }
@@ -388,11 +403,11 @@ inline T1 compare_list(const T0 &t0, const T1 &t1, Pred &&pred)
 {
     T1 result;
     int x, y;
-    for(x = 0; x < t0.size(); ++x)
+    for (x = 0; x < t0.size(); ++x)
     {
-        for(y = 0; y < t1.size(); ++y)
+        for (y = 0; y < t1.size(); ++y)
         {
-            if(pred(t0[x], t1[y]))
+            if (pred(t0[x], t1[y]))
             {
                 result << t1[y];
                 break;
@@ -404,7 +419,7 @@ inline T1 compare_list(const T0 &t0, const T1 &t1, Pred &&pred)
 
 bool adskiller_clean_cmd()
 {
-    if(status == MalwareStatus::Running)
+    if (status == MalwareStatus::Running)
         return false;
     delete network;
     network = nullptr;
@@ -419,7 +434,7 @@ bool adskiller_clean_cmd()
 
 void adskiller_kill_proc()
 {
-    if(malwareThread == nullptr)
+    if (malwareThread == nullptr)
         return;
     mCmd = CommandExecForceKill;
 }
@@ -448,7 +463,8 @@ std::shared_ptr<LabStatusInfo> fetch_lab_state(AdsKillerService *service, const 
     return std::move(service->_priv->labInfo);
 }
 
-std::shared_ptr<LabStatusInfo> fetch_device_packages(AdsKillerService *service, const AdbDevice &device, const QStringList &packages)
+std::shared_ptr<LabStatusInfo> fetch_device_packages(
+    AdsKillerService *service, const AdbDevice &device, const QStringList &packages)
 {
     QJsonArray array;
     QJsonObject request;
@@ -458,7 +474,7 @@ std::shared_ptr<LabStatusInfo> fetch_device_packages(AdsKillerService *service, 
     request["deviceSerial"] = device.devId;
     request["deviceModel"] = device.model;
     request["deviceVendor"] = device.vendor;
-    for(const QString &str : packages)
+    for (const QString &str : packages)
         array.append(str);
     request["packages"] = array;
     network->pullServiceUUID(service->uuid(), request, ServiceOperation::Open);
@@ -479,14 +495,14 @@ void adskiller_awake(AdsKillerService *service)
 
     network = new Network(MainWindow::current->network);
 
-    QObject::connect(network, &Network::sPullServiceUUID, service, &AdsKillerService::onPullServiceUUID, Qt::DirectConnection);
+    QObject::connect(
+        network, &Network::sPullServiceUUID, service, &AdsKillerService::onPullServiceUUID, Qt::DirectConnection);
 
     auto procedureStartAt = steady_clock::now();
 
     AdbDevice device = Adb::getDevice(adbDeviceSerial);
 
-    const std::function<QString(void)> print_device_info = [&sysInfo, &device]() -> QString
-    {
+    const std::function<QString(void)> print_device_info = [&sysInfo, &device]() -> QString {
         return QString(
                    "------------------------------------\n"
                    "       Модель: %1\n"
@@ -497,26 +513,34 @@ void adskiller_awake(AdsKillerService *service)
                    "       Ядро: %6\n"
                    "       Архитектура: %7\n"
                    "------------------------------------")
-            .arg(device.model, device.vendor, sysInfo->OSVersionString(), sysInfo->StorageDesignString(), sysInfo->RAMDesignString(), sysInfo->systemName, sysInfo->machine);
+            .arg(
+                device.model,
+                device.vendor,
+                sysInfo->OSVersionString(),
+                sysInfo->StorageDesignString(),
+                sysInfo->RAMDesignString(),
+                sysInfo->systemName,
+                sysInfo->machine);
     };
 
-    const std::function<QString(int)> generate_error_report = [](int status) -> QString
-    {
+    const std::function<QString(int)> generate_error_report = [](int status) -> QString {
         QString error;
-        if(status == NetworkStatus::ServerError)
+        if (status == NetworkStatus::ServerError)
             error = ("Ошибка на стороне сервера.");
-        else if(status == NetworkStatus::NoEnoughMoney)
+        else if (status == NetworkStatus::NoEnoughMoney)
             error = ("Пополните баланс, чтобы продолжить.");
         else
             error = (QString("Код ошибки %1").arg(status));
         return error;
     };
 
-    const std::function<bool(void)> check_device_connect = []() -> bool { return Adb::deviceStatus(adbDeviceSerial) == DEVICE; };
+    const std::function<bool(void)> check_device_connect = []() -> bool {
+        return Adb::deviceStatus(adbDeviceSerial) == DEVICE;
+    };
 
-    while(!isFinish)
+    while (!isFinish)
     {
-        switch(mCmd)
+        switch (mCmd)
         {
             // INIT
             case 0:
@@ -531,22 +555,24 @@ void adskiller_awake(AdsKillerService *service)
             // GET PACKAGES & UPLOAD
             case 1:
             {
-                if(!check_device_connect())
+                if (!check_device_connect())
                 {
                     adskiller_write_log_head("Устройство внезапно отключилась.");
-                    adskiller_write_log("Пожалуйста, убедитесь что устройство подключено корректно и кабель не поврежден.");
+                    adskiller_write_log(
+                        "Пожалуйста, убедитесь что устройство подключено корректно и кабель не поврежден.");
                     mCmd = CommandExecFailed;
                     break;
                 }
-                adskiller_write_log_head(QString("Получение данных с устройства ") + device.displayName + "(" + device.devId + ")", 2);
+                adskiller_write_log_head(
+                    QString("Получение данных с устройства ") + device.displayName + "(" + device.devId + ")", 2);
                 sysInfo = AdbShell(device.devId).getInfo();
                 adskiller_write_log(print_device_info());
                 WAITMODE;
 
                 localPackages = Adb::getPackages(adbDeviceSerial);
-                if(check_device_connect())
+                if (check_device_connect())
                 {
-                    if(localPackages.isEmpty())
+                    if (localPackages.isEmpty())
                     {
                         adskiller_write_log_head("Получили пустой результат.");
                         mCmd = CommandExecFailed;
@@ -564,10 +590,14 @@ void adskiller_awake(AdsKillerService *service)
 
                 num0 = mProgress;
                 num1 = 0;
-                for(const PackageIO &pkg : std::as_const(localPackages))
+                for (const PackageIO &pkg : std::as_const(localPackages))
                 {
                     int curValue = Map<int, int>(num1, 0, localPackages.size(), num0, 48);
-                    adskiller_write_log(QString(" >> md5 hash %1").arg(QString(QCryptographicHash::hash(pkg.packageName.toLatin1(), QCryptographicHash::Md5).toHex())), curValue);
+                    adskiller_write_log(
+                        QString(" >> md5 hash %1")
+                            .arg(QString(
+                                QCryptographicHash::hash(pkg.packageName.toLatin1(), QCryptographicHash::Md5).toHex())),
+                        curValue);
                     ++num1;
                     WAITMODE2;
                 }
@@ -575,21 +605,21 @@ void adskiller_awake(AdsKillerService *service)
                 WAITMODE;
                 adskiller_write_log_head("Анализ и обработка фоновых данных...");
                 Adb::killPackages(adbDeviceSerial, localPackages, lastResult);
-                if(localPackages.count() != lastResult)
+                if (localPackages.count() != lastResult)
                     adskiller_write_log("Частично.");
                 else
                     adskiller_write_log("Выполнено.");
                 WAITMODE;
 
-                if(!network->authedId.hasVipAccount())
+                if (!network->authedId.hasVipAccount())
                 {
                     mUserValue = 1000;
-                    while(mUserValue == 1000)
+                    while (mUserValue == 1000)
                     {
                         WAIT(100);
                     }
 
-                    if(mUserValue != QMessageBox::StandardButton::Yes)
+                    if (mUserValue != QMessageBox::StandardButton::Yes)
                     {
                         adskiller_write_log_head("Запрос отклонен пользователем");
                         adskiller_write_log("Вы отказались от оплаты. Процедура остановлена.");
@@ -603,10 +633,14 @@ void adskiller_awake(AdsKillerService *service)
                 std::shared_ptr<LabStatusInfo> labs;
                 QString mdKey;
 
-                std::transform(localPackages.begin(), localPackages.end(), std::back_inserter(localPackageNames), [](const PackageIO &package) { return package.packageName; });
+                std::transform(
+                    localPackages.begin(),
+                    localPackages.end(),
+                    std::back_inserter(localPackageNames),
+                    [](const PackageIO &package) { return package.packageName; });
 
                 labs = fetch_device_packages(service, device, localPackageNames);
-                if(!labs)
+                if (!labs)
                 {
                     adskiller_write_log_head("Ошибка при отправке");
                     adskiller_write_log(generate_error_report(lastResult));
@@ -619,7 +653,7 @@ void adskiller_awake(AdsKillerService *service)
                 mdKey = labs->mdKey;
                 WAITMODE;
 
-                if(lastResult)
+                if (lastResult)
                 {
                     adskiller_write_log_head("Ошибка во время загрузки");
                     adskiller_write_log(generate_error_report(lastResult));
@@ -629,7 +663,7 @@ void adskiller_awake(AdsKillerService *service)
                 }
 
                 int chances = 5;
-                if(!labs->ready())
+                if (!labs->ready())
                 {
                     adskiller_write_log_head(
                         "Выполняется серверная обработка. Ожидаем. Если пройдет больше "
@@ -639,9 +673,9 @@ void adskiller_awake(AdsKillerService *service)
                         "действий администратора для продолжения. Ожидайте.");
                 }
                 mProgress = 49;
-                while(labs && labs->exists() && !labs->ready() && chances > 0)
+                while (labs && labs->exists() && !labs->ready() && chances > 0)
                 {
-                    if(!check_device_connect())
+                    if (!check_device_connect())
                     {
                         adskiller_write_log_head("Устройство внезапно отключилась.");
                         mCmd = CommandExecFailed;
@@ -652,9 +686,9 @@ void adskiller_awake(AdsKillerService *service)
 
                     WAITMODE2;
 
-                    if(lastResult)
+                    if (lastResult)
                     {
-                        if(lastResult == NetworkStatus::ServerError)
+                        if (lastResult == NetworkStatus::ServerError)
                             break;
                         --chances;
                     }
@@ -666,7 +700,7 @@ void adskiller_awake(AdsKillerService *service)
                 mProgress = 50;
                 WAITMODE;
 
-                if(lastResult)
+                if (lastResult)
                 {
                     adskiller_write_log_head("Возникла ошибка.");
                     adskiller_write_log(generate_error_report(lastResult));
@@ -675,7 +709,7 @@ void adskiller_awake(AdsKillerService *service)
                     break;
                 }
 
-                if(labs->analyzeStatus == "part-verify")
+                if (labs->analyzeStatus == "part-verify")
                 {
                     adskiller_write_log_head("АВТОМАТИЧЕСКИЙ РЕЖИМ (BETA) -- ВЫПОЛНЕНИЕ");
                     WAIT(2500);
@@ -689,7 +723,7 @@ void adskiller_awake(AdsKillerService *service)
                 disableList.clear();
 
                 std::shared_ptr<AdsInfo> ads_data_input = fetch_ads_data(service, labs->mdKey);
-                if(lastResult != NetworkStatus::OK || !ads_data_input)
+                if (lastResult != NetworkStatus::OK || !ads_data_input)
                 {
                     adskiller_write_log_head("Ошибка во время получения.");
                     adskiller_write_log(generate_error_report(lastResult));
@@ -706,7 +740,7 @@ void adskiller_awake(AdsKillerService *service)
                 WAITMODE;
 
                 PRINT_LINE;
-                if(resultList.isEmpty() && disableList.isEmpty())
+                if (resultList.isEmpty() && disableList.isEmpty())
                 {
                     adskiller_write_log_head("Действий не требуется");
                     adskiller_write_log("К сожалению, автоматический режим не обнаружил вредоносного ПО.");
@@ -723,18 +757,24 @@ void adskiller_awake(AdsKillerService *service)
                 }
 
                 adskiller_write_log("Распаковка", 57);
-                resultList = compare_list(localPackageNames, resultList, [](const auto &lhs, const auto &rhs) -> bool { return lhs == rhs; });
-                disableList = compare_list(localPackages, disableList, [](const auto &lhs, const auto &rhs) -> bool { return !lhs.disabled && lhs.packageName == rhs; });
+                resultList = compare_list(
+                    localPackageNames, resultList, [](const auto &lhs, const auto &rhs) -> bool { return lhs == rhs; });
+                disableList = compare_list(localPackages, disableList, [](const auto &lhs, const auto &rhs) -> bool {
+                    return !lhs.disabled && lhs.packageName == rhs;
+                });
                 totalMalwareDetected = static_cast<int>(resultList.size() + disableList.size());
                 WAITMODE;
 
                 num0 = mProgress;
                 num1 = 0;
-                for(const QString &pkg : std::as_const(resultList))
+                for (const QString &pkg : std::as_const(resultList))
                 {
                     ++num1;
                     int curValue = Map<int, int>(num1, 0, resultList.size(), num0, 80);
-                    adskiller_write_log(QString(" >> md5 hash %1").arg(QString(QCryptographicHash::hash(pkg.toLatin1(), QCryptographicHash::Md5).toHex())), curValue);
+                    adskiller_write_log(
+                        QString(" >> md5 hash %1")
+                            .arg(QString(QCryptographicHash::hash(pkg.toLatin1(), QCryptographicHash::Md5).toHex())),
+                        curValue);
                     WAITMODE2;
                 }
                 WAITMODE;
@@ -743,7 +783,7 @@ void adskiller_awake(AdsKillerService *service)
 
                 lastResult = 0;
                 num1 = static_cast<int>(resultList.size());
-                if(!resultList.isEmpty() && !Adb::uninstallPackages(adbDeviceSerial, resultList, lastResult))
+                if (!resultList.isEmpty() && !Adb::uninstallPackages(adbDeviceSerial, resultList, lastResult))
                 {
                     adskiller_write_log_head("Ошибка");
                     adskiller_write_log("Что-то пошло не так. Возможно устройство было отключено.");
@@ -753,10 +793,10 @@ void adskiller_awake(AdsKillerService *service)
                     break;
                 }
                 num0 = lastResult;
-                if(!disableList.isEmpty())
+                if (!disableList.isEmpty())
                 {
                     num1 += static_cast<int>(disableList.size());
-                    if(!Adb::disablePackages(adbDeviceSerial, disableList, lastResult))
+                    if (!Adb::disablePackages(adbDeviceSerial, disableList, lastResult))
                     {
                         adskiller_write_log_head("Ошибка");
                         adskiller_write_log("Что-то пошло не так. Возможно устройство было отключено.");
@@ -769,7 +809,7 @@ void adskiller_awake(AdsKillerService *service)
                 }
 
                 mProgress = Map<int, int>(num0, 1, num1, mProgress, 99);
-                if(num0 != num1)
+                if (num0 != num1)
                     adskiller_write_log("Предупреждение: Процесс частично успешен. Повторите.");
                 else
                     mProgress = 99;
@@ -782,9 +822,9 @@ void adskiller_awake(AdsKillerService *service)
                 WAIT(2000);
 
                 isFinish = 1;
-                if(mCmd < 0)
+                if (mCmd < 0)
                 {
-                    if(mCmd == CommandExecForceKill)
+                    if (mCmd == CommandExecForceKill)
                     {
                         status = MalwareStatus::Idle;
                     }
@@ -798,7 +838,7 @@ void adskiller_awake(AdsKillerService *service)
                 {
                     QString text = "Процедура завершена.";
                     auto durationProcedure = duration_cast<seconds>(steady_clock::now() - procedureStartAt);
-                    if(totalMalwareDetected)
+                    if (totalMalwareDetected)
                     {
                         text += " Рекламных вирусов удалено %1.";
                         text = text.arg(totalMalwareDetected);
@@ -819,24 +859,24 @@ void AdsKillerService::onPullServiceUUID(const QJsonObject responce, const QStri
     QString cmd;
 
     _priv->lastNetStatus = 1;
-    while(true)
+    while (true)
     {
-        if(ok)
+        if (ok)
         {
             cmd = responce["cmd"].toString();
-            if(cmd == NET_COMMAND_GETADS)
+            if (cmd == NET_COMMAND_GETADS)
             {
                 _priv->adsdata = std::make_shared<AdsInfo>();
                 _priv->adsdata->labs = fromJsonLabs(responce["labs"]);
                 jarray = responce["result"].toArray();
-                for(const QJsonValue &val : std::as_const(jarray))
+                for (const QJsonValue &val : std::as_const(jarray))
                     _priv->adsdata->blacklist << val.toString();
                 jarray = responce["autodisable"].toArray();
-                if(!responce["autodisable"].isNull())
-                    for(const QJsonValue &val : std::as_const(jarray))
+                if (!responce["autodisable"].isNull())
+                    for (const QJsonValue &val : std::as_const(jarray))
                         _priv->adsdata->disabling << val.toString();
             }
-            else if(cmd == NET_COMMAND_MDKEYSTATE || cmd == NET_COMMAND_UPLOADPACKAGES)
+            else if (cmd == NET_COMMAND_MDKEYSTATE || cmd == NET_COMMAND_UPLOADPACKAGES)
             {
                 _priv->labInfo = std::make_shared<LabStatusInfo>(fromJsonLabs(responce["labs"]));
             }

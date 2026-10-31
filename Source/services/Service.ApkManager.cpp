@@ -40,17 +40,23 @@
 #include "Services.h"
 #include "MainWindow.h"
 
-QIcon extractAppIcon(AdbShell &shell, const QString &apkPath, const QString &pkgName, const QString &appName, bool isSystem, QMap<QString, QIcon> &cache)
+QIcon extractAppIcon(
+    AdbShell &shell,
+    const QString &apkPath,
+    const QString &pkgName,
+    const QString &appName,
+    bool isSystem,
+    QMap<QString, QIcon> &cache)
 {
-    if(cache.contains(pkgName))
+    if (cache.contains(pkgName))
         return cache.value(pkgName);
 
     QString cacheDir = QDir::tempPath() + "/adskiller_apk_icons";
     QString cacheFile = cacheDir + "/" + pkgName + ".png";
-    if(QFile::exists(cacheFile))
+    if (QFile::exists(cacheFile))
     {
         QPixmap diskPix(cacheFile);
-        if(!diskPix.isNull())
+        if (!diskPix.isNull())
         {
             QIcon icon(diskPix);
             cache[pkgName] = icon;
@@ -59,10 +65,10 @@ QIcon extractAppIcon(AdbShell &shell, const QString &apkPath, const QString &pkg
     }
 
     QByteArray rawData = shell.extractPackageIconData(apkPath, pkgName);
-    if(!rawData.isEmpty())
+    if (!rawData.isEmpty())
     {
         QPixmap pix;
-        if(pix.loadFromData(rawData))
+        if (pix.loadFromData(rawData))
         {
             QDir().mkpath(cacheDir);
             pix.save(cacheFile, "PNG");
@@ -77,7 +83,8 @@ QIcon extractAppIcon(AdbShell &shell, const QString &apkPath, const QString &pkg
     return fallback;
 }
 
-ApkManagerWidget::ApkManagerWidget(QWidget *parent) : QWidget(parent)
+ApkManagerWidget::ApkManagerWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setupUi();
 }
@@ -92,25 +99,35 @@ void ApkManagerWidget::setupUi()
 {
     setStyleSheet(
         "QWidget { background-color: #0A0E1A; color: #F8FAFC; font-family: 'Segoe UI', 'Noto Sans', sans-serif; }"
-        "QTableWidget { background-color: #0B0F19; alternate-background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; border-radius: 0px; gridline-color: #161F33; selection-background-color: #0284C7; selection-color: #FFFFFF; font-size: 12px; }"
-        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; font-weight: bold; font-size: 11px; border: none; border-bottom: 1px solid #1E293B; padding: 6px 8px; }"
-        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 10px; font-size: 12px; }"
+        "QTableWidget { background-color: #0B0F19; alternate-background-color: #0F172A; color: #F8FAFC; border: 1px "
+        "solid #1E293B; border-radius: 0px; gridline-color: #161F33; selection-background-color: #0284C7; "
+        "selection-color: #FFFFFF; font-size: 12px; }"
+        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; font-weight: bold; font-size: 11px; border: "
+        "none; border-bottom: 1px solid #1E293B; padding: 6px 8px; }"
+        "QLineEdit { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; "
+        "padding: 5px 10px; font-size: 12px; }"
         "QLineEdit:focus { border-color: #38BDF8; }"
-        "QComboBox { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 24px 5px 10px; font-size: 11.5px; font-weight: 500; }"
+        "QComboBox { background-color: #0F172A; color: #F8FAFC; border: 1.5px solid #1E293B; border-radius: 0px; "
+        "padding: 5px 24px 5px 10px; font-size: 11.5px; font-weight: 500; }"
         "QComboBox:hover { border-color: #38BDF8; background-color: #131E35; }"
-        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; border: none; width: 22px; background-color: transparent; }"
+        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; border: none; width: 22px; "
+        "background-color: transparent; }"
         "QComboBox::down-arrow { image: url(:/svg/arrow-down); width: 12px; height: 12px; }"
         "QComboBox::down-arrow:hover { image: url(:/svg/arrow-down-hover); }"
-        "QComboBox QAbstractItemView { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; selection-background-color: #0284C7; selection-color: #FFFFFF; padding: 4px; }"
-        "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
+        "QComboBox QAbstractItemView { background-color: #0F172A; color: #F8FAFC; border: 1px solid #1E293B; "
+        "selection-background-color: #0284C7; selection-color: #FFFFFF; padding: 4px; }"
+        "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; "
+        "padding: 5px 12px; font-size: 11.5px; font-weight: 600; }"
         "QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }"
         "QPushButton:pressed { background-color: #0B101D; border-color: #0284C7; }"
         "QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; }"
         "QTabWidget::pane { border: 1px solid #1E293B; background-color: #0B0F19; border-radius: 0px; }"
-        "QTabBar::tab { background: #0F172A; color: #94A3B8; padding: 6px 14px; font-size: 11.5px; font-weight: 600; border-radius: 0px; border-radius: 0px; margin-right: 2px; }"
+        "QTabBar::tab { background: #0F172A; color: #94A3B8; padding: 6px 14px; font-size: 11.5px; font-weight: 600; "
+        "border-radius: 0px; border-radius: 0px; margin-right: 2px; }"
         "QTabBar::tab:selected { background: #0B0F19; color: #38BDF8; border-bottom: 2px solid #38BDF8; }"
         "QTabBar::tab:hover:!selected { background: #131E35; color: #FFFFFF; }"
-        "QTextEdit { background-color: #080C14; color: #E2E8F0; border: 1px solid #1E293B; border-radius: 0px; font-family: monospace; font-size: 11.5px; }"
+        "QTextEdit { background-color: #080C14; color: #E2E8F0; border: 1px solid #1E293B; border-radius: 0px; "
+        "font-family: monospace; font-size: 11.5px; }"
         "QLabel { color: #94A3B8; font-size: 11.5px; }");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -131,7 +148,11 @@ void ApkManagerWidget::setupUi()
     m_filterCombo->addItem("Пользовательские (3rd-party)", "user");
     m_filterCombo->addItem("Системные (System)", "system");
     m_filterCombo->addItem("Отключенные (Disabled)", "disabled");
-    connect(m_filterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ApkManagerWidget::onSearchOrFilterChanged);
+    connect(
+        m_filterCombo,
+        QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this,
+        &ApkManagerWidget::onSearchOrFilterChanged);
 
     QPushButton *btnRefresh = new QPushButton("Обновить", this);
     btnRefresh->setIcon(QIcon(":/svg/refresh-cw"));
@@ -142,7 +163,8 @@ void ApkManagerWidget::setupUi()
     btnInstall->setIcon(QIcon(":/svg/plus"));
     btnInstall->setIconSize(QSize(13, 13));
     btnInstall->setStyleSheet(
-        "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 6px 14px; border: none; border-radius: 0px; }"
+        "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 6px 14px; border: none; "
+        "border-radius: 0px; }"
         "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0369A1, stop:1 #38BDF8); }");
     connect(btnInstall, &QPushButton::clicked, this, &ApkManagerWidget::installApk);
 
@@ -165,7 +187,8 @@ void ApkManagerWidget::setupUi()
 
     m_table = new QTableWidget(leftContainer);
     m_table->setColumnCount(5);
-    m_table->setHorizontalHeaderLabels(QStringList() << "Иконка" << "Приложение" << "Package ID" << "Тип" << "Состояние");
+    m_table->setHorizontalHeaderLabels(
+        QStringList() << "Иконка" << "Приложение" << "Package ID" << "Тип" << "Состояние");
     m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     m_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     m_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
@@ -191,7 +214,8 @@ void ApkManagerWidget::setupUi()
 
     // Top App Info Card
     QFrame *appCard = new QFrame(rightContainer);
-    appCard->setStyleSheet("QFrame { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; padding: 6px; }");
+    appCard->setStyleSheet(
+        "QFrame { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 0px; padding: 6px; }");
     QHBoxLayout *cardLayout = new QHBoxLayout(appCard);
     cardLayout->setContentsMargins(10, 8, 10, 8);
     cardLayout->setSpacing(14);
@@ -227,13 +251,19 @@ void ApkManagerWidget::setupUi()
     badgesLayout->setSpacing(6);
 
     m_typeBadge = new QLabel("-", appCard);
-    m_typeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+    m_typeBadge->setStyleSheet(
+        "background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; "
+        "font-size: 10.5px; font-weight: 600;");
 
     m_statusBadge = new QLabel("-", appCard);
-    m_statusBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+    m_statusBadge->setStyleSheet(
+        "background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; "
+        "font-size: 10.5px; font-weight: 600;");
 
     m_installerBadge = new QLabel("-", appCard);
-    m_installerBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+    m_installerBadge->setStyleSheet(
+        "background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; "
+        "font-size: 10.5px; font-weight: 600;");
 
     badgesLayout->addWidget(m_typeBadge);
     badgesLayout->addWidget(m_statusBadge);
@@ -255,13 +285,17 @@ void ApkManagerWidget::setupUi()
     m_btnLaunch = new QPushButton("Запустить", rightContainer);
     m_btnLaunch->setIcon(QIcon(":/svg/play"));
     m_btnLaunch->setIconSize(QSize(13, 13));
-    m_btnLaunch->setStyleSheet("QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { background-color: #059669; color: #FFFFFF; }");
+    m_btnLaunch->setStyleSheet(
+        "QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { "
+        "background-color: #059669; color: #FFFFFF; }");
     connect(m_btnLaunch, &QPushButton::clicked, this, &ApkManagerWidget::launchApp);
 
     m_btnStop = new QPushButton("Остановить", rightContainer);
     m_btnStop->setIcon(QIcon(":/svg/close"));
     m_btnStop->setIconSize(QSize(13, 13));
-    m_btnStop->setStyleSheet("QPushButton { background-color: #78350F; color: #FBBF24; border: 1px solid #D97706; } QPushButton:hover { background-color: #D97706; color: #FFFFFF; }");
+    m_btnStop->setStyleSheet(
+        "QPushButton { background-color: #78350F; color: #FBBF24; border: 1px solid #D97706; } QPushButton:hover { "
+        "background-color: #D97706; color: #FFFFFF; }");
     connect(m_btnStop, &QPushButton::clicked, this, &ApkManagerWidget::forceStopApp);
 
     m_btnToggleFreeze = new QPushButton("Отключить", rightContainer);
@@ -282,7 +316,10 @@ void ApkManagerWidget::setupUi()
     m_btnUninstall = new QPushButton("Удалить", rightContainer);
     m_btnUninstall->setIcon(QIcon(":/svg/trash"));
     m_btnUninstall->setIconSize(QSize(13, 13));
-    m_btnUninstall->setStyleSheet("QPushButton { background-color: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); } QPushButton:hover { background-color: rgba(239, 68, 68, 0.3); color: #FFA3A3; border-color: #EF4444; }");
+    m_btnUninstall->setStyleSheet(
+        "QPushButton { background-color: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, "
+        "0.4); } QPushButton:hover { background-color: rgba(239, 68, 68, 0.3); color: #FFA3A3; border-color: #EF4444; "
+        "}");
     connect(m_btnUninstall, &QPushButton::clicked, this, &ApkManagerWidget::uninstallApp);
 
     actionsLayout->addWidget(m_btnLaunch);
@@ -412,13 +449,13 @@ void ApkManagerWidget::updateButtonsEnabled(bool enabled)
 
 void ApkManagerWidget::loadPackages()
 {
-    if(m_device.devId.isEmpty() && MainWindow::current && !MainWindow::current->currentAdbDevice().isEmpty())
+    if (m_device.devId.isEmpty() && MainWindow::current && !MainWindow::current->currentAdbDevice().isEmpty())
         setDevice(MainWindow::current->currentAdbDevice());
 
-    if(!m_shell.isConnect() && !m_device.devId.isEmpty())
+    if (!m_shell.isConnect() && !m_device.devId.isEmpty())
         m_shell.connect(m_device.devId);
 
-    if(!m_shell.isConnect())
+    if (!m_shell.isConnect())
     {
         m_statusLabel->setText("Нет подключения к устройству");
         return;
@@ -428,14 +465,14 @@ void ApkManagerWidget::loadPackages()
     qApp->processEvents();
 
     auto packages = m_shell.getPackageList();
-    if(packages.isEmpty() && !m_shell.isConnect())
+    if (packages.isEmpty() && !m_shell.isConnect())
     {
         m_statusLabel->setText("[X] Ошибка при получении списка пакетов");
         return;
     }
 
     m_allPackages.clear();
-    for(const auto &p : packages)
+    for (const auto &p : packages)
     {
         AppPackageInfo info;
         static_cast<AdbPackageInfo &>(info) = p;
@@ -446,17 +483,21 @@ void ApkManagerWidget::loadPackages()
     populateTable();
 
     int userCount = 0, sysCount = 0, disCount = 0;
-    for(const auto &p : m_allPackages)
+    for (const auto &p : m_allPackages)
     {
-        if(p.isSystem)
+        if (p.isSystem)
             sysCount++;
         else
             userCount++;
-        if(p.isDisabled)
+        if (p.isDisabled)
             disCount++;
     }
 
-    m_statCountLabel->setText(QString("Всего: %1 | Пользовательских: %2 | Системных: %3 | Отключенных: %4").arg(m_allPackages.size()).arg(userCount).arg(sysCount).arg(disCount));
+    m_statCountLabel->setText(QString("Всего: %1 | Пользовательских: %2 | Системных: %3 | Отключенных: %4")
+                                  .arg(m_allPackages.size())
+                                  .arg(userCount)
+                                  .arg(sysCount)
+                                  .arg(disCount));
     m_statusLabel->setText("Готово");
 }
 
@@ -468,20 +509,20 @@ void ApkManagerWidget::populateTable()
     QString filterType = m_filterCombo->currentData().toString();
 
     int row = 0;
-    for(int i = 0; i < m_allPackages.size(); ++i)
+    for (int i = 0; i < m_allPackages.size(); ++i)
     {
         const AppPackageInfo &info = m_allPackages[i];
 
-        if(filterType == "user" && info.isSystem)
+        if (filterType == "user" && info.isSystem)
             continue;
-        if(filterType == "system" && !info.isSystem)
+        if (filterType == "system" && !info.isSystem)
             continue;
-        if(filterType == "disabled" && !info.isDisabled)
+        if (filterType == "disabled" && !info.isDisabled)
             continue;
 
-        if(!filterText.isEmpty())
+        if (!filterText.isEmpty())
         {
-            if(!info.packageName.toLower().contains(filterText) && !info.appName.toLower().contains(filterText))
+            if (!info.packageName.toLower().contains(filterText) && !info.appName.toLower().contains(filterText))
                 continue;
         }
 
@@ -497,10 +538,12 @@ void ApkManagerWidget::populateTable()
         QTableWidgetItem *pkgItem = new QTableWidgetItem(info.packageName);
         pkgItem->setData(Qt::UserRole, i);
 
-        QTableWidgetItem *typeItem = new QTableWidgetItem(QIcon(info.isSystem ? ":/svg/settings" : ":/svg/users"), info.isSystem ? "Системное" : "Пользовательское");
+        QTableWidgetItem *typeItem = new QTableWidgetItem(
+            QIcon(info.isSystem ? ":/svg/settings" : ":/svg/users"), info.isSystem ? "Системное" : "Пользовательское");
         typeItem->setForeground(info.isSystem ? QColor("#94A3B8") : QColor("#34D399"));
 
-        QTableWidgetItem *statusItem = new QTableWidgetItem(QIcon(info.isDisabled ? ":/svg/close" : ":/svg/check"), info.isDisabled ? "Отключено" : "Активно");
+        QTableWidgetItem *statusItem = new QTableWidgetItem(
+            QIcon(info.isDisabled ? ":/svg/close" : ":/svg/check"), info.isDisabled ? "Отключено" : "Активно");
         statusItem->setForeground(info.isDisabled ? QColor("#EF4444") : QColor("#10B981"));
 
         m_table->setItem(row, 0, iconItem);
@@ -512,7 +555,7 @@ void ApkManagerWidget::populateTable()
         row++;
     }
 
-    if(m_table->rowCount() > 0)
+    if (m_table->rowCount() > 0)
     {
         m_table->selectRow(0);
     }
@@ -545,18 +588,18 @@ void ApkManagerWidget::clearInspector()
 void ApkManagerWidget::onPackageSelected()
 {
     int curRow = m_table->currentRow();
-    if(curRow < 0)
+    if (curRow < 0)
     {
         clearInspector();
         return;
     }
 
     QTableWidgetItem *item = m_table->item(curRow, 0);
-    if(!item)
+    if (!item)
         return;
 
     int pkgIndex = item->data(Qt::UserRole).toInt();
-    if(pkgIndex < 0 || pkgIndex >= m_allPackages.size())
+    if (pkgIndex < 0 || pkgIndex >= m_allPackages.size())
         return;
 
     AppPackageInfo &pkgInfo = m_allPackages[pkgIndex];
@@ -568,43 +611,56 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
     m_statusLabel->setText("Получение подробных данных для " + pkgInfo.packageName + "...");
     qApp->processEvents();
 
-    QIcon extracted = extractAppIcon(m_shell, pkgInfo.apkPath, pkgInfo.packageName, pkgInfo.appName, pkgInfo.isSystem, m_iconCache);
+    QIcon extracted
+        = extractAppIcon(m_shell, pkgInfo.apkPath, pkgInfo.packageName, pkgInfo.appName, pkgInfo.isSystem, m_iconCache);
     pkgInfo.icon = extracted;
 
     QTableWidgetItem *iconItem = m_table->item(tableRow, 0);
-    if(iconItem)
+    if (iconItem)
         iconItem->setIcon(extracted);
 
     m_appIconLabel->setPixmap(extracted.pixmap(64, 64));
     m_appNameLabel->setText(pkgInfo.appName);
     m_packageIdLabel->setText(pkgInfo.packageName);
 
-    if(pkgInfo.isSystem)
+    if (pkgInfo.isSystem)
     {
         m_typeBadge->setText("Системное");
-        m_typeBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+        m_typeBadge->setStyleSheet(
+            "background-color: #1E293B; color: #94A3B8; border: 1px solid #334155; border-radius: 0px; padding: 2px "
+            "8px; font-size: 10.5px; font-weight: 600;");
     }
     else
     {
         m_typeBadge->setText("Пользовательское");
-        m_typeBadge->setStyleSheet("background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+        m_typeBadge->setStyleSheet(
+            "background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: 2px "
+            "8px; font-size: 10.5px; font-weight: 600;");
     }
 
-    if(pkgInfo.isDisabled)
+    if (pkgInfo.isDisabled)
     {
         m_statusBadge->setText("Отключено");
-        m_statusBadge->setStyleSheet("background-color: #450A0A; color: #F87171; border: 1px solid #DC2626; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+        m_statusBadge->setStyleSheet(
+            "background-color: #450A0A; color: #F87171; border: 1px solid #DC2626; border-radius: 0px; padding: 2px "
+            "8px; font-size: 10.5px; font-weight: 600;");
         m_btnToggleFreeze->setText("Включить");
         m_btnToggleFreeze->setIcon(QIcon(":/svg/play"));
-        m_btnToggleFreeze->setStyleSheet("QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { background-color: #059669; color: #FFFFFF; }");
+        m_btnToggleFreeze->setStyleSheet(
+            "QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { "
+            "background-color: #059669; color: #FFFFFF; }");
     }
     else
     {
         m_statusBadge->setText("Активно");
-        m_statusBadge->setStyleSheet("background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+        m_statusBadge->setStyleSheet(
+            "background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: 2px "
+            "8px; font-size: 10.5px; font-weight: 600;");
         m_btnToggleFreeze->setText("Отключить");
         m_btnToggleFreeze->setIcon(QIcon(":/svg/close"));
-        m_btnToggleFreeze->setStyleSheet("QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; } QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
+        m_btnToggleFreeze->setStyleSheet(
+            "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; "
+            "} QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
     }
 
     auto details = m_shell.getPackageDetails(pkgInfo.packageName);
@@ -615,15 +671,15 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
     m_currentDetails.isSystem = pkgInfo.isSystem;
     m_currentDetails.isDisabled = pkgInfo.isDisabled;
 
-    if(m_currentDetails.codePath.isEmpty() || m_currentDetails.codePath == "-")
+    if (m_currentDetails.codePath.isEmpty() || m_currentDetails.codePath == "-")
         m_currentDetails.codePath = pkgInfo.apkPath;
 
     QString instText = m_currentDetails.installer;
-    if(instText == "com.android.vending")
+    if (instText == "com.android.vending")
         instText = "Google Play Store";
-    else if(instText.contains("packageinstaller"))
+    else if (instText.contains("packageinstaller"))
         instText = "Пакетный установщик";
-    else if(instText.isEmpty() || instText == "-")
+    else if (instText.isEmpty() || instText == "-")
         instText = "Прямая установка / ADB";
 
     m_installerBadge->setText(instText);
@@ -641,8 +697,7 @@ void ApkManagerWidget::fillOverviewTab(const AppDetails &d)
 {
     m_overviewTable->setRowCount(0);
 
-    auto addRow = [this](const QString &param, const QString &val)
-    {
+    auto addRow = [this](const QString &param, const QString &val) {
         int r = m_overviewTable->rowCount();
         m_overviewTable->insertRow(r);
 
@@ -661,7 +716,8 @@ void ApkManagerWidget::fillOverviewTab(const AppDetails &d)
     addRow("Идентификатор пакета (Package ID)", d.packageName);
     addRow("Версия (versionName)", d.versionName);
     addRow("Номер сборки (versionCode)", d.versionCode);
-    addRow("Целевая версия ОС (targetSdk)", d.targetSdk + " (" + AdbShell::sdkToAndroidVersion(d.targetSdk.toInt()) + ")");
+    addRow(
+        "Целевая версия ОС (targetSdk)", d.targetSdk + " (" + AdbShell::sdkToAndroidVersion(d.targetSdk.toInt()) + ")");
     addRow("Минимальная версия ОС (minSdk)", d.minSdk + " (" + AdbShell::sdkToAndroidVersion(d.minSdk.toInt()) + ")");
     addRow("Размер файла APK", d.apkSize > 0 ? Generic::formatSizes(d.apkSize) : "-");
     addRow("Путь к APK на устройстве", d.codePath);
@@ -679,66 +735,67 @@ void ApkManagerWidget::fillPermissionsTab(const AppDetails &d)
     m_permTable->setRowCount(0);
     int grantedCount = 0;
 
-    for(const QString &perm : d.requestedPermissions)
+    for (const QString &perm : d.requestedPermissions)
     {
         int r = m_permTable->rowCount();
         m_permTable->insertRow(r);
 
         QString cat = "Системное";
         QString catIcon = ":/svg/settings";
-        if(perm.contains("CAMERA"))
+        if (perm.contains("CAMERA"))
         {
             cat = "Камера";
             catIcon = ":/svg/eye";
         }
-        else if(perm.contains("LOCATION"))
+        else if (perm.contains("LOCATION"))
         {
             cat = "Геолокация";
             catIcon = ":/svg/globe";
         }
-        else if(perm.contains("AUDIO") || perm.contains("RECORD"))
+        else if (perm.contains("AUDIO") || perm.contains("RECORD"))
         {
             cat = "Микрофон";
             catIcon = ":/svg/volume";
         }
-        else if(perm.contains("STORAGE") || perm.contains("MEDIA"))
+        else if (perm.contains("STORAGE") || perm.contains("MEDIA"))
         {
             cat = "Память и файлы";
             catIcon = ":/svg/folder";
         }
-        else if(perm.contains("CONTACTS"))
+        else if (perm.contains("CONTACTS"))
         {
             cat = "Контакты";
             catIcon = ":/svg/users";
         }
-        else if(perm.contains("SMS") || perm.contains("PHONE") || perm.contains("CALL"))
+        else if (perm.contains("SMS") || perm.contains("PHONE") || perm.contains("CALL"))
         {
             cat = "Связь и SMS";
             catIcon = ":/svg/message-circle";
         }
-        else if(perm.contains("INTERNET") || perm.contains("NETWORK"))
+        else if (perm.contains("INTERNET") || perm.contains("NETWORK"))
         {
             cat = "Интернет";
             catIcon = ":/svg/wifi";
         }
-        else if(perm.contains("BLUETOOTH"))
+        else if (perm.contains("BLUETOOTH"))
         {
             cat = "Bluetooth";
             catIcon = ":/svg/wifi";
         }
-        else if(perm.contains("NOTIFICATION"))
+        else if (perm.contains("NOTIFICATION"))
         {
             cat = "Уведомления";
             catIcon = ":/svg/lightbulb";
         }
 
         bool granted = d.grantedPermissions.contains(perm);
-        if(granted)
+        if (granted)
             grantedCount++;
 
         QTableWidgetItem *catItem = new QTableWidgetItem(QIcon(catIcon), cat);
         QTableWidgetItem *permItem = new QTableWidgetItem(perm);
-        QTableWidgetItem *statusItem = new QTableWidgetItem(QIcon(granted ? ":/svg/check" : ":/svg/close"), granted ? "Разрешено" : "Запрещено");
+        QTableWidgetItem *statusItem
+            = new QTableWidgetItem(QIcon(granted ? ":/svg/check" : ":/svg/close"), granted ? "Разрешено" : "Запрещено");
         statusItem->setForeground(granted ? QColor("#34D399") : QColor("#F87171"));
 
         m_permTable->setItem(r, 0, catItem);
@@ -746,25 +803,28 @@ void ApkManagerWidget::fillPermissionsTab(const AppDetails &d)
         m_permTable->setItem(r, 2, statusItem);
     }
 
-    m_permStatLabel->setText(QString("Всего: %1 | Разрешено: %2 | Запрещено: %3").arg(d.requestedPermissions.size()).arg(grantedCount).arg(d.requestedPermissions.size() - grantedCount));
+    m_permStatLabel->setText(QString("Всего: %1 | Разрешено: %2 | Запрещено: %3")
+                                 .arg(d.requestedPermissions.size())
+                                 .arg(grantedCount)
+                                 .arg(d.requestedPermissions.size() - grantedCount));
 }
 
 void ApkManagerWidget::filterPermissions(const QString &text)
 {
     QString search = text.trimmed().toLower();
-    for(int r = 0; r < m_permTable->rowCount(); ++r)
+    for (int r = 0; r < m_permTable->rowCount(); ++r)
     {
         bool match = false;
-        if(search.isEmpty())
+        if (search.isEmpty())
         {
             match = true;
         }
         else
         {
-            for(int c = 0; c < m_permTable->columnCount(); ++c)
+            for (int c = 0; c < m_permTable->columnCount(); ++c)
             {
                 QTableWidgetItem *it = m_permTable->item(r, c);
-                if(it && it->text().toLower().contains(search))
+                if (it && it->text().toLower().contains(search))
                 {
                     match = true;
                     break;
@@ -779,8 +839,7 @@ void ApkManagerWidget::fillComponentsTab(const AppDetails &d)
 {
     m_compTable->setRowCount(0);
 
-    auto addComp = [this](const QString &type, const QString &name, const QString &iconPath)
-    {
+    auto addComp = [this](const QString &type, const QString &name, const QString &iconPath) {
         int r = m_compTable->rowCount();
         m_compTable->insertRow(r);
         QTableWidgetItem *tItem = new QTableWidgetItem(QIcon(iconPath), type);
@@ -791,25 +850,25 @@ void ApkManagerWidget::fillComponentsTab(const AppDetails &d)
         m_compTable->setItem(r, 1, nItem);
     };
 
-    for(const QString &act : d.activities)
+    for (const QString &act : d.activities)
         addComp("Активность (Activity)", act, ":/svg/play");
-    for(const QString &srv : d.services)
+    for (const QString &srv : d.services)
         addComp("Служба (Service)", srv, ":/svg/settings");
-    for(const QString &rec : d.receivers)
+    for (const QString &rec : d.receivers)
         addComp("Приемник (Receiver)", rec, ":/svg/wifi");
-    for(const QString &prv : d.providers)
+    for (const QString &prv : d.providers)
         addComp("Провайдер (Provider)", prv, ":/svg/folder");
 }
 
 void ApkManagerWidget::launchApp()
 {
-    if(m_currentDetails.packageName.isEmpty())
+    if (m_currentDetails.packageName.isEmpty())
         return;
 
     m_statusLabel->setText("Запуск " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    if(m_shell.launchPackage(m_currentDetails.packageName))
+    if (m_shell.launchPackage(m_currentDetails.packageName))
         m_statusLabel->setText("[+] Приложение запущено: " + m_currentDetails.packageName);
     else
         m_statusLabel->setText("Не удалось запустить приложение");
@@ -817,13 +876,13 @@ void ApkManagerWidget::launchApp()
 
 void ApkManagerWidget::forceStopApp()
 {
-    if(m_currentDetails.packageName.isEmpty())
+    if (m_currentDetails.packageName.isEmpty())
         return;
 
     m_statusLabel->setText("Остановка " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    if(m_shell.stopPackage(m_currentDetails.packageName))
+    if (m_shell.stopPackage(m_currentDetails.packageName))
         m_statusLabel->setText("Приложение остановлено: " + m_currentDetails.packageName);
     else
         m_statusLabel->setText("Ошибка при остановке приложения");
@@ -831,7 +890,7 @@ void ApkManagerWidget::forceStopApp()
 
 void ApkManagerWidget::toggleFreezeApp()
 {
-    if(m_currentDetails.packageName.isEmpty())
+    if (m_currentDetails.packageName.isEmpty())
         return;
 
     bool wasDisabled = m_currentDetails.isDisabled;
@@ -839,23 +898,23 @@ void ApkManagerWidget::toggleFreezeApp()
     m_statusLabel->setText((wasDisabled ? "Включение " : "Отключение ") + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    if(m_shell.setPackageEnabled(m_currentDetails.packageName, wasDisabled))
+    if (m_shell.setPackageEnabled(m_currentDetails.packageName, wasDisabled))
     {
         m_currentDetails.isDisabled = !wasDisabled;
 
         int curRow = m_table->currentRow();
-        if(curRow >= 0)
+        if (curRow >= 0)
         {
             QTableWidgetItem *item = m_table->item(curRow, 0);
-            if(item)
+            if (item)
             {
                 int idx = item->data(Qt::UserRole).toInt();
-                if(idx >= 0 && idx < m_allPackages.size())
+                if (idx >= 0 && idx < m_allPackages.size())
                     m_allPackages[idx].isDisabled = m_currentDetails.isDisabled;
             }
 
             QTableWidgetItem *statusItem = m_table->item(curRow, 4);
-            if(statusItem)
+            if (statusItem)
             {
                 statusItem->setText(m_currentDetails.isDisabled ? "Отключено" : "Активно");
                 statusItem->setIcon(QIcon(m_currentDetails.isDisabled ? ":/svg/close" : ":/svg/check"));
@@ -863,21 +922,29 @@ void ApkManagerWidget::toggleFreezeApp()
             }
         }
 
-        if(m_currentDetails.isDisabled)
+        if (m_currentDetails.isDisabled)
         {
             m_statusBadge->setText("Отключено");
-            m_statusBadge->setStyleSheet("background-color: #450A0A; color: #F87171; border: 1px solid #DC2626; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+            m_statusBadge->setStyleSheet(
+                "background-color: #450A0A; color: #F87171; border: 1px solid #DC2626; border-radius: 0px; padding: "
+                "2px 8px; font-size: 10.5px; font-weight: 600;");
             m_btnToggleFreeze->setText("Включить");
             m_btnToggleFreeze->setIcon(QIcon(":/svg/play"));
-            m_btnToggleFreeze->setStyleSheet("QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { background-color: #059669; color: #FFFFFF; }");
+            m_btnToggleFreeze->setStyleSheet(
+                "QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } "
+                "QPushButton:hover { background-color: #059669; color: #FFFFFF; }");
         }
         else
         {
             m_statusBadge->setText("Активно");
-            m_statusBadge->setStyleSheet("background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: 2px 8px; font-size: 10.5px; font-weight: 600;");
+            m_statusBadge->setStyleSheet(
+                "background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: "
+                "2px 8px; font-size: 10.5px; font-weight: 600;");
             m_btnToggleFreeze->setText("Отключить");
             m_btnToggleFreeze->setIcon(QIcon(":/svg/close"));
-            m_btnToggleFreeze->setStyleSheet("QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; } QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
+            m_btnToggleFreeze->setStyleSheet(
+                "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: "
+                "0px; } QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
         }
 
         m_statusLabel->setText(wasDisabled ? "[+] Приложение включено" : "Приложение отключено");
@@ -890,18 +957,23 @@ void ApkManagerWidget::toggleFreezeApp()
 
 void ApkManagerWidget::clearAppData()
 {
-    if(m_currentDetails.packageName.isEmpty())
+    if (m_currentDetails.packageName.isEmpty())
         return;
 
-    auto ans = QMessageBox::question(this, "Очистка данных", "Вы действительно хотите сбросить все данные и кэш приложения " + m_currentDetails.appName + " (" + m_currentDetails.packageName + ")?", QMessageBox::Yes | QMessageBox::No);
+    auto ans = QMessageBox::question(
+        this,
+        "Очистка данных",
+        "Вы действительно хотите сбросить все данные и кэш приложения " + m_currentDetails.appName + " ("
+            + m_currentDetails.packageName + ")?",
+        QMessageBox::Yes | QMessageBox::No);
 
-    if(ans != QMessageBox::Yes)
+    if (ans != QMessageBox::Yes)
         return;
 
     m_statusLabel->setText("Очистка данных " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    if(m_shell.clearPackageData(m_currentDetails.packageName))
+    if (m_shell.clearPackageData(m_currentDetails.packageName))
         m_statusLabel->setText("[+] Данные приложения успешно сброшены");
     else
         m_statusLabel->setText("[x] Не удалось очистить данные");
@@ -909,18 +981,18 @@ void ApkManagerWidget::clearAppData()
 
 void ApkManagerWidget::exportSelectedApk()
 {
-    if(m_currentDetails.packageName.isEmpty() || m_currentDetails.codePath.isEmpty())
+    if (m_currentDetails.packageName.isEmpty() || m_currentDetails.codePath.isEmpty())
         return;
 
     QString defName = QDir::homePath() + "/" + m_currentDetails.packageName + ".apk";
     QString savePath = QFileDialog::getSaveFileName(this, "Сохранить APK файл", defName, "Android Package (*.apk)");
-    if(savePath.isEmpty())
+    if (savePath.isEmpty())
         return;
 
     m_statusLabel->setText("Выгрузка APK файла с устройства...");
     qApp->processEvents();
 
-    if(m_shell.pullFile(m_currentDetails.codePath, savePath))
+    if (m_shell.pullFile(m_currentDetails.codePath, savePath))
     {
         m_statusLabel->setText("[+] APK успешно сохранен: " + savePath);
         QMessageBox::information(this, "Успешно", "APK файл успешно выгружен на компьютер:\n" + savePath);
@@ -934,8 +1006,9 @@ void ApkManagerWidget::exportSelectedApk()
 
 void ApkManagerWidget::installApk()
 {
-    QString apkFile = QFileDialog::getOpenFileName(this, "Выберите APK файл для установки", QDir::homePath(), "Android Package (*.apk)");
-    if(apkFile.isEmpty())
+    QString apkFile = QFileDialog::getOpenFileName(
+        this, "Выберите APK файл для установки", QDir::homePath(), "Android Package (*.apk)");
+    if (apkFile.isEmpty())
         return;
 
     m_statusLabel->setText("Установка APK на устройство...");
@@ -943,7 +1016,7 @@ void ApkManagerWidget::installApk()
 
     auto [ok, output] = m_shell.installPackage(apkFile, true);
 
-    if(ok)
+    if (ok)
     {
         m_statusLabel->setText("[+] Приложение успешно установлено!");
         QMessageBox::information(this, "Установка завершена", "Приложение успешно установлено на устройство.");
@@ -958,18 +1031,23 @@ void ApkManagerWidget::installApk()
 
 void ApkManagerWidget::uninstallApp()
 {
-    if(m_currentDetails.packageName.isEmpty())
+    if (m_currentDetails.packageName.isEmpty())
         return;
 
-    auto ans = QMessageBox::question(this, "Удаление приложения", "Вы действительно хотите удалить " + m_currentDetails.appName + "\n(" + m_currentDetails.packageName + ") с устройства?", QMessageBox::Yes | QMessageBox::No);
+    auto ans = QMessageBox::question(
+        this,
+        "Удаление приложения",
+        "Вы действительно хотите удалить " + m_currentDetails.appName + "\n(" + m_currentDetails.packageName
+            + ") с устройства?",
+        QMessageBox::Yes | QMessageBox::No);
 
-    if(ans != QMessageBox::Yes)
+    if (ans != QMessageBox::Yes)
         return;
 
     m_statusLabel->setText("Удаление " + m_currentDetails.packageName + "...");
     qApp->processEvents();
 
-    if(m_shell.uninstallPackage(m_currentDetails.packageName))
+    if (m_shell.uninstallPackage(m_currentDetails.packageName))
     {
         m_statusLabel->setText("[+] Приложение удалено: " + m_currentDetails.packageName);
         QMessageBox::information(this, "Удалено", "Приложение успешно удалено.");
@@ -984,7 +1062,7 @@ void ApkManagerWidget::uninstallApp()
 
 void ApkManagerWidget::copyPackageId()
 {
-    if(!m_currentDetails.packageName.isEmpty())
+    if (!m_currentDetails.packageName.isEmpty())
     {
         QApplication::clipboard()->setText(m_currentDetails.packageName);
         m_statusLabel->setText("Package ID скопирован в буфер обмена");
@@ -993,7 +1071,7 @@ void ApkManagerWidget::copyPackageId()
 
 void ApkManagerWidget::copyRawDumpsys()
 {
-    if(!m_dumpsysEdit->toPlainText().isEmpty())
+    if (!m_dumpsysEdit->toPlainText().isEmpty())
     {
         QApplication::clipboard()->setText(m_dumpsysEdit->toPlainText());
         m_statusLabel->setText("Дамп скопирован в буфер обмена");
@@ -1006,25 +1084,26 @@ void ApkManagerWidget::resetSession()
     m_iconCache.clear();
     m_currentDetails = AppDetails();
 
-    if(m_table)
+    if (m_table)
     {
         m_table->blockSignals(true);
         m_table->setRowCount(0);
         m_table->blockSignals(false);
     }
 
-    if(m_searchEdit)
+    if (m_searchEdit)
         m_searchEdit->clear();
 
     clearInspector();
 
-    if(m_statusLabel)
+    if (m_statusLabel)
         m_statusLabel->setText(QString::fromUtf8("Готов"));
-    if(m_statCountLabel)
+    if (m_statCountLabel)
         m_statCountLabel->setText(QString::fromUtf8("Приложений: 0"));
 }
 
-ApkManagerService::ApkManagerService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
+ApkManagerService::ApkManagerService(QObject *parent)
+    : Service(DeviceConnectType::ADB, parent)
 {
     title = "APK Менеджер";
 }
@@ -1042,14 +1121,16 @@ QString ApkManagerService::uuid() const
 QString ApkManagerService::getInternalData()
 {
     QStringList data {"Device = " + mAdbDevice.devId};
-    auto *widget = MainWindow::current ? static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage)) : nullptr;
-    if(widget)
+    auto *widget = MainWindow::current
+                       ? static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage))
+                       : nullptr;
+    if (widget)
     {
         data << "Search = " + widget->m_searchEdit->text() << "Filter = " + widget->m_filterCombo->currentText();
         QStringList packages;
-        for(int row = 0; row < widget->m_table->rowCount(); ++row)
+        for (int row = 0; row < widget->m_table->rowCount(); ++row)
         {
-            if(auto *item = widget->m_table->item(row, 2))
+            if (auto *item = widget->m_table->item(row, 2))
                 packages << item->text();
         }
         data << "Packages = " + packages.join('\t');
@@ -1085,16 +1166,16 @@ bool ApkManagerService::isFinish()
 bool ApkManagerService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
             widget->setDevice(mAdbDevice);
@@ -1110,10 +1191,10 @@ void ApkManagerService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<ApkManagerWidget *>(MainWindow::current->pageWidget(ApkManagerPage));
-        if(widget)
+        if (widget)
             widget->resetSession();
     }
 }

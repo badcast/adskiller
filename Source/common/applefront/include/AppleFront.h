@@ -58,9 +58,19 @@ public:
     AppleDeviceMode mode;   // Normal, Recovery, DFU
     bool isPaired;          // Host pairing trusted
 
-    AppleDevice() : devId(), model(), displayName(), vendor("Apple"), marketingName(), productVersion(), buildVersion(), serialNumber(), ecid(), mode(AppleDeviceMode::Unknown), isPaired(false)
-    {
-    }
+    AppleDevice()
+        : devId()
+        , model()
+        , displayName()
+        , vendor("Apple")
+        , marketingName()
+        , productVersion()
+        , buildVersion()
+        , serialNumber()
+        , ecid()
+        , mode(AppleDeviceMode::Unknown)
+        , isPaired(false)
+    {}
 
     bool isEmpty() const;
     QString modeString() const;
@@ -89,9 +99,13 @@ public:
     QString activationState;
     bool passwordProtected;
 
-    AppleSysInfo() : diskTotal(-1), diskUsed(-1), batteryLevel(-1), isCharging(false), passwordProtected(false)
-    {
-    }
+    AppleSysInfo()
+        : diskTotal(-1)
+        , diskUsed(-1)
+        , batteryLevel(-1)
+        , isCharging(false)
+        , passwordProtected(false)
+    {}
 
     QString OSVersionString() const;
     QString StorageDesignString() const;

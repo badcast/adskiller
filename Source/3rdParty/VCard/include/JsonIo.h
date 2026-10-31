@@ -25,12 +25,10 @@
 class JsonWriter
 {
 public:
-    JsonWriter(std::ostream &os /*, vCvCardEncoding code = UTF_8*/) : m_os(&os)
-    {
-    }
-    ~JsonWriter()
-    {
-    }
+    JsonWriter(std::ostream &os /*, vCvCardEncoding code = UTF_8*/)
+        : m_os(&os)
+    {}
+    ~JsonWriter() {}
 
     JsonWriter &operator<<(vCard &vCard);
     JsonWriter &operator<<(std::vector<vCard> &cards);
@@ -46,12 +44,8 @@ protected:
 class JsonReader
 {
 public:
-    JsonReader()
-    {
-    }
-    ~JsonReader()
-    {
-    }
+    JsonReader() {}
+    ~JsonReader() {}
 
     std::vector<vCard> parseCards(std::istream *is);
 };

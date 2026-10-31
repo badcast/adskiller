@@ -26,7 +26,8 @@ public:
         Locked
     };
 
-    explicit AIChatBubble(Type type, const QString &text, const QString &timeStr = QString(), QWidget *parent = nullptr);
+    explicit AIChatBubble(
+        Type type, const QString &text, const QString &timeStr = QString(), QWidget *parent = nullptr);
 
     Type type() const
     {

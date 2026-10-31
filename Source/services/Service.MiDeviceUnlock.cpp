@@ -9,7 +9,8 @@
 // MiAccountWidget Implementation
 // ============================================================================
 
-MiAccountWidget::MiAccountWidget(QWidget *parent) : QWidget(parent)
+MiAccountWidget::MiAccountWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("MiAccountWidget { background-color: #0A0E1A; }");
@@ -21,9 +22,7 @@ void MiAccountWidget::setDevice(const AdbDevice &device)
     Q_UNUSED(device);
 }
 
-void MiAccountWidget::resetSession()
-{
-}
+void MiAccountWidget::resetSession() {}
 
 void MiAccountWidget::setupUi()
 {
@@ -84,7 +83,7 @@ void MiAccountWidget::setupUi()
 
 void MiAccountWidget::onBackToCabinet()
 {
-    if(MainWindow::current)
+    if (MainWindow::current)
         MainWindow::current->closeService(ServiceProvider::currentService());
 }
 
@@ -92,7 +91,8 @@ void MiAccountWidget::onBackToCabinet()
 // MiDeviceUnlockService (MI Account) Implementation
 // ============================================================================
 
-MiDeviceUnlockService::MiDeviceUnlockService(QObject *parent) : Service(DeviceConnectType::None, parent)
+MiDeviceUnlockService::MiDeviceUnlockService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
 {
     title = QString::fromUtf8("MI Account");
     m_sortScore = 200;
@@ -142,19 +142,19 @@ QString MiDeviceUnlockService::widgetIconName()
 bool MiDeviceUnlockService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<MiAccountWidget *>(MainWindow::current->pageWidget(MiAccountPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
-            if(!mAdbDevice.isEmpty())
+            if (!mAdbDevice.isEmpty())
                 widget->setDevice(mAdbDevice);
         }
     }
@@ -167,10 +167,10 @@ void MiDeviceUnlockService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<MiAccountWidget *>(MainWindow::current->pageWidget(MiAccountPage));
-        if(widget)
+        if (widget)
             widget->resetSession();
     }
 }

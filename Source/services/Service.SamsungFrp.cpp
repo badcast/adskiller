@@ -9,7 +9,8 @@
 // SamsungFrpWidget Implementation
 // ============================================================================
 
-SamsungFrpWidget::SamsungFrpWidget(QWidget *parent) : QWidget(parent)
+SamsungFrpWidget::SamsungFrpWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("SamsungFrpWidget { background-color: #0A0E1A; }");
@@ -21,9 +22,7 @@ void SamsungFrpWidget::setDevice(const AdbDevice &device)
     Q_UNUSED(device);
 }
 
-void SamsungFrpWidget::resetSession()
-{
-}
+void SamsungFrpWidget::resetSession() {}
 
 void SamsungFrpWidget::setupUi()
 {
@@ -84,7 +83,7 @@ void SamsungFrpWidget::setupUi()
 
 void SamsungFrpWidget::onBackToCabinet()
 {
-    if(MainWindow::current)
+    if (MainWindow::current)
         MainWindow::current->closeService(ServiceProvider::currentService());
 }
 
@@ -92,7 +91,8 @@ void SamsungFrpWidget::onBackToCabinet()
 // SamsungFrpService Implementation
 // ============================================================================
 
-SamsungFrpService::SamsungFrpService(QObject *parent) : Service(DeviceConnectType::None, parent)
+SamsungFrpService::SamsungFrpService(QObject *parent)
+    : Service(DeviceConnectType::None, parent)
 {
     title = QString::fromUtf8("Samsung FRP");
     m_sortScore = 180;
@@ -142,19 +142,19 @@ QString SamsungFrpService::widgetIconName()
 bool SamsungFrpService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<SamsungFrpWidget *>(MainWindow::current->pageWidget(SamsungFrpPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
-            if(!mAdbDevice.isEmpty())
+            if (!mAdbDevice.isEmpty())
                 widget->setDevice(mAdbDevice);
         }
     }
@@ -167,10 +167,10 @@ void SamsungFrpService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<SamsungFrpWidget *>(MainWindow::current->pageWidget(SamsungFrpPage));
-        if(widget)
+        if (widget)
             widget->resetSession();
     }
 }

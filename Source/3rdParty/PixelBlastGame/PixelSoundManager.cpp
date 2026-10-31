@@ -2,13 +2,13 @@
 
 #include "PixelSoundManager.h"
 
-SoundManager::SoundManager(QObject *parent) : QObject(parent)
-{
-}
+SoundManager::SoundManager(QObject *parent)
+    : QObject(parent)
+{}
 
 void SoundManager::setPoolSize(int size)
 {
-    if(size <= 0)
+    if (size <= 0)
         return;
     m_poolSize = size;
 }
@@ -21,7 +21,7 @@ void SoundManager::registerSound(const QString &name, const QUrl &url, bool asPo
 
     const int count = asPool ? m_poolSize : 1;
     effects.reserve(count);
-    for(int i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i)
     {
         QSoundEffect *se = new QSoundEffect(this);
         se->setLoopCount(1);
@@ -35,20 +35,20 @@ void SoundManager::registerSound(const QString &name, const QUrl &url, bool asPo
 void SoundManager::playSound(const QString &name, qreal volume)
 {
     auto it = m_registry.constFind(name);
-    if(it == m_registry.constEnd() || it->isEmpty())
+    if (it == m_registry.constEnd() || it->isEmpty())
         return;
 
     const QVector<QSoundEffect *> &effects = *it;
     QSoundEffect *effect = nullptr;
-    for(QSoundEffect *se : effects)
+    for (QSoundEffect *se : effects)
     {
-        if(!se->isPlaying())
+        if (!se->isPlaying())
         {
             effect = se;
             break;
         }
     }
-    if(effect == nullptr)
+    if (effect == nullptr)
     {
         int &next = m_nextIndex[name];
         effect = effects[next % effects.size()];

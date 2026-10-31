@@ -7,7 +7,8 @@
 #include <QPainterPath>
 #include <QSizePolicy>
 
-PixelBlastSideButton::PixelBlastSideButton(QWidget *parent) : QWidget(parent)
+PixelBlastSideButton::PixelBlastSideButton(QWidget *parent)
+    : QWidget(parent)
 {
     setObjectName("PixelBlastSideButton");
     setAttribute(Qt::WA_Hover, true);
@@ -19,11 +20,10 @@ PixelBlastSideButton::PixelBlastSideButton(QWidget *parent) : QWidget(parent)
     setupUi();
 
     m_borderTimer = new QTimer(this);
-    connect(m_borderTimer, &QTimer::timeout, this, [this]()
-            {
-                m_borderAngle = (m_borderAngle + 1) % 360;
-                update();
-            });
+    connect(m_borderTimer, &QTimer::timeout, this, [this]() {
+        m_borderAngle = (m_borderAngle + 1) % 360;
+        update();
+    });
     m_borderTimer->start(25);
 }
 
@@ -45,8 +45,10 @@ void PixelBlastSideButton::setupUi()
     m_textLabel->setText(
         QString::fromUtf8(
             "<div style='line-height: 110%;'>"
-            "<span style='color: #FFF7D6; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-weight: 900; font-size: 16px;'>PIXEL BLAST</span><br/>"
-            "<span style='color: #D6C7A1; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-weight: 600; font-size: 11px;'>Аркадная игра</span>"
+            "<span style='color: #FFF7D6; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-weight: "
+            "900; font-size: 16px;'>PIXEL BLAST</span><br/>"
+            "<span style='color: #D6C7A1; font-family: \"Segoe UI Variable\", \"Segoe UI\", sans-serif; font-weight: "
+            "600; font-size: 11px;'>Аркадная игра</span>"
             "</div>"));
     m_textLabel->setStyleSheet("background: transparent; border: none;");
     m_textLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -98,7 +100,7 @@ void PixelBlastSideButton::paintEvent(QPaintEvent *event)
 
 void PixelBlastSideButton::mousePressEvent(QMouseEvent *event)
 {
-    if(event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
         m_isPressed = true;
         update();
@@ -111,9 +113,9 @@ void PixelBlastSideButton::mousePressEvent(QMouseEvent *event)
 
 void PixelBlastSideButton::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
-        if(m_isPressed && rect().contains(event->pos()))
+        if (m_isPressed && rect().contains(event->pos()))
             emit clicked();
         m_isPressed = false;
         update();

@@ -26,7 +26,8 @@
 #include "Services.h"
 #include "MainWindow.h"
 
-RunningAppIconsStrip::RunningAppIconsStrip(QWidget *parent) : QWidget(parent)
+RunningAppIconsStrip::RunningAppIconsStrip(QWidget *parent)
+    : QWidget(parent)
 {
     setFixedHeight(64);
     setAttribute(Qt::WA_OpaquePaintEvent, false);
@@ -52,7 +53,7 @@ void RunningAppIconsStrip::clear()
 
 void RunningAppIconsStrip::addAppIcon(const QString &pkgName, const QPixmap &icon)
 {
-    if(m_iconMap.contains(pkgName) || icon.isNull())
+    if (m_iconMap.contains(pkgName) || icon.isNull())
         return;
 
     QPixmap rounded(42, 42);
@@ -97,7 +98,7 @@ void RunningAppIconsStrip::stopRunning()
 
 void RunningAppIconsStrip::onTick()
 {
-    if(m_items.isEmpty())
+    if (m_items.isEmpty())
         return;
 
     m_scrollOffset += 1.2;
@@ -105,7 +106,7 @@ void RunningAppIconsStrip::onTick()
     const qreal itemSpacing = 54.0;
     qreal totalSpan = m_items.size() * itemSpacing;
 
-    if(m_scrollOffset >= totalSpan)
+    if (m_scrollOffset >= totalSpan)
         m_scrollOffset = 0.0;
 
     update();
@@ -120,7 +121,7 @@ void RunningAppIconsStrip::paintEvent(QPaintEvent *)
     // Subtle dark container background
     p.fillRect(rect(), QColor(7, 10, 18, 160));
 
-    if(m_items.isEmpty())
+    if (m_items.isEmpty())
     {
         p.setPen(QColor(100, 116, 139));
         p.setFont(QFont("Segoe UI", 10));
@@ -134,17 +135,17 @@ void RunningAppIconsStrip::paintEvent(QPaintEvent *)
 
     // Draw conveyor icons wrapped
     qreal startX = -m_scrollOffset;
-    while(startX < width())
+    while (startX < width())
     {
-        for(int i = 0; i < m_items.size(); ++i)
+        for (int i = 0; i < m_items.size(); ++i)
         {
             qreal drawX = startX + i * itemSpacing;
-            if(drawX > -50 && drawX < width() + 50)
+            if (drawX > -50 && drawX < width() + 50)
             {
                 const auto &item = m_items[i];
                 bool isActive = (item.pkgName == m_activePackage);
 
-                if(isActive)
+                if (isActive)
                 {
                     // Glowing highlight box around active app
                     QRectF glowRect(drawX - 3, cy - 3, 48, 48);
@@ -157,7 +158,7 @@ void RunningAppIconsStrip::paintEvent(QPaintEvent *)
             }
         }
         startX += totalSpan;
-        if(totalSpan <= 0)
+        if (totalSpan <= 0)
             break;
     }
 
@@ -183,9 +184,15 @@ class StorageCacheCleanWorker : public QObject
     Q_OBJECT
 
 public:
-    StorageCacheCleanWorker(const QString &devId, bool showIcon, bool cleanCache, bool cleanThumbnails, bool stopApps, bool cleanTemp) : m_devId(devId), m_showIcon(showIcon), m_cleanCache(cleanCache), m_cleanThumbnails(cleanThumbnails), m_stopApps(stopApps), m_cleanTemp(cleanTemp)
-    {
-    }
+    StorageCacheCleanWorker(
+        const QString &devId, bool showIcon, bool cleanCache, bool cleanThumbnails, bool stopApps, bool cleanTemp)
+        : m_devId(devId)
+        , m_showIcon(showIcon)
+        , m_cleanCache(cleanCache)
+        , m_cleanThumbnails(cleanThumbnails)
+        , m_stopApps(stopApps)
+        , m_cleanTemp(cleanTemp)
+    {}
 
     void requestStop()
     {
@@ -200,7 +207,7 @@ public slots:
 
         emit sigLog("Инициализация быстрого сеанса очистки...", 0);
 
-        if(m_devId.isEmpty() || Adb::deviceStatus(m_devId) != DEVICE)
+        if (m_devId.isEmpty() || Adb::deviceStatus(m_devId) != DEVICE)
         {
             emit sigLog("❌ Ошибка: Android-устройство не подключено или не авторизовано.", 2);
             emit sigFinished(false, "Устройство не подключено");
@@ -208,7 +215,7 @@ public slots:
         }
 
         AdbFileIO fileIO(m_devId);
-        if(!fileIO.isConnect())
+        if (!fileIO.isConnect())
         {
             emit sigLog("❌ Ошибка: Не удалось установить adb-соединение с устройством.", 2);
             emit sigFinished(false, "Сбой соединения ADB");
@@ -219,12 +226,17 @@ public slots:
 
         // 1. Read initial storage state
         auto sysInfoBefore = fileIO.getInfo();
-        if(sysInfoBefore)
+        if (sysInfoBefore)
         {
             qint64 totalMb = sysInfoBefore->diskTotal / (1024 * 1024);
             qint64 usedMb = sysInfoBefore->diskUsed / (1024 * 1024);
             qint64 freeMb = qMax<qint64>(0, totalMb - usedMb);
-            emit sigLog(QString("📊 Хранилище: Занято %1 МБ / Всего %2 МБ (Свободно: %3 МБ)").arg(usedMb).arg(totalMb).arg(freeMb), 0);
+            emit sigLog(
+                QString("📊 Хранилище: Занято %1 МБ / Всего %2 МБ (Свободно: %3 МБ)")
+                    .arg(usedMb)
+                    .arg(totalMb)
+                    .arg(freeMb),
+                0);
         }
 
         // 2. Scan packages
@@ -233,12 +245,12 @@ public slots:
 
         // Filter 3rd party packages
         QList<AdbPackageInfo> userPackages;
-        for(const auto &p : packages)
+        for (const auto &p : packages)
         {
-            if(!p.isSystem)
+            if (!p.isSystem)
                 userPackages.append(p);
         }
-        if(userPackages.isEmpty())
+        if (userPackages.isEmpty())
             userPackages = packages; // fallback if all marked system
 
         emit sigLog(QString("📦 Найдено приложений для оптимизации: %1").arg(userPackages.size()), 0);
@@ -251,22 +263,22 @@ public slots:
 
         // 3. Process Applications: Stop background & Clean App Caches
         int processedApps = 0;
-        for(const auto &pkg : userPackages)
+        for (const auto &pkg : userPackages)
         {
-            if(m_stopped)
+            if (m_stopped)
                 break;
 
             QString friendly = !pkg.appName.isEmpty() ? pkg.appName : AdbShell::friendlyAppName(pkg.packageName);
 
             QPixmap appIcon;
             QByteArray iconData;
-            if(m_showIcon)
+            if (m_showIcon)
                 fileIO.extractPackageIconData(pkg.apkPath, pkg.packageName);
-            if(!iconData.isEmpty())
+            if (!iconData.isEmpty())
             {
                 appIcon.loadFromData(iconData);
             }
-            if(appIcon.isNull())
+            if (appIcon.isNull())
             {
                 appIcon = Generic::generateFallbackIcon(friendly, pkg.packageName, false);
             }
@@ -274,29 +286,44 @@ public slots:
             emit sigAppIconDiscovered(pkg.packageName, appIcon);
 
             // Step 3a: Force-stop background app
-            if(m_stopApps)
+            if (m_stopApps)
             {
-                emit sigProgress(10 + (processedApps * 45) / qMax(1, totalApps), friendly, pkg.packageName, appIcon, "Закрытие фонового процесса...");
+                emit sigProgress(
+                    10 + (processedApps * 45) / qMax(1, totalApps),
+                    friendly,
+                    pkg.packageName,
+                    appIcon,
+                    "Закрытие фонового процесса...");
                 bool stopped = fileIO.stopPackage(pkg.packageName);
-                if(stopped)
+                if (stopped)
                 {
                     stoppedCount++;
-                    emit sigLog(QString("  [✓] Остановлено: <b style='color:#38BDF8;'>%1</b> (%2)").arg(friendly, pkg.packageName), 0);
+                    emit sigLog(
+                        QString("  [✓] Остановлено: <b style='color:#38BDF8;'>%1</b> (%2)")
+                            .arg(friendly, pkg.packageName),
+                        0);
                 }
             }
 
             // Step 3b: Clean app cache (/data/data/<pkg>/cache, /sdcard/Android/data/<pkg>/cache)
-            if(m_cleanCache)
+            if (m_cleanCache)
             {
-                emit sigProgress(10 + (processedApps * 45) / qMax(1, totalApps), friendly, pkg.packageName, appIcon, "Очистка кэша приложения...");
+                emit sigProgress(
+                    10 + (processedApps * 45) / qMax(1, totalApps),
+                    friendly,
+                    pkg.packageName,
+                    appIcon,
+                    "Очистка кэша приложения...");
 
                 // Clean internal cache
-                fileIO.commandQueueWait(QStringList() << "rm" << "-rf" << QString("/data/data/%1/cache/*").arg(pkg.packageName));
-                fileIO.commandQueueWait(QStringList() << "rm" << "-rf" << QString("/data/data/%1/code_cache/*").arg(pkg.packageName));
+                fileIO.commandQueueWait(
+                    QStringList() << "rm" << "-rf" << QString("/data/data/%1/cache/*").arg(pkg.packageName));
+                fileIO.commandQueueWait(
+                    QStringList() << "rm" << "-rf" << QString("/data/data/%1/code_cache/*").arg(pkg.packageName));
 
                 // Clean external cache
                 QString extCacheDir = QString("/sdcard/Android/data/%1/cache").arg(pkg.packageName);
-                if(fileIO.exists(extCacheDir))
+                if (fileIO.exists(extCacheDir))
                 {
                     fileIO.deleteFile(extCacheDir);
                     fileIO.makeDir(extCacheDir);
@@ -312,29 +339,30 @@ public slots:
         }
 
         // 4. Clean Thumbnails via AdbFileIO
-        if(m_cleanThumbnails && !m_stopped)
+        if (m_cleanThumbnails && !m_stopped)
         {
             emit sigLog("🖼️ Очистка кэша миниатюр", 0);
-            emit sigProgress(60, "Миниатюры", "thumbnails", QPixmap(":/svg/hard-drive"), "Удаление кэша .thumbnails...");
+            emit sigProgress(
+                60, "Миниатюры", "thumbnails", QPixmap(":/svg/hard-drive"), "Удаление кэша .thumbnails...");
 
-            QStringList thumbDirs = {
-                "/sdcard/.thumbnails",
-                "/sdcard/DCIM/.thumbnails",
-                "/sdcard/Pictures/.thumbnails",
-                "/sdcard/Movies/.thumbnails",
-                "/sdcard/Download/.thumbnails",
-                "/sdcard/Android/media/.thumbnails",
-                "/sdcard/Android/data/com.sec.android.gallery3d/cache",
-                "/sdcard/Android/data/com.miui.gallery/cache",
-                "/sdcard/Android/data/com.google.android.apps.photos/cache"};
+            QStringList thumbDirs
+                = {"/sdcard/.thumbnails",
+                   "/sdcard/DCIM/.thumbnails",
+                   "/sdcard/Pictures/.thumbnails",
+                   "/sdcard/Movies/.thumbnails",
+                   "/sdcard/Download/.thumbnails",
+                   "/sdcard/Android/media/.thumbnails",
+                   "/sdcard/Android/data/com.sec.android.gallery3d/cache",
+                   "/sdcard/Android/data/com.miui.gallery/cache",
+                   "/sdcard/Android/data/com.google.android.apps.photos/cache"};
 
             int thumbIdx = 0;
-            for(const QString &dir : thumbDirs)
+            for (const QString &dir : thumbDirs)
             {
-                if(m_stopped)
+                if (m_stopped)
                     break;
 
-                if(fileIO.exists(dir))
+                if (fileIO.exists(dir))
                 {
                     emit sigLog(QString("  [→] Проверка директории: %1").arg(dir), 0);
 
@@ -342,18 +370,18 @@ public slots:
                     QList<AdbFileInfo> files = fileIO.getFileList(dir);
                     int dirCount = 0;
                     qint64 dirBytes = 0;
-                    for(const auto &fi : files)
+                    for (const auto &fi : files)
                     {
-                        if(!fi.isDir)
+                        if (!fi.isDir)
                         {
                             dirCount++;
                             dirBytes += fi.size;
                         }
                     }
 
-                    if(dirCount == 0)
+                    if (dirCount == 0)
                         dirCount = 120; // fallback count if directory scan restricted
-                    if(dirBytes == 0)
+                    if (dirBytes == 0)
                         dirBytes = (1024ULL * 1024ULL * 32ULL);
 
                     thumbnailsCount += dirCount;
@@ -361,27 +389,40 @@ public slots:
 
                     // Delete thumbnails using AdbFileIO
                     bool ok = fileIO.deleteFile(dir);
-                    if(ok || !fileIO.exists(dir))
+                    if (ok || !fileIO.exists(dir))
                     {
                         fileIO.makeDir(dir); // recreate clean folder
-                        emit sigLog(QString("  [✓] Удалены миниатюры: <b style='color:#34D399;'>%1</b> (%2 файлов, %3)").arg(dir).arg(dirCount).arg(Generic::formatSizes(dirBytes)), 1);
+                        emit sigLog(
+                            QString("  [✓] Удалены миниатюры: <b style='color:#34D399;'>%1</b> (%2 файлов, %3)")
+                                .arg(dir)
+                                .arg(dirCount)
+                                .arg(Generic::formatSizes(dirBytes)),
+                            1);
                     }
                 }
 
                 thumbIdx++;
-                emit sigProgress(60 + (thumbIdx * 20) / thumbDirs.size(), "Миниатюры", dir, QPixmap(":/svg/hard-drive"), "Очистка миниатюр...");
+                emit sigProgress(
+                    60 + (thumbIdx * 20) / thumbDirs.size(),
+                    "Миниатюры",
+                    dir,
+                    QPixmap(":/svg/hard-drive"),
+                    "Очистка миниатюр...");
                 emit sigStatsUpdated(appCacheFreed, thumbnailsCount, thumbnailsFreed, stoppedCount);
                 QThread::msleep(50);
             }
 
             // Global find & remove thumbnails
-            fileIO.commandQueueWait(QStringList() << "find" << "/sdcard" << "-type" << "d" << "-name" << ".thumbnails" << "-exec" << "rm" << "-rf" << "{}" << "+");
+            fileIO.commandQueueWait(
+                QStringList() << "find" << "/sdcard" << "-type" << "d" << "-name" << ".thumbnails" << "-exec" << "rm"
+                              << "-rf" << "{}" << "+");
         }
 
         // 5. Clean Temporary System Files
-        if(m_cleanTemp && !m_stopped)
+        if (m_cleanTemp && !m_stopped)
         {
-            emit sigProgress(85, "Системный мусор", "tmp", QPixmap(":/svg/trash"), "Очистка временных файлов и logcat...");
+            emit sigProgress(
+                85, "Системный мусор", "tmp", QPixmap(":/svg/trash"), "Очистка временных файлов и logcat...");
             emit sigLog("🧹 Очистка временных файлов /data/local/tmp...", 0);
             fileIO.commandQueueWait(QStringList() << "rm" << "-rf" << "/data/local/tmp/*");
 
@@ -389,7 +430,9 @@ public slots:
             fileIO.commandQueueWait(QStringList() << "logcat" << "-c");
 
             emit sigLog("🔄 Обновление медиабиблиотеки (Media Scanner Broadcast)...", 0);
-            fileIO.commandQueueWait(QStringList() << "am" << "broadcast" << "-a" << "android.intent.action.MEDIA_MOUNTED" << "-d" << "file:///sdcard");
+            fileIO.commandQueueWait(
+                QStringList() << "am" << "broadcast" << "-a" << "android.intent.action.MEDIA_MOUNTED" << "-d"
+                              << "file:///sdcard");
 
             emit sigLog("💾 Сброс системных дисковых буферов (sync)...", 0);
             fileIO.commandQueueWait(QStringList() << "sync");
@@ -398,13 +441,13 @@ public slots:
         // 6. Final state and stats
         emit sigProgress(95, "Финализация", "", QPixmap(), "Сбор итоговой статистики...");
         auto sysInfoAfter = fileIO.getInfo();
-        if(sysInfoAfter && sysInfoBefore)
+        if (sysInfoAfter && sysInfoBefore)
         {
             qint64 diffFreed = sysInfoBefore->diskUsed - sysInfoAfter->diskUsed;
-            if(diffFreed > 0)
+            if (diffFreed > 0)
             {
                 qint64 total = appCacheFreed + thumbnailsFreed;
-                if(diffFreed > total)
+                if (diffFreed > total)
                     appCacheFreed = diffFreed - thumbnailsFreed;
             }
         }
@@ -413,14 +456,19 @@ public slots:
         emit sigProgress(100, "Готово", "", QPixmap(), "Очистка успешно завершена!");
 
         auto elapsedSec = duration_cast<seconds>(steady_clock::now() - startTime).count();
-        QString summary = QString("Освобождено %1 | Остановлено: %2 | Время: %3 с.").arg(Generic::formatSizes(appCacheFreed + thumbnailsFreed)).arg(stoppedCount).arg(elapsedSec);
+        QString summary = QString("Освобождено %1 | Остановлено: %2 | Время: %3 с.")
+                              .arg(Generic::formatSizes(appCacheFreed + thumbnailsFreed))
+                              .arg(stoppedCount)
+                              .arg(elapsedSec);
 
-        emit sigLog(QString("🎉 <b style='color:#34D399;'>Очистка успешно завершена за %1 сек!</b>").arg(elapsedSec), 1);
+        emit sigLog(
+            QString("🎉 <b style='color:#34D399;'>Очистка успешно завершена за %1 сек!</b>").arg(elapsedSec), 1);
         emit sigFinished(true, summary);
     }
 
 signals:
-    void sigProgress(int percent, const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusMsg);
+    void sigProgress(
+        int percent, const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusMsg);
     void sigLog(const QString &msg, int level);
     void sigStatsUpdated(qint64 cacheBytes, int thumbnailsCount, qint64 thumbnailsBytes, int stoppedApps);
     void sigAppIconDiscovered(const QString &pkgName, const QPixmap &icon);
@@ -440,7 +488,8 @@ private:
 // StorageCacheCleanWidget Implementation
 // ============================================================================
 
-StorageCacheCleanWidget::StorageCacheCleanWidget(QWidget *parent) : QWidget(parent)
+StorageCacheCleanWidget::StorageCacheCleanWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setupUi();
 }
@@ -453,7 +502,7 @@ StorageCacheCleanWidget::~StorageCacheCleanWidget()
 void StorageCacheCleanWidget::setDevice(const AdbDevice &device)
 {
     m_device = device;
-    if(!device.devId.isEmpty())
+    if (!device.devId.isEmpty())
     {
         m_fileIO.connect(device.devId);
     }
@@ -462,23 +511,31 @@ void StorageCacheCleanWidget::setDevice(const AdbDevice &device)
 
 void StorageCacheCleanWidget::updateDeviceHeader()
 {
-    if(!m_lblDeviceTitle || !m_lblDeviceBadge)
+    if (!m_lblDeviceTitle || !m_lblDeviceBadge)
         return;
 
-    if(!m_device.devId.isEmpty())
+    if (!m_device.devId.isEmpty())
     {
-        QString devName = !m_device.marketingName.isEmpty() ? m_device.marketingName : (!m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.model.isEmpty() ? m_device.model : m_device.devId));
+        QString devName
+            = !m_device.marketingName.isEmpty()
+                  ? m_device.marketingName
+                  : (!m_device.displayName.isEmpty() ? m_device.displayName
+                                                     : (!m_device.model.isEmpty() ? m_device.model : m_device.devId));
         QString vendor = !m_device.vendor.isEmpty() ? m_device.vendor : "Android";
 
         m_lblDeviceTitle->setText(QString("%1 %2").arg(vendor, devName));
         m_lblDeviceBadge->setText(QString("Подключено: %1").arg(m_device.devId));
-        m_lblDeviceBadge->setStyleSheet("background-color: #064E3B; color: #34D399; font-size: 11px; font-weight: bold; border: 1px solid #059669; border-radius: 0px; padding: 4px 10px;");
+        m_lblDeviceBadge->setStyleSheet(
+            "background-color: #064E3B; color: #34D399; font-size: 11px; font-weight: bold; border: 1px solid #059669; "
+            "border-radius: 0px; padding: 4px 10px;");
     }
     else
     {
         m_lblDeviceTitle->setText("Устройство не подключено");
         m_lblDeviceBadge->setText("Нет соединения");
-        m_lblDeviceBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 11px; font-weight: bold; border: 1px solid #334155; border-radius: 0px; padding: 4px 10px;");
+        m_lblDeviceBadge->setStyleSheet(
+            "background-color: #1E293B; color: #94A3B8; font-size: 11px; font-weight: bold; border: 1px solid #334155; "
+            "border-radius: 0px; padding: 4px 10px;");
     }
 }
 
@@ -503,7 +560,8 @@ void StorageCacheCleanWidget::setupUi()
     QLabel *hdrIcon = new QLabel(headerFrame);
     hdrIcon->setFixedSize(42, 42);
     hdrIcon->setAlignment(Qt::AlignCenter);
-    hdrIcon->setPixmap(QPixmap(":/svg/services/storage-clean").scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    hdrIcon->setPixmap(
+        QPixmap(":/svg/services/storage-clean").scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     hdrIcon->setStyleSheet("background-color: #0B1E38; border: 1px solid #0284C7; border-radius: 0px;");
     headerLayout->addWidget(hdrIcon);
 
@@ -514,7 +572,8 @@ void StorageCacheCleanWidget::setupUi()
     m_lblDeviceTitle->setStyleSheet("color: #FFFFFF; font-size: 16px; font-weight: bold;");
     titleLayout->addWidget(m_lblDeviceTitle);
 
-    QLabel *subTitle = new QLabel("Глубокое удаление кэша приложений, миниатюр thumbnails и освобождение оперативной памяти", headerFrame);
+    QLabel *subTitle = new QLabel(
+        "Глубокое удаление кэша приложений, миниатюр thumbnails и освобождение оперативной памяти", headerFrame);
     subTitle->setStyleSheet("color: #94A3B8; font-size: 12px;");
     titleLayout->addWidget(subTitle);
 
@@ -522,7 +581,8 @@ void StorageCacheCleanWidget::setupUi()
     headerLayout->addStretch(1);
 
     m_lblDeviceBadge = new QLabel("Подключение...", headerFrame);
-    m_lblDeviceBadge->setStyleSheet("background-color: #1E293B; color: #94A3B8; font-size: 11px; font-weight: bold; padding: 4px 10px;");
+    m_lblDeviceBadge->setStyleSheet(
+        "background-color: #1E293B; color: #94A3B8; font-size: 11px; font-weight: bold; padding: 4px 10px;");
     headerLayout->addWidget(m_lblDeviceBadge);
 
     mainLayout->addWidget(headerFrame);
@@ -591,7 +651,8 @@ void StorageCacheCleanWidget::setupUi()
     m_btnStart->setFixedHeight(40);
     m_btnStart->setCursor(Qt::PointingHandCursor);
     m_btnStart->setStyleSheet(
-        "QPushButton { background-color: #0284C7; color: #FFFFFF; font-size: 13px; font-weight: bold; border: 1px solid #0284C7; border-radius: 0px; padding: 0 16px; }"
+        "QPushButton { background-color: #0284C7; color: #FFFFFF; font-size: 13px; font-weight: bold; border: 1px "
+        "solid #0284C7; border-radius: 0px; padding: 0 16px; }"
         "QPushButton:hover { background-color: #0369A1; border-color: #38BDF8; }"
         "QPushButton:pressed { background-color: #075985; }"
         "QPushButton:disabled { background-color: #1E293B; color: #64748B; border-color: #334155; }");
@@ -605,7 +666,8 @@ void StorageCacheCleanWidget::setupUi()
     m_btnStop->setEnabled(false);
     m_btnStop->setCursor(Qt::PointingHandCursor);
     m_btnStop->setStyleSheet(
-        "QPushButton { background-color: #EF4444; color: #FFFFFF; font-size: 12.5px; font-weight: bold; border: 1px solid #DC2626; border-radius: 0px; padding: 0 14px; }"
+        "QPushButton { background-color: #EF4444; color: #FFFFFF; font-size: 12.5px; font-weight: bold; border: 1px "
+        "solid #DC2626; border-radius: 0px; padding: 0 14px; }"
         "QPushButton:hover { background-color: #DC2626; border-color: #F87171; }"
         "QPushButton:disabled { background-color: #1E293B; color: #64748B; border-color: #334155; }");
     connect(m_btnStop, &QPushButton::clicked, this, &StorageCacheCleanWidget::onStopClicked);
@@ -623,8 +685,7 @@ void StorageCacheCleanWidget::setupUi()
     QGridLayout *metricsGrid = new QGridLayout();
     metricsGrid->setSpacing(10);
 
-    const auto createMetricCard = [](const QString &iconPath, const QString &title, QLabel *&valLabel) -> QFrame *
-    {
+    const auto createMetricCard = [](const QString &iconPath, const QString &title, QLabel *&valLabel) -> QFrame * {
         QFrame *card = new QFrame();
         card->setStyleSheet("background-color: #141518; border: 1px solid #282B32; border-radius: 0px;");
         QHBoxLayout *lay = new QHBoxLayout(card);
@@ -669,7 +730,9 @@ void StorageCacheCleanWidget::setupUi()
     consoleLayout->setSpacing(8);
 
     QHBoxLayout *cHead = new QHBoxLayout();
-    QLabel *cTitle = new QLabel("<img src=':/svg/clipboard' width='14' height='14' style='vertical-align:middle;'/> Журнал выполнения процедур", consoleFrame);
+    QLabel *cTitle = new QLabel(
+        "<img src=':/svg/clipboard' width='14' height='14' style='vertical-align:middle;'/> Журнал выполнения процедур",
+        consoleFrame);
     cTitle->setTextFormat(Qt::RichText);
     cTitle->setStyleSheet("color: #38BDF8; font-size: 12px; font-weight: bold;");
     cHead->addWidget(cTitle);
@@ -678,24 +741,22 @@ void StorageCacheCleanWidget::setupUi()
     QPushButton *btnClearLog = new QPushButton("Очистить журнал", consoleFrame);
     btnClearLog->setCursor(Qt::PointingHandCursor);
     btnClearLog->setStyleSheet(
-        "QPushButton { background-color: #070A12; border: 1px solid #1E293B; color: #94A3B8; font-size: 11px; padding: 3px 10px; }"
+        "QPushButton { background-color: #070A12; border: 1px solid #1E293B; color: #94A3B8; font-size: 11px; padding: "
+        "3px 10px; }"
         "QPushButton:hover { background-color: #1E293B; color: #FFFFFF; }");
-    connect(
-        btnClearLog,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            if(m_logConsole)
-                m_logConsole->clear();
-        });
+    connect(btnClearLog, &QPushButton::clicked, this, [this]() {
+        if (m_logConsole)
+            m_logConsole->clear();
+    });
     cHead->addWidget(btnClearLog);
 
     consoleLayout->addLayout(cHead);
 
     m_logConsole = new QTextEdit(consoleFrame);
     m_logConsole->setReadOnly(true);
-    m_logConsole->setStyleSheet("QTextEdit { background-color: #070A12; color: #E2E8F0; border: 1px solid #1E293B; border-radius: 0px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; padding: 8px; }");
+    m_logConsole->setStyleSheet(
+        "QTextEdit { background-color: #070A12; color: #E2E8F0; border: 1px solid #1E293B; border-radius: 0px; "
+        "font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; padding: 8px; }");
     consoleLayout->addWidget(m_logConsole);
 
     rightLayout->addWidget(consoleFrame, 1);
@@ -716,7 +777,7 @@ void StorageCacheCleanWidget::onStopClicked()
 
 void StorageCacheCleanWidget::startClean()
 {
-    if(m_isCleaning)
+    if (m_isCleaning)
         return;
 
     m_isCleaning = true;
@@ -734,7 +795,7 @@ void StorageCacheCleanWidget::startClean()
     m_iconsStrip->startRunning();
 
     QString devId = m_device.devId;
-    if(devId.isEmpty() && MainWindow::current)
+    if (devId.isEmpty() && MainWindow::current)
     {
         devId = MainWindow::current->currentAdbDevice().devId;
         m_device = MainWindow::current->currentAdbDevice();
@@ -742,7 +803,13 @@ void StorageCacheCleanWidget::startClean()
     }
 
     m_workerThread = new QThread(this);
-    m_worker = new StorageCacheCleanWorker(devId, m_chkIconShown->isChecked(), m_chkAppCache->isChecked(), m_chkThumbnails->isChecked(), m_chkStopApps->isChecked(), m_chkTempFiles->isChecked());
+    m_worker = new StorageCacheCleanWorker(
+        devId,
+        m_chkIconShown->isChecked(),
+        m_chkAppCache->isChecked(),
+        m_chkThumbnails->isChecked(),
+        m_chkStopApps->isChecked(),
+        m_chkTempFiles->isChecked());
     m_worker->moveToThread(m_workerThread);
 
     connect(m_workerThread, &QThread::started, m_worker, &StorageCacheCleanWorker::process);
@@ -761,10 +828,10 @@ void StorageCacheCleanWidget::startClean()
 
 void StorageCacheCleanWidget::stopClean()
 {
-    if(!m_isCleaning)
+    if (!m_isCleaning)
         return;
 
-    if(m_worker)
+    if (m_worker)
         m_worker->requestStop();
 
     m_isCleaning = false;
@@ -800,7 +867,8 @@ void StorageCacheCleanWidget::resetSession()
     m_logConsole->clear();
 }
 
-void StorageCacheCleanWidget::onWorkerProgress(int percent, const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusMsg)
+void StorageCacheCleanWidget::onWorkerProgress(
+    int percent, const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusMsg)
 {
     m_visualizer->setProgress(percent);
     m_visualizer->setCurrentApp(appName, pkgName, icon, statusMsg);
@@ -810,19 +878,21 @@ void StorageCacheCleanWidget::onWorkerProgress(int percent, const QString &appNa
 void StorageCacheCleanWidget::onWorkerLog(const QString &message, int level)
 {
     QString color = "#E2E8F0";
-    if(level == 1)
+    if (level == 1)
         color = "#34D399"; // green success
-    else if(level == 2)
+    else if (level == 2)
         color = "#F87171"; // red error / stop
 
     QString timeStr = QTime::currentTime().toString("hh:mm:ss");
-    QString html = QString("<span style='color:#64748B;'>[%1]</span> <span style='color:%2;'>%3</span>").arg(timeStr, color, message);
+    QString html = QString("<span style='color:#64748B;'>[%1]</span> <span style='color:%2;'>%3</span>")
+                       .arg(timeStr, color, message);
 
     m_logConsole->append(html);
     m_logConsole->verticalScrollBar()->setValue(m_logConsole->verticalScrollBar()->maximum());
 }
 
-void StorageCacheCleanWidget::onWorkerStatsUpdated(qint64 cacheBytes, int thumbnailsCount, qint64 thumbnailsBytes, int stoppedApps)
+void StorageCacheCleanWidget::onWorkerStatsUpdated(
+    qint64 cacheBytes, int thumbnailsCount, qint64 thumbnailsBytes, int stoppedApps)
 {
     m_cacheFreedBytes = cacheBytes;
     m_thumbnailsCount = thumbnailsCount;
@@ -843,7 +913,16 @@ void StorageCacheCleanWidget::onWorkerStatsUpdated(qint64 cacheBytes, int thumbn
 class StorageCleanResultDialog : public QDialog
 {
 public:
-    StorageCleanResultDialog(const QString &deviceName, qint64 totalFreed, qint64 cacheFreed, int thumbCount, qint64 thumbFreed, int appsStopped, const QString &summary, QWidget *parent = nullptr) : QDialog(parent)
+    StorageCleanResultDialog(
+        const QString &deviceName,
+        qint64 totalFreed,
+        qint64 cacheFreed,
+        int thumbCount,
+        qint64 thumbFreed,
+        int appsStopped,
+        const QString &summary,
+        QWidget *parent = nullptr)
+        : QDialog(parent)
     {
         setWindowTitle("Результаты очистки - AdsKiller");
         setWindowIcon(QIcon(":/resources/app-logo"));
@@ -881,7 +960,8 @@ public:
         titleLbl->setStyleSheet("color: #FFFFFF; font-size: 16px; font-weight: bold;");
         titleLay->addWidget(titleLbl);
 
-        QLabel *subLbl = new QLabel(deviceName.isEmpty() ? "Память Android-устройства оптимизирована" : deviceName, this);
+        QLabel *subLbl
+            = new QLabel(deviceName.isEmpty() ? "Память Android-устройства оптимизирована" : deviceName, this);
         subLbl->setStyleSheet("color: #38BDF8; font-size: 12px; font-weight: 500;");
         titleLay->addWidget(subLbl);
 
@@ -891,7 +971,8 @@ public:
 
         // Big Hero Result Box: Total Freed
         QFrame *heroFrame = new QFrame(this);
-        heroFrame->setStyleSheet("background-color: #070A12; border: 1.5px solid #059669; border-radius: 0px; padding: 10px;");
+        heroFrame->setStyleSheet(
+            "background-color: #070A12; border: 1.5px solid #059669; border-radius: 0px; padding: 10px;");
         QVBoxLayout *heroLay = new QVBoxLayout(heroFrame);
         heroLay->setContentsMargins(16, 12, 16, 12);
         heroLay->setAlignment(Qt::AlignCenter);
@@ -903,7 +984,8 @@ public:
         heroLay->addWidget(heroTitle);
 
         QLabel *heroVal = new QLabel(Generic::formatSizes(totalFreed), heroFrame);
-        heroVal->setStyleSheet("color: #34D399; font-size: 26px; font-weight: bold; font-family: 'Segoe UI', sans-serif;");
+        heroVal->setStyleSheet(
+            "color: #34D399; font-size: 26px; font-weight: bold; font-family: 'Segoe UI', sans-serif;");
         heroVal->setAlignment(Qt::AlignCenter);
         heroLay->addWidget(heroVal);
 
@@ -917,8 +999,11 @@ public:
         grid->setHorizontalSpacing(14);
         grid->setVerticalSpacing(10);
 
-        const auto addRow = [&](int row, const QString &iconPath, const QString &label, const QString &val, const QString &color = "#FFFFFF")
-        {
+        const auto addRow = [&](int row,
+                                const QString &iconPath,
+                                const QString &label,
+                                const QString &val,
+                                const QString &color = "#FFFFFF") {
             QLabel *iLbl = new QLabel(detailsFrame);
             iLbl->setPixmap(QPixmap(iconPath).scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation));
             grid->addWidget(iLbl, row, 0);
@@ -934,9 +1019,14 @@ public:
         };
 
         addRow(0, ":/svg/folder", "Кэш приложений:", Generic::formatSizes(cacheFreed), "#38BDF8");
-        addRow(1, ":/svg/hard-drive", "Миниатюры (Thumbnails):", QString("%1 ф. (%2)").arg(thumbCount).arg(Generic::formatSizes(thumbFreed)), "#00E5FF");
+        addRow(
+            1,
+            ":/svg/hard-drive",
+            "Миниатюры (Thumbnails):",
+            QString("%1 ф. (%2)").arg(thumbCount).arg(Generic::formatSizes(thumbFreed)),
+            "#00E5FF");
         addRow(2, ":/svg/zap", "Фоновые процессы:", QString("%1 остановлено").arg(appsStopped), "#FBBF24");
-        if(!summary.isEmpty())
+        if (!summary.isEmpty())
             addRow(3, ":/svg/check", "Итог:", summary, "#34D399");
 
         mainLayout->addWidget(detailsFrame);
@@ -982,10 +1072,20 @@ void StorageCacheCleanWidget::onWorkerFinished(bool success, const QString &summ
     m_iconsStrip->stopRunning();
 
     // Do NOT navigate away to cabinet: user stays in StorageCacheCleanWidget!
-    if(success)
+    if (success)
     {
-        QString devName = !m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.model.isEmpty() ? m_device.model : m_device.devId);
-        StorageCleanResultDialog dlg(devName, m_totalFreedBytes, m_cacheFreedBytes, m_thumbnailsCount, m_thumbnailsFreedBytes, m_appsStoppedCount, summary, this);
+        QString devName = !m_device.displayName.isEmpty()
+                              ? m_device.displayName
+                              : (!m_device.model.isEmpty() ? m_device.model : m_device.devId);
+        StorageCleanResultDialog dlg(
+            devName,
+            m_totalFreedBytes,
+            m_cacheFreedBytes,
+            m_thumbnailsCount,
+            m_thumbnailsFreedBytes,
+            m_appsStoppedCount,
+            summary,
+            this);
         dlg.exec();
     }
 }
@@ -994,9 +1094,9 @@ void StorageCacheCleanWidget::onWorkerFinished(bool success, const QString &summ
 // StorageCacheCleanService Implementation
 // ============================================================================
 
-StorageCacheCleanService::StorageCacheCleanService(QObject *parent) : Service(DeviceConnectType::ADB, parent)
-{
-}
+StorageCacheCleanService::StorageCacheCleanService(QObject *parent)
+    : Service(DeviceConnectType::ADB, parent)
+{}
 
 StorageCacheCleanService::~StorageCacheCleanService()
 {
@@ -1016,12 +1116,21 @@ QString StorageCacheCleanService::uuid() const
 QString StorageCacheCleanService::getInternalData()
 {
     QStringList data {"Device = " + mAdbDevice.devId};
-    auto *widget = MainWindow::current ? static_cast<StorageCacheCleanWidget *>(MainWindow::current->pageWidget(StorageCacheCleanPage)) : nullptr;
-    if(widget)
+    auto *widget = MainWindow::current
+                       ? static_cast<StorageCacheCleanWidget *>(MainWindow::current->pageWidget(StorageCacheCleanPage))
+                       : nullptr;
+    if (widget)
     {
-        data << "Clear app cache = " + QString(widget->m_chkAppCache && widget->m_chkAppCache->isChecked() ? "on" : "off") << "Clear thumbnails = " + QString(widget->m_chkThumbnails && widget->m_chkThumbnails->isChecked() ? "on" : "off")
-             << "Stop apps = " + QString(widget->m_chkStopApps && widget->m_chkStopApps->isChecked() ? "on" : "off") << "Clear temporary files = " + QString(widget->m_chkTempFiles && widget->m_chkTempFiles->isChecked() ? "on" : "off") << "Freed bytes = " + QString::number(widget->m_totalFreedBytes)
-             << "Thumbnails removed = " + QString::number(widget->m_thumbnailsCount) << "Apps stopped = " + QString::number(widget->m_appsStoppedCount);
+        data << "Clear app cache = "
+                    + QString(widget->m_chkAppCache && widget->m_chkAppCache->isChecked() ? "on" : "off")
+             << "Clear thumbnails = "
+                    + QString(widget->m_chkThumbnails && widget->m_chkThumbnails->isChecked() ? "on" : "off")
+             << "Stop apps = " + QString(widget->m_chkStopApps && widget->m_chkStopApps->isChecked() ? "on" : "off")
+             << "Clear temporary files = "
+                    + QString(widget->m_chkTempFiles && widget->m_chkTempFiles->isChecked() ? "on" : "off")
+             << "Freed bytes = " + QString::number(widget->m_totalFreedBytes)
+             << "Thumbnails removed = " + QString::number(widget->m_thumbnailsCount)
+             << "Apps stopped = " + QString::number(widget->m_appsStoppedCount);
     }
     return Service::getInternalData() + ":" + data.join('\t');
 }
@@ -1054,16 +1163,16 @@ QString StorageCacheCleanService::widgetIconName()
 bool StorageCacheCleanService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
 
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<StorageCacheCleanWidget *>(MainWindow::current->pageWidget(StorageCacheCleanPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
             widget->setDevice(mAdbDevice);
@@ -1079,10 +1188,10 @@ void StorageCacheCleanService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<StorageCacheCleanWidget *>(MainWindow::current->pageWidget(StorageCacheCleanPage));
-        if(widget)
+        if (widget)
             widget->stopClean();
     }
 }

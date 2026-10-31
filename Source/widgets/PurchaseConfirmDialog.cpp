@@ -7,7 +7,8 @@
 
 #include "PurchaseConfirmDialog.h"
 
-PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data) : QDialog(parent)
+PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data)
+    : QDialog(parent)
 {
     setWindowTitle("Подтверждение покупки - AdsKiller");
     setWindowIcon(QIcon(":/resources/app-logo"));
@@ -70,11 +71,11 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
 
     QString cleanDevName = deviceName;
     const QString prefix = "Выбранное устройство (";
-    if(cleanDevName.startsWith(prefix) && cleanDevName.endsWith(")"))
+    if (cleanDevName.startsWith(prefix) && cleanDevName.endsWith(")"))
     {
         cleanDevName = cleanDevName.mid(prefix.length(), cleanDevName.length() - prefix.length() - 1).trimmed();
     }
-    if(cleanDevName.isEmpty())
+    if (cleanDevName.isEmpty())
         cleanDevName = deviceName;
 
     // Row 0: Device
@@ -118,7 +119,8 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     lblBalanceTitle->setStyleSheet("color: #9CA3AF; font-size: 12px;");
     cardGrid->addWidget(lblBalanceTitle, 4, 0);
 
-    QLabel *lblBalanceVal = new QLabel(QString("%1 %2").arg(Generic::beautifyNumber(data.credits)).arg(data.currencyType), cardFrame);
+    QLabel *lblBalanceVal
+        = new QLabel(QString("%1 %2").arg(Generic::beautifyNumber(data.credits)).arg(data.currencyType), cardFrame);
     lblBalanceVal->setStyleSheet("color: #FBBF24; font-size: 13px; font-weight: bold;");
     lblBalanceVal->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     cardGrid->addWidget(lblBalanceVal, 4, 1);
@@ -132,7 +134,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     cardGrid->addWidget(lblAfterTitle, 5, 0);
 
     QLabel *lblAfterVal = new QLabel(cardFrame);
-    if(hasEnough)
+    if (hasEnough)
     {
         lblAfterVal->setText(QString("%1 %2").arg(Generic::beautifyNumber(remainingCredits)).arg(data.currencyType));
         lblAfterVal->setStyleSheet("color: #34D399; font-size: 13px; font-weight: bold;");
@@ -148,12 +150,15 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     mainLayout->addWidget(cardFrame);
 
     // Warning banner if insufficient funds
-    if(!hasEnough)
+    if (!hasEnough)
     {
         QLabel *warnLabel = new QLabel(this);
         warnLabel->setWordWrap(true);
         warnLabel->setTextFormat(Qt::RichText);
-        warnLabel->setText("<img src=\":/svg/alert-triangle\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> Недостаточно средств на балансе для оплаты процедуры. Пожалуйста, пополните баланс через меню «Поддержка → Связаться».");
+        warnLabel->setText(
+            "<img src=\":/svg/alert-triangle\" width=\"14\" height=\"14\" style=\"vertical-align: middle;\"/> "
+            "Недостаточно средств на балансе для оплаты процедуры. Пожалуйста, пополните баланс через меню «Поддержка "
+            "→ Связаться».");
         warnLabel->setStyleSheet(
             "background-color: rgba(239, 68, 68, 0.12);"
             "border: 1px solid rgba(239, 68, 68, 0.35);"
@@ -194,7 +199,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     QPushButton *confirmBtn = new QPushButton(this);
     confirmBtn->setCursor(Qt::PointingHandCursor);
     confirmBtn->setMinimumHeight(38);
-    if(hasEnough)
+    if (hasEnough)
     {
         confirmBtn->setIcon(QIcon(":/svg/credit-card"));
         confirmBtn->setIconSize(QSize(16, 16));
@@ -240,7 +245,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
 int PurchaseConfirmDialog::confirm(QWidget *parent, const QString &deviceName, const UserDataInfo &data)
 {
     PurchaseConfirmDialog dlg(parent, deviceName, data);
-    if(dlg.exec() == QDialog::Accepted)
+    if (dlg.exec() == QDialog::Accepted)
         return QMessageBox::StandardButton::Yes;
     return QMessageBox::StandardButton::No;
 }

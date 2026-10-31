@@ -6,8 +6,8 @@
 #include "Services.h"
 #include "MainWindow.h"
 
-#define FORCLYQUIT_CHECK             \
-    if(bCmd == CommandExecForceKill) \
+#define FORCLYQUIT_CHECK              \
+    if (bCmd == CommandExecForceKill) \
     break
 #define WAIT(MS) QThread::msleep(MS)
 #define WAITMODE      \
@@ -63,7 +63,7 @@ static inline void boostram_write_log(QString msg, int progress = -1)
     QMutexLocker locker(bMutex);
     (void) locker;
     bOutLogs << std::move(msg.split('\n'));
-    if(progress > -1)
+    if (progress > -1)
         bProgress = progress;
 }
 
@@ -73,13 +73,18 @@ static inline void boostram_write_log_head(QString msg, int progress = -1)
     (void) locker;
     bOutHeads = std::move(msg);
     bOutLogs << bOutHeads;
-    if(progress > -1)
+    if (progress > -1)
         bProgress = progress;
 }
 
-BoostRamService::BoostRamService(QObject *parent) : Service(DeviceConnectType::ADB, parent), processLogStatus(nullptr), malwareStatusText0(nullptr), deviceLabelName(nullptr), processBarStatus(nullptr), pushButtonReRun(nullptr)
-{
-}
+BoostRamService::BoostRamService(QObject *parent)
+    : Service(DeviceConnectType::ADB, parent)
+    , processLogStatus(nullptr)
+    , malwareStatusText0(nullptr)
+    , deviceLabelName(nullptr)
+    , processBarStatus(nullptr)
+    , pushButtonReRun(nullptr)
+{}
 
 BoostRamService::~BoostRamService()
 {
@@ -94,10 +99,10 @@ QString BoostRamService::uuid() const
 QString BoostRamService::getInternalData()
 {
     QStringList data {"Device = " + mAdbDevice.devId, "Progress = " + QString::number(bProgress) + "%"};
-    if(processLogStatus)
+    if (processLogStatus)
     {
         auto *model = qobject_cast<QStringListModel *>(processLogStatus->model());
-        if(model)
+        if (model)
             data << "Log = " + model->stringList().join('\t');
     }
     return Service::getInternalData() + ":" + data.join('\t');
@@ -111,7 +116,8 @@ QString BoostRamService::widgetIconName()
 void BoostRamService::setAndroidArgs(const AdbDevice &adbDevice)
 {
     Service::setAndroidArgs(adbDevice);
-    MainWindow::current->accessUi_page_longinfo(processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
+    MainWindow::current->accessUi_page_longinfo(
+        processLogStatus, malwareStatusText0, deviceLabelName, processBarStatus, pushButtonReRun);
 }
 
 PageIndex BoostRamService::targetPage()
@@ -121,7 +127,8 @@ PageIndex BoostRamService::targetPage()
 
 bool BoostRamService::canStart()
 {
-    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus && pushButtonReRun;
+    return Service::canStart() && processLogStatus && malwareStatusText0 && deviceLabelName && processBarStatus
+           && pushButtonReRun;
 }
 
 bool BoostRamService::isStarted()
@@ -136,12 +143,15 @@ bool BoostRamService::isFinish()
 
 static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::shared_ptr<AdbSysInfo> &sysInfo)
 {
-    QString devTitle = !device.marketingName.isEmpty() ? device.marketingName : (!device.displayName.isEmpty() ? device.displayName : device.model);
+    QString devTitle = !device.marketingName.isEmpty()
+                           ? device.marketingName
+                           : (!device.displayName.isEmpty() ? device.displayName : device.model);
     QString vendorStr = !device.vendor.isEmpty() ? device.vendor : "Android";
     QString osStr = sysInfo ? sysInfo->OSVersionString() : "Android";
     QString storageStr = sysInfo ? sysInfo->StorageDesignString() : "-";
     QString ramStr = sysInfo ? sysInfo->RAMDesignString() : "-";
-    QString kernelStr = (sysInfo && !sysInfo->kernelReleaseVersion.isEmpty()) ? sysInfo->kernelReleaseVersion.trimmed() : "Linux";
+    QString kernelStr
+        = (sysInfo && !sysInfo->kernelReleaseVersion.isEmpty()) ? sysInfo->kernelReleaseVersion.trimmed() : "Linux";
     QString archStr = (sysInfo && !sysInfo->machine.isEmpty()) ? sysInfo->machine.trimmed() : "aarch64";
     QString serialStr = !device.devId.isEmpty() ? device.devId : "USB";
 
@@ -150,19 +160,25 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
                "  <table width='100%' border='0' cellpadding='0' cellspacing='0' style='margin-bottom: 6px;'>"
                "    <tr>"
                "      <td align='left' style='font-size: 13px; font-weight: bold; color: #FFFFFF;'>"
-               "        <img src=':/svg/smartphone' width='14' height='14' style='vertical-align: middle;'/> %1 <span style='font-size: 11px; color: #8E9297;'>(%2)</span>"
+               "        <img src=':/svg/smartphone' width='14' height='14' style='vertical-align: middle;'/> %1 <span "
+               "style='font-size: 11px; color: #8E9297;'>(%2)</span>"
                "      </td>"
                "      <td align='right' style='font-size: 11px; color: #00E676; font-weight: bold;'>"
                "        Подключено [ %3 ]"
                "      </td>"
                "    </tr>"
                "  </table>"
-               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: #BAC0CB; background: rgba(0,0,0,0.3); border-radius: 0px;'>"
+               "  <table width='100%' border='0' cellpadding='4' cellspacing='3' style='font-size: 10.5px; color: "
+               "#BAC0CB; background: rgba(0,0,0,0.3); border-radius: 0px;'>"
                "    <tr>"
-               "      <td><img src=':/svg/bot' width='13' height='13' style='vertical-align: middle;'/> <b>ОС:</b> <span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
-               "      <td><img src=':/svg/hard-drive' width='13' height='13' style='vertical-align: middle;'/> <b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
-               "      <td><img src=':/svg/zap' width='13' height='13' style='vertical-align: middle;'/> <b>ОЗУ:</b> <span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
-               "      <td><img src=':/svg/settings' width='13' height='13' style='vertical-align: middle;'/> <b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
+               "      <td><img src=':/svg/bot' width='13' height='13' style='vertical-align: middle;'/> <b>ОС:</b> "
+               "<span style='color: #4CC2FF; font-weight: bold;'>%4</span></td>"
+               "      <td><img src=':/svg/hard-drive' width='13' height='13' style='vertical-align: middle;'/> "
+               "<b>Хранилище:</b> <span style='color: #00E5FF; font-weight: bold;'>%5</span></td>"
+               "      <td><img src=':/svg/zap' width='13' height='13' style='vertical-align: middle;'/> <b>ОЗУ:</b> "
+               "<span style='color: #FFD700; font-weight: bold;'>%6</span></td>"
+               "      <td><img src=':/svg/settings' width='13' height='13' style='vertical-align: middle;'/> "
+               "<b>Архитектура:</b> <span style='color: #E3E5E8; font-weight: bold;'>%7 (%8)</span></td>"
                "    </tr>"
                "  </table>"
                "</div>")
@@ -172,9 +188,9 @@ static QString generateDeviceDashboardHtml(const AdbDevice &device, const std::s
 bool BoostRamService::start()
 {
     sendCheckPull();
-    if(!canStart())
+    if (!canStart())
         return false;
-    if(pushButtonReRun)
+    if (pushButtonReRun)
         pushButtonReRun->setEnabled(false);
 
     QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
@@ -188,7 +204,7 @@ bool BoostRamService::start()
     MainWindow::current->malwareProgressCircle->setValue(0);
 
     AdbDevice dev = mAdbDevice;
-    if(dev.isEmpty() && !bAdbDeviceSerial.isEmpty())
+    if (dev.isEmpty() && !bAdbDeviceSerial.isEmpty())
         dev = Adb::getDevice(bAdbDeviceSerial);
 
     std::shared_ptr<AdbSysInfo> initialInfo = AdbShell(dev.devId).getInfo();
@@ -198,46 +214,38 @@ bool BoostRamService::start()
     place << "<< Пожалуйста, не отсоединяйте устройство от компьютера >>";
     model->setStringList(place);
 
-    MainWindow::current->delayUICall(
-        500,
-        [this]()
-        {
-            QTimer *updateTimer = new QTimer(this);
-            updateTimer->start(100);
-            QObject::connect(
-                updateTimer,
-                &QTimer::timeout,
-                this,
-                [this, updateTimer]()
-                {
-                    QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
-                    QString header = boostram_read_head();
-                    std::pair<QStringList, int> reads = boostram_read_log();
+    MainWindow::current->delayUICall(500, [this]() {
+        QTimer *updateTimer = new QTimer(this);
+        updateTimer->start(100);
+        QObject::connect(updateTimer, &QTimer::timeout, this, [this, updateTimer]() {
+            QStringListModel *model = static_cast<QStringListModel *>(processLogStatus->model());
+            QString header = boostram_read_head();
+            std::pair<QStringList, int> reads = boostram_read_log();
 
-                    malwareStatusText0->setText(header);
-                    processBarStatus->setValue(reads.second);
-                    MainWindow::current->malwareProgressCircle->setValue(reads.second);
-                    if(!reads.first.isEmpty())
-                    {
-                        QStringList from = model->stringList();
-                        from.append(reads.first);
-                        model->setStringList(from);
-                        processLogStatus->scrollToBottom();
-                    }
-                    if(bStatus != BoostRamStatus::Running)
-                    {
-                        circleRamState(bStatus != BoostRamStatus::Error);
-                        MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
-                        updateTimer->stop();
-                        updateTimer->deleteLater();
-                        if(pushButtonReRun)
-                            pushButtonReRun->setEnabled(true);
-                        boostram_clean_cmd();
-                    }
-                });
+            malwareStatusText0->setText(header);
+            processBarStatus->setValue(reads.second);
+            MainWindow::current->malwareProgressCircle->setValue(reads.second);
+            if (!reads.first.isEmpty())
+            {
+                QStringList from = model->stringList();
+                from.append(reads.first);
+                model->setStringList(from);
+                processLogStatus->scrollToBottom();
+            }
+            if (bStatus != BoostRamStatus::Running)
+            {
+                circleRamState(bStatus != BoostRamStatus::Error);
+                MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
+                updateTimer->stop();
+                updateTimer->deleteLater();
+                if (pushButtonReRun)
+                    pushButtonReRun->setEnabled(true);
+                boostram_clean_cmd();
+            }
         });
+    });
 
-    if(bBoostThread != nullptr)
+    if (bBoostThread != nullptr)
     {
         boostram_write_log("Процесс уже запущен.");
         return false;
@@ -257,28 +265,30 @@ bool BoostRamService::start()
 
 void BoostRamService::stop()
 {
-    if(isStarted())
+    if (isStarted())
         boostram_kill_proc();
-    if(isFinish())
+    if (isFinish())
         circleRamStateReset();
-    if(pushButtonReRun)
+    if (pushButtonReRun)
         pushButtonReRun->setEnabled(true);
 }
 
 void BoostRamService::circleRamState(bool success)
 {
-    if(MainWindow::current == nullptr)
+    if (MainWindow::current == nullptr)
         return;
     MainWindow::current->malwareProgressCircle->setInfinilyMode(false);
 
     QPropertyAnimation *animation;
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(1500);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(0.8);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(0.0);
@@ -286,7 +296,8 @@ void BoostRamService::circleRamState(bool success)
 
     QColor color = success ? QColor(80, 200, 120) : QColor(255, 100, 100);
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(color);
@@ -295,16 +306,18 @@ void BoostRamService::circleRamState(bool success)
 
 void BoostRamService::circleRamStateReset()
 {
-    if(MainWindow::current == nullptr)
+    if (MainWindow::current == nullptr)
         return;
     QPropertyAnimation *animation;
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "outerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(1500);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(1.0);
     animation->start(QAbstractAnimation::DeleteWhenStopped);
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "innerRadius", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(0.6);
@@ -312,7 +325,8 @@ void BoostRamService::circleRamStateReset()
 
     QColor color {110, 190, 235};
 
-    animation = new QPropertyAnimation(MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
+    animation = new QPropertyAnimation(
+        MainWindow::current->malwareProgressCircle, "color", MainWindow::current->malwareProgressCircle);
     animation->setDuration(750);
     animation->setEasingCurve(QEasingCurve::OutQuad);
     animation->setEndValue(color);
@@ -321,14 +335,14 @@ void BoostRamService::circleRamStateReset()
 
 static bool boostram_clean_cmd()
 {
-    if(bStatus == BoostRamStatus::Running)
+    if (bStatus == BoostRamStatus::Running)
         return false;
-    if(bMutex)
+    if (bMutex)
     {
         delete bMutex;
         bMutex = nullptr;
     }
-    if(bBoostThread)
+    if (bBoostThread)
     {
         bBoostThread->quit();
         bBoostThread->wait();
@@ -340,7 +354,7 @@ static bool boostram_clean_cmd()
 
 static void boostram_kill_proc()
 {
-    if(bBoostThread == nullptr)
+    if (bBoostThread == nullptr)
         return;
     bCmd = CommandExecForceKill;
 }
@@ -357,9 +371,9 @@ static void boostram_awake(BoostRamService *service)
 
     AdbDevice device = Adb::getDevice(bAdbDeviceSerial);
 
-    const std::function<QString(const std::shared_ptr<AdbSysInfo> &)> print_device_info = [&device](const std::shared_ptr<AdbSysInfo> &sysInfo) -> QString
-    {
-        if(!sysInfo)
+    const std::function<QString(const std::shared_ptr<AdbSysInfo> &)> print_device_info
+        = [&device](const std::shared_ptr<AdbSysInfo> &sysInfo) -> QString {
+        if (!sysInfo)
             return {};
         return QString(
                    "------------------------------------\n"
@@ -371,14 +385,23 @@ static void boostram_awake(BoostRamService *service)
                    "       Ядро: %6\n"
                    "       Архитектура: %7\n"
                    "------------------------------------")
-            .arg(device.model, device.vendor, sysInfo->OSVersionString(), sysInfo->StorageDesignString(), sysInfo->RAMDesignString(), sysInfo->systemName, sysInfo->machine);
+            .arg(
+                device.model,
+                device.vendor,
+                sysInfo->OSVersionString(),
+                sysInfo->StorageDesignString(),
+                sysInfo->RAMDesignString(),
+                sysInfo->systemName,
+                sysInfo->machine);
     };
 
-    const std::function<bool(void)> check_device_connect = []() -> bool { return Adb::deviceStatus(bAdbDeviceSerial) == DEVICE; };
+    const std::function<bool(void)> check_device_connect = []() -> bool {
+        return Adb::deviceStatus(bAdbDeviceSerial) == DEVICE;
+    };
 
-    while(!isFinish)
+    while (!isFinish)
     {
-        switch(bCmd)
+        switch (bCmd)
         {
             // INIT
             case 0:
@@ -392,7 +415,7 @@ static void boostram_awake(BoostRamService *service)
             // READ SYSINFO & PACKAGES
             case 1:
             {
-                if(!check_device_connect())
+                if (!check_device_connect())
                 {
                     boostram_write_log_head("Устройство отключено.");
                     boostram_write_log("Пожалуйста, убедитесь что устройство подключено корректно.");
@@ -400,23 +423,32 @@ static void boostram_awake(BoostRamService *service)
                     break;
                 }
 
-                boostram_write_log_head(QString("Получение данных с устройства ") + device.displayName + " (" + device.devId + ")...", 5);
+                boostram_write_log_head(
+                    QString("Получение данных с устройства ") + device.displayName + " (" + device.devId + ")...", 5);
                 sysInfoBefore = AdbShell(device.devId).getInfo();
-                if(sysInfoBefore)
+                if (sysInfoBefore)
                 {
                     boostram_write_log(print_device_info(sysInfoBefore));
                     qint64 totalRamMb = sysInfoBefore->ramTotal / (1024 * 1024);
                     qint64 usedRamMb = sysInfoBefore->ramUsed / (1024 * 1024);
                     qint64 freeRamMb = qMax<qint64>(0, totalRamMb - usedRamMb);
-                    int ramPercent = sysInfoBefore->ramTotal > 0 ? static_cast<int>((sysInfoBefore->ramUsed * 100) / sysInfoBefore->ramTotal) : 0;
+                    int ramPercent = sysInfoBefore->ramTotal > 0
+                                         ? static_cast<int>((sysInfoBefore->ramUsed * 100) / sysInfoBefore->ramTotal)
+                                         : 0;
 
-                    boostram_write_log(QString("Текущая загрузка ОЗУ: %1% (Занято: %2 МБ / Всего: %3 МБ, Свободно: %4 МБ)").arg(ramPercent).arg(usedRamMb).arg(totalRamMb).arg(freeRamMb), 10);
+                    boostram_write_log(
+                        QString("Текущая загрузка ОЗУ: %1% (Занято: %2 МБ / Всего: %3 МБ, Свободно: %4 МБ)")
+                            .arg(ramPercent)
+                            .arg(usedRamMb)
+                            .arg(totalRamMb)
+                            .arg(freeRamMb),
+                        10);
                 }
                 WAITMODE;
 
                 boostram_write_log_head("Сканирование активных и установленных приложений...", 15);
                 QList<PackageIO> packages = Adb::getPackages(bAdbDeviceSerial);
-                if(!check_device_connect())
+                if (!check_device_connect())
                 {
                     boostram_write_log_head("Устройство внезапно отключилось.");
                     bCmd = CommandExecFailed;
@@ -426,7 +458,7 @@ static void boostram_awake(BoostRamService *service)
                 boostram_write_log(QString("Найдено приложений для оптимизации: %1").arg(packages.size()), 20);
                 WAITMODE;
 
-                if(packages.isEmpty())
+                if (packages.isEmpty())
                 {
                     boostram_write_log("Нет сторонних приложений для остановки.");
                 }
@@ -437,20 +469,21 @@ static void boostram_awake(BoostRamService *service)
                     int total = packages.size();
                     int currentIdx = 0;
 
-                    for(const PackageIO &pkg : packages)
+                    for (const PackageIO &pkg : packages)
                     {
                         FORCLYQUIT_CHECK;
-                        if(!check_device_connect())
+                        if (!check_device_connect())
                         {
                             boostram_write_log_head("Устройство отключилось во время остановки приложений.");
                             bCmd = CommandExecFailed;
                             break;
                         }
 
-                        if(shell && shell->isConnect())
+                        if (shell && shell->isConnect())
                         {
-                            auto reply = shell->commandQueueWait(QStringList() << "am" << "force-stop" << pkg.packageName);
-                            if(reply.first)
+                            auto reply
+                                = shell->commandQueueWait(QStringList() << "am" << "force-stop" << pkg.packageName);
+                            if (reply.first)
                             {
                                 stoppedCount++;
                                 boostram_write_log(QString(" [+] Остановлено: %1").arg(pkg.packageName));
@@ -467,14 +500,14 @@ static void boostram_awake(BoostRamService *service)
                         WAITMODE2;
                     }
 
-                    if(bCmd == CommandExecForceKill || bCmd == CommandExecFailed)
+                    if (bCmd == CommandExecForceKill || bCmd == CommandExecFailed)
                         break;
                 }
 
                 boostram_write_log_head("Сброс системных буферов и финализация...", 92);
                 {
                     AdbShell shell(bAdbDeviceSerial);
-                    if(shell.isConnect())
+                    if (shell.isConnect())
                     {
                         shell.commandQueueWait(QStringList() << "am" << "kill-all");
                         shell.commandQueueWait(QStringList() << "sync");
@@ -483,15 +516,22 @@ static void boostram_awake(BoostRamService *service)
                 WAITMODE;
 
                 sysInfoAfter = AdbShell(device.devId).getInfo();
-                if(sysInfoAfter)
+                if (sysInfoAfter)
                 {
                     qint64 totalRamMb = sysInfoAfter->ramTotal / (1024 * 1024);
                     qint64 usedRamMb = sysInfoAfter->ramUsed / (1024 * 1024);
                     qint64 freeRamMb = qMax<qint64>(0, totalRamMb - usedRamMb);
-                    int ramPercent = sysInfoAfter->ramTotal > 0 ? static_cast<int>((sysInfoAfter->ramUsed * 100) / sysInfoAfter->ramTotal) : 0;
+                    int ramPercent = sysInfoAfter->ramTotal > 0
+                                         ? static_cast<int>((sysInfoAfter->ramUsed * 100) / sysInfoAfter->ramTotal)
+                                         : 0;
 
                     PRINT_LINE;
-                    boostram_write_log(QString("Итоговая загрузка ОЗУ: %1% (Занято: %2 МБ / Всего: %3 МБ, Свободно: %4 МБ)").arg(ramPercent).arg(usedRamMb).arg(totalRamMb).arg(freeRamMb));
+                    boostram_write_log(
+                        QString("Итоговая загрузка ОЗУ: %1% (Занято: %2 МБ / Всего: %3 МБ, Свободно: %4 МБ)")
+                            .arg(ramPercent)
+                            .arg(usedRamMb)
+                            .arg(totalRamMb)
+                            .arg(freeRamMb));
                 }
 
                 bProgress = 100;
@@ -503,7 +543,7 @@ static void boostram_awake(BoostRamService *service)
                 PRINT_LINE;
                 WAIT(1000);
                 isFinish = 1;
-                if(bCmd < 0)
+                if (bCmd < 0)
                 {
                     boostram_write_log_head("Процедура Boost RAM завершилась с ошибкой.", 100);
                     bStatus = BoostRamStatus::Error;
@@ -511,7 +551,9 @@ static void boostram_awake(BoostRamService *service)
                 else
                 {
                     auto durationProcedure = duration_cast<seconds>(steady_clock::now() - procedureStartAt);
-                    QString text = QString("Оптимизация завершена! Остановлено приложений: %1. Затрачено: %2 с.").arg(stoppedCount).arg(durationProcedure.count());
+                    QString text = QString("Оптимизация завершена! Остановлено приложений: %1. Затрачено: %2 с.")
+                                       .arg(stoppedCount)
+                                       .arg(durationProcedure.count());
                     boostram_write_log_head(text, 100);
                     bStatus = BoostRamStatus::Idle;
                 }

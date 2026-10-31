@@ -25,16 +25,16 @@ std::vector<std::string> split(const std::string s, char separator, bool skip_sl
     std::vector<std::string> result;
 
     int prev_pos = 0, pos = 0;
-    while(pos <= s.size())
+    while (pos <= s.size())
     {
-        if(skip_slashed)
-            if((pos + 1) <= s.size() && s[pos] == '\\' && s[pos + 1] == separator)
+        if (skip_slashed)
+            if ((pos + 1) <= s.size() && s[pos] == '\\' && s[pos + 1] == separator)
             {
                 pos += 2;
                 continue;
             }
 
-        if(s[pos] == separator)
+        if (s[pos] == separator)
         {
             result.push_back(s.substr(prev_pos, pos - prev_pos));
             prev_pos = pos + 1;

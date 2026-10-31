@@ -45,9 +45,18 @@ private:
     QWidget *createChangelogTab();
     QWidget *createFooterWidget();
 
-    QWidget *createAuthorCard(const QString &initials, const QColor &gradStart, const QColor &gradEnd, const QString &name, const QString &role, const QString &roleColor, const QString &description, const QString &contact = QString());
+    QWidget *createAuthorCard(
+        const QString &initials,
+        const QColor &gradStart,
+        const QColor &gradEnd,
+        const QString &name,
+        const QString &role,
+        const QString &roleColor,
+        const QString &description,
+        const QString &contact = QString());
 
-    static QPixmap createAvatarPixmap(const QString &initials, const QColor &startColor, const QColor &endColor, int size = 48);
+    static QPixmap createAvatarPixmap(
+        const QString &initials, const QColor &startColor, const QColor &endColor, int size = 48);
 
     static QString loadLicenseText();
 

@@ -74,12 +74,8 @@ typedef std::multimap<std::string, std::string>::iterator param_iterator;
 class vCardParamMap
 {
 public:
-    vCardParamMap()
-    {
-    }
-    ~vCardParamMap()
-    {
-    }
+    vCardParamMap() {}
+    ~vCardParamMap() {}
 
     /**
      * Returns the total number of parameters
@@ -179,20 +175,19 @@ public:
         Longitude
     };
 
-    vCardProperty()
-    {
-    }
+    vCardProperty() {}
     vCardProperty(const std::string &group, const std::string &name, const std::string &value);
     vCardProperty(const std::string &name, const std::string &value);
-    vCardProperty(const std::string &name, const std::vector<std::string> &values) : m_name(name), m_values(values)
-    {
-    }
-    vCardProperty(const std::string &name, const std::vector<std::string> &values, const vCardParamMap params) : m_name(name), m_values(values), m_params(params)
-    {
-    }
-    ~vCardProperty()
-    {
-    }
+    vCardProperty(const std::string &name, const std::vector<std::string> &values)
+        : m_name(name)
+        , m_values(values)
+    {}
+    vCardProperty(const std::string &name, const std::vector<std::string> &values, const vCardParamMap params)
+        : m_name(name)
+        , m_values(values)
+        , m_params(params)
+    {}
+    ~vCardProperty() {}
 
     std::string &getName()
     {
@@ -240,10 +235,26 @@ public:
     /// Static property creators
 
     static vCardProperty createAddress(
-        const std::string &street, const std::string &locality, const std::string &region, const std::string &postal_code, const std::string &country, const std::string &post_office_box = "", const std::string &ext_address = "", const vCardParamMap &params = vCardParamMap());
+        const std::string &street,
+        const std::string &locality,
+        const std::string &region,
+        const std::string &postal_code,
+        const std::string &country,
+        const std::string &post_office_box = "",
+        const std::string &ext_address = "",
+        const vCardParamMap &params = vCardParamMap());
     static vCardProperty createBirthday(const int year, const int month, const int day);
-    static vCardProperty createName(const std::string &firstname, const std::string &lastname, const std::string &additional = "", const std::string &prefix = "", const std::string &suffix = "", const vCardParamMap &params = vCardParamMap());
-    static vCardProperty createOrganization(const std::string &name, const std::vector<std::string> &levels = std::vector<std::string>(), const vCardParamMap &params = vCardParamMap());
+    static vCardProperty createName(
+        const std::string &firstname,
+        const std::string &lastname,
+        const std::string &additional = "",
+        const std::string &prefix = "",
+        const std::string &suffix = "",
+        const vCardParamMap &params = vCardParamMap());
+    static vCardProperty createOrganization(
+        const std::string &name,
+        const std::vector<std::string> &levels = std::vector<std::string>(),
+        const vCardParamMap &params = vCardParamMap());
 
     static vCardProperty createEmpty();
 
@@ -260,12 +271,10 @@ protected:
 class vCard
 {
 public:
-    vCard(vCardVersion v = VC_VER_4_0) : m_version(v)
-    {
-    }
-    ~vCard()
-    {
-    }
+    vCard(vCardVersion v = VC_VER_4_0)
+        : m_version(v)
+    {}
+    ~vCard() {}
 
     /**
      * Returns the number of properties

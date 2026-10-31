@@ -31,10 +31,10 @@ static QString getAppleMarketingName(const QString &prodType)
 
 static QString formatFileSize(qint64 bytes)
 {
-    if(bytes <= 0)
+    if (bytes <= 0)
         return QString("0 Б");
     double gb = bytes / (1024.0 * 1024.0 * 1024.0);
-    if(gb >= 1.0)
+    if (gb >= 1.0)
     {
         return QString("%1 ГБ").arg(gb, 0, 'f', 2);
     }
@@ -57,9 +57,9 @@ static QScrollArea *createMetroScrollArea(QWidget *contentWidget, QWidget *paren
 // -------------------------------------------------------------
 // IpswChecksumWorker Implementation (Asynchronous Hashing)
 // -------------------------------------------------------------
-IpswChecksumWorker::IpswChecksumWorker(QObject *parent) : QThread(parent)
-{
-}
+IpswChecksumWorker::IpswChecksumWorker(QObject *parent)
+    : QThread(parent)
+{}
 
 IpswChecksumWorker::~IpswChecksumWorker()
 {
@@ -67,7 +67,8 @@ IpswChecksumWorker::~IpswChecksumWorker()
     wait(2000);
 }
 
-void IpswChecksumWorker::startVerification(const QString &filePath, const QString &expectedSha1, const QString &expectedMd5)
+void IpswChecksumWorker::startVerification(
+    const QString &filePath, const QString &expectedSha1, const QString &expectedMd5)
 {
     cancel();
     wait();
@@ -88,16 +89,22 @@ void IpswChecksumWorker::cancel()
 void IpswChecksumWorker::run()
 {
     QFile file(m_filePath);
-    if(!file.open(QIODevice::ReadOnly))
+    if (!file.open(QIODevice::ReadOnly))
     {
-        emit finished(false, QString(), m_expectedSha1, QString(), QString::fromUtf8("Не удалось открыть файл прошивки для чтения: %1").arg(file.errorString()));
+        emit finished(
+            false,
+            QString(),
+            m_expectedSha1,
+            QString(),
+            QString::fromUtf8("Не удалось открыть файл прошивки для чтения: %1").arg(file.errorString()));
         return;
     }
 
     qint64 totalSize = file.size();
-    if(totalSize <= 0)
+    if (totalSize <= 0)
     {
-        emit finished(false, QString(), m_expectedSha1, QString(), QString::fromUtf8("Файл прошивки пуст (размер 0 байт)."));
+        emit finished(
+            false, QString(), m_expectedSha1, QString(), QString::fromUtf8("Файл прошивки пуст (размер 0 байт)."));
         return;
     }
 
@@ -112,10 +119,10 @@ void IpswChecksumWorker::run()
     qint64 lastTime = QDateTime::currentMSecsSinceEpoch();
     qint64 lastBytes = 0;
 
-    while(!file.atEnd() && !m_cancelRequested.load())
+    while (!file.atEnd() && !m_cancelRequested.load())
     {
         qint64 bytesRead = file.read(buffer.data(), bufferSize);
-        if(bytesRead <= 0)
+        if (bytesRead <= 0)
             break;
 
         sha1Hash.addData(buffer.constData(), bytesRead);
@@ -123,11 +130,11 @@ void IpswChecksumWorker::run()
         processed += bytesRead;
 
         qint64 now = QDateTime::currentMSecsSinceEpoch();
-        if(now - lastTime >= 180 || processed == totalSize)
+        if (now - lastTime >= 180 || processed == totalSize)
         {
             int pct = static_cast<int>((processed * 100) / totalSize);
             double speedMBs = 0.0;
-            if(now > lastTime)
+            if (now > lastTime)
             {
                 speedMBs = ((processed - lastBytes) / (1024.0 * 1024.0)) / ((now - lastTime) / 1000.0);
             }
@@ -137,9 +144,14 @@ void IpswChecksumWorker::run()
         }
     }
 
-    if(m_cancelRequested.load())
+    if (m_cancelRequested.load())
     {
-        emit finished(false, QString(), m_expectedSha1, QString(), QString::fromUtf8("Проверка контрольной суммы отменена пользователем."));
+        emit finished(
+            false,
+            QString(),
+            m_expectedSha1,
+            QString(),
+            QString::fromUtf8("Проверка контрольной суммы отменена пользователем."));
         return;
     }
 
@@ -147,11 +159,11 @@ void IpswChecksumWorker::run()
     QString calculatedMd5 = QString::fromLatin1(md5Hash.result().toHex()).toLower();
 
     bool matched = false;
-    if(!m_expectedSha1.isEmpty())
+    if (!m_expectedSha1.isEmpty())
     {
         matched = (calculatedSha1 == m_expectedSha1);
     }
-    else if(!m_expectedMd5.isEmpty())
+    else if (!m_expectedMd5.isEmpty())
     {
         matched = (calculatedMd5 == m_expectedMd5);
     }
@@ -166,7 +178,8 @@ void IpswChecksumWorker::run()
 // -------------------------------------------------------------
 // IpswDownloadWorker Implementation
 // -------------------------------------------------------------
-IpswDownloadWorker::IpswDownloadWorker(QObject *parent) : QObject(parent)
+IpswDownloadWorker::IpswDownloadWorker(QObject *parent)
+    : QObject(parent)
 {
     m_nam = new QNetworkAccessManager(this);
 }
@@ -184,14 +197,17 @@ void IpswDownloadWorker::startDownload(const QString &urlStr, const QString &des
     m_outputFile = new QFile(m_destPath, this);
 
     qint64 existingSize = 0;
-    if(m_outputFile->exists())
+    if (m_outputFile->exists())
     {
         existingSize = m_outputFile->size();
     }
 
-    if(!m_outputFile->open(QIODevice::WriteOnly | QIODevice::Append))
+    if (!m_outputFile->open(QIODevice::WriteOnly | QIODevice::Append))
     {
-        emit downloadFinished(false, destPath, QString::fromUtf8("Не удалось открыть файл для записи: %1").arg(m_outputFile->errorString()));
+        emit downloadFinished(
+            false,
+            destPath,
+            QString::fromUtf8("Не удалось открыть файл для записи: %1").arg(m_outputFile->errorString()));
         delete m_outputFile;
         m_outputFile = nullptr;
         return;
@@ -201,7 +217,7 @@ void IpswDownloadWorker::startDownload(const QString &urlStr, const QString &des
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::UserAgentHeader, "AdsKiller-AppleFlasher/2.0");
 
-    if(existingSize > 0)
+    if (existingSize > 0)
     {
         QByteArray rangeHeader = "bytes=" + QByteArray::number(existingSize) + "-";
         request.setRawHeader("Range", rangeHeader);
@@ -218,13 +234,13 @@ void IpswDownloadWorker::startDownload(const QString &urlStr, const QString &des
 
 void IpswDownloadWorker::cancelDownload()
 {
-    if(m_reply)
+    if (m_reply)
     {
         m_reply->abort();
         m_reply->deleteLater();
         m_reply = nullptr;
     }
-    if(m_outputFile)
+    if (m_outputFile)
     {
         m_outputFile->flush();
         m_outputFile->close();
@@ -235,7 +251,7 @@ void IpswDownloadWorker::cancelDownload()
 
 void IpswDownloadWorker::onReadyRead()
 {
-    if(m_reply && m_outputFile && m_outputFile->isOpen())
+    if (m_reply && m_outputFile && m_outputFile->isOpen())
     {
         m_outputFile->write(m_reply->readAll());
     }
@@ -246,7 +262,7 @@ void IpswDownloadWorker::onDownloadProgress(qint64 bytesReceived, qint64 bytesTo
     qint64 now = QDateTime::currentMSecsSinceEpoch();
     qint64 dt = now - m_lastTime;
     double speedMBs = 0.0;
-    if(dt >= 400)
+    if (dt >= 400)
     {
         qint64 bytesDiff = bytesReceived - m_lastBytes;
         speedMBs = (bytesDiff / (1024.0 * 1024.0)) / (dt / 1000.0);
@@ -259,13 +275,13 @@ void IpswDownloadWorker::onDownloadProgress(qint64 bytesReceived, qint64 bytesTo
 
 void IpswDownloadWorker::onFinished()
 {
-    if(!m_reply)
+    if (!m_reply)
         return;
 
     bool ok = (m_reply->error() == QNetworkReply::NoError);
     QString err = m_reply->errorString();
 
-    if(m_outputFile)
+    if (m_outputFile)
     {
         m_outputFile->flush();
         m_outputFile->close();
@@ -282,9 +298,9 @@ void IpswDownloadWorker::onFinished()
 // -------------------------------------------------------------
 // AppleRestoreWorker Implementation
 // -------------------------------------------------------------
-AppleRestoreWorker::AppleRestoreWorker(QObject *parent) : QObject(parent)
-{
-}
+AppleRestoreWorker::AppleRestoreWorker(QObject *parent)
+    : QObject(parent)
+{}
 
 AppleRestoreWorker::~AppleRestoreWorker()
 {
@@ -300,10 +316,14 @@ void AppleRestoreWorker::startRestore(const QString &ipswPath, bool retainUserDa
     m_process->setProcessChannelMode(QProcess::MergedChannels);
 
     connect(m_process, &QProcess::readyReadStandardOutput, this, &AppleRestoreWorker::onReadyReadStandardOutput);
-    connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &AppleRestoreWorker::onProcessFinished);
+    connect(
+        m_process,
+        QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+        this,
+        &AppleRestoreWorker::onProcessFinished);
 
     QStringList args;
-    if(retainUserData)
+    if (retainUserData)
     {
         args << "-u"; // update mode: retains data
     }
@@ -312,7 +332,7 @@ void AppleRestoreWorker::startRestore(const QString &ipswPath, bool retainUserDa
         args << "-e"; // erase mode: clean flash
     }
 
-    if(!udid.isEmpty())
+    if (!udid.isEmpty())
     {
         args << "-u" << udid;
     }
@@ -321,7 +341,9 @@ void AppleRestoreWorker::startRestore(const QString &ipswPath, bool retainUserDa
 
     QString prog = AppleExecutableFilename("idevicerestore");
 
-    emit progressChanged(2, QString::fromUtf8("Инициализация прошивки (%1)...").arg(retainUserData ? "Update (-u)" : "Clean Erase (-e)"));
+    emit progressChanged(
+        2,
+        QString::fromUtf8("Инициализация прошивки (%1)...").arg(retainUserData ? "Update (-u)" : "Clean Erase (-e)"));
     emit logReceived(QString("[COMMAND] %1 %2").arg(prog, args.join(" ")));
 
     m_process->start(prog, args);
@@ -329,11 +351,11 @@ void AppleRestoreWorker::startRestore(const QString &ipswPath, bool retainUserDa
 
 void AppleRestoreWorker::abortRestore()
 {
-    if(m_process && m_process->state() != QProcess::NotRunning)
+    if (m_process && m_process->state() != QProcess::NotRunning)
     {
         m_aborted = true;
         m_process->terminate();
-        if(!m_process->waitForFinished(2000))
+        if (!m_process->waitForFinished(2000))
         {
             m_process->kill();
         }
@@ -344,13 +366,13 @@ void AppleRestoreWorker::abortRestore()
 
 void AppleRestoreWorker::onReadyReadStandardOutput()
 {
-    if(!m_process)
+    if (!m_process)
         return;
     QByteArray data = m_process->readAllStandardOutput();
     QString text = QString::fromUtf8(data);
     QStringList lines = text.split(QRegularExpression("[\r\n]+"), Qt::SkipEmptyParts);
 
-    for(const QString &line : lines)
+    for (const QString &line : lines)
     {
         parseLogLine(line.trimmed());
     }
@@ -363,41 +385,41 @@ void AppleRestoreWorker::onReadyReadStandardError()
 
 void AppleRestoreWorker::parseLogLine(const QString &line)
 {
-    if(line.isEmpty())
+    if (line.isEmpty())
         return;
 
     emit logReceived(line);
 
     // Parse idevicerestore stages
-    if(line.contains("Extracting", Qt::CaseInsensitive))
+    if (line.contains("Extracting", Qt::CaseInsensitive))
     {
         emit progressChanged(8, QString::fromUtf8("Распаковка IPSW архива..."));
     }
-    else if(line.contains("TSS", Qt::CaseInsensitive) || line.contains("ticket", Qt::CaseInsensitive))
+    else if (line.contains("TSS", Qt::CaseInsensitive) || line.contains("ticket", Qt::CaseInsensitive))
     {
         emit progressChanged(18, QString::fromUtf8("Запрос цифровой подписи (TSS) у серверов Apple..."));
     }
-    else if(line.contains("iBSS", Qt::CaseInsensitive))
+    else if (line.contains("iBSS", Qt::CaseInsensitive))
     {
         emit progressChanged(28, QString::fromUtf8("Отправка загрузчика iBSS..."));
     }
-    else if(line.contains("iBEC", Qt::CaseInsensitive))
+    else if (line.contains("iBEC", Qt::CaseInsensitive))
     {
         emit progressChanged(38, QString::fromUtf8("Отправка загрузчика iBEC..."));
     }
-    else if(line.contains("Ramdisk", Qt::CaseInsensitive))
+    else if (line.contains("Ramdisk", Qt::CaseInsensitive))
     {
         emit progressChanged(48, QString::fromUtf8("Загрузка Restore Ramdisk в оперативную память..."));
     }
-    else if(line.contains("DeviceTree", Qt::CaseInsensitive) || line.contains("KernelCache", Qt::CaseInsensitive))
+    else if (line.contains("DeviceTree", Qt::CaseInsensitive) || line.contains("KernelCache", Qt::CaseInsensitive))
     {
         emit progressChanged(55, QString::fromUtf8("Отправка ядра KernelCache..."));
     }
-    else if(line.contains("Restoring image", Qt::CaseInsensitive) || line.contains("Writing", Qt::CaseInsensitive))
+    else if (line.contains("Restoring image", Qt::CaseInsensitive) || line.contains("Writing", Qt::CaseInsensitive))
     {
         static const QRegularExpression rx("(\\d+)%");
         auto match = rx.match(line);
-        if(match.hasMatch())
+        if (match.hasMatch())
         {
             int subPct = match.captured(1).toInt();
             int mapped = 60 + static_cast<int>(subPct * 0.32); // 60% -> 92%
@@ -408,11 +430,11 @@ void AppleRestoreWorker::parseLogLine(const QString &line)
             emit progressChanged(65, QString::fromUtf8("Запись файловой системы iOS..."));
         }
     }
-    else if(line.contains("Baseband", Qt::CaseInsensitive) || line.contains("Modem", Qt::CaseInsensitive))
+    else if (line.contains("Baseband", Qt::CaseInsensitive) || line.contains("Modem", Qt::CaseInsensitive))
     {
         emit progressChanged(94, QString::fromUtf8("Прошивка модема устройства (Baseband)..."));
     }
-    else if(line.contains("Restore complete", Qt::CaseInsensitive) || line.contains("SUCCESS", Qt::CaseInsensitive))
+    else if (line.contains("Restore complete", Qt::CaseInsensitive) || line.contains("SUCCESS", Qt::CaseInsensitive))
     {
         emit progressChanged(100, QString::fromUtf8("Прошивка успешно завершена! Перезагрузка устройства."));
     }
@@ -423,13 +445,14 @@ void AppleRestoreWorker::onProcessFinished(int exitCode, QProcess::ExitStatus ex
     (void) exitStatus;
     bool ok = (exitCode == 0) && !m_aborted;
     QString msg;
-    if(m_aborted)
+    if (m_aborted)
     {
         msg = QString::fromUtf8("Операция была отменена пользователем.");
     }
-    else if(!ok)
+    else if (!ok)
     {
-        msg = QString::fromUtf8("Процесс прошивки завершился с кодом ошибки %1. Подробности в консоли терминала.").arg(exitCode);
+        msg = QString::fromUtf8("Процесс прошивки завершился с кодом ошибки %1. Подробности в консоли терминала.")
+                  .arg(exitCode);
     }
     emit restoreFinished(ok, msg);
 }
@@ -437,7 +460,8 @@ void AppleRestoreWorker::onProcessFinished(int exitCode, QProcess::ExitStatus ex
 // -------------------------------------------------------------
 // AppleIpswWidget Implementation
 // -------------------------------------------------------------
-AppleIpswWidget::AppleIpswWidget(QWidget *parent) : QWidget(parent)
+AppleIpswWidget::AppleIpswWidget(QWidget *parent)
+    : QWidget(parent)
 {
     m_netManager = new QNetworkAccessManager(this);
     m_downloader = new IpswDownloadWorker(this);
@@ -464,20 +488,20 @@ AppleIpswWidget::AppleIpswWidget(QWidget *parent) : QWidget(parent)
 
 AppleIpswWidget::~AppleIpswWidget()
 {
-    if(m_detectTimer)
+    if (m_detectTimer)
     {
         m_detectTimer->stop();
     }
-    if(m_checksumWorker)
+    if (m_checksumWorker)
     {
         m_checksumWorker->cancel();
         m_checksumWorker->wait(1000);
     }
-    if(m_downloader)
+    if (m_downloader)
     {
         m_downloader->cancelDownload();
     }
-    if(m_restoreWorker)
+    if (m_restoreWorker)
     {
         m_restoreWorker->abortRestore();
     }
@@ -485,7 +509,7 @@ AppleIpswWidget::~AppleIpswWidget()
 
 QString AppleIpswWidget::downloadDirectory() const
 {
-    if(!m_customDownloadDir.isEmpty() && QDir(m_customDownloadDir).exists())
+    if (!m_customDownloadDir.isEmpty() && QDir(m_customDownloadDir).exists())
         return m_customDownloadDir;
     QString def = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/AdsKiller/IPSW";
     QDir().mkpath(def);
@@ -494,7 +518,7 @@ QString AppleIpswWidget::downloadDirectory() const
 
 void AppleIpswWidget::startDeviceDetection()
 {
-    if(!m_detectTimer->isActive())
+    if (!m_detectTimer->isActive())
         m_detectTimer->start(4000);
     refreshDevice();
 }
@@ -508,36 +532,51 @@ void AppleIpswWidget::setupUi()
 {
     // Modern Midnight Obsidian Styling (Flat, Sharp, Cyber/Metro Zero-Radius Palette)
     setStyleSheet(
-        "AppleIpswWidget, QWidget#ipswMainContainer { background-color: #0A0E1A; color: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; }"
+        "AppleIpswWidget, QWidget#ipswMainContainer { background-color: #0A0E1A; color: #F8FAFC; font-family: "
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; }"
         "QSplitter::handle { background-color: #1E293B; width: 3px; }"
         "QTabWidget::pane { border: 1px solid #1E293B; background-color: #0F172A; border-radius: 0px; }"
-        "QTabBar::tab { background-color: #0B101D; color: #94A3B8; padding: 8px 18px; border: 1px solid #1E293B; border-bottom: none; font-weight: 600; font-size: 12px; }"
+        "QTabBar::tab { background-color: #0B101D; color: #94A3B8; padding: 8px 18px; border: 1px solid #1E293B; "
+        "border-bottom: none; font-weight: 600; font-size: 12px; }"
         "QTabBar::tab:selected { background-color: #0F172A; color: #38BDF8; border-top: 2px solid #38BDF8; }"
         "QTabBar::tab:hover:!selected { background-color: #141C2E; color: #FFFFFF; }"
-        "QComboBox { background-color: #070A12; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 28px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 0px; min-height: 22px; }"
+        "QComboBox { background-color: #070A12; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 28px 6px 12px; "
+        "font-size: 12px; font-weight: 600; border-radius: 0px; min-height: 22px; }"
         "QComboBox:hover { border-color: #38BDF8; background-color: #0B101D; }"
-        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; border: none; width: 26px; background: #141C2E; }"
+        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; border: none; width: 26px; "
+        "background: #141C2E; }"
         "QComboBox::down-arrow { image: url(:/svg/arrow-down); width: 12px; height: 12px; }"
         "QComboBox::down-arrow:hover { image: url(:/svg/arrow-down-hover); }"
-        "QComboBox QAbstractItemView { background-color: #0F172A; border: 1px solid #1E293B; color: #F8FAFC; selection-background-color: #0284C7; selection-color: #FFFFFF; outline: none; }"
-        "QLineEdit { background-color: #070A12; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 10px; font-size: 12px; border-radius: 0px; }"
+        "QComboBox QAbstractItemView { background-color: #0F172A; border: 1px solid #1E293B; color: #F8FAFC; "
+        "selection-background-color: #0284C7; selection-color: #FFFFFF; outline: none; }"
+        "QLineEdit { background-color: #070A12; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 10px; "
+        "font-size: 12px; border-radius: 0px; }"
         "QLineEdit:hover { border-color: #334155; }"
         "QLineEdit:focus { border: 1px solid #38BDF8; background-color: #0B101D; }"
-        "QTableWidget { background-color: #0B101D; border: 1px solid #1E293B; gridline-color: #1E293B; selection-background-color: #0284C7; selection-color: #FFFFFF; border-radius: 0px; }"
-        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; padding: 7px 10px; border: 1px solid #1E293B; font-weight: bold; border-radius: 0px; }"
-        "QPushButton { background-color: #0F172A; border: 1px solid #1E293B; color: #F8FAFC; padding: 7px 16px; border-radius: 0px; font-weight: 600; }"
+        "QTableWidget { background-color: #0B101D; border: 1px solid #1E293B; gridline-color: #1E293B; "
+        "selection-background-color: #0284C7; selection-color: #FFFFFF; border-radius: 0px; }"
+        "QHeaderView::section { background-color: #0F172A; color: #94A3B8; padding: 7px 10px; border: 1px solid "
+        "#1E293B; font-weight: bold; border-radius: 0px; }"
+        "QPushButton { background-color: #0F172A; border: 1px solid #1E293B; color: #F8FAFC; padding: 7px 16px; "
+        "border-radius: 0px; font-weight: 600; }"
         "QPushButton:hover { background-color: #1E293B; border-color: #38BDF8; color: #FFFFFF; }"
         "QPushButton:pressed { background-color: #0284C7; }"
         "QPushButton:disabled { background-color: #070A12; color: #475569; border-color: #1E293B; }"
         "QRadioButton { spacing: 8px; color: #F8FAFC; font-weight: 500; font-size: 12px; }"
-        "QRadioButton::indicator { width: 15px; height: 15px; border: 2px solid #475569; background: transparent; border-radius: 7px; }"
+        "QRadioButton::indicator { width: 15px; height: 15px; border: 2px solid #475569; background: transparent; "
+        "border-radius: 7px; }"
         "QRadioButton::indicator:checked { background-color: #38BDF8; border-color: #38BDF8; }"
         "QCheckBox { spacing: 8px; color: #F8FAFC; font-weight: 500; }"
-        "QCheckBox::indicator { width: 15px; height: 15px; border: 1px solid #334155; background: #070A12; border-radius: 0px; }"
-        "QCheckBox::indicator:checked { background-color: #0284C7; border-color: #38BDF8; image: url(:/resources/checkbox-checked); }"
-        "QProgressBar { background-color: #070A12; border: 1px solid #1E293B; text-align: center; color: #F8FAFC; font-weight: bold; border-radius: 0px; height: 22px; }"
-        "QProgressBar::chunk { background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #38BDF8); }"
-        "QTextEdit { background-color: #070A12; border: 1px solid #1E293B; color: #E2E8F0; font-family: 'Consolas', 'Courier New', monospace; font-size: 11.5px; border-radius: 0px; }"
+        "QCheckBox::indicator { width: 15px; height: 15px; border: 1px solid #334155; background: #070A12; "
+        "border-radius: 0px; }"
+        "QCheckBox::indicator:checked { background-color: #0284C7; border-color: #38BDF8; image: "
+        "url(:/resources/checkbox-checked); }"
+        "QProgressBar { background-color: #070A12; border: 1px solid #1E293B; text-align: center; color: #F8FAFC; "
+        "font-weight: bold; border-radius: 0px; height: 22px; }"
+        "QProgressBar::chunk { background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 "
+        "#38BDF8); }"
+        "QTextEdit { background-color: #070A12; border: 1px solid #1E293B; color: #E2E8F0; font-family: 'Consolas', "
+        "'Courier New', monospace; font-size: 11.5px; border-radius: 0px; }"
         "QScrollBar:vertical { background-color: #070A12; width: 8px; margin: 0px; border: none; }"
         "QScrollBar::handle:vertical { background-color: #1E293B; min-height: 24px; border-radius: 0px; }"
         "QScrollBar::handle:vertical:hover { background-color: #38BDF8; }"
@@ -559,7 +598,7 @@ void AppleIpswWidget::setupUi()
 
     QLabel *lblAppleIcon = new QLabel(headerWidget);
     QIcon iconApple(":/svg/apple");
-    if(iconApple.isNull())
+    if (iconApple.isNull())
         iconApple = QIcon(":/svg/services/apple");
     lblAppleIcon->setPixmap(iconApple.pixmap(30, 30));
     lblAppleIcon->setFixedSize(30, 30);
@@ -567,8 +606,16 @@ void AppleIpswWidget::setupUi()
 
     QVBoxLayout *headerTitleLayout = new QVBoxLayout();
     headerTitleLayout->setSpacing(2);
-    QLabel *headerTitle = new QLabel(QString::fromUtf8("<span style='font-size: 14.5px; font-weight: 700; color: #FFFFFF;'>Apple iOS Firmware & Recovery Studio</span>"), headerWidget);
-    QLabel *headerSubtitle = new QLabel(QString::fromUtf8("<span style='font-size: 11px; color: #94A3B8;'>Пошаговый мастер восстановления * Контроль целостности SHA-1 * TSS Подписи Apple</span>"), headerWidget);
+    QLabel *headerTitle = new QLabel(
+        QString::fromUtf8(
+            "<span style='font-size: 14.5px; font-weight: 700; color: #FFFFFF;'>Apple iOS Firmware & Recovery "
+            "Studio</span>"),
+        headerWidget);
+    QLabel *headerSubtitle = new QLabel(
+        QString::fromUtf8(
+            "<span style='font-size: 11px; color: #94A3B8;'>Пошаговый мастер восстановления * Контроль целостности "
+            "SHA-1 * TSS Подписи Apple</span>"),
+        headerWidget);
     headerTitleLayout->addWidget(headerTitle);
     headerTitleLayout->addWidget(headerSubtitle);
     headerLayout->addLayout(headerTitleLayout);
@@ -585,14 +632,18 @@ void AppleIpswWidget::setupUi()
     m_btnModeSimple = new QPushButton(QString::fromUtf8("⚡ МАСТЕР (Рекомендуется)"), modeBtnBox);
     m_btnModeSimple->setObjectName(QStringLiteral("ipswBtnModeSimple"));
     m_btnModeSimple->setCursor(Qt::PointingHandCursor);
-    m_btnModeSimple->setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 6px 14px; font-size: 11.5px;");
+    m_btnModeSimple->setStyleSheet(
+        "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 6px 14px; "
+        "font-size: 11.5px;");
     connect(m_btnModeSimple, &QPushButton::clicked, this, [this]() { onSwitchMode(0); });
     modeBtnLayout->addWidget(m_btnModeSimple);
 
     m_btnModeAdvanced = new QPushButton(QString::fromUtf8("🛠 ЭКСПЕРТНЫЙ РЕЖИМ"), modeBtnBox);
     m_btnModeAdvanced->setObjectName(QStringLiteral("ipswBtnModeAdvanced"));
     m_btnModeAdvanced->setCursor(Qt::PointingHandCursor);
-    m_btnModeAdvanced->setStyleSheet("background-color: transparent; color: #94A3B8; font-weight: 600; border: none; padding: 6px 14px; font-size: 11.5px;");
+    m_btnModeAdvanced->setStyleSheet(
+        "background-color: transparent; color: #94A3B8; font-weight: 600; border: none; padding: 6px 14px; font-size: "
+        "11.5px;");
     connect(m_btnModeAdvanced, &QPushButton::clicked, this, [this]() { onSwitchMode(1); });
     modeBtnLayout->addWidget(m_btnModeAdvanced);
 
@@ -601,7 +652,9 @@ void AppleIpswWidget::setupUi()
 
     // Top Header Device Pill
     m_lblHeaderDevicePill = new QLabel(headerWidget);
-    m_lblHeaderDevicePill->setStyleSheet("background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 5px 12px; font-weight: 600; font-size: 11.5px;");
+    m_lblHeaderDevicePill->setStyleSheet(
+        "background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 5px 12px; "
+        "font-weight: 600; font-size: 11.5px;");
     m_lblHeaderDevicePill->setText(QString::fromUtf8("○ Устройство не подключено"));
     headerLayout->addWidget(m_lblHeaderDevicePill);
 
@@ -610,7 +663,9 @@ void AppleIpswWidget::setupUi()
     m_btnRefreshDevice->setCursor(Qt::PointingHandCursor);
     m_btnRefreshDevice->setIcon(QIcon(":/svg/refresh-cw"));
     m_btnRefreshDevice->setIconSize(QSize(13, 13));
-    m_btnRefreshDevice->setStyleSheet("background-color: #141C2E; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 12px; font-weight: 600; font-size: 11.5px;");
+    m_btnRefreshDevice->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 12px; font-weight: 600; "
+        "font-size: 11.5px;");
     connect(m_btnRefreshDevice, &QPushButton::clicked, this, &AppleIpswWidget::scanDevices);
     headerLayout->addWidget(m_btnRefreshDevice);
 
@@ -627,20 +682,28 @@ void AppleIpswWidget::setupUi()
 
 void AppleIpswWidget::onSwitchMode(int mode)
 {
-    if(!m_modeStack)
+    if (!m_modeStack)
         return;
     m_modeStack->setCurrentIndex(mode);
 
-    if(mode == 0)
+    if (mode == 0)
     {
-        m_btnModeSimple->setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 6px 14px; font-size: 11.5px;");
-        m_btnModeAdvanced->setStyleSheet("background-color: transparent; color: #94A3B8; font-weight: 600; border: none; padding: 6px 14px; font-size: 11.5px;");
+        m_btnModeSimple->setStyleSheet(
+            "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 6px "
+            "14px; font-size: 11.5px;");
+        m_btnModeAdvanced->setStyleSheet(
+            "background-color: transparent; color: #94A3B8; font-weight: 600; border: none; padding: 6px 14px; "
+            "font-size: 11.5px;");
         updateSimpleWizardStep1();
     }
     else
     {
-        m_btnModeAdvanced->setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 6px 14px; font-size: 11.5px;");
-        m_btnModeSimple->setStyleSheet("background-color: transparent; color: #94A3B8; font-weight: 600; border: none; padding: 6px 14px; font-size: 11.5px;");
+        m_btnModeAdvanced->setStyleSheet(
+            "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 6px "
+            "14px; font-size: 11.5px;");
+        m_btnModeSimple->setStyleSheet(
+            "background-color: transparent; color: #94A3B8; font-weight: 600; border: none; padding: 6px 14px; "
+            "font-size: 11.5px;");
         updateDeviceCard();
         updateDiskSpaceInfo();
     }
@@ -651,14 +714,17 @@ void AppleIpswWidget::onSwitchMode(int mode)
 // -------------------------------------------------------------
 void AppleIpswWidget::updateSimpleStepPills(int step)
 {
-    if(!m_lblSimplePill1 || !m_lblSimplePill2 || !m_lblSimplePill3)
+    if (!m_lblSimplePill1 || !m_lblSimplePill2 || !m_lblSimplePill3)
         return;
 
-    auto styleActive = "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 7px 12px; font-size: 11.5px;";
-    auto styleCompleted = "background-color: #064E3B; color: #34D399; font-weight: bold; border: 1px solid #059669; padding: 7px 12px; font-size: 11.5px;";
-    auto stylePending = "background-color: #0F172A; color: #64748B; font-weight: 600; border: 1px solid #1E293B; padding: 7px 12px; font-size: 11.5px;";
+    auto styleActive = "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; "
+                       "padding: 7px 12px; font-size: 11.5px;";
+    auto styleCompleted = "background-color: #064E3B; color: #34D399; font-weight: bold; border: 1px solid #059669; "
+                          "padding: 7px 12px; font-size: 11.5px;";
+    auto stylePending = "background-color: #0F172A; color: #64748B; font-weight: 600; border: 1px solid #1E293B; "
+                        "padding: 7px 12px; font-size: 11.5px;";
 
-    if(step == 0)
+    if (step == 0)
     {
         m_lblSimplePill1->setStyleSheet(styleActive);
         m_lblSimplePill1->setText(QString::fromUtf8("1. ПОДКЛЮЧЕНИЕ IPHONE"));
@@ -667,7 +733,7 @@ void AppleIpswWidget::updateSimpleStepPills(int step)
         m_lblSimplePill3->setStyleSheet(stylePending);
         m_lblSimplePill3->setText(QString::fromUtf8("3. ВОССТАНОВЛЕНИЕ"));
     }
-    else if(step == 1)
+    else if (step == 1)
     {
         m_lblSimplePill1->setStyleSheet(styleCompleted);
         m_lblSimplePill1->setText(QString::fromUtf8("✔ 1. ПОДКЛЮЧЕНИЕ IPHONE"));
@@ -728,8 +794,16 @@ void AppleIpswWidget::setupSimpleWizardPage()
     QVBoxLayout *s1CardLayout = new QVBoxLayout(s1Card);
     s1CardLayout->setSpacing(14);
 
-    QLabel *s1Title = new QLabel(QString::fromUtf8("<span style='font-size: 15px; font-weight: bold; color: #FFFFFF;'>📱 Шаг 1: Подключение устройства Apple по USB</span>"), s1Card);
-    QLabel *s1Desc = new QLabel(QString::fromUtf8("Подключите iPhone, iPad или iPod оригинальным кабелем напрямую к порту компьютера. AdsKiller автоматически определит модель и подберет актуальную цифровую прошивку Apple."), s1Card);
+    QLabel *s1Title = new QLabel(
+        QString::fromUtf8(
+            "<span style='font-size: 15px; font-weight: bold; color: #FFFFFF;'>📱 Шаг 1: Подключение устройства Apple "
+            "по USB</span>"),
+        s1Card);
+    QLabel *s1Desc = new QLabel(
+        QString::fromUtf8(
+            "Подключите iPhone, iPad или iPod оригинальным кабелем напрямую к порту компьютера. AdsKiller "
+            "автоматически определит модель и подберет актуальную цифровую прошивку Apple."),
+        s1Card);
     s1Desc->setStyleSheet("color: #94A3B8; font-size: 12px;");
     s1Desc->setWordWrap(true);
 
@@ -754,7 +828,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
     m_lblSimpleCardDeviceTitle = new QLabel(m_simpleConnectedDeviceCard);
     m_lblSimpleCardDeviceTitle->setStyleSheet("font-size: 14px; font-weight: bold; color: #38BDF8;");
     m_lblSimpleCardDeviceMode = new QLabel(m_simpleConnectedDeviceCard);
-    m_lblSimpleCardDeviceMode->setStyleSheet("background: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold; padding: 3px 8px; border: 1px solid #059669; font-size: 11px;");
+    m_lblSimpleCardDeviceMode->setStyleSheet(
+        "background: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold; padding: 3px 8px; border: 1px solid "
+        "#059669; font-size: 11px;");
     scdHead->addWidget(m_lblSimpleCardDeviceTitle);
     scdHead->addStretch();
     scdHead->addWidget(m_lblSimpleCardDeviceMode);
@@ -764,8 +840,7 @@ void AppleIpswWidget::setupSimpleWizardPage()
     scdGrid->setHorizontalSpacing(16);
     scdGrid->setVerticalSpacing(6);
 
-    auto addScdProp = [this, scdGrid](int r, int c, const QString &label, QLabel *&valLbl)
-    {
+    auto addScdProp = [this, scdGrid](int r, int c, const QString &label, QLabel *&valLbl) {
         QLabel *l = new QLabel(label, m_simpleConnectedDeviceCard);
         l->setStyleSheet("color: #64748B; font-weight: 600; font-size: 11.5px;");
         valLbl = new QLabel("-", m_simpleConnectedDeviceCard);
@@ -794,18 +869,29 @@ void AppleIpswWidget::setupSimpleWizardPage()
     hintTitle->setStyleSheet("color: #38BDF8; font-size: 12px;");
     hintLayout->addWidget(hintTitle);
 
-    auto addHint = [hintLayout, hintBox](const QString &text)
-    {
+    auto addHint = [hintLayout, hintBox](const QString &text) {
         QLabel *l = new QLabel(text, hintBox);
         l->setStyleSheet("color: #CBD5E1; font-size: 11.5px;");
         l->setWordWrap(true);
         hintLayout->addWidget(l);
     };
 
-    addHint(QString::fromUtf8("* <b>Прямой порт USB:</b> Подключайте кабель напрямую к портам материнской платы ПК (избегайте USB-хабов)."));
-    addHint(QString::fromUtf8("* <b>Доверие компьютеру:</b> Если экран iPhone активен, разблокируйте его и нажмите «Доверять этому компьютеру»."));
-    addHint(QString::fromUtf8("* <b>Зависание на логотипе Apple / Bootloop:</b> Переведите устройство в Recovery Mode (зажмите кнопки громкости и питания до значка кабеля и ПК)."));
-    addHint(QString::fromUtf8("* <b>Контроль кабеля:</b> Поврежденные неоригинальные кабели могут обрывать связь при записи разделов RootFS."));
+    addHint(
+        QString::fromUtf8(
+            "* <b>Прямой порт USB:</b> Подключайте кабель напрямую к портам материнской платы ПК (избегайте "
+            "USB-хабов)."));
+    addHint(
+        QString::fromUtf8(
+            "* <b>Доверие компьютеру:</b> Если экран iPhone активен, разблокируйте его и нажмите «Доверять этому "
+            "компьютеру»."));
+    addHint(
+        QString::fromUtf8(
+            "* <b>Зависание на логотипе Apple / Bootloop:</b> Переведите устройство в Recovery Mode (зажмите кнопки "
+            "громкости и питания до значка кабеля и ПК)."));
+    addHint(
+        QString::fromUtf8(
+            "* <b>Контроль кабеля:</b> Поврежденные неоригинальные кабели могут обрывать связь при записи разделов "
+            "RootFS."));
 
     s1CardLayout->addWidget(hintBox);
     s1Layout->addWidget(s1Card);
@@ -817,14 +903,19 @@ void AppleIpswWidget::setupSimpleWizardPage()
     btnManualRefresh->setObjectName(QStringLiteral("ipswBtnManualRefreshUSB"));
     btnManualRefresh->setCursor(Qt::PointingHandCursor);
     btnManualRefresh->setIcon(QIcon(":/svg/refresh-cw"));
-    btnManualRefresh->setStyleSheet("background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600; font-size: 12px;");
+    btnManualRefresh->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600; "
+        "font-size: 12px;");
     connect(btnManualRefresh, &QPushButton::clicked, this, &AppleIpswWidget::scanDevices);
     s1Bar->addWidget(btnManualRefresh);
 
     m_btnSimpleStep1Next = new QPushButton(QString::fromUtf8("Продолжить: Выбор режима и прошивка ➔"), step1);
     m_btnSimpleStep1Next->setObjectName(QStringLiteral("ipswBtnStep1Next"));
     m_btnSimpleStep1Next->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleStep1Next->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 22px; font-weight: bold; font-size: 12.5px; } QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; }");
+    m_btnSimpleStep1Next->setStyleSheet(
+        "QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 22px; "
+        "font-weight: bold; font-size: 12.5px; } QPushButton:disabled { background-color: #0B101D; color: #475569; "
+        "border-color: #1E293B; }");
     m_btnSimpleStep1Next->setEnabled(false);
     connect(m_btnSimpleStep1Next, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleStep1Next);
     s1Bar->addWidget(m_btnSimpleStep1Next);
@@ -848,11 +939,17 @@ void AppleIpswWidget::setupSimpleWizardPage()
     QVBoxLayout *s2CardLayout = new QVBoxLayout(s2Card);
     s2CardLayout->setSpacing(14);
 
-    QLabel *s2Title = new QLabel(QString::fromUtf8("<span style='font-size: 15px; font-weight: bold; color: #FFFFFF;'>⚙ Шаг 2: Автонастройки, режим восстановления и проверка IPSW</span>"), s2Card);
+    QLabel *s2Title = new QLabel(
+        QString::fromUtf8(
+            "<span style='font-size: 15px; font-weight: bold; color: #FFFFFF;'>⚙ Шаг 2: Автонастройки, режим "
+            "восстановления и проверка IPSW</span>"),
+        s2Card);
     s2CardLayout->addWidget(s2Title);
 
     m_lblSimpleDeviceSummary = new QLabel(s2Card);
-    m_lblSimpleDeviceSummary->setStyleSheet("background: #070A12; border: 1px solid #1E293B; padding: 10px 14px; font-size: 12.5px; font-weight: bold; color: #FFFFFF;");
+    m_lblSimpleDeviceSummary->setStyleSheet(
+        "background: #070A12; border: 1px solid #1E293B; padding: 10px 14px; font-size: 12.5px; font-weight: bold; "
+        "color: #FFFFFF;");
     s2CardLayout->addWidget(m_lblSimpleDeviceSummary);
 
     // Mode Selection Interactive Cards
@@ -878,13 +975,19 @@ void AppleIpswWidget::setupSimpleWizardPage()
     m_rbSimpleRetain->setChecked(true);
     m_simpleResetGroup->addButton(m_rbSimpleRetain, 0);
     QLabel *badgeRetain = new QLabel(QString::fromUtf8("РЕКОМЕНДУЕТСЯ"), opt1Card);
-    badgeRetain->setStyleSheet("background: rgba(16,185,129,0.15); color: #34D399; font-weight: bold; padding: 2px 8px; border: 1px solid #059669; font-size: 10.5px;");
+    badgeRetain->setStyleSheet(
+        "background: rgba(16,185,129,0.15); color: #34D399; font-weight: bold; padding: 2px 8px; border: 1px solid "
+        "#059669; font-size: 10.5px;");
     opt1H->addWidget(m_rbSimpleRetain);
     opt1H->addStretch();
     opt1H->addWidget(badgeRetain);
     opt1Layout->addLayout(opt1H);
 
-    QLabel *opt1Desc = new QLabel(QString::fromUtf8("Все ваши фото, приложения, контакты и сообщения сохранятся на устройстве. Будет обновлена только операционная система iOS."), opt1Card);
+    QLabel *opt1Desc = new QLabel(
+        QString::fromUtf8(
+            "Все ваши фото, приложения, контакты и сообщения сохранятся на устройстве. Будет обновлена только "
+            "операционная система iOS."),
+        opt1Card);
     opt1Desc->setStyleSheet("color: #94A3B8; font-size: 11.5px; margin-left: 24px;");
     opt1Desc->setWordWrap(true);
     opt1Layout->addWidget(opt1Desc);
@@ -897,16 +1000,23 @@ void AppleIpswWidget::setupSimpleWizardPage()
     opt2Layout->setSpacing(4);
 
     QHBoxLayout *opt2H = new QHBoxLayout();
-    m_rbSimpleErase = new QRadioButton(QString::fromUtf8("<b>2. Полная очистка и восстановление (Сброс до завода)</b>"), opt2Card);
+    m_rbSimpleErase
+        = new QRadioButton(QString::fromUtf8("<b>2. Полная очистка и восстановление (Сброс до завода)</b>"), opt2Card);
     m_simpleResetGroup->addButton(m_rbSimpleErase, 1);
     QLabel *badgeErase = new QLabel(QString::fromUtf8("УДАЛЕНИЕ ВСЕХ ДАННЫХ"), opt2Card);
-    badgeErase->setStyleSheet("background: rgba(239,68,68,0.15); color: #F87171; font-weight: bold; padding: 2px 8px; border: 1px solid #DC2626; font-size: 10.5px;");
+    badgeErase->setStyleSheet(
+        "background: rgba(239,68,68,0.15); color: #F87171; font-weight: bold; padding: 2px 8px; border: 1px solid "
+        "#DC2626; font-size: 10.5px;");
     opt2H->addWidget(m_rbSimpleErase);
     opt2H->addStretch();
     opt2H->addWidget(badgeErase);
     opt2Layout->addLayout(opt2H);
 
-    QLabel *opt2Desc = new QLabel(QString::fromUtf8("ВНИМАНИЕ! Полная переразметка накопителя NAND. Все данные пользователя будут безвозвратно удалены. Рекомендуется при сбоях загрузки или забытом пароле экрана."), opt2Card);
+    QLabel *opt2Desc = new QLabel(
+        QString::fromUtf8(
+            "ВНИМАНИЕ! Полная переразметка накопителя NAND. Все данные пользователя будут безвозвратно удалены. "
+            "Рекомендуется при сбоях загрузки или забытом пароле экрана."),
+        opt2Card);
     opt2Desc->setStyleSheet("color: #F87171; font-size: 11.5px; margin-left: 24px;");
     opt2Desc->setWordWrap(true);
     opt2Layout->addWidget(opt2Desc);
@@ -935,27 +1045,33 @@ void AppleIpswWidget::setupSimpleWizardPage()
     scLayout->setSpacing(6);
 
     QHBoxLayout *scHead = new QHBoxLayout();
-    QLabel *scTitle = new QLabel(QString::fromUtf8("<b>🔒 Контроль целостности (SHA-1 Checksum):</b>"), m_simpleChecksumCard);
+    QLabel *scTitle
+        = new QLabel(QString::fromUtf8("<b>🔒 Контроль целостности (SHA-1 Checksum):</b>"), m_simpleChecksumCard);
     scTitle->setStyleSheet("color: #94A3B8; font-size: 11.5px;");
     scHead->addWidget(scTitle);
     scHead->addStretch();
 
     m_btnSimpleVerifyChecksum = new QPushButton(QString::fromUtf8("🔍 Сверить SHA-1"), m_simpleChecksumCard);
     m_btnSimpleVerifyChecksum->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleVerifyChecksum->setStyleSheet("background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 4px 10px; font-weight: 600; font-size: 11px;");
+    m_btnSimpleVerifyChecksum->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 4px 10px; font-weight: 600; "
+        "font-size: 11px;");
     connect(m_btnSimpleVerifyChecksum, &QPushButton::clicked, this, &AppleIpswWidget::onStartChecksumVerification);
     scHead->addWidget(m_btnSimpleVerifyChecksum);
 
     m_btnSimpleCancelChecksum = new QPushButton(QString::fromUtf8("⏹ Отмена"), m_simpleChecksumCard);
     m_btnSimpleCancelChecksum->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleCancelChecksum->setStyleSheet("background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 4px 10px; font-weight: 600; font-size: 11px;");
+    m_btnSimpleCancelChecksum->setStyleSheet(
+        "background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 4px 10px; font-weight: 600; "
+        "font-size: 11px;");
     m_btnSimpleCancelChecksum->setVisible(false);
     connect(m_btnSimpleCancelChecksum, &QPushButton::clicked, this, &AppleIpswWidget::onCancelChecksumVerification);
     scHead->addWidget(m_btnSimpleCancelChecksum);
 
     scLayout->addLayout(scHead);
 
-    m_lblSimpleChecksumStatus = new QLabel(QString::fromUtf8("Контрольная сумма еще не проверялась."), m_simpleChecksumCard);
+    m_lblSimpleChecksumStatus
+        = new QLabel(QString::fromUtf8("Контрольная сумма еще не проверялась."), m_simpleChecksumCard);
     m_lblSimpleChecksumStatus->setStyleSheet("color: #64748B; font-size: 11.5px;");
     m_lblSimpleChecksumStatus->setWordWrap(true);
     scLayout->addWidget(m_lblSimpleChecksumStatus);
@@ -969,8 +1085,14 @@ void AppleIpswWidget::setupSimpleWizardPage()
     fwLayout->addWidget(m_simpleChecksumCard);
     s2CardLayout->addWidget(fwCard);
 
-    QLabel *safetyLbl = new QLabel(QString::fromUtf8("⚠️ <b>Безопасность:</b> Убедитесь, что заряд аккумулятора iPhone не менее 50%, и не отключайте кабель во время прошивки."), s2Card);
-    safetyLbl->setStyleSheet("background: rgba(245,158,11,0.1); border: 1px solid #D97706; color: #FBBF24; padding: 8px 12px; font-size: 11.5px;");
+    QLabel *safetyLbl = new QLabel(
+        QString::fromUtf8(
+            "⚠️ <b>Безопасность:</b> Убедитесь, что заряд аккумулятора iPhone не менее 50%, и не отключайте кабель во "
+            "время прошивки."),
+        s2Card);
+    safetyLbl->setStyleSheet(
+        "background: rgba(245,158,11,0.1); border: 1px solid #D97706; color: #FBBF24; padding: 8px 12px; font-size: "
+        "11.5px;");
     safetyLbl->setWordWrap(true);
     s2CardLayout->addWidget(safetyLbl);
 
@@ -980,7 +1102,8 @@ void AppleIpswWidget::setupSimpleWizardPage()
     m_btnSimpleStep2Back = new QPushButton(QString::fromUtf8("⬅ Назад к устройству"), step2);
     m_btnSimpleStep2Back->setObjectName(QStringLiteral("ipswBtnStep2Back"));
     m_btnSimpleStep2Back->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleStep2Back->setStyleSheet("background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
+    m_btnSimpleStep2Back->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(m_btnSimpleStep2Back, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleStep2Back);
     s2Bar->addWidget(m_btnSimpleStep2Back);
 
@@ -989,7 +1112,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
     m_btnSimpleStep2Start = new QPushButton(QString::fromUtf8("⚡ Начать восстановление ➔"), step2);
     m_btnSimpleStep2Start->setObjectName(QStringLiteral("ipswBtnStep2Start"));
     m_btnSimpleStep2Start->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleStep2Start->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 24px; font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; }");
+    m_btnSimpleStep2Start->setStyleSheet(
+        "QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 24px; "
+        "font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; }");
     connect(m_btnSimpleStep2Start, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleStep2Start);
     s2Bar->addWidget(m_btnSimpleStep2Start);
 
@@ -1012,7 +1137,11 @@ void AppleIpswWidget::setupSimpleWizardPage()
     QVBoxLayout *s3CardLayout = new QVBoxLayout(s3Card);
     s3CardLayout->setSpacing(16);
 
-    QLabel *s3Title = new QLabel(QString::fromUtf8("<span style='font-size: 16px; font-weight: bold; color: #FFFFFF;'>⚡ Шаг 3: Процесс восстановления iPhone</span>"), s3Card);
+    QLabel *s3Title = new QLabel(
+        QString::fromUtf8(
+            "<span style='font-size: 16px; font-weight: bold; color: #FFFFFF;'>⚡ Шаг 3: Процесс восстановления "
+            "iPhone</span>"),
+        s3Card);
     s3CardLayout->addWidget(s3Title);
 
     m_lblSimpleProgressStatus = new QLabel(QString::fromUtf8("Инициализация процесса восстановления..."), s3Card);
@@ -1054,7 +1183,8 @@ void AppleIpswWidget::setupSimpleWizardPage()
     m_btnSimpleCancel = new QPushButton(QString::fromUtf8("⏹ Отмена операции"), step3);
     m_btnSimpleCancel->setObjectName(QStringLiteral("ipswBtnSimpleCancel"));
     m_btnSimpleCancel->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleCancel->setStyleSheet("background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 8px 16px; font-weight: bold;");
+    m_btnSimpleCancel->setStyleSheet(
+        "background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 8px 16px; font-weight: bold;");
     connect(m_btnSimpleCancel, &QPushButton::clicked, this, &AppleIpswWidget::onCancelFlashClicked);
     s3Bar->addWidget(m_btnSimpleCancel);
 
@@ -1063,7 +1193,9 @@ void AppleIpswWidget::setupSimpleWizardPage()
     m_btnSimpleRetry = new QPushButton(QString::fromUtf8("🔄 Повторить попытку"), step3);
     m_btnSimpleRetry->setObjectName(QStringLiteral("ipswBtnSimpleRetry"));
     m_btnSimpleRetry->setCursor(Qt::PointingHandCursor);
-    m_btnSimpleRetry->setStyleSheet("background-color: #064E3B; border: 1px solid #059669; color: #34D399; padding: 8px 24px; font-weight: bold; font-size: 12.5px;");
+    m_btnSimpleRetry->setStyleSheet(
+        "background-color: #064E3B; border: 1px solid #059669; color: #34D399; padding: 8px 24px; font-weight: bold; "
+        "font-size: 12.5px;");
     m_btnSimpleRetry->setVisible(false);
     connect(m_btnSimpleRetry, &QPushButton::clicked, this, &AppleIpswWidget::onSimpleRetry);
     s3Bar->addWidget(m_btnSimpleRetry);
@@ -1086,14 +1218,17 @@ void AppleIpswWidget::setupSimpleWizardPage()
 // -------------------------------------------------------------
 void AppleIpswWidget::updateAdvStepPills(int step)
 {
-    if(!m_lblAdvPill1 || !m_lblAdvPill2 || !m_lblAdvPill3)
+    if (!m_lblAdvPill1 || !m_lblAdvPill2 || !m_lblAdvPill3)
         return;
 
-    auto styleActive = "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; padding: 7px 12px; font-size: 11.5px;";
-    auto styleCompleted = "background-color: #064E3B; color: #34D399; font-weight: bold; border: 1px solid #059669; padding: 7px 12px; font-size: 11.5px;";
-    auto stylePending = "background-color: #0F172A; color: #64748B; font-weight: 600; border: 1px solid #1E293B; padding: 7px 12px; font-size: 11.5px;";
+    auto styleActive = "background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: 1px solid #38BDF8; "
+                       "padding: 7px 12px; font-size: 11.5px;";
+    auto styleCompleted = "background-color: #064E3B; color: #34D399; font-weight: bold; border: 1px solid #059669; "
+                          "padding: 7px 12px; font-size: 11.5px;";
+    auto stylePending = "background-color: #0F172A; color: #64748B; font-weight: 600; border: 1px solid #1E293B; "
+                        "padding: 7px 12px; font-size: 11.5px;";
 
-    if(step == 0)
+    if (step == 0)
     {
         m_lblAdvPill1->setStyleSheet(styleActive);
         m_lblAdvPill1->setText(QString::fromUtf8("1. КАТАЛОГ & ХРАНИЛИЩЕ"));
@@ -1102,7 +1237,7 @@ void AppleIpswWidget::updateAdvStepPills(int step)
         m_lblAdvPill3->setStyleSheet(stylePending);
         m_lblAdvPill3->setText(QString::fromUtf8("3. ДИАГНОСТИКА & ТЕРМИНАЛ"));
     }
-    else if(step == 1)
+    else if (step == 1)
     {
         m_lblAdvPill1->setStyleSheet(styleCompleted);
         m_lblAdvPill1->setText(QString::fromUtf8("✔ 1. КАТАЛОГ & ХРАНИЛИЩЕ"));
@@ -1178,7 +1313,11 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_comboDeviceModel = new QComboBox(tabCatalog);
     m_comboDeviceModel->setObjectName(QStringLiteral("ipswComboDeviceModel"));
     m_comboDeviceModel->setMinimumWidth(260);
-    connect(m_comboDeviceModel, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AppleIpswWidget::onModelSelected);
+    connect(
+        m_comboDeviceModel,
+        QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this,
+        &AppleIpswWidget::onModelSelected);
     filterRow->addWidget(m_comboDeviceModel);
 
     m_editCatalogFilter = new QLineEdit(tabCatalog);
@@ -1204,7 +1343,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnSelectLocal->setObjectName(QStringLiteral("ipswBtnSelectLocal"));
     m_btnSelectLocal->setCursor(Qt::PointingHandCursor);
     m_btnSelectLocal->setIcon(QIcon(":/svg/folder"));
-    m_btnSelectLocal->setStyleSheet("QPushButton { background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 6px 14px; font-weight: 600; } QPushButton:hover { background-color: #38BDF8; color: #000000; }");
+    m_btnSelectLocal->setStyleSheet(
+        "QPushButton { background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 6px 14px; "
+        "font-weight: 600; } QPushButton:hover { background-color: #38BDF8; color: #000000; }");
     connect(m_btnSelectLocal, &QPushButton::clicked, this, &AppleIpswWidget::onSelectLocalIpswClicked);
     filterRow->addWidget(m_btnSelectLocal);
 
@@ -1216,7 +1357,8 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     QVBoxLayout *sfbLayout = new QVBoxLayout(selFwBox);
     sfbLayout->setSpacing(6);
 
-    m_lblSelectedIpsw = new QLabel(QString::fromUtf8("Файл прошивки не выбран. Выберите версию из таблицы или укажите локальный файл."), selFwBox);
+    m_lblSelectedIpsw = new QLabel(
+        QString::fromUtf8("Файл прошивки не выбран. Выберите версию из таблицы или укажите локальный файл."), selFwBox);
     m_lblSelectedIpsw->setObjectName(QStringLiteral("ipswLblSelectedIpsw"));
     m_lblSelectedIpsw->setStyleSheet("color: #38BDF8; font-size: 11.5px;");
     sfbLayout->addWidget(m_lblSelectedIpsw);
@@ -1228,7 +1370,8 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     accLayout->setContentsMargins(4, 4, 4, 4);
     accLayout->setSpacing(10);
 
-    m_lblAdvChecksumStatus = new QLabel(QString::fromUtf8("Контрольная сумма SHA-1: не проверялась."), m_advChecksumCard);
+    m_lblAdvChecksumStatus
+        = new QLabel(QString::fromUtf8("Контрольная сумма SHA-1: не проверялась."), m_advChecksumCard);
     m_lblAdvChecksumStatus->setStyleSheet("color: #94A3B8; font-size: 11px;");
     accLayout->addWidget(m_lblAdvChecksumStatus, 1);
 
@@ -1240,13 +1383,17 @@ void AppleIpswWidget::setupAdvancedWizardPage()
 
     m_btnAdvVerifyChecksum = new QPushButton(QString::fromUtf8("🔍 Сверить SHA-1"), m_advChecksumCard);
     m_btnAdvVerifyChecksum->setCursor(Qt::PointingHandCursor);
-    m_btnAdvVerifyChecksum->setStyleSheet("background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 4px 10px; font-weight: 600; font-size: 11px;");
+    m_btnAdvVerifyChecksum->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 4px 10px; font-weight: 600; "
+        "font-size: 11px;");
     connect(m_btnAdvVerifyChecksum, &QPushButton::clicked, this, &AppleIpswWidget::onStartChecksumVerification);
     accLayout->addWidget(m_btnAdvVerifyChecksum);
 
     m_btnAdvCancelChecksum = new QPushButton(QString::fromUtf8("⏹ Отмена"), m_advChecksumCard);
     m_btnAdvCancelChecksum->setCursor(Qt::PointingHandCursor);
-    m_btnAdvCancelChecksum->setStyleSheet("background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 4px 10px; font-weight: 600; font-size: 11px;");
+    m_btnAdvCancelChecksum->setStyleSheet(
+        "background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 4px 10px; font-weight: 600; "
+        "font-size: 11px;");
     m_btnAdvCancelChecksum->setVisible(false);
     connect(m_btnAdvCancelChecksum, &QPushButton::clicked, this, &AppleIpswWidget::onCancelChecksumVerification);
     accLayout->addWidget(m_btnAdvCancelChecksum);
@@ -1258,7 +1405,13 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_firmwareTable = new QTableWidget(tabCatalog);
     m_firmwareTable->setObjectName(QStringLiteral("ipswFirmwareCatalogTable"));
     m_firmwareTable->setColumnCount(6);
-    m_firmwareTable->setHorizontalHeaderLabels({QString::fromUtf8("Версия iOS"), QString::fromUtf8("Номер сборки"), QString::fromUtf8("Дата релиза"), QString::fromUtf8("Статус Apple (TSS)"), QString::fromUtf8("Размер"), QString::fromUtf8("Действие")});
+    m_firmwareTable->setHorizontalHeaderLabels(
+        {QString::fromUtf8("Версия iOS"),
+         QString::fromUtf8("Номер сборки"),
+         QString::fromUtf8("Дата релиза"),
+         QString::fromUtf8("Статус Apple (TSS)"),
+         QString::fromUtf8("Размер"),
+         QString::fromUtf8("Действие")});
     m_firmwareTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     m_firmwareTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     m_firmwareTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
@@ -1319,7 +1472,13 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_localFirmwareTable = new QTableWidget(tabStorage);
     m_localFirmwareTable->setObjectName(QStringLiteral("ipswLocalFirmwareTable"));
     m_localFirmwareTable->setColumnCount(6);
-    m_localFirmwareTable->setHorizontalHeaderLabels({QString::fromUtf8("Имя файла"), QString::fromUtf8("Модель устройства"), QString::fromUtf8("Размер"), QString::fromUtf8("Дата изменения"), QString::fromUtf8("Контрольная сумма"), QString::fromUtf8("Действия")});
+    m_localFirmwareTable->setHorizontalHeaderLabels(
+        {QString::fromUtf8("Имя файла"),
+         QString::fromUtf8("Модель устройства"),
+         QString::fromUtf8("Размер"),
+         QString::fromUtf8("Дата изменения"),
+         QString::fromUtf8("Контрольная сумма"),
+         QString::fromUtf8("Действия")});
     m_localFirmwareTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     m_localFirmwareTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     m_localFirmwareTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
@@ -1340,7 +1499,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnAdvStep1Next = new QPushButton(QString::fromUtf8("Далее: Режим сброса и настройки ➔"), advStep1);
     m_btnAdvStep1Next->setObjectName(QStringLiteral("ipswBtnAdvStep1Next"));
     m_btnAdvStep1Next->setCursor(Qt::PointingHandCursor);
-    m_btnAdvStep1Next->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 22px; font-weight: bold; font-size: 12.5px; } QPushButton:hover { background-color: #0369A1; }");
+    m_btnAdvStep1Next->setStyleSheet(
+        "QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 22px; "
+        "font-weight: bold; font-size: 12.5px; } QPushButton:hover { background-color: #0369A1; }");
     connect(m_btnAdvStep1Next, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep1Next);
     a1Bar->addWidget(m_btnAdvStep1Next);
 
@@ -1363,11 +1524,17 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     QVBoxLayout *a2CardLayout = new QVBoxLayout(a2Card);
     a2CardLayout->setSpacing(14);
 
-    QLabel *a2Title = new QLabel(QString::fromUtf8("<span style='font-size: 15px; font-weight: bold; color: #FFFFFF;'>🛠 Этап 2: Тонкая настройка режима прошивки</span>"), a2Card);
+    QLabel *a2Title = new QLabel(
+        QString::fromUtf8(
+            "<span style='font-size: 15px; font-weight: bold; color: #FFFFFF;'>🛠 Этап 2: Тонкая настройка режима "
+            "прошивки</span>"),
+        a2Card);
     a2CardLayout->addWidget(a2Title);
 
     m_lblAdvStep2FirmwareSummary = new QLabel(a2Card);
-    m_lblAdvStep2FirmwareSummary->setStyleSheet("background: #070A12; border: 1px solid #1E293B; padding: 10px 14px; color: #FFFFFF; font-size: 12px; font-weight: 600;");
+    m_lblAdvStep2FirmwareSummary->setStyleSheet(
+        "background: #070A12; border: 1px solid #1E293B; padding: 10px 14px; color: #FFFFFF; font-size: 12px; "
+        "font-weight: 600;");
     a2CardLayout->addWidget(m_lblAdvStep2FirmwareSummary);
 
     m_flashModeGroup = new QButtonGroup(this);
@@ -1377,19 +1544,29 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     QVBoxLayout *advModeBoxLayout = new QVBoxLayout(advModeBox);
     advModeBoxLayout->setSpacing(12);
 
-    m_rbRetainData = new QRadioButton(QString::fromUtf8("<b>Обновление (сохранить пользовательские данные) [-u Update]</b>"), advModeBox);
+    m_rbRetainData = new QRadioButton(
+        QString::fromUtf8("<b>Обновление (сохранить пользовательские данные) [-u Update]</b>"), advModeBox);
     m_rbRetainData->setObjectName(QStringLiteral("ipswRbRetainData"));
     m_rbRetainData->setChecked(true);
     m_flashModeGroup->addButton(m_rbRetainData, 0);
-    QLabel *retDesc = new QLabel(QString::fromUtf8("Флаг <code>-u</code>: Сохраняет разделы с личными данными (/private/var). Обновляет операционную систему, ядро KernelCache и модем Baseband."), advModeBox);
+    QLabel *retDesc = new QLabel(
+        QString::fromUtf8(
+            "Флаг <code>-u</code>: Сохраняет разделы с личными данными (/private/var). Обновляет операционную систему, "
+            "ядро KernelCache и модем Baseband."),
+        advModeBox);
     retDesc->setStyleSheet("color: #94A3B8; font-size: 11.5px; margin-left: 24px;");
     advModeBoxLayout->addWidget(m_rbRetainData);
     advModeBoxLayout->addWidget(retDesc);
 
-    m_rbCleanRestore = new QRadioButton(QString::fromUtf8("<b>Чистая прошивка со сбросом (стереть все данные) [-e Erase]</b>"), advModeBox);
+    m_rbCleanRestore = new QRadioButton(
+        QString::fromUtf8("<b>Чистая прошивка со сбросом (стереть все данные) [-e Erase]</b>"), advModeBox);
     m_rbCleanRestore->setObjectName(QStringLiteral("ipswRbCleanRestore"));
     m_flashModeGroup->addButton(m_rbCleanRestore, 1);
-    QLabel *eraseDesc = new QLabel(QString::fromUtf8("Флаг <code>-e</code>: Полная переразметка разделов флеш-памяти NAND. Рекомендуется при повреждении системной таблицы или забытом пароле экрана."), advModeBox);
+    QLabel *eraseDesc = new QLabel(
+        QString::fromUtf8(
+            "Флаг <code>-e</code>: Полная переразметка разделов флеш-памяти NAND. Рекомендуется при повреждении "
+            "системной таблицы или забытом пароле экрана."),
+        advModeBox);
     eraseDesc->setStyleSheet("color: #F87171; font-size: 11.5px; margin-left: 24px;");
     advModeBoxLayout->addWidget(m_rbCleanRestore);
     advModeBoxLayout->addWidget(eraseDesc);
@@ -1421,7 +1598,8 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnAdvStep2Back = new QPushButton(QString::fromUtf8("⬅ Назад к каталогу"), advStep2);
     m_btnAdvStep2Back->setObjectName(QStringLiteral("ipswBtnAdvStep2Back"));
     m_btnAdvStep2Back->setCursor(Qt::PointingHandCursor);
-    m_btnAdvStep2Back->setStyleSheet("background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
+    m_btnAdvStep2Back->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(m_btnAdvStep2Back, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep2Back);
     a2Bar->addWidget(m_btnAdvStep2Back);
 
@@ -1430,7 +1608,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnAdvStep2Next = new QPushButton(QString::fromUtf8("Далее: Управление устройством и запуск ➔"), advStep2);
     m_btnAdvStep2Next->setObjectName(QStringLiteral("ipswBtnAdvStep2Next"));
     m_btnAdvStep2Next->setCursor(Qt::PointingHandCursor);
-    m_btnAdvStep2Next->setStyleSheet("QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 22px; font-weight: bold; font-size: 12.5px; } QPushButton:hover { background-color: #0369A1; }");
+    m_btnAdvStep2Next->setStyleSheet(
+        "QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 22px; "
+        "font-weight: bold; font-size: 12.5px; } QPushButton:hover { background-color: #0369A1; }");
     connect(m_btnAdvStep2Next, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep2Next);
     a2Bar->addWidget(m_btnAdvStep2Next);
 
@@ -1462,7 +1642,7 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_lblDeviceIcon = new QLabel(m_deviceCardWidget);
     m_lblDeviceIcon->setAlignment(Qt::AlignCenter);
     QIcon devIcon(":/svg/apple");
-    if(devIcon.isNull())
+    if (devIcon.isNull())
         devIcon = QIcon(":/svg/services/apple");
     m_lblDeviceIcon->setPixmap(devIcon.pixmap(48, 48));
     cardLayout->addWidget(m_lblDeviceIcon);
@@ -1474,13 +1654,14 @@ void AppleIpswWidget::setupAdvancedWizardPage()
 
     m_lblDeviceMode = new QLabel(QString::fromUtf8("● Ожидание подключения USB"), m_deviceCardWidget);
     m_lblDeviceMode->setAlignment(Qt::AlignCenter);
-    m_lblDeviceMode->setStyleSheet("font-size: 11.5px; color: #EAB308; font-weight: 600; padding: 4px 10px; background: rgba(234, 179, 8, 0.1); border: 1px solid #854D0E;");
+    m_lblDeviceMode->setStyleSheet(
+        "font-size: 11.5px; color: #EAB308; font-weight: 600; padding: 4px 10px; background: rgba(234, 179, 8, 0.1); "
+        "border: 1px solid #854D0E;");
     cardLayout->addWidget(m_lblDeviceMode);
 
     cardLayout->addSpacing(4);
 
-    auto addAttrRow = [this, cardLayout](const QString &title, QLabel *&valLbl)
-    {
+    auto addAttrRow = [this, cardLayout](const QString &title, QLabel *&valLbl) {
         QHBoxLayout *row = new QHBoxLayout();
         QLabel *tLbl = new QLabel(title, m_deviceCardWidget);
         tLbl->setStyleSheet("color: #64748B; font-size: 11.5px; font-weight: 600;");
@@ -1544,7 +1725,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     statusRow->addStretch();
 
     m_lblAdvStep3ChecksumBadge = new QLabel(execBox);
-    m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 2px 8px; font-size: 11px; font-weight: 600;");
+    m_lblAdvStep3ChecksumBadge->setStyleSheet(
+        "background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 2px 8px; "
+        "font-size: 11px; font-weight: 600;");
     m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("○ Хеш не проверен"));
     statusRow->addWidget(m_lblAdvStep3ChecksumBadge);
 
@@ -1561,7 +1744,8 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnAdvStep3Back = new QPushButton(QString::fromUtf8("⬅ Назад"), execBox);
     m_btnAdvStep3Back->setObjectName(QStringLiteral("ipswBtnAdvStep3Back"));
     m_btnAdvStep3Back->setCursor(Qt::PointingHandCursor);
-    m_btnAdvStep3Back->setStyleSheet("background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
+    m_btnAdvStep3Back->setStyleSheet(
+        "background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600;");
     connect(m_btnAdvStep3Back, &QPushButton::clicked, this, &AppleIpswWidget::onAdvStep2Back);
     ctrlBtns->addWidget(m_btnAdvStep3Back);
 
@@ -1569,14 +1753,19 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnStartFlash->setObjectName(QStringLiteral("ipswBtnStartFlash"));
     m_btnStartFlash->setCursor(Qt::PointingHandCursor);
     m_btnStartFlash->setStyleSheet(
-        "QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 24px; font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; } QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; }");
+        "QPushButton { background-color: #0284C7; border: 1px solid #38BDF8; color: #FFFFFF; padding: 8px 24px; "
+        "font-weight: bold; font-size: 13px; } QPushButton:hover { background-color: #0369A1; } QPushButton:disabled { "
+        "background-color: #0B101D; color: #475569; border-color: #1E293B; }");
     connect(m_btnStartFlash, &QPushButton::clicked, this, &AppleIpswWidget::onStartFlashClicked);
     ctrlBtns->addWidget(m_btnStartFlash, 2);
 
     m_btnCancelFlash = new QPushButton(QString::fromUtf8("⏹ Отмена"), execBox);
     m_btnCancelFlash->setObjectName(QStringLiteral("ipswBtnCancelFlash"));
     m_btnCancelFlash->setCursor(Qt::PointingHandCursor);
-    m_btnCancelFlash->setStyleSheet("QPushButton { background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 8px 16px; font-weight: bold; } QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; }");
+    m_btnCancelFlash->setStyleSheet(
+        "QPushButton { background-color: #7F1D1D; border: 1px solid #EF4444; color: #FFFFFF; padding: 8px 16px; "
+        "font-weight: bold; } QPushButton:disabled { background-color: #0B101D; color: #475569; border-color: #1E293B; "
+        "}");
     m_btnCancelFlash->setEnabled(false);
     connect(m_btnCancelFlash, &QPushButton::clicked, this, &AppleIpswWidget::onCancelFlashClicked);
     ctrlBtns->addWidget(m_btnCancelFlash);
@@ -1584,7 +1773,9 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnAdvRetry = new QPushButton(QString::fromUtf8("🔄 Повторить"), execBox);
     m_btnAdvRetry->setObjectName(QStringLiteral("ipswBtnAdvRetry"));
     m_btnAdvRetry->setCursor(Qt::PointingHandCursor);
-    m_btnAdvRetry->setStyleSheet("QPushButton { background-color: #064E3B; border: 1px solid #059669; color: #34D399; padding: 8px 16px; font-weight: bold; } QPushButton:hover { background-color: #047857; }");
+    m_btnAdvRetry->setStyleSheet(
+        "QPushButton { background-color: #064E3B; border: 1px solid #059669; color: #34D399; padding: 8px 16px; "
+        "font-weight: bold; } QPushButton:hover { background-color: #047857; }");
     m_btnAdvRetry->setVisible(false);
     connect(m_btnAdvRetry, &QPushButton::clicked, this, &AppleIpswWidget::onAdvRetry);
     ctrlBtns->addWidget(m_btnAdvRetry);
@@ -1605,19 +1796,25 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     thLayout->setContentsMargins(6, 2, 6, 2);
     thLayout->setSpacing(8);
 
-    QLabel *termTitle = new QLabel(QString::fromUtf8("<span style='color: #38BDF8; font-family: monospace; font-size: 11.5px;'>&gt; idevicerestore log terminal</span>"), termHead);
+    QLabel *termTitle = new QLabel(
+        QString::fromUtf8(
+            "<span style='color: #38BDF8; font-family: monospace; font-size: 11.5px;'>&gt; idevicerestore log "
+            "terminal</span>"),
+        termHead);
     thLayout->addWidget(termTitle);
     thLayout->addStretch();
 
     QPushButton *btnCopyLog = new QPushButton(QString::fromUtf8("📋 Копировать"), termHead);
     btnCopyLog->setCursor(Qt::PointingHandCursor);
-    btnCopyLog->setStyleSheet("background: transparent; border: 1px solid #334155; color: #94A3B8; padding: 2px 8px; font-size: 11px;");
+    btnCopyLog->setStyleSheet(
+        "background: transparent; border: 1px solid #334155; color: #94A3B8; padding: 2px 8px; font-size: 11px;");
     connect(btnCopyLog, &QPushButton::clicked, this, &AppleIpswWidget::onCopyLogClicked);
     thLayout->addWidget(btnCopyLog);
 
     QPushButton *btnClearLog = new QPushButton(QString::fromUtf8("🗑 Очистить"), termHead);
     btnClearLog->setCursor(Qt::PointingHandCursor);
-    btnClearLog->setStyleSheet("background: transparent; border: 1px solid #334155; color: #94A3B8; padding: 2px 8px; font-size: 11px;");
+    btnClearLog->setStyleSheet(
+        "background: transparent; border: 1px solid #334155; color: #94A3B8; padding: 2px 8px; font-size: 11px;");
     connect(btnClearLog, &QPushButton::clicked, this, &AppleIpswWidget::onClearLogClicked);
     thLayout->addWidget(btnClearLog);
 
@@ -1651,9 +1848,10 @@ void AppleIpswWidget::setupAdvancedWizardPage()
 // -------------------------------------------------------------
 // Checksum Verification Methods
 // -------------------------------------------------------------
-void AppleIpswWidget::startChecksumForFile(const QString &filePath, const QString &expectedSha1, const QString &expectedMd5)
+void AppleIpswWidget::startChecksumForFile(
+    const QString &filePath, const QString &expectedSha1, const QString &expectedMd5)
 {
-    if(filePath.isEmpty() || !QFile::exists(filePath))
+    if (filePath.isEmpty() || !QFile::exists(filePath))
     {
         m_checksumStatus = ChecksumStatus::NotChecked;
         updateChecksumUi();
@@ -1668,15 +1866,20 @@ void AppleIpswWidget::startChecksumForFile(const QString &filePath, const QStrin
 
     updateChecksumUi();
 
-    appendLog(QString::fromUtf8("[ХЕШ] Запуск асинхронной сверки SHA-1 для: %1...").arg(QFileInfo(filePath).fileName()), "#38BDF8");
+    appendLog(
+        QString::fromUtf8("[ХЕШ] Запуск асинхронной сверки SHA-1 для: %1...").arg(QFileInfo(filePath).fileName()),
+        "#38BDF8");
     m_checksumWorker->startVerification(filePath, expectedSha1, expectedMd5);
 }
 
 void AppleIpswWidget::onStartChecksumVerification()
 {
-    if(m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
+    if (m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
     {
-        QMessageBox::warning(this, QString::fromUtf8("Файл не найден"), QString::fromUtf8("Файл прошивки не найден на диске.\nСначала скачайте его или выберите локальный .ipsw."));
+        QMessageBox::warning(
+            this,
+            QString::fromUtf8("Файл не найден"),
+            QString::fromUtf8("Файл прошивки не найден на диске.\nСначала скачайте его или выберите локальный .ipsw."));
         return;
     }
 
@@ -1685,7 +1888,7 @@ void AppleIpswWidget::onStartChecksumVerification()
 
 void AppleIpswWidget::onCancelChecksumVerification()
 {
-    if(m_checksumWorker && m_checksumWorker->isRunning())
+    if (m_checksumWorker && m_checksumWorker->isRunning())
     {
         m_checksumWorker->cancel();
         m_checksumStatus = ChecksumStatus::NotChecked;
@@ -1696,26 +1899,30 @@ void AppleIpswWidget::onCancelChecksumVerification()
 
 void AppleIpswWidget::onChecksumProgress(int percent, double speedMBs, qint64 processedBytes, qint64 totalBytes)
 {
-    if(m_simpleChecksumProgress)
+    if (m_simpleChecksumProgress)
     {
         m_simpleChecksumProgress->setValue(percent);
     }
-    if(m_advChecksumProgress)
+    if (m_advChecksumProgress)
     {
         m_advChecksumProgress->setValue(percent);
     }
 
-    QString status = QString::fromUtf8("Сверка SHA-1: %1% (%2 из %3 * %4 МБ/с)...").arg(percent).arg(formatFileSize(processedBytes), formatFileSize(totalBytes)).arg(speedMBs, 0, 'f', 1);
+    QString status = QString::fromUtf8("Сверка SHA-1: %1% (%2 из %3 * %4 МБ/с)...")
+                         .arg(percent)
+                         .arg(formatFileSize(processedBytes), formatFileSize(totalBytes))
+                         .arg(speedMBs, 0, 'f', 1);
 
-    if(m_lblSimpleChecksumStatus)
+    if (m_lblSimpleChecksumStatus)
         m_lblSimpleChecksumStatus->setText(status);
-    if(m_lblAdvChecksumStatus)
+    if (m_lblAdvChecksumStatus)
         m_lblAdvChecksumStatus->setText(status);
 }
 
-void AppleIpswWidget::onChecksumFinished(bool matched, const QString &calcSha1, const QString &expSha1, const QString &calcMd5, const QString &errorStr)
+void AppleIpswWidget::onChecksumFinished(
+    bool matched, const QString &calcSha1, const QString &expSha1, const QString &calcMd5, const QString &errorStr)
 {
-    if(!errorStr.isEmpty())
+    if (!errorStr.isEmpty())
     {
         m_checksumStatus = ChecksumStatus::Error;
         m_checksumErrorStr = errorStr;
@@ -1727,17 +1934,25 @@ void AppleIpswWidget::onChecksumFinished(bool matched, const QString &calcSha1, 
         m_currentCalculatedMd5 = calcMd5;
         m_currentExpectedSha1 = expSha1;
 
-        if(!expSha1.isEmpty())
+        if (!expSha1.isEmpty())
         {
-            if(matched)
+            if (matched)
             {
                 m_checksumStatus = ChecksumStatus::Matched;
-                appendLog(QString::fromUtf8("[ХЕШ ПОДТВЕРЖДЕН] SHA-1 %1 совпадает с официальным реестром Apple TSS (100% целостность)!").arg(calcSha1), "#10B981");
+                appendLog(
+                    QString::fromUtf8(
+                        "[ХЕШ ПОДТВЕРЖДЕН] SHA-1 %1 совпадает с официальным реестром Apple TSS (100% целостность)!")
+                        .arg(calcSha1),
+                    "#10B981");
             }
             else
             {
                 m_checksumStatus = ChecksumStatus::Mismatch;
-                appendLog(QString::fromUtf8("[ХЕШ НЕСОВПАДЕНИЕ!] ВНИМАНИЕ: Контрольная сумма не совпадает!\nВычислено: %1\nОжидалось:  %2").arg(calcSha1, expSha1), "#EF4444");
+                appendLog(
+                    QString::fromUtf8(
+                        "[ХЕШ НЕСОВПАДЕНИЕ!] ВНИМАНИЕ: Контрольная сумма не совпадает!\nВычислено: %1\nОжидалось:  %2")
+                        .arg(calcSha1, expSha1),
+                    "#EF4444");
             }
         }
         else
@@ -1753,22 +1968,27 @@ void AppleIpswWidget::onChecksumFinished(bool matched, const QString &calcSha1, 
 void AppleIpswWidget::updateChecksumUi()
 {
     // Simple Mode Checksum Card
-    if(m_lblSimpleChecksumStatus && m_simpleChecksumProgress && m_btnSimpleVerifyChecksum && m_btnSimpleCancelChecksum)
+    if (m_lblSimpleChecksumStatus && m_simpleChecksumProgress && m_btnSimpleVerifyChecksum && m_btnSimpleCancelChecksum)
     {
-        switch(m_checksumStatus)
+        switch (m_checksumStatus)
         {
             case ChecksumStatus::NotChecked:
                 m_simpleChecksumProgress->setVisible(false);
                 m_btnSimpleCancelChecksum->setVisible(false);
                 m_btnSimpleVerifyChecksum->setVisible(true);
                 m_btnSimpleVerifyChecksum->setText(QString::fromUtf8("🔍 Сверить SHA-1"));
-                if(!m_selectedFirmware.sha1sum.isEmpty())
+                if (!m_selectedFirmware.sha1sum.isEmpty())
                 {
-                    m_lblSimpleChecksumStatus->setText(QString::fromUtf8("Официальный хеш Apple: <span style='font-family: monospace; color: #38BDF8;'>%1</span> (Не проверен)").arg(m_selectedFirmware.sha1sum));
+                    m_lblSimpleChecksumStatus->setText(
+                        QString::fromUtf8(
+                            "Официальный хеш Apple: <span style='font-family: monospace; color: #38BDF8;'>%1</span> "
+                            "(Не проверен)")
+                            .arg(m_selectedFirmware.sha1sum));
                 }
                 else
                 {
-                    m_lblSimpleChecksumStatus->setText(QString::fromUtf8("Контрольная сумма файла еще не проверялась."));
+                    m_lblSimpleChecksumStatus->setText(
+                        QString::fromUtf8("Контрольная сумма файла еще не проверялась."));
                 }
                 m_lblSimpleChecksumStatus->setStyleSheet("color: #64748B; font-size: 11.5px;");
                 break;
@@ -1785,8 +2005,14 @@ void AppleIpswWidget::updateChecksumUi()
                 m_btnSimpleCancelChecksum->setVisible(false);
                 m_btnSimpleVerifyChecksum->setVisible(true);
                 m_btnSimpleVerifyChecksum->setText(QString::fromUtf8("🔄 Перепроверить"));
-                m_lblSimpleChecksumStatus->setText(QString::fromUtf8("✔ <b>Хеш SHA-1 подтвержден!</b> Файл на 100% целостен и совпадает с официальным реестром Apple TSS.<br><span style='font-family: monospace; color: #34D399;'>%1</span>").arg(m_currentCalculatedSha1));
-                m_lblSimpleChecksumStatus->setStyleSheet("background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid #059669; padding: 6px 10px; font-size: 11.5px;");
+                m_lblSimpleChecksumStatus->setText(
+                    QString::fromUtf8(
+                        "✔ <b>Хеш SHA-1 подтвержден!</b> Файл на 100% целостен и совпадает с официальным реестром "
+                        "Apple TSS.<br><span style='font-family: monospace; color: #34D399;'>%1</span>")
+                        .arg(m_currentCalculatedSha1));
+                m_lblSimpleChecksumStatus->setStyleSheet(
+                    "background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid #059669; padding: 6px "
+                    "10px; font-size: 11.5px;");
                 break;
 
             case ChecksumStatus::Mismatch:
@@ -1795,8 +2021,14 @@ void AppleIpswWidget::updateChecksumUi()
                 m_btnSimpleVerifyChecksum->setVisible(true);
                 m_btnSimpleVerifyChecksum->setText(QString::fromUtf8("🔄 Повторить сверку"));
                 m_lblSimpleChecksumStatus->setText(
-                    QString::fromUtf8("⚠ <b>ОШИБКА ЦЕЛОСТНОСТИ!</b> Контрольная сумма файла НЕ совпадает с официальной!<br>Вычислен: <span style='font-family: monospace;'>%1</span><br>Ожидался:  <span style='font-family: monospace;'>%2</span>").arg(m_currentCalculatedSha1, m_currentExpectedSha1));
-                m_lblSimpleChecksumStatus->setStyleSheet("background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 6px 10px; font-size: 11.5px;");
+                    QString::fromUtf8(
+                        "⚠ <b>ОШИБКА ЦЕЛОСТНОСТИ!</b> Контрольная сумма файла НЕ совпадает с официальной!<br>Вычислен: "
+                        "<span style='font-family: monospace;'>%1</span><br>Ожидался:  <span style='font-family: "
+                        "monospace;'>%2</span>")
+                        .arg(m_currentCalculatedSha1, m_currentExpectedSha1));
+                m_lblSimpleChecksumStatus->setStyleSheet(
+                    "background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 6px "
+                    "10px; font-size: 11.5px;");
                 break;
 
             case ChecksumStatus::VerifiedWithoutExpected:
@@ -1804,33 +2036,45 @@ void AppleIpswWidget::updateChecksumUi()
                 m_btnSimpleCancelChecksum->setVisible(false);
                 m_btnSimpleVerifyChecksum->setVisible(true);
                 m_btnSimpleVerifyChecksum->setText(QString::fromUtf8("🔄 Перепроверить"));
-                m_lblSimpleChecksumStatus->setText(QString::fromUtf8("✔ Вычислен SHA-1: <span style='font-family: monospace; color: #38BDF8;'>%1</span> (MD5: %2)").arg(m_currentCalculatedSha1, m_currentCalculatedMd5));
-                m_lblSimpleChecksumStatus->setStyleSheet("background: rgba(56, 189, 248, 0.1); color: #38BDF8; border: 1px solid #0284C7; padding: 6px 10px; font-size: 11.5px;");
+                m_lblSimpleChecksumStatus->setText(
+                    QString::fromUtf8(
+                        "✔ Вычислен SHA-1: <span style='font-family: monospace; color: #38BDF8;'>%1</span> (MD5: %2)")
+                        .arg(m_currentCalculatedSha1, m_currentCalculatedMd5));
+                m_lblSimpleChecksumStatus->setStyleSheet(
+                    "background: rgba(56, 189, 248, 0.1); color: #38BDF8; border: 1px solid #0284C7; padding: 6px "
+                    "10px; font-size: 11.5px;");
                 break;
 
             case ChecksumStatus::Error:
                 m_simpleChecksumProgress->setVisible(false);
                 m_btnSimpleCancelChecksum->setVisible(false);
                 m_btnSimpleVerifyChecksum->setVisible(true);
-                m_lblSimpleChecksumStatus->setText(QString::fromUtf8("Ошибка при чтении файла: %1").arg(m_checksumErrorStr));
-                m_lblSimpleChecksumStatus->setStyleSheet("background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 6px 10px; font-size: 11.5px;");
+                m_lblSimpleChecksumStatus->setText(
+                    QString::fromUtf8("Ошибка при чтении файла: %1").arg(m_checksumErrorStr));
+                m_lblSimpleChecksumStatus->setStyleSheet(
+                    "background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 6px "
+                    "10px; font-size: 11.5px;");
                 break;
         }
     }
 
     // Advanced Mode Checksum Card (Step 1)
-    if(m_lblAdvChecksumStatus && m_advChecksumProgress && m_btnAdvVerifyChecksum && m_btnAdvCancelChecksum)
+    if (m_lblAdvChecksumStatus && m_advChecksumProgress && m_btnAdvVerifyChecksum && m_btnAdvCancelChecksum)
     {
-        switch(m_checksumStatus)
+        switch (m_checksumStatus)
         {
             case ChecksumStatus::NotChecked:
                 m_advChecksumProgress->setVisible(false);
                 m_btnAdvCancelChecksum->setVisible(false);
                 m_btnAdvVerifyChecksum->setVisible(true);
                 m_btnAdvVerifyChecksum->setText(QString::fromUtf8("🔍 Сверить SHA-1"));
-                if(!m_selectedFirmware.sha1sum.isEmpty())
+                if (!m_selectedFirmware.sha1sum.isEmpty())
                 {
-                    m_lblAdvChecksumStatus->setText(QString::fromUtf8("Хеш Apple TSS: <span style='font-family: monospace; color: #38BDF8;'>%1</span> (Не проверен)").arg(m_selectedFirmware.sha1sum));
+                    m_lblAdvChecksumStatus->setText(
+                        QString::fromUtf8(
+                            "Хеш Apple TSS: <span style='font-family: monospace; color: #38BDF8;'>%1</span> (Не "
+                            "проверен)")
+                            .arg(m_selectedFirmware.sha1sum));
                 }
                 else
                 {
@@ -1851,7 +2095,11 @@ void AppleIpswWidget::updateChecksumUi()
                 m_btnAdvCancelChecksum->setVisible(false);
                 m_btnAdvVerifyChecksum->setVisible(true);
                 m_btnAdvVerifyChecksum->setText(QString::fromUtf8("🔄 Перепроверить"));
-                m_lblAdvChecksumStatus->setText(QString::fromUtf8("✔ <b>SHA-1 Валиден (100% совпадение):</b> <span style='font-family: monospace; color: #34D399;'>%1</span>").arg(m_currentCalculatedSha1));
+                m_lblAdvChecksumStatus->setText(
+                    QString::fromUtf8(
+                        "✔ <b>SHA-1 Валиден (100% совпадение):</b> <span style='font-family: monospace; color: "
+                        "#34D399;'>%1</span>")
+                        .arg(m_currentCalculatedSha1));
                 m_lblAdvChecksumStatus->setStyleSheet("color: #34D399; font-size: 11px;");
                 break;
 
@@ -1860,7 +2108,10 @@ void AppleIpswWidget::updateChecksumUi()
                 m_btnAdvCancelChecksum->setVisible(false);
                 m_btnAdvVerifyChecksum->setVisible(true);
                 m_btnAdvVerifyChecksum->setText(QString::fromUtf8("🔄 Повторить сверку"));
-                m_lblAdvChecksumStatus->setText(QString::fromUtf8("⚠ <b>НЕСОВПАДЕНИЕ ХЕША:</b> <span style='font-family: monospace;'>%1</span> (Ожидался: %2)").arg(m_currentCalculatedSha1, m_currentExpectedSha1));
+                m_lblAdvChecksumStatus->setText(
+                    QString::fromUtf8(
+                        "⚠ <b>НЕСОВПАДЕНИЕ ХЕША:</b> <span style='font-family: monospace;'>%1</span> (Ожидался: %2)")
+                        .arg(m_currentCalculatedSha1, m_currentExpectedSha1));
                 m_lblAdvChecksumStatus->setStyleSheet("color: #F87171; font-size: 11px;");
                 break;
 
@@ -1869,7 +2120,9 @@ void AppleIpswWidget::updateChecksumUi()
                 m_btnAdvCancelChecksum->setVisible(false);
                 m_btnAdvVerifyChecksum->setVisible(true);
                 m_btnAdvVerifyChecksum->setText(QString::fromUtf8("🔄 Перепроверить"));
-                m_lblAdvChecksumStatus->setText(QString::fromUtf8("✔ SHA-1: <span style='font-family: monospace; color: #38BDF8;'>%1</span>").arg(m_currentCalculatedSha1));
+                m_lblAdvChecksumStatus->setText(
+                    QString::fromUtf8("✔ SHA-1: <span style='font-family: monospace; color: #38BDF8;'>%1</span>")
+                        .arg(m_currentCalculatedSha1));
                 m_lblAdvChecksumStatus->setStyleSheet("color: #38BDF8; font-size: 11px;");
                 break;
 
@@ -1884,33 +2137,45 @@ void AppleIpswWidget::updateChecksumUi()
     }
 
     // Step 3 Checksum Badge
-    if(m_lblAdvStep3ChecksumBadge)
+    if (m_lblAdvStep3ChecksumBadge)
     {
-        switch(m_checksumStatus)
+        switch (m_checksumStatus)
         {
             case ChecksumStatus::NotChecked:
                 m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("○ Хеш не проверен"));
-                m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 2px 8px; font-size: 11px; font-weight: 600;");
+                m_lblAdvStep3ChecksumBadge->setStyleSheet(
+                    "background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 2px "
+                    "8px; font-size: 11px; font-weight: 600;");
                 break;
             case ChecksumStatus::Calculating:
                 m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("⏳ Идет сверка SHA-1..."));
-                m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #0284C7; padding: 2px 8px; font-size: 11px; font-weight: 600;");
+                m_lblAdvStep3ChecksumBadge->setStyleSheet(
+                    "background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #0284C7; padding: 2px "
+                    "8px; font-size: 11px; font-weight: 600;");
                 break;
             case ChecksumStatus::Matched:
                 m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("✔ Целостность SHA-1 подтверждена"));
-                m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid #059669; padding: 2px 8px; font-size: 11px; font-weight: 600;");
+                m_lblAdvStep3ChecksumBadge->setStyleSheet(
+                    "background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid #059669; padding: 2px "
+                    "8px; font-size: 11px; font-weight: 600;");
                 break;
             case ChecksumStatus::Mismatch:
                 m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("⚠ ХЕШ ПОВРЕЖДЕН!"));
-                m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 2px 8px; font-size: 11px; font-weight: bold;");
+                m_lblAdvStep3ChecksumBadge->setStyleSheet(
+                    "background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 2px 8px; "
+                    "font-size: 11px; font-weight: bold;");
                 break;
             case ChecksumStatus::VerifiedWithoutExpected:
                 m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("✔ SHA-1 Вычислен"));
-                m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #0284C7; padding: 2px 8px; font-size: 11px; font-weight: 600;");
+                m_lblAdvStep3ChecksumBadge->setStyleSheet(
+                    "background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #0284C7; padding: 2px "
+                    "8px; font-size: 11px; font-weight: 600;");
                 break;
             case ChecksumStatus::Error:
                 m_lblAdvStep3ChecksumBadge->setText(QString::fromUtf8("Ошибка проверки"));
-                m_lblAdvStep3ChecksumBadge->setStyleSheet("background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 2px 8px; font-size: 11px; font-weight: 600;");
+                m_lblAdvStep3ChecksumBadge->setStyleSheet(
+                    "background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #DC2626; padding: 2px 8px; "
+                    "font-size: 11px; font-weight: 600;");
                 break;
         }
     }
@@ -1921,52 +2186,66 @@ void AppleIpswWidget::updateChecksumUi()
 // -------------------------------------------------------------
 void AppleIpswWidget::updateSimpleWizardStep1()
 {
-    if(!m_lblSimpleUsbStatus || !m_lblSimpleDetectedModel || !m_btnSimpleStep1Next)
+    if (!m_lblSimpleUsbStatus || !m_lblSimpleDetectedModel || !m_btnSimpleStep1Next)
         return;
 
-    if(m_device.isEmpty())
+    if (m_device.isEmpty())
     {
         m_lblSimpleUsbStatus->setText(QString::fromUtf8("⏳ Ожидание подключения iPhone / iPad по USB..."));
-        m_lblSimpleUsbStatus->setStyleSheet("background: rgba(245, 158, 11, 0.1); color: #FBBF24; font-size: 12.5px; font-weight: bold; padding: 12px; border: 1px solid #D97706;");
-        m_lblSimpleDetectedModel->setText(QString::fromUtf8("Устройство пока не обнаружено. Подключите кабель USB к компьютеру и разблокируйте экран."));
+        m_lblSimpleUsbStatus->setStyleSheet(
+            "background: rgba(245, 158, 11, 0.1); color: #FBBF24; font-size: 12.5px; font-weight: bold; padding: 12px; "
+            "border: 1px solid #D97706;");
+        m_lblSimpleDetectedModel->setText(
+            QString::fromUtf8(
+                "Устройство пока не обнаружено. Подключите кабель USB к компьютеру и разблокируйте экран."));
         m_lblSimpleDetectedModel->setStyleSheet("color: #94A3B8; font-size: 12px;");
 
-        if(m_simpleConnectedDeviceCard)
+        if (m_simpleConnectedDeviceCard)
             m_simpleConnectedDeviceCard->setVisible(false);
         m_btnSimpleStep1Next->setEnabled(false);
     }
     else
     {
-        QString name = !m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
+        QString name = !m_device.displayName.isEmpty()
+                           ? m_device.displayName
+                           : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
         m_lblSimpleUsbStatus->setText(QString::fromUtf8("✔ Устройство Apple успешно обнаружено!"));
-        m_lblSimpleUsbStatus->setStyleSheet("background: rgba(16, 185, 129, 0.12); color: #34D399; font-size: 12.5px; font-weight: bold; padding: 12px; border: 1px solid #059669;");
-        m_lblSimpleDetectedModel->setText(QString::fromUtf8("Готово к автонастройке и прошивке. Нажмите «Продолжить» для перехода к параметрам."));
+        m_lblSimpleUsbStatus->setStyleSheet(
+            "background: rgba(16, 185, 129, 0.12); color: #34D399; font-size: 12.5px; font-weight: bold; padding: "
+            "12px; border: 1px solid #059669;");
+        m_lblSimpleDetectedModel->setText(
+            QString::fromUtf8("Готово к автонастройке и прошивке. Нажмите «Продолжить» для перехода к параметрам."));
         m_lblSimpleDetectedModel->setStyleSheet("color: #F8FAFC; font-size: 12px;");
 
-        if(m_simpleConnectedDeviceCard)
+        if (m_simpleConnectedDeviceCard)
         {
             m_simpleConnectedDeviceCard->setVisible(true);
-            if(m_lblSimpleCardDeviceTitle)
+            if (m_lblSimpleCardDeviceTitle)
                 m_lblSimpleCardDeviceTitle->setText(name);
-            if(m_lblSimpleCardDeviceMode)
+            if (m_lblSimpleCardDeviceMode)
             {
                 m_lblSimpleCardDeviceMode->setText(QString("● %1").arg(m_device.modeString()));
-                if(m_device.mode == AppleDeviceMode::Normal)
+                if (m_device.mode == AppleDeviceMode::Normal)
                 {
-                    m_lblSimpleCardDeviceMode->setStyleSheet("background: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold; padding: 3px 8px; border: 1px solid #059669; font-size: 11px;");
+                    m_lblSimpleCardDeviceMode->setStyleSheet(
+                        "background: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: bold; padding: 3px 8px; "
+                        "border: 1px solid #059669; font-size: 11px;");
                 }
                 else
                 {
-                    m_lblSimpleCardDeviceMode->setStyleSheet("background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-weight: bold; padding: 3px 8px; border: 1px solid #0284C7; font-size: 11px;");
+                    m_lblSimpleCardDeviceMode->setStyleSheet(
+                        "background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-weight: bold; padding: 3px 8px; "
+                        "border: 1px solid #0284C7; font-size: 11px;");
                 }
             }
-            if(m_lblSimpleCardModel)
+            if (m_lblSimpleCardModel)
                 m_lblSimpleCardModel->setText(!m_device.model.isEmpty() ? m_device.model : "-");
-            if(m_lblSimpleCardIos)
-                m_lblSimpleCardIos->setText(!m_device.productVersion.isEmpty() ? m_device.productVersion : QString::fromUtf8("В Recovery/DFU"));
-            if(m_lblSimpleCardSerial)
+            if (m_lblSimpleCardIos)
+                m_lblSimpleCardIos->setText(
+                    !m_device.productVersion.isEmpty() ? m_device.productVersion : QString::fromUtf8("В Recovery/DFU"));
+            if (m_lblSimpleCardSerial)
                 m_lblSimpleCardSerial->setText(!m_device.serialNumber.isEmpty() ? m_device.serialNumber : "-");
-            if(m_lblSimpleCardEcid)
+            if (m_lblSimpleCardEcid)
                 m_lblSimpleCardEcid->setText(!m_device.ecid.isEmpty() ? m_device.ecid : "-");
         }
 
@@ -1976,43 +2255,56 @@ void AppleIpswWidget::updateSimpleWizardStep1()
 
 void AppleIpswWidget::updateSimpleWizardStep2()
 {
-    if(!m_lblSimpleDeviceSummary || !m_lblSimpleAutoIpswInfo)
+    if (!m_lblSimpleDeviceSummary || !m_lblSimpleAutoIpswInfo)
         return;
 
-    QString name = !m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
-    m_lblSimpleDeviceSummary->setText(QString::fromUtf8("📱 Выбранное устройство: <b>%1</b> (Режим: %2 * ECID: %3)").arg(name, m_device.modeString(), !m_device.ecid.isEmpty() ? m_device.ecid : "-"));
+    QString name = !m_device.displayName.isEmpty()
+                       ? m_device.displayName
+                       : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
+    m_lblSimpleDeviceSummary->setText(
+        QString::fromUtf8("📱 Выбранное устройство: <b>%1</b> (Режим: %2 * ECID: %3)")
+            .arg(name, m_device.modeString(), !m_device.ecid.isEmpty() ? m_device.ecid : "-"));
 
     IpswFirmwareInfo bestSigned;
-    for(const auto &fw : m_firmwares)
+    for (const auto &fw : m_firmwares)
     {
-        if(fw.isSigned)
+        if (fw.isSigned)
         {
             bestSigned = fw;
             break;
         }
     }
 
-    if(!bestSigned.version.isEmpty())
+    if (!bestSigned.version.isEmpty())
     {
         m_selectedFirmware = bestSigned;
         m_isLocalIpsw = false;
-        QString expectedFileName = QString("%1_%2_%3_Restore.ipsw").arg(bestSigned.identifier, bestSigned.version, bestSigned.buildid);
+        QString expectedFileName
+            = QString("%1_%2_%3_Restore.ipsw").arg(bestSigned.identifier, bestSigned.version, bestSigned.buildid);
         m_selectedIpswPath = downloadDirectory() + "/" + expectedFileName;
 
-        if(QFile::exists(m_selectedIpswPath))
+        if (QFile::exists(m_selectedIpswPath))
         {
-            m_lblSimpleAutoIpswInfo->setText(QString::fromUtf8("✔ Официальная прошивка <b>iOS %1 (Сборка %2)</b> уже загружена в хранилище [%3] и готова к установке.").arg(bestSigned.version, bestSigned.buildid, formatFileSize(QFileInfo(m_selectedIpswPath).size())));
+            m_lblSimpleAutoIpswInfo->setText(
+                QString::fromUtf8(
+                    "✔ Официальная прошивка <b>iOS %1 (Сборка %2)</b> уже загружена в хранилище [%3] и готова к "
+                    "установке.")
+                    .arg(bestSigned.version, bestSigned.buildid, formatFileSize(QFileInfo(m_selectedIpswPath).size())));
             m_lblSimpleAutoIpswInfo->setStyleSheet("color: #34D399; font-size: 12px; padding: 6px;");
 
             // Check if checksum was already verified for this file
-            if(m_checksumStatus == ChecksumStatus::NotChecked)
+            if (m_checksumStatus == ChecksumStatus::NotChecked)
             {
                 startChecksumForFile(m_selectedIpswPath, bestSigned.sha1sum, bestSigned.md5sum);
             }
         }
         else
         {
-            m_lblSimpleAutoIpswInfo->setText(QString::fromUtf8("⬇ Актуальная официальная прошивка Apple: <b>iOS %1 (Сборка %2)</b> [Размер: %3]. Будет загружена автоматически с серверов Apple перед установкой.").arg(bestSigned.version, bestSigned.buildid, formatFileSize(bestSigned.size)));
+            m_lblSimpleAutoIpswInfo->setText(
+                QString::fromUtf8(
+                    "⬇ Актуальная официальная прошивка Apple: <b>iOS %1 (Сборка %2)</b> [Размер: %3]. Будет загружена "
+                    "автоматически с серверов Apple перед установкой.")
+                    .arg(bestSigned.version, bestSigned.buildid, formatFileSize(bestSigned.size)));
             m_lblSimpleAutoIpswInfo->setStyleSheet("color: #38BDF8; font-size: 12px; padding: 6px;");
             m_checksumStatus = ChecksumStatus::NotChecked;
             updateChecksumUi();
@@ -2020,11 +2312,12 @@ void AppleIpswWidget::updateSimpleWizardStep2()
     }
     else
     {
-        m_lblSimpleAutoIpswInfo->setText(QString::fromUtf8("⏳ Запрос актуальной подписанной прошивки у серверов Apple..."));
+        m_lblSimpleAutoIpswInfo->setText(
+            QString::fromUtf8("⏳ Запрос актуальной подписанной прошивки у серверов Apple..."));
         m_lblSimpleAutoIpswInfo->setStyleSheet("color: #FBBF24; font-size: 12px; padding: 6px;");
         m_checksumStatus = ChecksumStatus::NotChecked;
         updateChecksumUi();
-        if(!m_device.model.isEmpty())
+        if (!m_device.model.isEmpty())
         {
             fetchFirmwareCatalog(m_device.model);
         }
@@ -2033,9 +2326,12 @@ void AppleIpswWidget::updateSimpleWizardStep2()
 
 void AppleIpswWidget::onSimpleStep1Next()
 {
-    if(m_device.isEmpty())
+    if (m_device.isEmpty())
     {
-        QMessageBox::information(this, QString::fromUtf8("Подключение USB"), QString::fromUtf8("Сначала подключите устройство Apple через кабель USB к компьютеру."));
+        QMessageBox::information(
+            this,
+            QString::fromUtf8("Подключение USB"),
+            QString::fromUtf8("Сначала подключите устройство Apple через кабель USB к компьютеру."));
         return;
     }
     m_simpleStepStack->setCurrentIndex(1);
@@ -2052,20 +2348,28 @@ void AppleIpswWidget::onSimpleStep2Back()
 
 void AppleIpswWidget::onSimpleStep2Start()
 {
-    if(m_device.isEmpty())
+    if (m_device.isEmpty())
     {
-        QMessageBox::warning(this, QString::fromUtf8("Устройство отключено"), QString::fromUtf8("Устройство Apple не найдено. Подключите кабель USB."));
+        QMessageBox::warning(
+            this,
+            QString::fromUtf8("Устройство отключено"),
+            QString::fromUtf8("Устройство Apple не найдено. Подключите кабель USB."));
         onSimpleStep2Back();
         return;
     }
 
-    if(m_checksumStatus == ChecksumStatus::Calculating)
+    if (m_checksumStatus == ChecksumStatus::Calculating)
     {
-        QMessageBox::information(this, QString::fromUtf8("Проверка контрольной суммы"), QString::fromUtf8("В данный момент выполняется проверка целостности файла (SHA-1).\nПожалуйста, дождитесь завершения или отмените проверку."));
+        QMessageBox::information(
+            this,
+            QString::fromUtf8("Проверка контрольной суммы"),
+            QString::fromUtf8(
+                "В данный момент выполняется проверка целостности файла (SHA-1).\nПожалуйста, дождитесь завершения или "
+                "отмените проверку."));
         return;
     }
 
-    if(m_checksumStatus == ChecksumStatus::Mismatch)
+    if (m_checksumStatus == ChecksumStatus::Mismatch)
     {
         auto res = QMessageBox::critical(
             this,
@@ -2077,20 +2381,27 @@ void AppleIpswWidget::onSimpleStep2Start()
                 "Вы действительно хотите проигнорировать предупреждение и продолжить?"),
             QMessageBox::Yes | QMessageBox::No,
             QMessageBox::No);
-        if(res != QMessageBox::Yes)
+        if (res != QMessageBox::Yes)
             return;
     }
 
     bool retain = m_rbSimpleRetain->isChecked();
-    QString confirmText = retain ? QString::fromUtf8("Начать ОБНОВЛЕНИЕ устройства %1 с сохранением данных?\n\nФайл прошивки: iOS %2 (%3)").arg(!m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName, m_selectedFirmware.version, m_selectedFirmware.buildid)
-                                 : QString::fromUtf8(
-                                       "ВНИМАНИЕ! Выбран режим ПОЛНОЙ ОЧИСТКИ.\n\n"
-                                       "Все данные пользователя на iPhone будут ПОЛНОСТЬЮ СТЕРТЫ!\n\n"
-                                       "Вы уверены, что хотите продолжить?");
+    QString confirmText
+        = retain
+              ? QString::fromUtf8("Начать ОБНОВЛЕНИЕ устройства %1 с сохранением данных?\n\nФайл прошивки: iOS %2 (%3)")
+                    .arg(
+                        !m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName,
+                        m_selectedFirmware.version,
+                        m_selectedFirmware.buildid)
+              : QString::fromUtf8(
+                    "ВНИМАНИЕ! Выбран режим ПОЛНОЙ ОЧИСТКИ.\n\n"
+                    "Все данные пользователя на iPhone будут ПОЛНОСТЬЮ СТЕРТЫ!\n\n"
+                    "Вы уверены, что хотите продолжить?");
 
-    auto reply = QMessageBox::question(this, QString::fromUtf8("Подтверждение восстановления"), confirmText, QMessageBox::Yes | QMessageBox::No);
+    auto reply = QMessageBox::question(
+        this, QString::fromUtf8("Подтверждение восстановления"), confirmText, QMessageBox::Yes | QMessageBox::No);
 
-    if(reply != QMessageBox::Yes)
+    if (reply != QMessageBox::Yes)
         return;
 
     m_simpleStepStack->setCurrentIndex(2);
@@ -2099,21 +2410,29 @@ void AppleIpswWidget::onSimpleStep2Start()
     m_btnSimpleCancel->setEnabled(true);
     m_simpleProgressBar->setValue(0);
 
-    if(m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
+    if (m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
     {
-        if(m_selectedFirmware.url.isEmpty())
+        if (m_selectedFirmware.url.isEmpty())
         {
-            QMessageBox::critical(this, QString::fromUtf8("Ошибка"), QString::fromUtf8("Не удалось определить ссылку на прошивку. Попробуйте обновить каталог или переключитесь в расширенный режим."));
+            QMessageBox::critical(
+                this,
+                QString::fromUtf8("Ошибка"),
+                QString::fromUtf8(
+                    "Не удалось определить ссылку на прошивку. Попробуйте обновить каталог или переключитесь в "
+                    "расширенный режим."));
             onSimpleStep2Back();
             return;
         }
 
-        m_lblSimpleProgressStatus->setText(QString::fromUtf8("Загрузка официальной прошивки iOS %1 с серверов Apple...").arg(m_selectedFirmware.version));
+        m_lblSimpleProgressStatus->setText(
+            QString::fromUtf8("Загрузка официальной прошивки iOS %1 с серверов Apple...")
+                .arg(m_selectedFirmware.version));
         m_downloader->startDownload(m_selectedFirmware.url, m_selectedIpswPath);
         return;
     }
 
-    m_lblSimpleProgressStatus->setText(QString::fromUtf8("Запуск процесса прошивки (%1)...").arg(retain ? "с сохранением данных" : "со сбросом"));
+    m_lblSimpleProgressStatus->setText(
+        QString::fromUtf8("Запуск процесса прошивки (%1)...").arg(retain ? "с сохранением данных" : "со сбросом"));
     m_restoreWorker->startRestore(m_selectedIpswPath, retain, m_device.devId);
 }
 
@@ -2128,14 +2447,19 @@ void AppleIpswWidget::onSimpleRetry()
 // -------------------------------------------------------------
 void AppleIpswWidget::onAdvStep1Next()
 {
-    if(m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
+    if (m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
     {
-        if(!m_selectedFirmware.url.isEmpty())
+        if (!m_selectedFirmware.url.isEmpty())
         {
-            auto res = QMessageBox::question(this, QString::fromUtf8("Прошивка не загружена"), QString::fromUtf8("Выбранная прошивка iOS %1 еще не загружена на диск.\nПредзагрузить её сейчас?").arg(m_selectedFirmware.version), QMessageBox::Yes | QMessageBox::No);
-            if(res == QMessageBox::Yes)
+            auto res = QMessageBox::question(
+                this,
+                QString::fromUtf8("Прошивка не загружена"),
+                QString::fromUtf8("Выбранная прошивка iOS %1 еще не загружена на диск.\nПредзагрузить её сейчас?")
+                    .arg(m_selectedFirmware.version),
+                QMessageBox::Yes | QMessageBox::No);
+            if (res == QMessageBox::Yes)
             {
-                if(m_firmwareTable && m_firmwareTable->currentRow() >= 0)
+                if (m_firmwareTable && m_firmwareTable->currentRow() >= 0)
                     onDownloadIpswClicked(m_firmwareTable->currentRow());
                 else
                     onDownloadIpswClicked(0);
@@ -2144,7 +2468,10 @@ void AppleIpswWidget::onAdvStep1Next()
         }
         else
         {
-            QMessageBox::warning(this, QString::fromUtf8("Прошивка не выбрана"), QString::fromUtf8("Пожалуйста, выберите версию прошивки из таблицы или укажите локальный файл .ipsw."));
+            QMessageBox::warning(
+                this,
+                QString::fromUtf8("Прошивка не выбрана"),
+                QString::fromUtf8("Пожалуйста, выберите версию прошивки из таблицы или укажите локальный файл .ipsw."));
             return;
         }
     }
@@ -2152,9 +2479,11 @@ void AppleIpswWidget::onAdvStep1Next()
     m_advancedStepStack->setCurrentIndex(1);
     updateAdvStepPills(1);
 
-    if(m_lblAdvStep2FirmwareSummary)
+    if (m_lblAdvStep2FirmwareSummary)
     {
-        m_lblAdvStep2FirmwareSummary->setText(QString::fromUtf8("📦 Выбранный файл прошивки: <b>%1</b> (%2)").arg(QFileInfo(m_selectedIpswPath).fileName(), formatFileSize(QFileInfo(m_selectedIpswPath).size())));
+        m_lblAdvStep2FirmwareSummary->setText(
+            QString::fromUtf8("📦 Выбранный файл прошивки: <b>%1</b> (%2)")
+                .arg(QFileInfo(m_selectedIpswPath).fileName(), formatFileSize(QFileInfo(m_selectedIpswPath).size())));
     }
 }
 
@@ -2180,23 +2509,24 @@ void AppleIpswWidget::onAdvRetry()
 
 void AppleIpswWidget::appendLog(const QString &line, const QString &color)
 {
-    if(!m_logTerminal)
+    if (!m_logTerminal)
         return;
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-    QString formatted = QString("<span style='color: #475569;'>[%1]</span> <span style='color: %2;'>%3</span>").arg(timestamp, color, line.toHtmlEscaped());
+    QString formatted = QString("<span style='color: #475569;'>[%1]</span> <span style='color: %2;'>%3</span>")
+                            .arg(timestamp, color, line.toHtmlEscaped());
     m_logTerminal->append(formatted);
     m_logTerminal->verticalScrollBar()->setValue(m_logTerminal->verticalScrollBar()->maximum());
 }
 
 void AppleIpswWidget::onClearLogClicked()
 {
-    if(m_logTerminal)
+    if (m_logTerminal)
         m_logTerminal->clear();
 }
 
 void AppleIpswWidget::onCopyLogClicked()
 {
-    if(m_logTerminal)
+    if (m_logTerminal)
     {
         QApplication::clipboard()->setText(m_logTerminal->toPlainText());
         appendLog(QString::fromUtf8("[СИСТЕМА] Консольный лог скопирован в буфер обмена."), "#38BDF8");
@@ -2205,7 +2535,7 @@ void AppleIpswWidget::onCopyLogClicked()
 
 void AppleIpswWidget::loadDeviceList()
 {
-    if(!m_comboDeviceModel)
+    if (!m_comboDeviceModel)
         return;
 
     m_comboDeviceModel->blockSignals(true);
@@ -2215,45 +2545,45 @@ void AppleIpswWidget::loadDeviceList()
     {
         const char *id;
         const char *name;
-    } defaultModels[] = {
-        {"iPhone17,2", "iPhone 16 Pro Max"},
-        {"iPhone17,1", "iPhone 16 Pro"},
-        {"iPhone17,4", "iPhone 16 Plus"},
-        {"iPhone17,3", "iPhone 16"},
-        {"iPhone16,2", "iPhone 15 Pro Max"},
-        {"iPhone16,1", "iPhone 15 Pro"},
-        {"iPhone15,5", "iPhone 15 Plus"},
-        {"iPhone15,4", "iPhone 15"},
-        {"iPhone15,3", "iPhone 14 Pro Max"},
-        {"iPhone15,2", "iPhone 14 Pro"},
-        {"iPhone14,8", "iPhone 14 Plus"},
-        {"iPhone14,7", "iPhone 14"},
-        {"iPhone14,3", "iPhone 13 Pro Max"},
-        {"iPhone14,2", "iPhone 13 Pro"},
-        {"iPhone14,5", "iPhone 13"},
-        {"iPhone14,4", "iPhone 13 mini"},
-        {"iPhone13,4", "iPhone 12 Pro Max"},
-        {"iPhone13,3", "iPhone 12 Pro"},
-        {"iPhone13,2", "iPhone 12"},
-        {"iPhone13,1", "iPhone 12 mini"},
-        {"iPhone12,5", "iPhone 11 Pro Max"},
-        {"iPhone12,3", "iPhone 11 Pro"},
-        {"iPhone12,1", "iPhone 11"},
-        {"iPhone11,6", "iPhone XS Max"},
-        {"iPhone11,2", "iPhone XS"},
-        {"iPhone11,8", "iPhone XR"},
-        {"iPhone10,3", "iPhone X"},
-        {"iPhone10,2", "iPhone 8 Plus"},
-        {"iPhone10,1", "iPhone 8"},
-        {"iPhone14,6", "iPhone SE (3rd gen)"},
-        {"iPhone12,8", "iPhone SE (2nd gen)"},
-        {"iPad14,5", "iPad Pro 12.9-inch (6th gen)"},
-        {"iPad14,3", "iPad Pro 11-inch (4th gen)"},
-        {"iPad13,16", "iPad Air (5th gen)"},
-        {"iPad13,18", "iPad (10th gen)"},
-        {"iPad14,1", "iPad mini (6th gen)"}};
+    } defaultModels[]
+        = {{"iPhone17,2", "iPhone 16 Pro Max"},
+           {"iPhone17,1", "iPhone 16 Pro"},
+           {"iPhone17,4", "iPhone 16 Plus"},
+           {"iPhone17,3", "iPhone 16"},
+           {"iPhone16,2", "iPhone 15 Pro Max"},
+           {"iPhone16,1", "iPhone 15 Pro"},
+           {"iPhone15,5", "iPhone 15 Plus"},
+           {"iPhone15,4", "iPhone 15"},
+           {"iPhone15,3", "iPhone 14 Pro Max"},
+           {"iPhone15,2", "iPhone 14 Pro"},
+           {"iPhone14,8", "iPhone 14 Plus"},
+           {"iPhone14,7", "iPhone 14"},
+           {"iPhone14,3", "iPhone 13 Pro Max"},
+           {"iPhone14,2", "iPhone 13 Pro"},
+           {"iPhone14,5", "iPhone 13"},
+           {"iPhone14,4", "iPhone 13 mini"},
+           {"iPhone13,4", "iPhone 12 Pro Max"},
+           {"iPhone13,3", "iPhone 12 Pro"},
+           {"iPhone13,2", "iPhone 12"},
+           {"iPhone13,1", "iPhone 12 mini"},
+           {"iPhone12,5", "iPhone 11 Pro Max"},
+           {"iPhone12,3", "iPhone 11 Pro"},
+           {"iPhone12,1", "iPhone 11"},
+           {"iPhone11,6", "iPhone XS Max"},
+           {"iPhone11,2", "iPhone XS"},
+           {"iPhone11,8", "iPhone XR"},
+           {"iPhone10,3", "iPhone X"},
+           {"iPhone10,2", "iPhone 8 Plus"},
+           {"iPhone10,1", "iPhone 8"},
+           {"iPhone14,6", "iPhone SE (3rd gen)"},
+           {"iPhone12,8", "iPhone SE (2nd gen)"},
+           {"iPad14,5", "iPad Pro 12.9-inch (6th gen)"},
+           {"iPad14,3", "iPad Pro 11-inch (4th gen)"},
+           {"iPad13,16", "iPad Air (5th gen)"},
+           {"iPad13,18", "iPad (10th gen)"},
+           {"iPad14,1", "iPad mini (6th gen)"}};
 
-    for(const auto &item : defaultModels)
+    for (const auto &item : defaultModels)
     {
         m_comboDeviceModel->addItem(QString("%1 (%2)").arg(item.name, item.id), item.id);
     }
@@ -2265,37 +2595,32 @@ void AppleIpswWidget::loadDeviceList()
     QNetworkRequest req(url);
     req.setHeader(QNetworkRequest::UserAgentHeader, "AdsKiller-AppleFlasher/2.0");
     QNetworkReply *reply = m_netManager->get(req);
-    connect(
-        reply,
-        &QNetworkReply::finished,
-        this,
-        [this, reply]()
-        {
-            reply->deleteLater();
-            if(reply->error() != QNetworkReply::NoError)
-                return;
-            QByteArray data = reply->readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-            if(!doc.isArray())
-                return;
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError)
+            return;
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        if (!doc.isArray())
+            return;
 
-            QJsonArray arr = doc.array();
-            for(const QJsonValue &v : arr)
+        QJsonArray arr = doc.array();
+        for (const QJsonValue &v : arr)
+        {
+            QJsonObject obj = v.toObject();
+            QString id = obj["identifier"].toString();
+            QString name = obj["name"].toString();
+            if (!id.isEmpty() && m_comboDeviceModel)
             {
-                QJsonObject obj = v.toObject();
-                QString id = obj["identifier"].toString();
-                QString name = obj["name"].toString();
-                if(!id.isEmpty() && m_comboDeviceModel)
+                if (m_comboDeviceModel->findData(id) == -1)
                 {
-                    if(m_comboDeviceModel->findData(id) == -1)
-                    {
-                        m_comboDeviceModel->addItem(QString("%1 (%2)").arg(name, id), id);
-                    }
+                    m_comboDeviceModel->addItem(QString("%1 (%2)").arg(name, id), id);
                 }
             }
-        });
+        }
+    });
 
-    if(m_comboDeviceModel->count() > 0)
+    if (m_comboDeviceModel->count() > 0)
     {
         m_comboDeviceModel->setCurrentIndex(0);
         m_currentSelectedModelId = m_comboDeviceModel->currentData().toString();
@@ -2305,10 +2630,10 @@ void AppleIpswWidget::loadDeviceList()
 
 void AppleIpswWidget::onModelSelected(int index)
 {
-    if(index < 0 || !m_comboDeviceModel)
+    if (index < 0 || !m_comboDeviceModel)
         return;
     QString modelId = m_comboDeviceModel->itemData(index).toString();
-    if(!modelId.isEmpty() && modelId != m_currentSelectedModelId)
+    if (!modelId.isEmpty() && modelId != m_currentSelectedModelId)
     {
         m_currentSelectedModelId = modelId;
         fetchFirmwareCatalog(modelId);
@@ -2317,11 +2642,11 @@ void AppleIpswWidget::onModelSelected(int index)
 
 void AppleIpswWidget::onRefreshCatalogClicked()
 {
-    if(!m_currentSelectedModelId.isEmpty())
+    if (!m_currentSelectedModelId.isEmpty())
     {
         fetchFirmwareCatalog(m_currentSelectedModelId);
     }
-    else if(m_comboDeviceModel && m_comboDeviceModel->currentIndex() >= 0)
+    else if (m_comboDeviceModel && m_comboDeviceModel->currentIndex() >= 0)
     {
         onModelSelected(m_comboDeviceModel->currentIndex());
     }
@@ -2329,15 +2654,15 @@ void AppleIpswWidget::onRefreshCatalogClicked()
 
 void AppleIpswWidget::onFilterCatalogChanged()
 {
-    if(!m_firmwareTable)
+    if (!m_firmwareTable)
         return;
     QString filterText = m_editCatalogFilter ? m_editCatalogFilter->text().trimmed().toLower() : QString();
     bool onlySigned = m_chkOnlySigned ? m_chkOnlySigned->isChecked() : false;
 
-    for(int row = 0; row < m_firmwareTable->rowCount(); ++row)
+    for (int row = 0; row < m_firmwareTable->rowCount(); ++row)
     {
         bool matchesText = true;
-        if(!filterText.isEmpty())
+        if (!filterText.isEmpty())
         {
             QString ver = m_firmwareTable->item(row, 0) ? m_firmwareTable->item(row, 0)->text().toLower() : QString();
             QString build = m_firmwareTable->item(row, 1) ? m_firmwareTable->item(row, 1)->text().toLower() : QString();
@@ -2345,7 +2670,7 @@ void AppleIpswWidget::onFilterCatalogChanged()
         }
 
         bool matchesSigned = true;
-        if(onlySigned)
+        if (onlySigned)
         {
             QString signStatus = m_firmwareTable->item(row, 3) ? m_firmwareTable->item(row, 3)->text() : QString();
             matchesSigned = signStatus.contains(QString::fromUtf8("Подписывается"));
@@ -2358,16 +2683,16 @@ void AppleIpswWidget::onFilterCatalogChanged()
 void AppleIpswWidget::updateDiskSpaceInfo()
 {
     QString dir = downloadDirectory();
-    if(m_lblStoragePath)
+    if (m_lblStoragePath)
     {
         m_lblStoragePath->setText(QString::fromUtf8("📁 Каталог IPSW: <b>%1</b>").arg(dir));
         m_lblStoragePath->setToolTip(dir);
     }
 
-    if(m_lblDiskSpace)
+    if (m_lblDiskSpace)
     {
         QStorageInfo storage(dir);
-        if(storage.isValid())
+        if (storage.isValid())
         {
             qint64 freeBytes = storage.bytesAvailable();
             m_lblDiskSpace->setText(QString::fromUtf8("Свободно на диске: %1").arg(formatFileSize(freeBytes)));
@@ -2383,8 +2708,9 @@ void AppleIpswWidget::onOpenFolderClicked()
 
 void AppleIpswWidget::onChangeFolderClicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(this, QString::fromUtf8("Выберите папку для хранения прошивок"), downloadDirectory());
-    if(!dir.isEmpty())
+    QString dir = QFileDialog::getExistingDirectory(
+        this, QString::fromUtf8("Выберите папку для хранения прошивок"), downloadDirectory());
+    if (!dir.isEmpty())
     {
         m_customDownloadDir = dir;
         updateDiskSpaceInfo();
@@ -2402,14 +2728,14 @@ void AppleIpswWidget::scanLocalFirmwares()
 
 void AppleIpswWidget::populateLocalFirmwareTable()
 {
-    if(!m_localFirmwareTable)
+    if (!m_localFirmwareTable)
         return;
     m_localFirmwareTable->setRowCount(0);
 
     QDir dir(downloadDirectory());
     QFileInfoList files = dir.entryInfoList(QStringList() << "*.ipsw", QDir::Files, QDir::Time);
 
-    for(const QFileInfo &fi : files)
+    for (const QFileInfo &fi : files)
     {
         int row = m_localFirmwareTable->rowCount();
         m_localFirmwareTable->insertRow(row);
@@ -2425,7 +2751,7 @@ void AppleIpswWidget::populateLocalFirmwareTable()
         QString detectedModel = "Apple Device";
         static const QRegularExpression rx("([a-zA-Z]+[0-9]+,[0-9]+)");
         auto match = rx.match(baseName);
-        if(match.hasMatch())
+        if (match.hasMatch())
         {
             QString mId = match.captured(1);
             detectedModel = QString("%1 (%2)").arg(Apple::marketingNameForModel(mId), mId);
@@ -2453,17 +2779,14 @@ void AppleIpswWidget::populateLocalFirmwareTable()
         cwLayout->setSpacing(4);
 
         QPushButton *btnCheckHash = new QPushButton(QString::fromUtf8("🔍 Сверить SHA-1"), checkWidget);
-        btnCheckHash->setStyleSheet("background-color: #141C2E; color: #38BDF8; font-weight: 600; padding: 4px 8px; font-size: 11px; border: 1px solid #1E293B;");
-        connect(
-            btnCheckHash,
-            &QPushButton::clicked,
-            this,
-            [this, filePath]()
-            {
-                m_selectedIpswPath = filePath;
-                m_isLocalIpsw = true;
-                startChecksumForFile(filePath);
-            });
+        btnCheckHash->setStyleSheet(
+            "background-color: #141C2E; color: #38BDF8; font-weight: 600; padding: 4px 8px; font-size: 11px; border: "
+            "1px solid #1E293B;");
+        connect(btnCheckHash, &QPushButton::clicked, this, [this, filePath]() {
+            m_selectedIpswPath = filePath;
+            m_isLocalIpsw = true;
+            startChecksumForFile(filePath);
+        });
         cwLayout->addWidget(btnCheckHash);
         m_localFirmwareTable->setCellWidget(row, 4, checkWidget);
 
@@ -2474,42 +2797,42 @@ void AppleIpswWidget::populateLocalFirmwareTable()
         aLayout->setSpacing(6);
 
         QPushButton *btnSelect = new QPushButton(QString::fromUtf8("⚡ Выбрать"), actionWidget);
-        btnSelect->setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; padding: 4px 8px; font-size: 11px; border: 1px solid #38BDF8;");
-        connect(
-            btnSelect,
-            &QPushButton::clicked,
-            this,
-            [this, filePath, detectedModel, baseName]()
-            {
-                m_selectedIpswPath = filePath;
-                m_isLocalIpsw = true;
-                m_lblSelectedIpsw->setText(QString::fromUtf8("✔ Выбрана прошивка: <b>%1</b> [%2]").arg(baseName, formatFileSize(QFileInfo(filePath).size())));
-                m_lblSelectedIpsw->setStyleSheet("color: #34D399; font-size: 11.5px; padding: 4px;");
-                if(m_tabWidget)
-                    m_tabWidget->setCurrentIndex(0);
-                startChecksumForFile(filePath);
-                appendLog(QString::fromUtf8("[ВЫБОР ПРОШИВКИ] Выбран локальный файл: %1").arg(filePath), "#10B981");
-            });
+        btnSelect->setStyleSheet(
+            "background-color: #0284C7; color: #FFFFFF; font-weight: bold; padding: 4px 8px; font-size: 11px; border: "
+            "1px solid #38BDF8;");
+        connect(btnSelect, &QPushButton::clicked, this, [this, filePath, detectedModel, baseName]() {
+            m_selectedIpswPath = filePath;
+            m_isLocalIpsw = true;
+            m_lblSelectedIpsw->setText(
+                QString::fromUtf8("✔ Выбрана прошивка: <b>%1</b> [%2]")
+                    .arg(baseName, formatFileSize(QFileInfo(filePath).size())));
+            m_lblSelectedIpsw->setStyleSheet("color: #34D399; font-size: 11.5px; padding: 4px;");
+            if (m_tabWidget)
+                m_tabWidget->setCurrentIndex(0);
+            startChecksumForFile(filePath);
+            appendLog(QString::fromUtf8("[ВЫБОР ПРОШИВКИ] Выбран локальный файл: %1").arg(filePath), "#10B981");
+        });
         aLayout->addWidget(btnSelect);
 
         QPushButton *btnDel = new QPushButton(QString::fromUtf8("🗑"), actionWidget);
-        btnDel->setStyleSheet("background-color: #141C2E; color: #EF4444; font-weight: bold; padding: 4px 8px; font-size: 11px; border: 1px solid #1E293B;");
+        btnDel->setStyleSheet(
+            "background-color: #141C2E; color: #EF4444; font-weight: bold; padding: 4px 8px; font-size: 11px; border: "
+            "1px solid #1E293B;");
         btnDel->setToolTip(QString::fromUtf8("Удалить файл с диска"));
-        connect(
-            btnDel,
-            &QPushButton::clicked,
-            this,
-            [this, filePath]()
+        connect(btnDel, &QPushButton::clicked, this, [this, filePath]() {
+            auto res = QMessageBox::question(
+                this,
+                QString::fromUtf8("Удаление файла"),
+                QString::fromUtf8("Вы уверены, что хотите удалить файл прошивки?\n\n%1").arg(filePath),
+                QMessageBox::Yes | QMessageBox::No);
+            if (res == QMessageBox::Yes)
             {
-                auto res = QMessageBox::question(this, QString::fromUtf8("Удаление файла"), QString::fromUtf8("Вы уверены, что хотите удалить файл прошивки?\n\n%1").arg(filePath), QMessageBox::Yes | QMessageBox::No);
-                if(res == QMessageBox::Yes)
-                {
-                    QFile::remove(filePath);
-                    scanLocalFirmwares();
-                    populateFirmwareTable();
-                    appendLog(QString::fromUtf8("[УДАЛЕНИЕ] Файл прошивки удален: %1").arg(filePath), "#EF4444");
-                }
-            });
+                QFile::remove(filePath);
+                scanLocalFirmwares();
+                populateFirmwareTable();
+                appendLog(QString::fromUtf8("[УДАЛЕНИЕ] Файл прошивки удален: %1").arg(filePath), "#EF4444");
+            }
+        });
         aLayout->addWidget(btnDel);
 
         m_localFirmwareTable->setCellWidget(row, 5, actionWidget);
@@ -2523,17 +2846,17 @@ void AppleIpswWidget::setDevice(const AppleDevice &device)
     updateDeviceCard();
     updateSimpleWizardStep1();
 
-    if(m_simpleStepStack && m_simpleStepStack->currentIndex() == 1)
+    if (m_simpleStepStack && m_simpleStepStack->currentIndex() == 1)
     {
         updateSimpleWizardStep2();
     }
 
-    if(changed && !m_device.model.isEmpty() && !m_device.model.startsWith("Apple"))
+    if (changed && !m_device.model.isEmpty() && !m_device.model.startsWith("Apple"))
     {
-        if(m_comboDeviceModel)
+        if (m_comboDeviceModel)
         {
             int idx = m_comboDeviceModel->findData(m_device.model);
-            if(idx != -1)
+            if (idx != -1)
             {
                 m_comboDeviceModel->blockSignals(true);
                 m_comboDeviceModel->setCurrentIndex(idx);
@@ -2547,7 +2870,7 @@ void AppleIpswWidget::setDevice(const AppleDevice &device)
 
 void AppleIpswWidget::refreshDevice()
 {
-    if(MainWindow::current && !MainWindow::current->currentAppleDevice().isEmpty())
+    if (MainWindow::current && !MainWindow::current->currentAppleDevice().isEmpty())
     {
         setDevice(MainWindow::current->currentAppleDevice());
     }
@@ -2559,17 +2882,17 @@ void AppleIpswWidget::refreshDevice()
 
 void AppleIpswWidget::scanDevices()
 {
-    if(!m_detectTimer || !m_detectTimer->isActive())
+    if (!m_detectTimer || !m_detectTimer->isActive())
         return;
 
     QList<AppleDevice> devs = Apple::getDevices();
-    if(!devs.isEmpty())
+    if (!devs.isEmpty())
     {
         setDevice(devs.first());
     }
     else
     {
-        if(!m_device.isEmpty())
+        if (!m_device.isEmpty())
         {
             m_device = AppleDevice();
             updateDeviceCard();
@@ -2581,82 +2904,95 @@ void AppleIpswWidget::scanDevices()
 
 void AppleIpswWidget::updateDeviceCard()
 {
-    if(!m_lblDeviceName || !m_lblDeviceMode)
+    if (!m_lblDeviceName || !m_lblDeviceMode)
         return;
 
-    if(m_device.isEmpty())
+    if (m_device.isEmpty())
     {
-        if(m_lblHeaderDevicePill)
+        if (m_lblHeaderDevicePill)
         {
             m_lblHeaderDevicePill->setText(QString::fromUtf8("○ Устройство не подключено"));
-            m_lblHeaderDevicePill->setStyleSheet("background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 5px 12px; font-weight: 600; font-size: 11.5px;");
+            m_lblHeaderDevicePill->setStyleSheet(
+                "background: rgba(148, 163, 184, 0.08); color: #94A3B8; border: 1px solid #1E293B; padding: 5px 12px; "
+                "font-weight: 600; font-size: 11.5px;");
         }
 
         m_lblDeviceName->setText(QString::fromUtf8("Устройство не обнаружено"));
         m_lblDeviceMode->setText(QString::fromUtf8("● Ожидание подключения USB"));
-        m_lblDeviceMode->setStyleSheet("font-size: 11.5px; color: #EAB308; font-weight: 600; padding: 4px 10px; background: rgba(234, 179, 8, 0.1); border: 1px solid #854D0E;");
-        if(m_lblIosVersion)
+        m_lblDeviceMode->setStyleSheet(
+            "font-size: 11.5px; color: #EAB308; font-weight: 600; padding: 4px 10px; background: rgba(234, 179, 8, "
+            "0.1); border: 1px solid #854D0E;");
+        if (m_lblIosVersion)
             m_lblIosVersion->setText("-");
-        if(m_lblSerial)
+        if (m_lblSerial)
             m_lblSerial->setText("-");
-        if(m_lblEcid)
+        if (m_lblEcid)
             m_lblEcid->setText("-");
-        if(m_lblUdid)
+        if (m_lblUdid)
             m_lblUdid->setText("-");
 
-        if(m_btnExitRecovery)
+        if (m_btnExitRecovery)
             m_btnExitRecovery->setEnabled(false);
-        if(m_btnEnterRecovery)
+        if (m_btnEnterRecovery)
             m_btnEnterRecovery->setEnabled(false);
-        if(m_btnReboot)
+        if (m_btnReboot)
             m_btnReboot->setEnabled(false);
         return;
     }
 
-    QString name = !m_device.displayName.isEmpty() ? m_device.displayName : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
+    QString name = !m_device.displayName.isEmpty()
+                       ? m_device.displayName
+                       : (!m_device.marketingName.isEmpty() ? m_device.marketingName : m_device.model);
     m_lblDeviceName->setText(name);
     m_lblDeviceMode->setText(QString("● %1").arg(m_device.modeString()));
 
-    if(m_lblHeaderDevicePill)
+    if (m_lblHeaderDevicePill)
     {
         m_lblHeaderDevicePill->setText(QString("● %1 (%2)").arg(name, m_device.modeString()));
-        m_lblHeaderDevicePill->setStyleSheet("background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid #059669; padding: 5px 12px; font-weight: 600; font-size: 11.5px;");
+        m_lblHeaderDevicePill->setStyleSheet(
+            "background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid #059669; padding: 5px 12px; "
+            "font-weight: 600; font-size: 11.5px;");
     }
 
-    if(m_device.mode == AppleDeviceMode::Normal)
+    if (m_device.mode == AppleDeviceMode::Normal)
     {
-        m_lblDeviceMode->setStyleSheet("font-size: 11.5px; color: #10B981; font-weight: 600; padding: 4px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid #059669;");
-        if(m_btnExitRecovery)
+        m_lblDeviceMode->setStyleSheet(
+            "font-size: 11.5px; color: #10B981; font-weight: 600; padding: 4px 10px; background: rgba(16, 185, 129, "
+            "0.1); border: 1px solid #059669;");
+        if (m_btnExitRecovery)
             m_btnExitRecovery->setEnabled(false);
-        if(m_btnEnterRecovery)
+        if (m_btnEnterRecovery)
             m_btnEnterRecovery->setEnabled(true);
-        if(m_btnReboot)
+        if (m_btnReboot)
             m_btnReboot->setEnabled(true);
     }
     else
     {
-        m_lblDeviceMode->setStyleSheet("font-size: 11.5px; color: #38BDF8; font-weight: 600; padding: 4px 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid #0284C7;");
-        if(m_btnExitRecovery)
+        m_lblDeviceMode->setStyleSheet(
+            "font-size: 11.5px; color: #38BDF8; font-weight: 600; padding: 4px 10px; background: rgba(56, 189, 248, "
+            "0.1); border: 1px solid #0284C7;");
+        if (m_btnExitRecovery)
             m_btnExitRecovery->setEnabled(true);
-        if(m_btnEnterRecovery)
+        if (m_btnEnterRecovery)
             m_btnEnterRecovery->setEnabled(false);
-        if(m_btnReboot)
+        if (m_btnReboot)
             m_btnReboot->setEnabled(true);
     }
 
-    if(m_lblIosVersion)
-        m_lblIosVersion->setText(!m_device.productVersion.isEmpty() ? m_device.productVersion : QString::fromUtf8("В Recovery/DFU"));
-    if(m_lblSerial)
+    if (m_lblIosVersion)
+        m_lblIosVersion->setText(
+            !m_device.productVersion.isEmpty() ? m_device.productVersion : QString::fromUtf8("В Recovery/DFU"));
+    if (m_lblSerial)
         m_lblSerial->setText(!m_device.serialNumber.isEmpty() ? m_device.serialNumber : "-");
-    if(m_lblEcid)
+    if (m_lblEcid)
         m_lblEcid->setText(!m_device.ecid.isEmpty() ? m_device.ecid : "-");
-    if(m_lblUdid)
+    if (m_lblUdid)
         m_lblUdid->setText(!m_device.devId.isEmpty() ? (m_device.devId.left(14) + "...") : "-");
 }
 
 void AppleIpswWidget::fetchFirmwareCatalog(const QString &modelId)
 {
-    if(modelId.isEmpty())
+    if (modelId.isEmpty())
         return;
 
     appendLog(QString::fromUtf8("[API] Запрос каталога прошивок Apple для %1...").arg(modelId), "#38BDF8");
@@ -2666,57 +3002,58 @@ void AppleIpswWidget::fetchFirmwareCatalog(const QString &modelId)
     req.setHeader(QNetworkRequest::UserAgentHeader, "AdsKiller-AppleFlasher/2.0");
 
     QNetworkReply *reply = m_netManager->get(req);
-    connect(
-        reply,
-        &QNetworkReply::finished,
-        this,
-        [this, reply, modelId]()
+    connect(reply, &QNetworkReply::finished, this, [this, reply, modelId]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError)
         {
-            reply->deleteLater();
-            if(reply->error() != QNetworkReply::NoError)
-            {
-                appendLog(QString::fromUtf8("[API ОШИБКА] Не удалось загрузить каталог: %1").arg(reply->errorString()), "#EF4444");
-                return;
-            }
+            appendLog(
+                QString::fromUtf8("[API ОШИБКА] Не удалось загрузить каталог: %1").arg(reply->errorString()),
+                "#EF4444");
+            return;
+        }
 
-            QByteArray data = reply->readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-            if(!doc.isObject())
-                return;
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        if (!doc.isObject())
+            return;
 
-            QJsonObject root = doc.object();
-            QJsonArray firmwares = root["firmwares"].toArray();
+        QJsonObject root = doc.object();
+        QJsonArray firmwares = root["firmwares"].toArray();
 
-            m_firmwares.clear();
-            for(const QJsonValue &val : firmwares)
-            {
-                QJsonObject fObj = val.toObject();
-                IpswFirmwareInfo info;
-                info.identifier = fObj["identifier"].toString();
-                info.version = fObj["version"].toString();
-                info.buildid = fObj["buildid"].toString();
-                info.sha1sum = fObj["sha1sum"].toString().trimmed().toLower();
-                info.md5sum = fObj["md5sum"].toString().trimmed().toLower();
-                info.size = fObj["size"].toVariant().toLongLong();
-                info.url = fObj["url"].toString();
-                info.isSigned = fObj["signed"].toBool();
-                info.releaseDate = fObj["releasedate"].toString().left(10);
-                m_firmwares.append(info);
-            }
+        m_firmwares.clear();
+        for (const QJsonValue &val : firmwares)
+        {
+            QJsonObject fObj = val.toObject();
+            IpswFirmwareInfo info;
+            info.identifier = fObj["identifier"].toString();
+            info.version = fObj["version"].toString();
+            info.buildid = fObj["buildid"].toString();
+            info.sha1sum = fObj["sha1sum"].toString().trimmed().toLower();
+            info.md5sum = fObj["md5sum"].toString().trimmed().toLower();
+            info.size = fObj["size"].toVariant().toLongLong();
+            info.url = fObj["url"].toString();
+            info.isSigned = fObj["signed"].toBool();
+            info.releaseDate = fObj["releasedate"].toString().left(10);
+            m_firmwares.append(info);
+        }
 
-            populateFirmwareTable();
-            updateSimpleWizardStep2();
-            appendLog(QString::fromUtf8("[API] Каталог Apple обновлен: %1 версий iOS для %2").arg(m_firmwares.size()).arg(modelId), "#10B981");
-        });
+        populateFirmwareTable();
+        updateSimpleWizardStep2();
+        appendLog(
+            QString::fromUtf8("[API] Каталог Apple обновлен: %1 версий iOS для %2")
+                .arg(m_firmwares.size())
+                .arg(modelId),
+            "#10B981");
+    });
 }
 
 void AppleIpswWidget::populateFirmwareTable()
 {
-    if(!m_firmwareTable)
+    if (!m_firmwareTable)
         return;
     m_firmwareTable->setRowCount(0);
 
-    for(int i = 0; i < m_firmwares.size(); ++i)
+    for (int i = 0; i < m_firmwares.size(); ++i)
     {
         const auto &fw = m_firmwares[i];
         int row = m_firmwareTable->rowCount();
@@ -2739,7 +3076,9 @@ void AppleIpswWidget::populateFirmwareTable()
         m_firmwareTable->setItem(row, 2, dateItem);
 
         // 3: Signed Status
-        QTableWidgetItem *signItem = new QTableWidgetItem(fw.isSigned ? QString::fromUtf8("🟢 Подписывается Apple (Готова к установке)") : QString::fromUtf8("🔴 Не подписывается (Отказ TSS)"));
+        QTableWidgetItem *signItem = new QTableWidgetItem(
+            fw.isSigned ? QString::fromUtf8("🟢 Подписывается Apple (Готова к установке)")
+                        : QString::fromUtf8("🔴 Не подписывается (Отказ TSS)"));
         signItem->setFont(QFont("Segoe UI", 9, QFont::Bold));
         signItem->setForeground(fw.isSigned ? QColor("#34D399") : QColor("#F87171"));
         m_firmwareTable->setItem(row, 3, signItem);
@@ -2759,21 +3098,28 @@ void AppleIpswWidget::populateFirmwareTable()
         actLayout->setContentsMargins(4, 2, 4, 2);
         actLayout->setSpacing(6);
 
-        if(alreadyDownloaded)
+        if (alreadyDownloaded)
         {
             QLabel *lblReady = new QLabel(QString::fromUtf8("✔ На диске"), actionWidget);
             lblReady->setStyleSheet("color: #34D399; font-weight: bold; font-size: 11px;");
             actLayout->addWidget(lblReady);
 
             QPushButton *btnUse = new QPushButton(QString::fromUtf8("⚡ Выбрать"), actionWidget);
-            btnUse->setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; padding: 4px 8px; font-size: 11px; border: 1px solid #38BDF8;");
+            btnUse->setStyleSheet(
+                "background-color: #0284C7; color: #FFFFFF; font-weight: bold; padding: 4px 8px; font-size: 11px; "
+                "border: 1px solid #38BDF8;");
             connect(btnUse, &QPushButton::clicked, this, [this, i]() { onFirmwareSelected(i, 0); });
             actLayout->addWidget(btnUse);
         }
         else
         {
-            QPushButton *btnAction = new QPushButton(fw.isSigned ? QString::fromUtf8("⬇ Предзагрузить") : QString::fromUtf8("⬇ Скачать"), actionWidget);
-            btnAction->setStyleSheet(fw.isSigned ? "background-color: #064E3B; color: #34D399; font-weight: bold; padding: 4px 8px; font-size: 11px; border: 1px solid #059669;" : "background-color: #141C2E; color: #94A3B8; padding: 4px 8px; font-size: 11px; border: 1px solid #1E293B;");
+            QPushButton *btnAction = new QPushButton(
+                fw.isSigned ? QString::fromUtf8("⬇ Предзагрузить") : QString::fromUtf8("⬇ Скачать"), actionWidget);
+            btnAction->setStyleSheet(
+                fw.isSigned ? "background-color: #064E3B; color: #34D399; font-weight: bold; padding: 4px 8px; "
+                              "font-size: 11px; border: 1px solid #059669;"
+                            : "background-color: #141C2E; color: #94A3B8; padding: 4px 8px; font-size: 11px; border: "
+                              "1px solid #1E293B;");
             connect(btnAction, &QPushButton::clicked, this, [this, i]() { onDownloadIpswClicked(i); });
             actLayout->addWidget(btnAction);
         }
@@ -2787,24 +3133,30 @@ void AppleIpswWidget::populateFirmwareTable()
 void AppleIpswWidget::onFirmwareSelected(int row, int column)
 {
     (void) column;
-    if(row < 0 || row >= m_firmwares.size())
+    if (row < 0 || row >= m_firmwares.size())
         return;
 
     m_selectedFirmware = m_firmwares[row];
     m_isLocalIpsw = false;
 
-    QString expectedFileName = QString("%1_%2_%3_Restore.ipsw").arg(m_selectedFirmware.identifier, m_selectedFirmware.version, m_selectedFirmware.buildid);
+    QString expectedFileName
+        = QString("%1_%2_%3_Restore.ipsw")
+              .arg(m_selectedFirmware.identifier, m_selectedFirmware.version, m_selectedFirmware.buildid);
     m_selectedIpswPath = downloadDirectory() + "/" + expectedFileName;
 
-    if(QFile::exists(m_selectedIpswPath))
+    if (QFile::exists(m_selectedIpswPath))
     {
-        m_lblSelectedIpsw->setText(QString::fromUtf8("✔ Выбрана готовая прошивка: <b>iOS %1 (%2)</b> [%3]").arg(m_selectedFirmware.version, m_selectedFirmware.buildid, m_selectedIpswPath));
+        m_lblSelectedIpsw->setText(
+            QString::fromUtf8("✔ Выбрана готовая прошивка: <b>iOS %1 (%2)</b> [%3]")
+                .arg(m_selectedFirmware.version, m_selectedFirmware.buildid, m_selectedIpswPath));
         m_lblSelectedIpsw->setStyleSheet("color: #34D399; font-size: 11.5px; padding: 4px;");
         startChecksumForFile(m_selectedIpswPath, m_selectedFirmware.sha1sum, m_selectedFirmware.md5sum);
     }
     else
     {
-        m_lblSelectedIpsw->setText(QString::fromUtf8("Выбрана прошивка: <b>iOS %1 (%2)</b>. Нажмите «Предзагрузить» для скачивания файла.").arg(m_selectedFirmware.version, m_selectedFirmware.buildid));
+        m_lblSelectedIpsw->setText(
+            QString::fromUtf8("Выбрана прошивка: <b>iOS %1 (%2)</b>. Нажмите «Предзагрузить» для скачивания файла.")
+                .arg(m_selectedFirmware.version, m_selectedFirmware.buildid));
         m_lblSelectedIpsw->setStyleSheet("color: #FBBF24; font-size: 11.5px; padding: 4px;");
         m_checksumStatus = ChecksumStatus::NotChecked;
         updateChecksumUi();
@@ -2813,7 +3165,7 @@ void AppleIpswWidget::onFirmwareSelected(int row, int column)
 
 void AppleIpswWidget::onDownloadIpswClicked(int row)
 {
-    if(row < 0 || row >= m_firmwares.size())
+    if (row < 0 || row >= m_firmwares.size())
         return;
     const auto &fw = m_firmwares[row];
     m_selectedFirmware = fw;
@@ -2821,7 +3173,7 @@ void AppleIpswWidget::onDownloadIpswClicked(int row)
     QString expectedFileName = QString("%1_%2_%3_Restore.ipsw").arg(fw.identifier, fw.version, fw.buildid);
     m_selectedIpswPath = downloadDirectory() + "/" + expectedFileName;
 
-    if(!fw.isSigned)
+    if (!fw.isSigned)
     {
         auto res = QMessageBox::warning(
             this,
@@ -2832,7 +3184,7 @@ void AppleIpswWidget::onDownloadIpswClicked(int row)
                 "Всё равно начать скачивание?")
                 .arg(fw.version),
             QMessageBox::Yes | QMessageBox::No);
-        if(res != QMessageBox::Yes)
+        if (res != QMessageBox::Yes)
             return;
     }
 
@@ -2846,40 +3198,45 @@ void AppleIpswWidget::onDownloadIpswClicked(int row)
 
 void AppleIpswWidget::onDownloadProgress(qint64 received, qint64 total, double speedMBs)
 {
-    if(total > 0)
+    if (total > 0)
     {
         int pct = static_cast<int>((received * 100) / total);
-        if(m_progressBar)
+        if (m_progressBar)
             m_progressBar->setValue(pct);
-        if(m_simpleProgressBar)
+        if (m_simpleProgressBar)
             m_simpleProgressBar->setValue(pct);
-        QString status = QString::fromUtf8("Скачивание: %1 из %2 (%3%) * Скорость: %4 МБ/с").arg(formatFileSize(received), formatFileSize(total)).arg(pct).arg(speedMBs, 0, 'f', 1);
-        if(m_lblProgressStatus)
+        QString status = QString::fromUtf8("Скачивание: %1 из %2 (%3%) * Скорость: %4 МБ/с")
+                             .arg(formatFileSize(received), formatFileSize(total))
+                             .arg(pct)
+                             .arg(speedMBs, 0, 'f', 1);
+        if (m_lblProgressStatus)
             m_lblProgressStatus->setText(status);
-        if(m_lblSimpleProgressStatus)
+        if (m_lblSimpleProgressStatus)
             m_lblSimpleProgressStatus->setText(status);
     }
 }
 
 void AppleIpswWidget::onDownloadFinished(bool success, const QString &path, const QString &errorStr)
 {
-    if(m_btnCancelFlash)
+    if (m_btnCancelFlash)
         m_btnCancelFlash->setEnabled(false);
-    if(m_btnSimpleCancel)
+    if (m_btnSimpleCancel)
         m_btnSimpleCancel->setEnabled(false);
 
-    if(success)
+    if (success)
     {
-        if(m_progressBar)
+        if (m_progressBar)
             m_progressBar->setValue(100);
-        if(m_simpleProgressBar)
+        if (m_simpleProgressBar)
             m_simpleProgressBar->setValue(100);
-        if(m_lblProgressStatus)
-            m_lblProgressStatus->setText(QString::fromUtf8("Скачивание завершено! Выполняется проверка целостности SHA-1..."));
-        if(m_lblSimpleProgressStatus)
-            m_lblSimpleProgressStatus->setText(QString::fromUtf8("Загрузка прошивки завершена. Выполняется проверка контрольной суммы..."));
+        if (m_lblProgressStatus)
+            m_lblProgressStatus->setText(
+                QString::fromUtf8("Скачивание завершено! Выполняется проверка целостности SHA-1..."));
+        if (m_lblSimpleProgressStatus)
+            m_lblSimpleProgressStatus->setText(
+                QString::fromUtf8("Загрузка прошивки завершена. Выполняется проверка контрольной суммы..."));
 
-        if(m_lblSelectedIpsw)
+        if (m_lblSelectedIpsw)
         {
             m_lblSelectedIpsw->setText(QString::fromUtf8("✔ Файл сохранен: %1").arg(path));
             m_lblSelectedIpsw->setStyleSheet("color: #34D399; font-size: 11.5px; padding: 4px;");
@@ -2891,35 +3248,37 @@ void AppleIpswWidget::onDownloadFinished(bool success, const QString &path, cons
         // Automatically launch checksum verification on newly downloaded file
         startChecksumForFile(path, m_selectedFirmware.sha1sum, m_selectedFirmware.md5sum);
 
-        if(m_modeStack && m_modeStack->currentIndex() == 0 && m_simpleStepStack && m_simpleStepStack->currentIndex() == 2)
+        if (m_modeStack && m_modeStack->currentIndex() == 0 && m_simpleStepStack
+            && m_simpleStepStack->currentIndex() == 2)
         {
-            if(!m_device.isEmpty())
+            if (!m_device.isEmpty())
             {
                 bool retain = m_rbSimpleRetain ? m_rbSimpleRetain->isChecked() : true;
-                if(m_lblSimpleProgressStatus)
+                if (m_lblSimpleProgressStatus)
                     m_lblSimpleProgressStatus->setText(QString::fromUtf8("Запуск процесса прошивки устройства..."));
-                if(m_btnSimpleCancel)
+                if (m_btnSimpleCancel)
                     m_btnSimpleCancel->setEnabled(true);
                 m_restoreWorker->startRestore(path, retain, m_device.devId);
             }
             else
             {
-                if(m_lblSimpleProgressStatus)
-                    m_lblSimpleProgressStatus->setText(QString::fromUtf8("Прошивка загружена. Ожидание подключения iPhone по USB..."));
-                if(m_btnSimpleRetry)
+                if (m_lblSimpleProgressStatus)
+                    m_lblSimpleProgressStatus->setText(
+                        QString::fromUtf8("Прошивка загружена. Ожидание подключения iPhone по USB..."));
+                if (m_btnSimpleRetry)
                     m_btnSimpleRetry->setVisible(true);
             }
         }
     }
     else
     {
-        if(m_lblProgressStatus)
+        if (m_lblProgressStatus)
             m_lblProgressStatus->setText(QString::fromUtf8("Ошибка скачивания: %1").arg(errorStr));
-        if(m_lblSimpleProgressStatus)
+        if (m_lblSimpleProgressStatus)
             m_lblSimpleProgressStatus->setText(QString::fromUtf8("Ошибка скачивания: %1").arg(errorStr));
-        if(m_btnSimpleRetry)
+        if (m_btnSimpleRetry)
             m_btnSimpleRetry->setVisible(true);
-        if(m_btnAdvRetry)
+        if (m_btnAdvRetry)
             m_btnAdvRetry->setVisible(true);
         appendLog(QString::fromUtf8("[СКАЧИВАНИЕ ОШИБКА] %1").arg(errorStr), "#EF4444");
     }
@@ -2927,17 +3286,23 @@ void AppleIpswWidget::onDownloadFinished(bool success, const QString &path, cons
 
 void AppleIpswWidget::onSelectLocalIpswClicked()
 {
-    QString path = QFileDialog::getOpenFileName(this, QString::fromUtf8("Выберите файл прошивки Apple IPSW"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation), QString::fromUtf8("Apple Firmware (*.ipsw)"));
+    QString path = QFileDialog::getOpenFileName(
+        this,
+        QString::fromUtf8("Выберите файл прошивки Apple IPSW"),
+        QStandardPaths::writableLocation(QStandardPaths::DownloadLocation),
+        QString::fromUtf8("Apple Firmware (*.ipsw)"));
 
-    if(!path.isEmpty())
+    if (!path.isEmpty())
     {
         m_selectedIpswPath = path;
         m_isLocalIpsw = true;
 
         QFileInfo fi(path);
-        if(m_lblSelectedIpsw)
+        if (m_lblSelectedIpsw)
         {
-            m_lblSelectedIpsw->setText(QString::fromUtf8("✔ Локальный IPSW выбран: <b>%1</b> (%2)").arg(fi.fileName(), formatFileSize(fi.size())));
+            m_lblSelectedIpsw->setText(
+                QString::fromUtf8("✔ Локальный IPSW выбран: <b>%1</b> (%2)")
+                    .arg(fi.fileName(), formatFileSize(fi.size())));
             m_lblSelectedIpsw->setStyleSheet("color: #34D399; font-size: 11.5px; padding: 4px;");
         }
 
@@ -2950,25 +3315,36 @@ void AppleIpswWidget::onSelectLocalIpswClicked()
 
 void AppleIpswWidget::onStartFlashClicked()
 {
-    if(m_device.isEmpty())
+    if (m_device.isEmpty())
     {
-        QMessageBox::warning(this, QString::fromUtf8("Устройство не подключено"), QString::fromUtf8("Пожалуйста, подключите устройство Apple через USB в обычном режиме, Recovery или DFU."));
+        QMessageBox::warning(
+            this,
+            QString::fromUtf8("Устройство не подключено"),
+            QString::fromUtf8("Пожалуйста, подключите устройство Apple через USB в обычном режиме, Recovery или DFU."));
         return;
     }
 
-    if(m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
+    if (m_selectedIpswPath.isEmpty() || !QFile::exists(m_selectedIpswPath))
     {
-        QMessageBox::warning(this, QString::fromUtf8("Файл прошивки не найден"), QString::fromUtf8("Пожалуйста, скачайте прошивку из таблицы либо укажите локальный файл .ipsw."));
+        QMessageBox::warning(
+            this,
+            QString::fromUtf8("Файл прошивки не найден"),
+            QString::fromUtf8("Пожалуйста, скачайте прошивку из таблицы либо укажите локальный файл .ipsw."));
         return;
     }
 
-    if(m_checksumStatus == ChecksumStatus::Calculating)
+    if (m_checksumStatus == ChecksumStatus::Calculating)
     {
-        QMessageBox::information(this, QString::fromUtf8("Проверка контрольной суммы"), QString::fromUtf8("В данный момент выполняется проверка целостности файла (SHA-1).\nПожалуйста, дождитесь завершения сверки."));
+        QMessageBox::information(
+            this,
+            QString::fromUtf8("Проверка контрольной суммы"),
+            QString::fromUtf8(
+                "В данный момент выполняется проверка целостности файла (SHA-1).\nПожалуйста, дождитесь завершения "
+                "сверки."));
         return;
     }
 
-    if(m_checksumStatus == ChecksumStatus::Mismatch)
+    if (m_checksumStatus == ChecksumStatus::Mismatch)
     {
         auto res = QMessageBox::critical(
             this,
@@ -2979,35 +3355,46 @@ void AppleIpswWidget::onStartFlashClicked()
                 "Вы действительно хотите проигнорировать предупреждение и продолжить?"),
             QMessageBox::Yes | QMessageBox::No,
             QMessageBox::No);
-        if(res != QMessageBox::Yes)
+        if (res != QMessageBox::Yes)
             return;
     }
 
     bool retain = m_rbRetainData ? m_rbRetainData->isChecked() : true;
-    QString confirmText = retain ? QString::fromUtf8("Начать ОБНОВЛЕНИЕ устройства %1 с сохранением данных?\n\nФайл: %2").arg(!m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName, QFileInfo(m_selectedIpswPath).fileName())
-                                 : QString::fromUtf8(
-                                       "ВНИМАНИЕ! Выбран режим ЧИСТОЙ ПРОШИВКИ СО СБРОСОМ.\n\n"
-                                       "Все данные пользователя на устройстве %1 будут ПОЛНОСТЬЮ СТЕРТЫ!\n\n"
-                                       "Продолжить?")
-                                       .arg(!m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName);
+    QString confirmText
+        = retain ? QString::fromUtf8("Начать ОБНОВЛЕНИЕ устройства %1 с сохранением данных?\n\nФайл: %2")
+                       .arg(
+                           !m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName,
+                           QFileInfo(m_selectedIpswPath).fileName())
+                 : QString::fromUtf8(
+                       "ВНИМАНИЕ! Выбран режим ЧИСТОЙ ПРОШИВКИ СО СБРОСОМ.\n\n"
+                       "Все данные пользователя на устройстве %1 будут ПОЛНОСТЬЮ СТЕРТЫ!\n\n"
+                       "Продолжить?")
+                       .arg(!m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName);
 
-    auto reply = QMessageBox::question(this, QString::fromUtf8("Подтверждение прошивки iOS"), confirmText, QMessageBox::Yes | QMessageBox::No);
+    auto reply = QMessageBox::question(
+        this, QString::fromUtf8("Подтверждение прошивки iOS"), confirmText, QMessageBox::Yes | QMessageBox::No);
 
-    if(reply != QMessageBox::Yes)
+    if (reply != QMessageBox::Yes)
         return;
 
-    if(m_btnStartFlash)
+    if (m_btnStartFlash)
         m_btnStartFlash->setEnabled(false);
-    if(m_btnCancelFlash)
+    if (m_btnCancelFlash)
         m_btnCancelFlash->setEnabled(true);
-    if(m_btnAdvRetry)
+    if (m_btnAdvRetry)
         m_btnAdvRetry->setVisible(false);
-    if(m_progressBar)
+    if (m_progressBar)
         m_progressBar->setValue(0);
 
     appendLog(QString::fromUtf8("=================================================="), "#475569");
-    appendLog(QString::fromUtf8("[СТАРТ] Запуск процесса прошивки %1...").arg(!m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName), "#38BDF8");
-    appendLog(QString::fromUtf8("[РЕЖИМ] %1").arg(retain ? "Обновление с сохранением данных (-u)" : "Полная чистая прошивка со сбросом (-e)"), "#38BDF8");
+    appendLog(
+        QString::fromUtf8("[СТАРТ] Запуск процесса прошивки %1...")
+            .arg(!m_device.displayName.isEmpty() ? m_device.displayName : m_device.marketingName),
+        "#38BDF8");
+    appendLog(
+        QString::fromUtf8("[РЕЖИМ] %1")
+            .arg(retain ? "Обновление с сохранением данных (-u)" : "Полная чистая прошивка со сбросом (-e)"),
+        "#38BDF8");
     appendLog(QString::fromUtf8("[ФАЙЛ] %1").arg(m_selectedIpswPath), "#38BDF8");
 
     m_restoreWorker->startRestore(m_selectedIpswPath, retain, m_device.devId);
@@ -3015,30 +3402,34 @@ void AppleIpswWidget::onStartFlashClicked()
 
 void AppleIpswWidget::onCancelFlashClicked()
 {
-    auto reply = QMessageBox::question(this, QString::fromUtf8("Отмена операции"), QString::fromUtf8("Вы уверены, что хотите прервать текущую операцию?"), QMessageBox::Yes | QMessageBox::No);
+    auto reply = QMessageBox::question(
+        this,
+        QString::fromUtf8("Отмена операции"),
+        QString::fromUtf8("Вы уверены, что хотите прервать текущую операцию?"),
+        QMessageBox::Yes | QMessageBox::No);
 
-    if(reply == QMessageBox::Yes)
+    if (reply == QMessageBox::Yes)
     {
         m_downloader->cancelDownload();
         m_restoreWorker->abortRestore();
-        if(m_checksumWorker && m_checksumWorker->isRunning())
+        if (m_checksumWorker && m_checksumWorker->isRunning())
         {
             m_checksumWorker->cancel();
         }
 
-        if(m_btnCancelFlash)
+        if (m_btnCancelFlash)
             m_btnCancelFlash->setEnabled(false);
-        if(m_btnStartFlash)
+        if (m_btnStartFlash)
             m_btnStartFlash->setEnabled(true);
-        if(m_btnSimpleCancel)
+        if (m_btnSimpleCancel)
             m_btnSimpleCancel->setEnabled(false);
-        if(m_btnSimpleRetry)
+        if (m_btnSimpleRetry)
             m_btnSimpleRetry->setVisible(true);
-        if(m_btnAdvRetry)
+        if (m_btnAdvRetry)
             m_btnAdvRetry->setVisible(true);
-        if(m_lblProgressStatus)
+        if (m_lblProgressStatus)
             m_lblProgressStatus->setText(QString::fromUtf8("Операция прервана."));
-        if(m_lblSimpleProgressStatus)
+        if (m_lblSimpleProgressStatus)
             m_lblSimpleProgressStatus->setText(QString::fromUtf8("Операция прервана."));
         appendLog(QString::fromUtf8("[ПРЕРВАНО] Операция отменена пользователем."), "#EF4444");
     }
@@ -3046,25 +3437,27 @@ void AppleIpswWidget::onCancelFlashClicked()
 
 void AppleIpswWidget::onRestoreProgress(int percent, const QString &stageText)
 {
-    if(m_progressBar)
+    if (m_progressBar)
         m_progressBar->setValue(percent);
-    if(m_simpleProgressBar)
+    if (m_simpleProgressBar)
         m_simpleProgressBar->setValue(percent);
     QString text = QString("%1% * %2").arg(percent).arg(stageText);
-    if(m_lblProgressStatus)
+    if (m_lblProgressStatus)
         m_lblProgressStatus->setText(text);
-    if(m_lblSimpleProgressStatus)
+    if (m_lblSimpleProgressStatus)
         m_lblSimpleProgressStatus->setText(text);
 }
 
 void AppleIpswWidget::onRestoreLog(const QString &line)
 {
     QString color = "#E2E8F0";
-    if(line.contains("ERROR", Qt::CaseInsensitive) || line.contains("failed", Qt::CaseInsensitive))
+    if (line.contains("ERROR", Qt::CaseInsensitive) || line.contains("failed", Qt::CaseInsensitive))
         color = "#EF4444";
-    else if(line.contains("SUCCESS", Qt::CaseInsensitive) || line.contains("complete", Qt::CaseInsensitive))
+    else if (line.contains("SUCCESS", Qt::CaseInsensitive) || line.contains("complete", Qt::CaseInsensitive))
         color = "#10B981";
-    else if(line.contains("Extracting", Qt::CaseInsensitive) || line.contains("TSS", Qt::CaseInsensitive) || line.contains("Sending", Qt::CaseInsensitive))
+    else if (
+        line.contains("Extracting", Qt::CaseInsensitive) || line.contains("TSS", Qt::CaseInsensitive)
+        || line.contains("Sending", Qt::CaseInsensitive))
         color = "#38BDF8";
 
     appendLog(line, color);
@@ -3072,38 +3465,48 @@ void AppleIpswWidget::onRestoreLog(const QString &line)
 
 void AppleIpswWidget::onRestoreFinished(bool success, const QString &errorStr)
 {
-    if(m_btnStartFlash)
+    if (m_btnStartFlash)
         m_btnStartFlash->setEnabled(true);
-    if(m_btnCancelFlash)
+    if (m_btnCancelFlash)
         m_btnCancelFlash->setEnabled(false);
-    if(m_btnSimpleCancel)
+    if (m_btnSimpleCancel)
         m_btnSimpleCancel->setEnabled(false);
-    if(m_btnSimpleRetry)
+    if (m_btnSimpleRetry)
         m_btnSimpleRetry->setVisible(true);
-    if(m_btnAdvRetry)
+    if (m_btnAdvRetry)
         m_btnAdvRetry->setVisible(true);
 
-    if(success)
+    if (success)
     {
-        if(m_progressBar)
+        if (m_progressBar)
             m_progressBar->setValue(100);
-        if(m_simpleProgressBar)
+        if (m_simpleProgressBar)
             m_simpleProgressBar->setValue(100);
-        if(m_lblProgressStatus)
+        if (m_lblProgressStatus)
             m_lblProgressStatus->setText(QString::fromUtf8("Прошивка успешно завершена!"));
-        if(m_lblSimpleProgressStatus)
+        if (m_lblSimpleProgressStatus)
             m_lblSimpleProgressStatus->setText(QString::fromUtf8("✔ Прошивка успешно завершена!"));
         appendLog(QString::fromUtf8("[УСПЕХ] Устройство успешно прошито и перезагружается!"), "#10B981");
-        QMessageBox::information(this, QString::fromUtf8("Успех"), QString::fromUtf8("Устройство Apple успешно прошито!\nДождитесь появления логотипа Apple и полосы прогресса на экране телефона."));
+        QMessageBox::information(
+            this,
+            QString::fromUtf8("Успех"),
+            QString::fromUtf8(
+                "Устройство Apple успешно прошито!\nДождитесь появления логотипа Apple и полосы прогресса на экране "
+                "телефона."));
     }
     else
     {
-        if(m_lblProgressStatus)
+        if (m_lblProgressStatus)
             m_lblProgressStatus->setText(QString::fromUtf8("Ошибка прошивки: %1").arg(errorStr));
-        if(m_lblSimpleProgressStatus)
+        if (m_lblSimpleProgressStatus)
             m_lblSimpleProgressStatus->setText(QString::fromUtf8("Ошибка прошивки: %1").arg(errorStr));
         appendLog(QString::fromUtf8("[ОШИБКА] %1").arg(errorStr), "#EF4444");
-        QMessageBox::critical(this, QString::fromUtf8("Ошибка прошивки"), QString::fromUtf8("Процесс прошивки завершился ошибкой:\n%1\n\nВы можете повторить попытку нажав «Повторить».").arg(errorStr));
+        QMessageBox::critical(
+            this,
+            QString::fromUtf8("Ошибка прошивки"),
+            QString::fromUtf8(
+                "Процесс прошивки завершился ошибкой:\n%1\n\nВы можете повторить попытку нажав «Повторить».")
+                .arg(errorStr));
     }
 }
 
@@ -3111,9 +3514,10 @@ void AppleIpswWidget::onExitRecoveryClicked()
 {
     appendLog(QString::fromUtf8("[КОМАНДА] Выход из Recovery Mode (AppleShell)..."), "#38BDF8");
     AppleShell shell(m_device.devId);
-    if(shell.exitRecovery())
+    if (shell.exitRecovery())
     {
-        appendLog(QString::fromUtf8("[КОМАНДА] Команда отправлена. Устройство перезагружается в обычный режим."), "#10B981");
+        appendLog(
+            QString::fromUtf8("[КОМАНДА] Команда отправлена. Устройство перезагружается в обычный режим."), "#10B981");
     }
     else
     {
@@ -3124,11 +3528,11 @@ void AppleIpswWidget::onExitRecoveryClicked()
 
 void AppleIpswWidget::onEnterRecoveryClicked()
 {
-    if(m_device.devId.isEmpty())
+    if (m_device.devId.isEmpty())
         return;
     appendLog(QString::fromUtf8("[КОМАНДА] Ввод устройства в Recovery Mode (AppleShell)..."), "#38BDF8");
     AppleShell shell(m_device.devId);
-    if(shell.enterRecovery())
+    if (shell.enterRecovery())
     {
         appendLog(QString::fromUtf8("[КОМАНДА] Устройство переводится в Recovery Mode."), "#10B981");
     }
@@ -3143,7 +3547,7 @@ void AppleIpswWidget::onRebootClicked()
 {
     appendLog(QString::fromUtf8("[КОМАНДА] Перезагрузка устройства (AppleShell)..."), "#38BDF8");
     AppleShell shell(m_device.devId);
-    if(shell.restartDevice())
+    if (shell.restartDevice())
     {
         appendLog(QString::fromUtf8("[КОМАНДА] Команда перезагрузки отправлена."), "#10B981");
     }
@@ -3156,27 +3560,27 @@ void AppleIpswWidget::onRebootClicked()
 
 void AppleIpswWidget::resetSession()
 {
-    if(m_downloader)
+    if (m_downloader)
         m_downloader->cancelDownload();
-    if(m_restoreWorker)
+    if (m_restoreWorker)
         m_restoreWorker->abortRestore();
-    if(m_checksumWorker && m_checksumWorker->isRunning())
+    if (m_checksumWorker && m_checksumWorker->isRunning())
         m_checksumWorker->cancel();
 
-    if(m_btnCancelFlash)
+    if (m_btnCancelFlash)
         m_btnCancelFlash->setEnabled(false);
-    if(m_btnStartFlash)
+    if (m_btnStartFlash)
         m_btnStartFlash->setEnabled(true);
-    if(m_btnSimpleCancel)
+    if (m_btnSimpleCancel)
         m_btnSimpleCancel->setEnabled(false);
 
-    if(m_progressBar)
+    if (m_progressBar)
         m_progressBar->setValue(0);
-    if(m_simpleProgressBar)
+    if (m_simpleProgressBar)
         m_simpleProgressBar->setValue(0);
-    if(m_lblProgressStatus)
+    if (m_lblProgressStatus)
         m_lblProgressStatus->setText(QString::fromUtf8("Готов к прошивке"));
-    if(m_lblSimpleProgressStatus)
+    if (m_lblSimpleProgressStatus)
         m_lblSimpleProgressStatus->setText(QString::fromUtf8("Готов к прошивке"));
 }
 
@@ -3256,12 +3660,17 @@ void AppleIpswWidget::showBetaDisclaimer()
     bodyLbl->setText(
         QString::fromUtf8(
             "<div style='line-height: 150%;'>"
-            "<p style='margin-top: 0px;'>Данный сервис находится в статусе <b>активного бета-тестирования</b> (экспериментальный модуль).</p>"
+            "<p style='margin-top: 0px;'>Данный сервис находится в статусе <b>активного бета-тестирования</b> "
+            "(экспериментальный модуль).</p>"
             "<p>⚠️ <b>Все действия вы принимаете исключительно на свой страх и риск!</b></p>"
-            "<p>Программа полноценно поддерживает <b>скачивание официальных прошивок Apple IPSW</b> напрямую с серверов Apple и <b>проверку контрольных сумм (хешей SHA1 / MD5)</b>. "
-            "Однако для непосредственной прошивки устройства разработчик настоятельно рекомендует использовать проверенное ПО - <b>3uTools</b> или официальный <b>Apple iTunes / Finder</b>.</p>"
-            "<p style='color: #CBD5E1; background: rgba(15, 23, 42, 0.7); border-left: 3px solid #38BDF8; padding: 8px 10px; margin: 10px 0;'>"
-            "ℹ️ <i>В ближайшее время модуль будет полностью финализирован. В настоящий момент у разработчика нет под рукой физического устройства iPhone/iPad для аппаратного тестирования каждого сценария. "
+            "<p>Программа полноценно поддерживает <b>скачивание официальных прошивок Apple IPSW</b> напрямую с "
+            "серверов Apple и <b>проверку контрольных сумм (хешей SHA1 / MD5)</b>. "
+            "Однако для непосредственной прошивки устройства разработчик настоятельно рекомендует использовать "
+            "проверенное ПО - <b>3uTools</b> или официальный <b>Apple iTunes / Finder</b>.</p>"
+            "<p style='color: #CBD5E1; background: rgba(15, 23, 42, 0.7); border-left: 3px solid #38BDF8; padding: 8px "
+            "10px; margin: 10px 0;'>"
+            "ℹ️ <i>В ближайшее время модуль будет полностью финализирован. В настоящий момент у разработчика нет под "
+            "рукой физического устройства iPhone/iPad для аппаратного тестирования каждого сценария. "
             "Вы можете протестировать функционал и при желании сообщить разработчику о результатах.</i></p>"
             "<p style='margin-bottom: 0px;'>Спасибо за понимание и содействие развитию проекта!</p>"
             "</div>"));
@@ -3285,7 +3694,8 @@ void AppleIpswWidget::showBetaDisclaimer()
 // -------------------------------------------------------------
 // AppleIpswService Implementation
 // -------------------------------------------------------------
-AppleIpswService::AppleIpswService(QObject *parent) : Service(DeviceConnectType::Apple, parent)
+AppleIpswService::AppleIpswService(QObject *parent)
+    : Service(DeviceConnectType::Apple, parent)
 {
     m_sortScore = 300;
     m_flag = ServiceFlag::Beta;
@@ -3304,10 +3714,13 @@ QString AppleIpswService::uuid() const
 QString AppleIpswService::getInternalData()
 {
     QStringList data;
-    auto *widget = MainWindow::current ? static_cast<AppleIpswWidget *>(MainWindow::current->pageWidget(AppleIpswPage)) : nullptr;
-    if(widget)
+    auto *widget = MainWindow::current ? static_cast<AppleIpswWidget *>(MainWindow::current->pageWidget(AppleIpswPage))
+                                       : nullptr;
+    if (widget)
     {
-        data << "Device = " + widget->m_device.devId << "Model = " + widget->m_currentSelectedModelId << "Firmware file = " + widget->m_selectedIpswPath << "Firmware version = " + widget->m_selectedFirmware.version
+        data << "Device = " + widget->m_device.devId << "Model = " + widget->m_currentSelectedModelId
+             << "Firmware file = " + widget->m_selectedIpswPath
+             << "Firmware version = " + widget->m_selectedFirmware.version
              << "Checksum status = " + QString::number(static_cast<int>(widget->m_checksumStatus));
     }
     return Service::getInternalData() + ":" + data.join('\t');
@@ -3344,13 +3757,13 @@ bool AppleIpswService::start()
     m_started = true;
     m_finished = false;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<AppleIpswWidget *>(MainWindow::current->pageWidget(AppleIpswPage));
-        if(widget)
+        if (widget)
         {
             widget->resetSession();
-            if(!mAppleDevice.isEmpty())
+            if (!mAppleDevice.isEmpty())
                 widget->setDevice(mAppleDevice);
             widget->startDeviceDetection();
         }
@@ -3364,10 +3777,10 @@ void AppleIpswService::stop()
     m_started = false;
     m_finished = true;
 
-    if(MainWindow::current)
+    if (MainWindow::current)
     {
         auto *widget = static_cast<AppleIpswWidget *>(MainWindow::current->pageWidget(AppleIpswPage));
-        if(widget)
+        if (widget)
         {
             widget->stopDeviceDetection();
             widget->resetSession();

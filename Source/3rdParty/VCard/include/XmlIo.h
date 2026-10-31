@@ -25,12 +25,10 @@
 class XmlWriter
 {
 public:
-    XmlWriter(std::ostream &os /*, vCvCardEncoding code = UTF_8*/) : m_os(&os)
-    {
-    }
-    ~XmlWriter()
-    {
-    }
+    XmlWriter(std::ostream &os /*, vCvCardEncoding code = UTF_8*/)
+        : m_os(&os)
+    {}
+    ~XmlWriter() {}
 
     XmlWriter &operator<<(vCard &vCard);
     XmlWriter &operator<<(std::vector<vCard> &cards);
@@ -46,12 +44,8 @@ protected:
 class XmlReader
 {
 public:
-    XmlReader()
-    {
-    }
-    ~XmlReader()
-    {
-    }
+    XmlReader() {}
+    ~XmlReader() {}
 
     std::vector<vCard> parseCards(std::istream *is);
 };

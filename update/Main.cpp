@@ -14,20 +14,20 @@ int main(int argc, char **argv)
     QApplication a(argc, argv);
     QSharedMemory sharedMemApp("imister.kz-app_adskiller_v1");
     int waitAppCloseRetries = 20;
-    while(sharedMemApp.attach() && --waitAppCloseRetries > 0)
+    while (sharedMemApp.attach() && --waitAppCloseRetries > 0)
     {
         sharedMemApp.detach();
         QThread::msleep(500);
     }
-    if(sharedMemApp.isAttached())
+    if (sharedMemApp.isAttached())
         sharedMemApp.detach();
 
     QSharedMemory sharedMemory("imister.kz-app_adskiller_v1_update");
-    if(sharedMemory.attach())
+    if (sharedMemory.attach())
     {
         return 1;
     }
-    if(!sharedMemory.create(1))
+    if (!sharedMemory.create(1))
     {
         return 1;
     }
@@ -48,20 +48,19 @@ int main(int argc, char **argv)
     parser.process(a);
 
     QString workDir = QApplication::applicationDirPath();
-    if(parser.isSet(dirOption))
+    if (parser.isSet(dirOption))
     {
         QDir dir(parser.value(dirOption));
         workDir = QDir::cleanPath(dir.absolutePath());
     }
 
     const bool simulate = parser.isSet(simulateOption);
-    const auto hasMainBinary = [](const QString &dirPath) -> bool
-    {
+    const auto hasMainBinary = [](const QString &dirPath) -> bool {
         const QDir d(dirPath);
         return d.exists("adskiller.exe") || d.exists("adskiller.exe.old") || d.exists("adskiller");
     };
 
-    if(!simulate && !hasMainBinary(workDir))
+    if (!simulate && !hasMainBinary(workDir))
     {
         qDebug() << "Update manager require adskiller.exe in target directory";
         sharedMemory.detach();
@@ -69,16 +68,16 @@ int main(int argc, char **argv)
     }
 
     QString validatedExecPath;
-    if(parser.isSet(execOption))
+    if (parser.isSet(execOption))
     {
         const QFileInfo execInfo(parser.value(execOption));
         const QString execDir = QDir::cleanPath(execInfo.absolutePath());
         const QString targetDir = QDir::cleanPath(QDir(workDir).absolutePath());
         const QString exeName = execInfo.fileName();
-        const bool allowedName = (exeName.compare(QLatin1String("adskiller.exe"), Qt::CaseInsensitive) == 0) ||
-                                 (exeName == QLatin1String("adskiller"));
+        const bool allowedName = (exeName.compare(QLatin1String("adskiller.exe"), Qt::CaseInsensitive) == 0)
+                                 || (exeName == QLatin1String("adskiller"));
 
-        if(!execInfo.exists() || !execInfo.isFile() || execDir != targetDir || !allowedName)
+        if (!execInfo.exists() || !execInfo.isFile() || execDir != targetDir || !allowedName)
         {
             qDebug() << "Program file is not exists or not permitted";
             sharedMemory.detach();
@@ -89,7 +88,7 @@ int main(int argc, char **argv)
 
     int exitCode = startProcessDownload(a, workDir, simulate);
     sharedMemory.detach();
-    if(exitCode == 0 && !simulate && !validatedExecPath.isEmpty())
+    if (exitCode == 0 && !simulate && !validatedExecPath.isEmpty())
         QProcess::startDetached(validatedExecPath, QStringList(), workDir);
     return exitCode;
 }
@@ -103,22 +102,17 @@ int startProcessDownload(QApplication &app, QString &workDir, bool simulate)
     QThread downloadThread;
 
     manager.moveToThread(&downloadThread);
-    QObject::connect(
-        &downloadThread,
-        &QThread::started,
-        &manager,
-        [&]()
-        {
-            QDir existDir(workDir);
-            std::pair<QList<FetchResult>, int> result = manager.fetch();
-            if(result.second < 0)
-                return;
-            result = manager.filter_by(existDir.path(), result.first);
-            if(result.second < 0)
-                return;
-            if(manager.downloadAll(existDir.path(), result.first) < 0)
-                return;
-        });
+    QObject::connect(&downloadThread, &QThread::started, &manager, [&]() {
+        QDir existDir(workDir);
+        std::pair<QList<FetchResult>, int> result = manager.fetch();
+        if (result.second < 0)
+            return;
+        result = manager.filter_by(existDir.path(), result.first);
+        if (result.second < 0)
+            return;
+        if (manager.downloadAll(existDir.path(), result.first) < 0)
+            return;
+    });
 
     QTimer *progressUpdateTimer = new QTimer(&window);
     progressUpdateTimer->setInterval(100);
@@ -135,77 +129,79 @@ int startProcessDownload(QApplication &app, QString &workDir, bool simulate)
             QString lastErr;
             int status;
             lastErr = manager.getLastError(&status);
-            if(status < 0)
+            if (status < 0)
             {
                 window.setProgress(0, 0);
                 window.setText("Download fails.\n" + lastErr);
                 progressUpdateTimer->stop();
-                window.delayPush(
-                    3000,
-                    [&]()
-                    {
-                        window.close();
-                        app.quit();
-                    });
+                window.delayPush(3000, [&]() {
+                    window.close();
+                    app.quit();
+                });
                 return;
             }
             double v1, v2;
             downloads = manager.downloadStatus();
 
             quint64 diffBytes = 0;
-            if(downloads.totalDownloadedBytes > lastDownloadedBytes)
+            if (downloads.totalDownloadedBytes > lastDownloadedBytes)
                 diffBytes = downloads.totalDownloadedBytes - lastDownloadedBytes;
             quint64 speed = diffBytes * 10; // timer is 100ms, so x10 for bytes/sec
             lastDownloadedBytes = downloads.totalDownloadedBytes;
 
-            auto formatBytes = [](quint64 bytes) -> QString
-            {
-                if(bytes > 1024 * 1024)
+            auto formatBytes = [](quint64 bytes) -> QString {
+                if (bytes > 1024 * 1024)
                     return QString::number(bytes / (1024.0 * 1024.0), 'f', 1) + " MB";
-                if(bytes > 1024)
+                if (bytes > 1024)
                     return QString::number(bytes / 1024.0, 'f', 1) + " KB";
                 return QString::number(bytes) + " B";
             };
 
             v1 = downloads.currentDownloadBytes;
             v1 /= std::max<quint64>(downloads.currentMaxDownloadBytes, 1u);
-            if(manager.finishSuccess.load())
+            if (manager.finishSuccess.load())
             {
                 progressUpdateTimer->stop();
-                if(downloads.maxDownloads == 0)
+                if (downloads.maxDownloads == 0)
                     window.setText("Update is not required.");
                 else
                     window.setText("Complete.\nClosing.");
-                window.delayPush(
-                    1200,
-                    [&app, &window]()
-                    {
-                        window.close();
-                        app.quit();
-                    });
+                window.delayPush(1200, [&app, &window]() {
+                    window.close();
+                    app.quit();
+                });
                 v1 = 1.0F;
                 v2 = 1.0F;
             }
             else
             {
-                v2 = static_cast<double>(downloads.totalDownloadedBytes) / std::max<quint64>(downloads.totalDownloadBytes, 1u);
+                v2 = static_cast<double>(downloads.totalDownloadedBytes)
+                     / std::max<quint64>(downloads.totalDownloadBytes, 1u);
             }
             window.setProgress(static_cast<int>(v1 * 100), static_cast<int>(v2 * 100));
 
             int blocks = static_cast<int>(v2 * 100);
-            if(blocks > 100)
+            if (blocks > 100)
                 blocks = 100;
 
-            QString stats = QString("Скорость: <b>%1/s</b><br>Загружено: %2 / %3<br>Осталось: %4<br>Блоков: <b>%5 / 100</b>")
-                                .arg(
-                                    formatBytes(speed),
-                                    formatBytes(downloads.totalDownloadedBytes),
-                                    formatBytes(downloads.totalDownloadBytes),
-                                    formatBytes(downloads.totalDownloadBytes > downloads.totalDownloadedBytes ? downloads.totalDownloadBytes - downloads.totalDownloadedBytes : 0),
-                                    QString::number(blocks));
+            QString stats
+                = QString("Скорость: <b>%1/s</b><br>Загружено: %2 / %3<br>Осталось: %4<br>Блоков: <b>%5 / 100</b>")
+                      .arg(
+                          formatBytes(speed),
+                          formatBytes(downloads.totalDownloadedBytes),
+                          formatBytes(downloads.totalDownloadBytes),
+                          formatBytes(
+                              downloads.totalDownloadBytes > downloads.totalDownloadedBytes
+                                  ? downloads.totalDownloadBytes - downloads.totalDownloadedBytes
+                                  : 0),
+                          QString::number(blocks));
             window.setStats(stats);
-            if(!downloads.currentStatus.isEmpty())
-                window.setText(QString("Download %1/%2: %3").arg(QString::number(downloads.downloadStep), QString::number(downloads.maxDownloads), downloads.currentStatus));
+            if (!downloads.currentStatus.isEmpty())
+                window.setText(QString("Download %1/%2: %3")
+                                   .arg(
+                                       QString::number(downloads.downloadStep),
+                                       QString::number(downloads.maxDownloads),
+                                       downloads.currentStatus));
         });
 
     progressUpdateTimer->start();
@@ -219,7 +215,7 @@ int startProcessDownload(QApplication &app, QString &workDir, bool simulate)
     downloadThread.quit();
     downloadThread.wait();
 
-    if(manager.finishSuccess)
+    if (manager.finishSuccess)
         exitCode = 0;
     else
         exitCode |= 2;

@@ -14,15 +14,17 @@
 #include "MainWindow.h"
 #include "Services.h"
 
-Analytics::Analytics(MainWindow *window) : QObject(window), m_window(window)
+Analytics::Analytics(MainWindow *window)
+    : QObject(window)
+    , m_window(window)
 {
-    if(qApp)
+    if (qApp)
         qApp->installEventFilter(this);
 }
 
 Analytics::~Analytics()
 {
-    if(qApp)
+    if (qApp)
         qApp->removeEventFilter(this);
 }
 
@@ -30,21 +32,25 @@ QString Analytics::collectData()
 {
     QStringList data;
     const QDateTime now = QDateTime::currentDateTime();
-    data << "Local timestamp = " + now.toString(Qt::ISODateWithMs) << "Operating system = " + QSysInfo::prettyProductName() << "OS type = " + QSysInfo::productType() << "OS version = " + QSysInfo::productVersion() << "Kernel = " + QSysInfo::kernelType() + " " + QSysInfo::kernelVersion()
+    data << "Local timestamp = " + now.toString(Qt::ISODateWithMs)
+         << "Operating system = " + QSysInfo::prettyProductName() << "OS type = " + QSysInfo::productType()
+         << "OS version = " + QSysInfo::productVersion()
+         << "Kernel = " + QSysInfo::kernelType() + " " + QSysInfo::kernelVersion()
          << "Architecture = " + QSysInfo::currentCpuArchitecture();
 
     const std::shared_ptr<Service> service = ServiceProvider::currentService();
-    if(service)
+    if (service)
     {
         data << "Service info:";
         data << service->getInternalData();
     }
     else
     {
-        data << "No service is running; the user is on the main page (Cabinet) and viewing the service list with account information.";
+        data << "No service is running; the user is on the main page (Cabinet) and viewing the service list with "
+                "account information.";
     }
 
-    if(!m_events.isEmpty())
+    if (!m_events.isEmpty())
     {
         data << "UI events:";
         data.append(m_events);
@@ -56,26 +62,26 @@ QString Analytics::collectData()
 
 bool Analytics::eventFilter(QObject *watched, QEvent *event)
 {
-    if(!event)
+    if (!event)
         return false;
 
-    if(!AppSetting::analyticsEnabled())
+    if (!AppSetting::analyticsEnabled())
     {
         m_events.clear();
         return false;
     }
 
     QWidget *widget = qobject_cast<QWidget *>(watched);
-    if(!widget || (widget != m_window && !m_window->isAncestorOf(widget)))
+    if (!widget || (widget != m_window && !m_window->isAncestorOf(widget)))
         return false;
 
     QString eventName;
-    switch(event->type())
+    switch (event->type())
     {
         case QEvent::MouseMove:
         {
             const qint64 now = QDateTime::currentMSecsSinceEpoch();
-            if(now - m_lastMouseEventMs < 100)
+            if (now - m_lastMouseEventMs < 100)
                 return false;
             m_lastMouseEventMs = now;
             eventName = "mouse_move";
@@ -112,17 +118,17 @@ bool Analytics::eventFilter(QObject *watched, QEvent *event)
             eventName = "pointer_leave";
             break;
         case QEvent::Move:
-            if(widget == m_window)
+            if (widget == m_window)
                 eventName = "window_move";
             break;
         case QEvent::Resize:
-            if(widget == m_window)
+            if (widget == m_window)
                 eventName = "window_resize";
             break;
         case QEvent::Show:
-            for(auto iter = m_window->pages.cbegin(); iter != m_window->pages.cend(); ++iter)
+            for (auto iter = m_window->pages.cbegin(); iter != m_window->pages.cend(); ++iter)
             {
-                if(iter.value() == widget)
+                if (iter.value() == widget)
                 {
                     eventName = "page_show";
                     break;
@@ -133,7 +139,7 @@ bool Analytics::eventFilter(QObject *watched, QEvent *event)
             return false;
     }
 
-    if(eventName.isEmpty())
+    if (eventName.isEmpty())
         return false;
 
     const QPoint cursor = QCursor::pos();
@@ -155,28 +161,30 @@ bool Analytics::eventFilter(QObject *watched, QEvent *event)
     record["window_width"] = m_window->width();
     record["window_height"] = m_window->height();
 
-    if(event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
+    if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
     {
         const auto *keyEvent = static_cast<QKeyEvent *>(event);
         const QString keyText = keyEvent->text();
-        if(keyText.isEmpty() || !keyText.at(0).isPrint())
+        if (keyText.isEmpty() || !keyText.at(0).isPrint())
             record["key_code"] = keyEvent->key();
         record["modifiers"] = static_cast<int>(keyEvent->modifiers());
     }
-    else if(event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseButtonDblClick)
+    else if (
+        event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease
+        || event->type() == QEvent::MouseButtonDblClick)
     {
         const auto *mouseEvent = static_cast<QMouseEvent *>(event);
         record["button"] = static_cast<int>(mouseEvent->button());
         record["buttons"] = static_cast<int>(mouseEvent->buttons());
     }
-    else if(event->type() == QEvent::Wheel)
+    else if (event->type() == QEvent::Wheel)
     {
         const auto *wheelEvent = static_cast<QWheelEvent *>(event);
         record["wheel_x"] = wheelEvent->angleDelta().x();
         record["wheel_y"] = wheelEvent->angleDelta().y();
     }
 
-    if(m_events.size() == 512)
+    if (m_events.size() == 512)
         m_events.removeFirst();
     m_events.append(QString::fromUtf8(QJsonDocument(record).toJson(QJsonDocument::Compact)));
     return false;

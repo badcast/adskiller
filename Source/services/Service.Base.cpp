@@ -23,9 +23,9 @@ PageIndex Service::targetPage()
 
 bool Service::canStart()
 {
-    if(mDeviceConnectType == DeviceConnectType::ADB)
+    if (mDeviceConnectType == DeviceConnectType::ADB)
         return !mAdbDevice.isEmpty();
-    if(mDeviceConnectType == DeviceConnectType::Apple)
+    if (mDeviceConnectType == DeviceConnectType::Apple)
         return !mAppleDevice.isEmpty();
     return mDeviceConnectType == DeviceConnectType::None;
 }
@@ -48,7 +48,7 @@ bool Service::restart()
 
 void Service::close()
 {
-    if(isStarted())
+    if (isStarted())
     {
         stop();
         MainWindow::current->updateCabinet();
@@ -63,15 +63,18 @@ DeviceConnectType Service::deviceConnectType() const
 bool Service::isOnlineService() const
 {
     const QString id = uuid();
-    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString || id == IDServiceAIAgentString || id == IDServiceAITranslaterString || id == IDServiceImeiVerificationKzString || id == IDServiceMiAccountString || id == IDServiceSamsungFrpString;
+    return id == IDServiceAdsString || id == IDServiceMyDeviceString || id == IDServiceVIPBuyString
+           || id == IDServiceAIAgentString || id == IDServiceAITranslaterString
+           || id == IDServiceImeiVerificationKzString || id == IDServiceMiAccountString
+           || id == IDServiceSamsungFrpString;
 }
 
 void Service::sendCheckPull() const
 {
-    if(MainWindow::current && MainWindow::current->network.isAuthed())
+    if (MainWindow::current && MainWindow::current->network.isAuthed())
     {
         const QString id = uuid();
-        if(!id.isEmpty())
+        if (!id.isEmpty())
         {
             QJsonObject req;
             req[QStringLiteral("check")] = true;

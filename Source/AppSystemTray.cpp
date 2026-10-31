@@ -5,27 +5,24 @@
 #include "AppSystemTray.h"
 #include "MainWindow.h"
 
-AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
+AdsAppSystemTray::AdsAppSystemTray(QWidget *parent)
+    : QSystemTrayIcon(parent)
 {
     QMenu *menu = new QMenu(parent);
     MainWindow *mainWindow = qobject_cast<MainWindow *>(parent);
-    if(mainWindow == nullptr)
+    if (mainWindow == nullptr)
     {
         qDebug() << "Require parent as MainWindow instance";
         delete menu;
         return;
     }
     QAction *restoreWindow = new QAction("Restore", this);
-    QObject::connect(
-        restoreWindow,
-        &QAction::triggered,
-        [=]()
-        {
-            if(mainWindow->isHidden())
-                mainWindow->show();
-            else
-                mainWindow->hide();
-        });
+    QObject::connect(restoreWindow, &QAction::triggered, [=]() {
+        if (mainWindow->isHidden())
+            mainWindow->show();
+        else
+            mainWindow->hide();
+    });
 
     QAction *quitAction = new QAction("Exit", this);
     QObject::connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
@@ -38,17 +35,13 @@ AdsAppSystemTray::AdsAppSystemTray(QWidget *parent) : QSystemTrayIcon(parent)
     // setThemeToLight->setCheckable(true);
     // QObject::connect(setThemeToLight, &QAction::triggered, [=]() { mainWindow->setTheme(ThemeScheme::Light); });
 
-    QObject::connect(
-        menu,
-        &QMenu::aboutToShow,
-        [=]()
-        {
-            // ThemeScheme scheme = mainWindow->getTheme();
-            // setThemeToDark->setChecked(scheme == ThemeScheme::Dark);
-            // setThemeToLight->setChecked(scheme == ThemeScheme::Light);
+    QObject::connect(menu, &QMenu::aboutToShow, [=]() {
+        // ThemeScheme scheme = mainWindow->getTheme();
+        // setThemeToDark->setChecked(scheme == ThemeScheme::Dark);
+        // setThemeToLight->setChecked(scheme == ThemeScheme::Light);
 
-            restoreWindow->setText((mainWindow->isHidden() ? "Restore" : "Hide"));
-        });
+        restoreWindow->setText((mainWindow->isHidden() ? "Restore" : "Hide"));
+    });
 
     menu->addAction(restoreWindow);
     menu->addSeparator();

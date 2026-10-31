@@ -61,85 +61,95 @@ constexpr struct
 {
     PageIndex index;
     const char *widgetName;
-} PageConstNames[7] = {{AuthPage, "page_auth"}, {CabinetPage, "page_cabinet"}, {LongInfoPage, "page_adsmalware"}, {LoaderPage, "page_loader"}, {DevicesPage, "page_devices"}, {MyDevicesPage, "page_mydevices"}, {BuyVIPPage, "page_buyvip"}};
+} PageConstNames[7]
+    = {{AuthPage, "page_auth"},
+       {CabinetPage, "page_cabinet"},
+       {LongInfoPage, "page_adsmalware"},
+       {LoaderPage, "page_loader"},
+       {DevicesPage, "page_devices"},
+       {MyDevicesPage, "page_mydevices"},
+       {BuyVIPPage, "page_buyvip"}};
 
 namespace
 {
-    class HorizontalWheelFilter : public QObject
+class HorizontalWheelFilter : public QObject
+{
+public:
+    explicit HorizontalWheelFilter(QScrollArea *scrollArea)
+        : QObject(scrollArea)
+        , m_scrollArea(scrollArea)
+    {}
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override
     {
-    public:
-        explicit HorizontalWheelFilter(QScrollArea *scrollArea) : QObject(scrollArea), m_scrollArea(scrollArea)
+        if (event->type() == QEvent::Wheel && m_scrollArea)
         {
-        }
-
-    protected:
-        bool eventFilter(QObject *obj, QEvent *event) override
-        {
-            if(event->type() == QEvent::Wheel && m_scrollArea)
+            QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
+            int delta = wheelEvent->angleDelta().y();
+            if (delta == 0)
+                delta = wheelEvent->angleDelta().x();
+            if (delta != 0)
             {
-                QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
-                int delta = wheelEvent->angleDelta().y();
-                if(delta == 0)
-                    delta = wheelEvent->angleDelta().x();
-                if(delta != 0)
-                {
-                    QScrollBar *hBar = m_scrollArea->horizontalScrollBar();
-                    if(hBar)
-                        hBar->setValue(hBar->value() - delta);
-                    return true;
-                }
+                QScrollBar *hBar = m_scrollArea->horizontalScrollBar();
+                if (hBar)
+                    hBar->setValue(hBar->value() - delta);
+                return true;
             }
-            return QObject::eventFilter(obj, event);
         }
+        return QObject::eventFilter(obj, event);
+    }
 
-    private:
-        QScrollArea *m_scrollArea;
-    };
+private:
+    QScrollArea *m_scrollArea;
+};
 
-    class CapsuleFocusFilter : public QObject
+class CapsuleFocusFilter : public QObject
+{
+public:
+    explicit CapsuleFocusFilter(QWidget *capsule)
+        : QObject(capsule)
+        , m_capsule(capsule)
+    {}
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override
     {
-    public:
-        explicit CapsuleFocusFilter(QWidget *capsule) : QObject(capsule), m_capsule(capsule)
-        {
-        }
-
-    protected:
-        bool eventFilter(QObject *obj, QEvent *event) override
-        {
-            if(!m_capsule)
-                return QObject::eventFilter(obj, event);
-
-            if(event->type() == QEvent::FocusIn)
-            {
-                m_capsule->setProperty("focused", true);
-                m_capsule->style()->unpolish(m_capsule);
-                m_capsule->style()->polish(m_capsule);
-            }
-            else if(event->type() == QEvent::FocusOut)
-            {
-                m_capsule->setProperty("focused", false);
-                m_capsule->style()->unpolish(m_capsule);
-                m_capsule->style()->polish(m_capsule);
-            }
+        if (!m_capsule)
             return QObject::eventFilter(obj, event);
-        }
 
-    private:
-        QWidget *m_capsule;
-    };
+        if (event->type() == QEvent::FocusIn)
+        {
+            m_capsule->setProperty("focused", true);
+            m_capsule->style()->unpolish(m_capsule);
+            m_capsule->style()->polish(m_capsule);
+        }
+        else if (event->type() == QEvent::FocusOut)
+        {
+            m_capsule->setProperty("focused", false);
+            m_capsule->style()->unpolish(m_capsule);
+            m_capsule->style()->polish(m_capsule);
+        }
+        return QObject::eventFilter(obj, event);
+    }
+
+private:
+    QWidget *m_capsule;
+};
 } // namespace
 
 void MainWindow::setupWindowLayoutAndAnim()
 {
     // Refresh TabPages to Content widget (Selective)
     QList<QWidget *> _w;
-    for(int x = 0; x < ui->tabWidget->count(); ++x)
+    for (int x = 0; x < ui->tabWidget->count(); ++x)
         _w << ui->tabWidget->widget(x);
 
-    for(const auto &item : std::as_const(PageConstNames))
+    for (const auto &item : std::as_const(PageConstNames))
     {
-        auto iter = std::find_if(_w.begin(), _w.end(), [&item](const QWidget *it) { return it->objectName() == item.widgetName; });
-        if(iter != std::end(_w))
+        auto iter = std::find_if(
+            _w.begin(), _w.end(), [&item](const QWidget *it) { return it->objectName() == item.widgetName; });
+        if (iter != std::end(_w))
             pages.insert(item.index, *iter);
     }
 
@@ -167,7 +177,7 @@ void MainWindow::setupWindowLayoutAndAnim()
     // Top header back to main page.
     ui->contentLayout->layout()->addWidget(ui->toplevel_backpage);
 
-    for(int x = 0; x < _w.count(); ++x)
+    for (int x = 0; x < _w.count(); ++x)
         ui->contentLayout->layout()->addWidget(_w[x]);
 
     // Embedded pages for File Manager and APK Manager
@@ -245,7 +255,7 @@ void MainWindow::setupWindowLayoutAndAnim()
     // Font init
     int fontId = QFontDatabase::addApplicationFont(":/resources/font-DigitalNumbers");
     QStringList fontFamils = QFontDatabase::applicationFontFamilies(fontId);
-    if(!fontFamils.isEmpty())
+    if (!fontFamils.isEmpty())
     {
         QString fontFamily = fontFamils.first();
         malwareProgressCircle->setStyleSheet(QString("QWidget { Font-family: '%1'; }").arg(fontFamily));
@@ -253,7 +263,7 @@ void MainWindow::setupWindowLayoutAndAnim()
 
     snows = nullptr;
     QDate d = QDate::currentDate();
-    if(d >= QDate(d.year(), 12, 20) || d <= QDate(d.year(), 2, 1))
+    if (d >= QDate(d.year(), 12, 20) || d <= QDate(d.year(), 2, 1))
     {
         // ADD Snowflakes
         snows = new Snowflake(this, 50);
@@ -277,9 +287,9 @@ void MainWindow::setupWindowLayoutAndAnim()
 void MainWindow::setupAiPanel()
 {
     // Modern AI Panel configuration
-    if(ui->aiToolBoxToggle && ui->aiToolBoxContainer)
+    if (ui->aiToolBoxToggle && ui->aiToolBoxContainer)
     {
-        if(ui->horizontalLayout_ai)
+        if (ui->horizontalLayout_ai)
         {
             ui->horizontalLayout_ai->setContentsMargins(0, 0, 0, 0);
             ui->horizontalLayout_ai->setSpacing(0);
@@ -290,13 +300,13 @@ void MainWindow::setupAiPanel()
         ui->aiToolBoxToggle->setCursor(Qt::PointingHandCursor);
 
         // Detach pages from legacy QToolBox and embed modern aiPanel into horizontalLayout_ai
-        if(ui->aiToolBox)
+        if (ui->aiToolBox)
         {
-            while(ui->aiToolBox->count() > 0)
+            while (ui->aiToolBox->count() > 0)
             {
                 ui->aiToolBox->removeItem(0);
             }
-            if(ui->horizontalLayout_ai)
+            if (ui->horizontalLayout_ai)
             {
                 ui->horizontalLayout_ai->removeWidget(ui->aiToolBox);
                 ui->aiToolBox->hide();
@@ -309,7 +319,7 @@ void MainWindow::setupAiPanel()
         aiPanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         aiPanel->setMinimumHeight(520);
 
-        if(ui->horizontalLayout_ai)
+        if (ui->horizontalLayout_ai)
         {
             ui->horizontalLayout_ai->insertWidget(0, aiPanel, 1);
             ui->horizontalLayout_ai->setStretch(0, 1);
@@ -388,31 +398,20 @@ void MainWindow::setupAiPanel()
         aiStack->addWidget(ui->aiToolBoxPage2);
         aiPanelLayout->addWidget(aiStack, 1);
 
-        QObject::connect(
-            tabChatBtn,
-            &QPushButton::clicked,
-            this,
-            [aiStack, tabChatBtn, tabInfoBtn]()
-            {
-                aiStack->setCurrentIndex(0);
-                tabChatBtn->setChecked(true);
-                tabInfoBtn->setChecked(false);
-            });
-        QObject::connect(
-            tabInfoBtn,
-            &QPushButton::clicked,
-            this,
-            [aiStack, tabChatBtn, tabInfoBtn]()
-            {
-                aiStack->setCurrentIndex(1);
-                tabChatBtn->setChecked(false);
-                tabInfoBtn->setChecked(true);
-            });
+        QObject::connect(tabChatBtn, &QPushButton::clicked, this, [aiStack, tabChatBtn, tabInfoBtn]() {
+            aiStack->setCurrentIndex(0);
+            tabChatBtn->setChecked(true);
+            tabInfoBtn->setChecked(false);
+        });
+        QObject::connect(tabInfoBtn, &QPushButton::clicked, this, [aiStack, tabChatBtn, tabInfoBtn]() {
+            aiStack->setCurrentIndex(1);
+            tabChatBtn->setChecked(false);
+            tabInfoBtn->setChecked(true);
+        });
 
         // Collapse / Expand toggle logic
-        auto setAiPanelExpanded = [this, aiPanel](bool expanded)
-        {
-            if(expanded)
+        auto setAiPanelExpanded = [this, aiPanel](bool expanded) {
+            if (expanded)
             {
                 ui->aiToolBoxToggle->setVisible(false);
                 aiPanel->setVisible(true);
@@ -431,12 +430,15 @@ void MainWindow::setupAiPanel()
             }
         };
 
-        QObject::connect(headerCollapseBtn, &QPushButton::clicked, this, [setAiPanelExpanded]() { setAiPanelExpanded(false); });
+        QObject::connect(
+            headerCollapseBtn, &QPushButton::clicked, this, [setAiPanelExpanded]() { setAiPanelExpanded(false); });
 
-        QObject::connect(ui->aiToolBoxToggle, &QPushButton::clicked, this, [setAiPanelExpanded, aiPanel]() { setAiPanelExpanded(!aiPanel->isVisible()); });
+        QObject::connect(ui->aiToolBoxToggle, &QPushButton::clicked, this, [setAiPanelExpanded, aiPanel]() {
+            setAiPanelExpanded(!aiPanel->isVisible());
+        });
 
         // Setup Page 2: About AI info
-        if(ui->aboutAi_edit)
+        if (ui->aboutAi_edit)
         {
             ui->aboutAi_edit->setHtml(
                 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"
@@ -470,33 +472,31 @@ void MainWindow::setupAiPanel()
 
         QCheckBox *analyticsConsent = new QCheckBox(QString::fromUtf8("Отправлять аналитику"), ui->aiToolBoxPage2);
         analyticsConsent->setObjectName("analyticsConsentCheckBox");
-        analyticsConsent->setToolTip(QString::fromUtf8("Разрешить передачу сведений об ОС и взаимодействии с окном вместе с запросом к ИИ"));
+        analyticsConsent->setToolTip(
+            QString::fromUtf8("Разрешить передачу сведений об ОС и взаимодействии с окном вместе с запросом к ИИ"));
         analyticsConsent->setChecked(AppSetting::analyticsEnabled());
-        analyticsConsent->setStyleSheet("QCheckBox { color: #CBD5E1; spacing: 8px; padding: 6px 8px; } QCheckBox::indicator { width: 16px; height: 16px; }");
-        if(auto *infoLayout = qobject_cast<QGridLayout *>(ui->aiToolBoxPage2->layout()))
+        analyticsConsent->setStyleSheet(
+            "QCheckBox { color: #CBD5E1; spacing: 8px; padding: 6px 8px; } QCheckBox::indicator { width: 16px; height: "
+            "16px; }");
+        if (auto *infoLayout = qobject_cast<QGridLayout *>(ui->aiToolBoxPage2->layout()))
         {
             infoLayout->addWidget(analyticsConsent, 1, 0);
             infoLayout->setRowStretch(0, 1);
         }
-        connect(
-            analyticsConsent,
-            &QCheckBox::toggled,
-            this,
-            [](bool enabled)
-            {
-                AppSetting::analyticsEnabled(nullptr, enabled);
-                AppSetting::save();
-            });
+        connect(analyticsConsent, &QCheckBox::toggled, this, [](bool enabled) {
+            AppSetting::analyticsEnabled(nullptr, enabled);
+            AppSetting::save();
+        });
 
         // Setup Page 1: Chat interface
         ui->aiToolBoxPage1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
         // Clean out legacy designer layout immediately before creating Page 1 widgets
         QLayout *oldPage1Layout = ui->aiToolBoxPage1->layout();
-        if(oldPage1Layout)
+        if (oldPage1Layout)
         {
             QLayoutItem *item;
-            while((item = oldPage1Layout->takeAt(0)) != nullptr)
+            while ((item = oldPage1Layout->takeAt(0)) != nullptr)
             {
                 delete item;
             }
@@ -564,25 +564,28 @@ void MainWindow::setupAiPanel()
             {":/svg/credit-card", {"Мои кредиты", "Сколько кредитов?", "Остаток баланса?", "Показать баланс"}},
             {":/svg/crown", {"VIP статус", "Остаток VIP дней", "Сколько VIP дней?", "Когда истекает VIP?"}},
             {":/svg/smartphone", {"Мои устройства", "Список устройств", "Активные девайсы", "Привязанные устройства"}},
-            {":/svg/shield", {"Удаление рекламы", "Запусти удаление рекламы", "Какие есть сервисы?", "Открой окно покупки VIP"}},
+            {":/svg/shield",
+             {"Удаление рекламы", "Запусти удаление рекламы", "Какие есть сервисы?", "Открой окно покупки VIP"}},
             {":/svg/zap", {"Быстрая очистка", "Остановить приложения", "Очистить кэш", "Как закрыть вирусы?"}},
             {":/svg/rocket", {"Ускорить телефон", "Как очистить ОЗУ?", "Оптимизация системы", "Ускорить работу"}},
-            {":/svg/lightbulb", {"Что ты умеешь?", "Возможности AdsKiller", "Справка по функциям", "Чем можешь помочь?"}},
+            {":/svg/lightbulb",
+             {"Что ты умеешь?", "Возможности AdsKiller", "Справка по функциям", "Чем можешь помочь?"}},
             {":/svg/mail", {"Моя почта", "Мой email", "Какая у меня почта?", "Адрес эл. почты"}},
             {":/svg/shopping-cart", {"Купить кредиты", "Как купить VIP?", "Пополнение баланса", "Тарифы и цены"}},
             {":/svg/lock", {"Безопасность", "Безопасно ли это?", "Как включить отладку?", "Как подключить телефон?"}},
-            {":/svg/bar-chart", {"Статистика", "Заблокированная реклама", "Отчет блокировки", "Сколько рекламы скрыто?"}},
-            {":/svg/clipboard", {"Как пользоваться?", "Инструкция для новичка", "Быстрый старт", "Помощь по приложению"}}};
+            {":/svg/bar-chart",
+             {"Статистика", "Заблокированная реклама", "Отчет блокировки", "Сколько рекламы скрыто?"}},
+            {":/svg/clipboard",
+             {"Как пользоваться?", "Инструкция для новичка", "Быстрый старт", "Помощь по приложению"}}};
 
         auto questionsPtr = std::make_shared<QList<QuickQuestion>>(quickQuestions);
 
-        auto populateRandomButtons = [this, quickButtonsWidget, quickButtonsLayout, scrollArea, questionsPtr]()
-        {
+        auto populateRandomButtons = [this, quickButtonsWidget, quickButtonsLayout, scrollArea, questionsPtr]() {
             // Clear existing buttons from layout
             QLayoutItem *child;
-            while((child = quickButtonsLayout->takeAt(0)) != nullptr)
+            while ((child = quickButtonsLayout->takeAt(0)) != nullptr)
             {
-                if(child->widget())
+                if (child->widget())
                     delete child->widget();
                 delete child;
             }
@@ -590,7 +593,7 @@ void MainWindow::setupAiPanel()
             // Shuffle questions randomly
             std::shuffle(questionsPtr->begin(), questionsPtr->end(), *QRandomGenerator::global());
 
-            for(int i = 0; i < questionsPtr->size(); ++i)
+            for (int i = 0; i < questionsPtr->size(); ++i)
             {
                 const auto &qData = (*questionsPtr)[i];
                 int initialIdx = QRandomGenerator::global()->bounded(qData.variations.size());
@@ -608,27 +611,30 @@ void MainWindow::setupAiPanel()
                     btn,
                     &QPushButton::clicked,
                     this,
-                    [this, btn, iconRes = qData.iconRes, variations = qData.variations, lastIdx = initialIdx]() mutable
-                    {
-                        if(!ui->aiChatSend->isEnabled())
+                    [this,
+                     btn,
+                     iconRes = qData.iconRes,
+                     variations = qData.variations,
+                     lastIdx = initialIdx]() mutable {
+                        if (!ui->aiChatSend->isEnabled())
                             return;
                         QString textToSend = variations[lastIdx];
                         ui->aiChatEdit->setText(textToSend);
                         ui->aiChatSend->click();
 
-                        if(variations.size() > 1)
+                        if (variations.size() > 1)
                         {
                             int r;
                             do
                             {
                                 r = QRandomGenerator::global()->bounded(variations.size());
-                            } while(r == lastIdx);
+                            } while (r == lastIdx);
                             lastIdx = r;
                             btn->setText(variations[r]);
                         }
                     });
             }
-            if(scrollArea->horizontalScrollBar())
+            if (scrollArea->horizontalScrollBar())
                 scrollArea->horizontalScrollBar()->setValue(0);
         };
 
@@ -670,7 +676,7 @@ void MainWindow::setupAiPanel()
         page1Layout->addWidget(inputCapsule, 0);
 
         // Activate container layout and ensure all components are visible
-        if(ui->aiToolBoxContainer->layout())
+        if (ui->aiToolBoxContainer->layout())
             ui->aiToolBoxContainer->layout()->activate();
 
         // Explicitly show all components to ensure nothing remains hidden
@@ -705,20 +711,15 @@ void MainWindow::setupRadioPlayer()
     addToolBar(Qt::TopToolBarArea, radioToolBar);
 
     // Hide toolbar when close button is clicked
-    connect(
-        radioPlayer,
-        &RadioPlayerWidget::requestClose,
-        this,
-        [this]()
+    connect(radioPlayer, &RadioPlayerWidget::requestClose, this, [this]() {
+        if (radioToolBar)
         {
-            if(radioToolBar)
-            {
-                radioToolBar->setVisible(false);
-            }
-        });
+            radioToolBar->setVisible(false);
+        }
+    });
 
     // Add "Радио" menu to QMenuBar
-    if(ui->menubar)
+    if (ui->menubar)
     {
         QMenu *radioMenu = ui->menubar->addMenu(QString::fromUtf8("Радио"));
         radioMenu->setIcon(QIcon(":/svg/radio"));
@@ -730,116 +731,129 @@ void MainWindow::setupRadioPlayer()
 
         radioMenu->addSeparator();
 
-        QAction *playPauseAct = radioMenu->addAction(QIcon(":/svg/play"), QString::fromUtf8("Воспроизведение / Пауза"), radioPlayer, &RadioPlayerWidget::togglePlay);
+        QAction *playPauseAct = radioMenu->addAction(
+            QIcon(":/svg/play"),
+            QString::fromUtf8("Воспроизведение / Пауза"),
+            radioPlayer,
+            &RadioPlayerWidget::togglePlay);
         playPauseAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Space));
 
-        QAction *nextStationAct = radioMenu->addAction(QIcon(":/svg/skip-forward"), QString::fromUtf8("Следующая станция"), radioPlayer, &RadioPlayerWidget::nextStation);
+        QAction *nextStationAct = radioMenu->addAction(
+            QIcon(":/svg/skip-forward"),
+            QString::fromUtf8("Следующая станция"),
+            radioPlayer,
+            &RadioPlayerWidget::nextStation);
         nextStationAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Right));
 
-        QAction *prevStationAct = radioMenu->addAction(QIcon(":/svg/skip-back"), QString::fromUtf8("Предыдущая станция"), radioPlayer, &RadioPlayerWidget::previousStation);
+        QAction *prevStationAct = radioMenu->addAction(
+            QIcon(":/svg/skip-back"),
+            QString::fromUtf8("Предыдущая станция"),
+            radioPlayer,
+            &RadioPlayerWidget::previousStation);
         prevStationAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Left));
 
         radioMenu->addSeparator();
 
         QMenu *stationsSubMenu = radioMenu->addMenu(QString::fromUtf8("Выбрать станцию"));
         const auto &stations = radioPlayer->stations();
-        for(int i = 0; i < stations.size(); ++i)
+        for (int i = 0; i < stations.size(); ++i)
         {
             const auto &st = stations[i];
             QAction *stAct = stationsSubMenu->addAction(QStringLiteral("%1 (%2)").arg(st.name, st.genre));
-            connect(
-                stAct,
-                &QAction::triggered,
-                radioPlayer,
-                [this, i]()
+            connect(stAct, &QAction::triggered, radioPlayer, [this, i]() {
+                radioPlayer->setStationIndex(i);
+                if (!radioPlayer->isPlaying())
                 {
-                    radioPlayer->setStationIndex(i);
-                    if(!radioPlayer->isPlaying())
-                    {
-                        radioPlayer->play();
-                    }
-                });
+                    radioPlayer->play();
+                }
+            });
         }
 
         radioMenu->addSeparator();
-        radioMenu->addAction(QIcon(":/svg/plus"), QString::fromUtf8("Добавить свою радиостанцию..."), radioPlayer, &RadioPlayerWidget::showAddStationDialog);
+        radioMenu->addAction(
+            QIcon(":/svg/plus"),
+            QString::fromUtf8("Добавить свою радиостанцию..."),
+            radioPlayer,
+            &RadioPlayerWidget::showAddStationDialog);
     }
 }
 
 void MainWindow::setupPagesDesign()
 {
-    if(ui->contentLayout)
+    if (ui->contentLayout)
         ui->contentLayout->setAttribute(Qt::WA_StyledBackground, true);
-    if(ui->toplevel_up)
+    if (ui->toplevel_up)
         ui->toplevel_up->setAttribute(Qt::WA_StyledBackground, true);
-    if(ui->toplevel_backpage)
+    if (ui->toplevel_backpage)
         ui->toplevel_backpage->setAttribute(Qt::WA_StyledBackground, true);
 
-    for(auto *page : pages.values())
+    for (auto *page : pages.values())
     {
-        if(page)
+        if (page)
             page->setAttribute(Qt::WA_StyledBackground, true);
     }
 
     // ==========================================
     // 1. Auth Page (page_auth)
     // ==========================================
-    if(ui->page_auth)
+    if (ui->page_auth)
     {
         ui->page_auth->setAttribute(Qt::WA_StyledBackground, true);
     }
-    if(ui->gridLayout_asd2)
+    if (ui->gridLayout_asd2)
     {
         ui->gridLayout_asd2->setAlignment(Qt::AlignCenter);
     }
 
-    if(ui->frame_4)
+    if (ui->frame_4)
     {
         ui->frame_4->setAttribute(Qt::WA_StyledBackground, true);
         ui->frame_4->setFixedSize(400, 520);
     }
 
-    if(ui->mainapplogo)
+    if (ui->mainapplogo)
     {
         ui->mainapplogo->setFixedSize(68, 68);
         bool isHoliday = (QDate::currentDate().month() == 12 || QDate::currentDate().month() == 1);
         ui->mainapplogo->setProperty("holiday", isHoliday);
     }
 
-    if(ui->label_4)
+    if (ui->label_4)
     {
         ui->label_4->setTextFormat(Qt::RichText);
         ui->label_4->setAlignment(Qt::AlignCenter);
         ui->label_4->setText(
             "<div align='center'>"
-            "<span style='font-size: 20px; font-weight: 700; color: #F8FAFC; letter-spacing: 0.5px;'>AdsKiller Desktop</span><br>"
-            "<span style='font-size: 13px; font-weight: 400; color: #94A3B8;'>Авторизуйтесь для доступа к сервисам</span>"
+            "<span style='font-size: 20px; font-weight: 700; color: #F8FAFC; letter-spacing: 0.5px;'>AdsKiller "
+            "Desktop</span><br>"
+            "<span style='font-size: 13px; font-weight: 400; color: #94A3B8;'>Авторизуйтесь для доступа к "
+            "сервисам</span>"
             "</div>");
     }
 
-    if(ui->label_12)
+    if (ui->label_12)
     {
         ui->label_12->setText("ЛОГИН или EMAIL");
     }
 
-    if(ui->lineLoginEdit)
+    if (ui->lineLoginEdit)
     {
         ui->lineLoginEdit->setFixedHeight(42);
         ui->lineLoginEdit->setPlaceholderText("Логин или электронная почта");
     }
 
-    if(ui->label_14)
+    if (ui->label_14)
     {
         ui->label_14->setText("ПАРОЛЬ");
     }
 
-    if(ui->linePassEdit)
+    if (ui->linePassEdit)
     {
         ui->linePassEdit->setFixedHeight(42);
         ui->linePassEdit->setPlaceholderText("Пароль");
     }
 
-    if(ui->butShowPass)
+    if (ui->butShowPass)
     {
         ui->butShowPass->setText(QString());
         ui->butShowPass->setIcon(QIcon(":/svg/eye"));
@@ -849,70 +863,71 @@ void MainWindow::setupPagesDesign()
         ui->butShowPass->setFixedSize(42, 42);
     }
 
-    if(ui->checkAutoLogin)
+    if (ui->checkAutoLogin)
     {
         ui->checkAutoLogin->setCursor(Qt::PointingHandCursor);
         ui->checkAutoLogin->setText("Войти при запуске");
     }
 
-    if(ui->label_2)
+    if (ui->label_2)
     {
         ui->label_2->setCursor(Qt::PointingHandCursor);
-        ui->label_2->setText("<a href=\"index\" style=\"color: #38BDF8; text-decoration: none;\">Забыли логин или пароль?</a>");
+        ui->label_2->setText(
+            "<a href=\"index\" style=\"color: #38BDF8; text-decoration: none;\">Забыли логин или пароль?</a>");
     }
 
-    if(ui->authButton)
+    if (ui->authButton)
     {
         ui->authButton->setText("Войти в систему");
         ui->authButton->setFixedHeight(44);
         ui->authButton->setCursor(Qt::PointingHandCursor);
     }
 
-    if(ui->statusAuthText)
+    if (ui->statusAuthText)
     {
         ui->statusAuthText->setAlignment(Qt::AlignCenter);
         ui->statusAuthText->setWordWrap(true);
     }
 
-    if(ui->label_auth_ver)
+    if (ui->label_auth_ver)
     {
         ui->label_auth_ver->setAlignment(Qt::AlignCenter);
         ui->label_auth_ver->setText("Версия: " + runtimeVersion.mVersion.toString());
     }
 
     // Assemble modern responsive layout for frame_4
-    if(ui->frame_4 && !ui->frame_4->layout())
+    if (ui->frame_4 && !ui->frame_4->layout())
     {
         QVBoxLayout *cardLayout = new QVBoxLayout(ui->frame_4);
         cardLayout->setContentsMargins(22, 18, 22, 14);
         cardLayout->setSpacing(0);
 
         // 1. App logo badge
-        if(ui->mainapplogo)
+        if (ui->mainapplogo)
             cardLayout->addWidget(ui->mainapplogo, 0, Qt::AlignHCenter);
 
         cardLayout->addSpacing(8);
 
         // 2. Title and Subtitle
-        if(ui->label_4)
+        if (ui->label_4)
             cardLayout->addWidget(ui->label_4);
 
         cardLayout->addSpacing(8);
 
         // 3. Login label
-        if(ui->label_12)
+        if (ui->label_12)
             cardLayout->addWidget(ui->label_12);
 
         cardLayout->addSpacing(4);
 
         // 4. Login input
-        if(ui->lineLoginEdit)
+        if (ui->lineLoginEdit)
             cardLayout->addWidget(ui->lineLoginEdit);
 
         cardLayout->addSpacing(8);
 
         // 5. Password label
-        if(ui->label_14)
+        if (ui->label_14)
             cardLayout->addWidget(ui->label_14);
 
         cardLayout->addSpacing(4);
@@ -921,9 +936,9 @@ void MainWindow::setupPagesDesign()
         QHBoxLayout *passRow = new QHBoxLayout();
         passRow->setContentsMargins(0, 0, 0, 0);
         passRow->setSpacing(8);
-        if(ui->linePassEdit)
+        if (ui->linePassEdit)
             passRow->addWidget(ui->linePassEdit, 1);
-        if(ui->butShowPass)
+        if (ui->butShowPass)
             passRow->addWidget(ui->butShowPass, 0);
         cardLayout->addLayout(passRow);
 
@@ -932,10 +947,10 @@ void MainWindow::setupPagesDesign()
         // 7. Options row (Auto login + Forgot token)
         QHBoxLayout *optRow = new QHBoxLayout();
         optRow->setContentsMargins(0, 0, 0, 0);
-        if(ui->checkAutoLogin)
+        if (ui->checkAutoLogin)
             optRow->addWidget(ui->checkAutoLogin, 0, Qt::AlignVCenter);
         optRow->addStretch(1);
-        if(ui->label_2)
+        if (ui->label_2)
             optRow->addWidget(ui->label_2, 0, Qt::AlignVCenter);
         cardLayout->addLayout(optRow);
 
@@ -956,11 +971,14 @@ void MainWindow::setupPagesDesign()
         consentLabel->setText(
             "<span style='color:#94A3B8;'>"
             "Я согласен с "
-            "<a href='https://adskiller.imister.tech#TERMS' style='color:#38BDF8; text-decoration:none;'>условиями соглашения</a>"
+            "<a href='https://adskiller.imister.tech#TERMS' style='color:#38BDF8; text-decoration:none;'>условиями "
+            "соглашения</a>"
             ", "
-            "<a href='https://adskiller.imister.tech#PRIVACY' style='color:#38BDF8; text-decoration:none;'>политикой конфиден.</a>"
+            "<a href='https://adskiller.imister.tech#PRIVACY' style='color:#38BDF8; text-decoration:none;'>политикой "
+            "конфиден.</a>"
             " и "
-            "<a href='https://adskiller.imister.tech#LICENSE' style='color:#38BDF8; text-decoration:none;'>лицензией</a>"
+            "<a href='https://adskiller.imister.tech#LICENSE' style='color:#38BDF8; "
+            "text-decoration:none;'>лицензией</a>"
             "</span>");
 
         QHBoxLayout *consentRow = new QHBoxLayout();
@@ -973,7 +991,7 @@ void MainWindow::setupPagesDesign()
         cardLayout->addSpacing(6);
 
         // 9. Sign In CTA button
-        if(ui->authButton)
+        if (ui->authButton)
         {
             ui->authButton->setEnabled(false);
             cardLayout->addWidget(ui->authButton);
@@ -983,34 +1001,34 @@ void MainWindow::setupPagesDesign()
         cardLayout->addSpacing(6);
 
         // 10. Status text banner
-        if(ui->statusAuthText)
+        if (ui->statusAuthText)
             cardLayout->addWidget(ui->statusAuthText);
 
         cardLayout->addStretch(1);
 
         // 11. Version footer
-        if(ui->label_auth_ver)
+        if (ui->label_auth_ver)
             cardLayout->addWidget(ui->label_auth_ver);
 
         // Connect Enter key navigation
-        if(ui->lineLoginEdit && ui->linePassEdit)
+        if (ui->lineLoginEdit && ui->linePassEdit)
             connect(ui->lineLoginEdit, &QLineEdit::returnPressed, [this]() { ui->linePassEdit->setFocus(); });
-        if(ui->linePassEdit && ui->authButton)
+        if (ui->linePassEdit && ui->authButton)
             connect(ui->linePassEdit, &QLineEdit::returnPressed, ui->authButton, &QPushButton::click);
     }
 
     // ==========================================
     // 2. Cabinet Page (page_cabinet)
     // ==========================================
-    if(ui->scrollArea_3)
+    if (ui->scrollArea_3)
     {
         ui->scrollArea_3->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     }
-    if(ui->logoutButton)
+    if (ui->logoutButton)
     {
         ui->logoutButton->setCursor(Qt::PointingHandCursor);
     }
-    if(ui->authpageUpdate)
+    if (ui->authpageUpdate)
     {
         ui->authpageUpdate->setText(QString::fromUtf8("Обновить"));
         ui->authpageUpdate->setMinimumSize(105, 30);
@@ -1018,28 +1036,28 @@ void MainWindow::setupPagesDesign()
         ui->authpageUpdate->setCursor(Qt::PointingHandCursor);
         ui->authpageUpdate->setToolTip(QString::fromUtf8("Обновить данные кабинета и доступность сервисов"));
     }
-    if(ui->frame_5)
+    if (ui->frame_5)
         ui->frame_5->hide();
-    if(ui->frame_6)
+    if (ui->frame_6)
         ui->frame_6->hide();
 
-    if(ui->horizontalLayout)
+    if (ui->horizontalLayout)
     {
         ui->horizontalLayout->setContentsMargins(14, 8, 14, 4);
         ui->horizontalLayout->setSpacing(0);
-        if(ui->horizontalSpacer_8)
+        if (ui->horizontalSpacer_8)
             ui->horizontalSpacer_8->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
-        if(ui->horizontalSpacer_9)
+        if (ui->horizontalSpacer_9)
             ui->horizontalSpacer_9->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
     }
 
-    if(ui->authedMainWin)
+    if (ui->authedMainWin)
     {
-        if(ui->authedMainWin->layout())
+        if (ui->authedMainWin->layout())
         {
-            if(ui->frame_3)
+            if (ui->frame_3)
                 ui->authedMainWin->layout()->removeWidget(ui->frame_3);
-            if(ui->labelLoginAuthed)
+            if (ui->labelLoginAuthed)
                 ui->authedMainWin->layout()->removeWidget(ui->labelLoginAuthed);
             delete ui->authedMainWin->layout();
         }
@@ -1051,7 +1069,7 @@ void MainWindow::setupPagesDesign()
         authLayout->setContentsMargins(0, 0, 0, 0);
         authLayout->setSpacing(10);
 
-        if(ui->frame_3)
+        if (ui->frame_3)
         {
             ui->frame_3->setFixedSize(36, 36);
             authLayout->addWidget(ui->frame_3, 0, Qt::AlignVCenter);
@@ -1061,7 +1079,7 @@ void MainWindow::setupPagesDesign()
         userCol->setContentsMargins(0, 0, 0, 0);
         userCol->setSpacing(1);
 
-        if(ui->labelLoginAuthed)
+        if (ui->labelLoginAuthed)
         {
             QFont font = ui->labelLoginAuthed->font();
             font.setPointSize(12);
@@ -1069,32 +1087,35 @@ void MainWindow::setupPagesDesign()
             font.setUnderline(false);
             ui->labelLoginAuthed->setFont(font);
             ui->labelLoginAuthed->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-            ui->labelLoginAuthed->setStyleSheet("color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
+            ui->labelLoginAuthed->setStyleSheet(
+                "color: #F8FAFC; font-size: 14px; font-weight: bold; background: transparent; border: none;");
             userCol->addWidget(ui->labelLoginAuthed);
         }
 
         QLabel *roleLbl = ui->authedMainWin->findChild<QLabel *>("cabinetRoleBadge");
-        if(!roleLbl)
+        if (!roleLbl)
         {
             roleLbl = new QLabel(QString::fromUtf8("Основной аккаунт"), ui->authedMainWin);
             roleLbl->setObjectName("cabinetRoleBadge");
-            roleLbl->setStyleSheet("color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: transparent; border: none;");
+            roleLbl->setStyleSheet(
+                "color: #64748B; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; "
+                "background: transparent; border: none;");
         }
         userCol->addWidget(roleLbl);
 
         authLayout->addLayout(userCol);
 
         QLabel *onlineBadge = ui->authedMainWin->findChild<QLabel *>("cabinetOnlineBadge");
-        if(onlineBadge)
+        if (onlineBadge)
         {
             onlineBadge->hide();
             delete onlineBadge;
         }
     }
 
-    if(ui->frame_7)
+    if (ui->frame_7)
     {
-        if(!ui->frame_7->layout())
+        if (!ui->frame_7->layout())
         {
             ui->frame_7->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
             ui->frame_7->setMinimumHeight(0);
@@ -1109,7 +1130,7 @@ void MainWindow::setupPagesDesign()
             topRow->setContentsMargins(0, 0, 0, 0);
             topRow->setSpacing(8);
 
-            if(ui->authedMainWin)
+            if (ui->authedMainWin)
             {
                 topRow->addWidget(ui->authedMainWin, 0, Qt::AlignLeft | Qt::AlignVCenter);
             }
@@ -1124,50 +1145,47 @@ void MainWindow::setupPagesDesign()
             btnAddCredits->setToolTip(QString::fromUtf8("Пополнить баланс кредитов через администратора"));
             topRow->addWidget(btnAddCredits, 0, Qt::AlignRight | Qt::AlignVCenter);
 
-            QObject::connect(
-                btnAddCredits,
-                &QPushButton::clicked,
-                this,
-                [this]()
+            QObject::connect(btnAddCredits, &QPushButton::clicked, this, [this]() {
+                QMessageBox msgBox(this);
+                msgBox.setWindowTitle(QString::fromUtf8("Пополнение баланса"));
+                msgBox.setIcon(QMessageBox::Information);
+                msgBox.setText(
+                    QString::fromUtf8(
+                        "<h3>Пополнение кредитов</h3>"
+                        "<p>Для пополнения баланса кредитов напишите администратору программы в WhatsApp.</p>"
+                        "<p style='color: #94A3B8; font-size: 11px;'>Нажмите кнопку <b>«Написать в WhatsApp»</b>, "
+                        "чтобы перейти к диалогу с администратором.</p>"));
+
+                QPushButton *btnWa
+                    = msgBox.addButton(QString::fromUtf8("Написать в WhatsApp"), QMessageBox::ActionRole);
+                btnWa->setIcon(QIcon(":/svg/message-circle"));
+                btnWa->setIconSize(QSize(16, 16));
+                btnWa->setCursor(Qt::PointingHandCursor);
+                btnWa->setStyleSheet(
+                    "QPushButton {"
+                    "   background-color: #059669;"
+                    "   color: #FFFFFF;"
+                    "   font-size: 12px;"
+                    "   font-weight: bold;"
+                    "   border: 1px solid #059669;"
+                    "   border-radius: 0px;"
+                    "   padding: 6px 16px;"
+                    "   min-width: 160px;"
+                    "}"
+                    "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
+                    "QPushButton:pressed { background-color: #047857; }");
+
+                QPushButton *btnClose = msgBox.addButton(QString::fromUtf8("Закрыть"), QMessageBox::RejectRole);
+                btnClose->setCursor(Qt::PointingHandCursor);
+                msgBox.setDefaultButton(btnWa);
+
+                msgBox.exec();
+
+                if (msgBox.clickedButton() == btnWa)
                 {
-                    QMessageBox msgBox(this);
-                    msgBox.setWindowTitle(QString::fromUtf8("Пополнение баланса"));
-                    msgBox.setIcon(QMessageBox::Information);
-                    msgBox.setText(
-                        QString::fromUtf8(
-                            "<h3>Пополнение кредитов</h3>"
-                            "<p>Для пополнения баланса кредитов напишите администратору программы в WhatsApp.</p>"
-                            "<p style='color: #94A3B8; font-size: 11px;'>Нажмите кнопку <b>«Написать в WhatsApp»</b>, чтобы перейти к диалогу с администратором.</p>"));
-
-                    QPushButton *btnWa = msgBox.addButton(QString::fromUtf8("Написать в WhatsApp"), QMessageBox::ActionRole);
-                    btnWa->setIcon(QIcon(":/svg/message-circle"));
-                    btnWa->setIconSize(QSize(16, 16));
-                    btnWa->setCursor(Qt::PointingHandCursor);
-                    btnWa->setStyleSheet(
-                        "QPushButton {"
-                        "   background-color: #059669;"
-                        "   color: #FFFFFF;"
-                        "   font-size: 12px;"
-                        "   font-weight: bold;"
-                        "   border: 1px solid #059669;"
-                        "   border-radius: 0px;"
-                        "   padding: 6px 16px;"
-                        "   min-width: 160px;"
-                        "}"
-                        "QPushButton:hover { background-color: #10B981; border-color: #34D399; }"
-                        "QPushButton:pressed { background-color: #047857; }");
-
-                    QPushButton *btnClose = msgBox.addButton(QString::fromUtf8("Закрыть"), QMessageBox::RejectRole);
-                    btnClose->setCursor(Qt::PointingHandCursor);
-                    msgBox.setDefaultButton(btnWa);
-
-                    msgBox.exec();
-
-                    if(msgBox.clickedButton() == btnWa)
-                    {
-                        this->on_action_WhatsApp_triggered();
-                    }
-                });
+                    this->on_action_WhatsApp_triggered();
+                }
+            });
 
             // Кнопка "Добавить VIP"
             QPushButton *btnAddVip = new QPushButton(QString::fromUtf8("+ Добавить VIP"), ui->frame_7);
@@ -1176,7 +1194,8 @@ void MainWindow::setupPagesDesign()
             btnAddVip->setFixedHeight(26);
             btnAddVip->setStyleSheet(QStringLiteral(
                 "QPushButton {"
-                "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FDE047, stop:0.5 #F59E0B, stop:1 #D97706);"
+                "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FDE047, stop:0.5 #F59E0B, stop:1 "
+                "#D97706);"
                 "    color: #000000;"
                 "    font-size: 11px;"
                 "    font-weight: 800;"
@@ -1185,7 +1204,8 @@ void MainWindow::setupPagesDesign()
                 "    padding: 2px 10px;"
                 "}"
                 "QPushButton:hover {"
-                "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FEF08A, stop:0.5 #FBBF24, stop:1 #F59E0B);"
+                "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FEF08A, stop:0.5 #FBBF24, stop:1 "
+                "#F59E0B);"
                 "    border-color: #FDE047;"
                 "    color: #000000;"
                 "}"
@@ -1197,29 +1217,28 @@ void MainWindow::setupPagesDesign()
             btnAddVip->setToolTip(QString::fromUtf8("Оформить или продлить VIP-статус"));
             topRow->addWidget(btnAddVip, 0, Qt::AlignRight | Qt::AlignVCenter);
 
-            QObject::connect(
-                btnAddVip,
-                &QPushButton::clicked,
-                this,
-                [this]()
+            QObject::connect(btnAddVip, &QPushButton::clicked, this, [this]() {
+                for (const auto &s : std::as_const(services))
                 {
-                    for(const auto &s : std::as_const(services))
+                    if (s && s->uuid() == IDServiceVIPBuyString)
                     {
-                        if(s && s->uuid() == IDServiceVIPBuyString)
+                        if (s->active)
                         {
-                            if(s->active)
-                            {
-                                this->runService(s);
-                            }
-                            else
-                            {
-                                QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP временно недоступен."));
-                            }
-                            return;
+                            this->runService(s);
                         }
+                        else
+                        {
+                            QMessageBox::warning(
+                                this,
+                                QString::fromUtf8("Пополнение VIP"),
+                                QString::fromUtf8("Сервис пополнения VIP временно недоступен."));
+                        }
+                        return;
                     }
-                    QMessageBox::warning(this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP недоступен."));
-                });
+                }
+                QMessageBox::warning(
+                    this, QString::fromUtf8("Пополнение VIP"), QString::fromUtf8("Сервис пополнения VIP недоступен."));
+            });
 
             f7MainLayout->addLayout(topRow);
 
@@ -1238,39 +1257,40 @@ void MainWindow::setupPagesDesign()
             refLayout->setContentsMargins(0, 0, 0, 0);
             refLayout->setSpacing(0);
 
-            auto createChip = [refBar, refLayout](const QString &iconRes, const QString &caption, const QString &valObjName, const QString &initVal)
-            {
-                QFrame *chip = new QFrame(refBar);
-                chip->setObjectName("cabinetSideRow");
-                chip->setProperty("cabinetChip", true);
+            auto createChip =
+                [refBar, refLayout](
+                    const QString &iconRes, const QString &caption, const QString &valObjName, const QString &initVal) {
+                    QFrame *chip = new QFrame(refBar);
+                    chip->setObjectName("cabinetSideRow");
+                    chip->setProperty("cabinetChip", true);
 
-                QHBoxLayout *cl = new QHBoxLayout(chip);
-                cl->setContentsMargins(6, 3, 6, 3);
-                cl->setSpacing(6);
+                    QHBoxLayout *cl = new QHBoxLayout(chip);
+                    cl->setContentsMargins(6, 3, 6, 3);
+                    cl->setSpacing(6);
 
-                QLabel *iconLbl = new QLabel(chip);
-                iconLbl->setObjectName("cabinetSideIcon");
-                iconLbl->setFixedSize(18, 18);
-                iconLbl->setAlignment(Qt::AlignCenter);
-                iconLbl->setPixmap(QPixmap(iconRes).scaled(14, 14, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                cl->addWidget(iconLbl);
+                    QLabel *iconLbl = new QLabel(chip);
+                    iconLbl->setObjectName("cabinetSideIcon");
+                    iconLbl->setFixedSize(18, 18);
+                    iconLbl->setAlignment(Qt::AlignCenter);
+                    iconLbl->setPixmap(QPixmap(iconRes).scaled(14, 14, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cl->addWidget(iconLbl);
 
-                QVBoxLayout *vl = new QVBoxLayout();
-                vl->setContentsMargins(0, 0, 0, 0);
-                vl->setSpacing(1);
+                    QVBoxLayout *vl = new QVBoxLayout();
+                    vl->setContentsMargins(0, 0, 0, 0);
+                    vl->setSpacing(1);
 
-                QLabel *capLbl = new QLabel(caption, chip);
-                capLbl->setObjectName("cabinetSideCaption");
-                vl->addWidget(capLbl);
+                    QLabel *capLbl = new QLabel(caption, chip);
+                    capLbl->setObjectName("cabinetSideCaption");
+                    vl->addWidget(capLbl);
 
-                QLabel *valLbl = new QLabel(initVal, chip);
-                valLbl->setObjectName(valObjName);
-                valLbl->setProperty("cabinetVal", true);
-                vl->addWidget(valLbl);
+                    QLabel *valLbl = new QLabel(initVal, chip);
+                    valLbl->setObjectName(valObjName);
+                    valLbl->setProperty("cabinetVal", true);
+                    vl->addWidget(valLbl);
 
-                cl->addLayout(vl);
-                refLayout->addWidget(chip, 1);
-            };
+                    cl->addLayout(vl);
+                    refLayout->addWidget(chip, 1);
+                };
 
             createChip(":/svg/credit-card", QString::fromUtf8("Баланс"), "cabinetVal_credits", "-");
             createChip(":/svg/crown", QString::fromUtf8("VIP-статус"), "cabinetVal_vip", "-");
@@ -1289,11 +1309,11 @@ void MainWindow::setupPagesDesign()
         updateCabinetUserCard();
     }
 
-    if(ui->label_7)
+    if (ui->label_7)
     {
         ui->label_7->setText(QString::fromUtf8("ДОСТУПНЫЕ СЕРВИСЫ"));
     }
-    if(ui->toplevel_layout_auth_2 && !ui->toplevel_up_2->findChild<QLineEdit *>("serviceSearchEdit"))
+    if (ui->toplevel_layout_auth_2 && !ui->toplevel_up_2->findChild<QLineEdit *>("serviceSearchEdit"))
     {
         ui->toplevel_layout_auth_2->setContentsMargins(14, 4, 14, 4);
         ui->toplevel_layout_auth_2->setSpacing(10);
@@ -1324,31 +1344,31 @@ void MainWindow::setupPagesDesign()
         QObject::connect(searchEdit, &QLineEdit::textChanged, this, [this]() { this->applyServiceFilters(); });
     }
 
-    if(ui->authInfo)
+    if (ui->authInfo)
     {
         ui->authInfo->setVisible(false);
     }
 
-    if(ui->sss && ui->serviceContents)
+    if (ui->sss && ui->serviceContents)
     {
-        if(services.isEmpty())
+        if (services.isEmpty())
         {
-            if(auto *btn18 = ui->serviceContents->findChild<QPushButton *>("button_RemoveADSMalware_18"))
+            if (auto *btn18 = ui->serviceContents->findChild<QPushButton *>("button_RemoveADSMalware_18"))
             {
                 ui->serviceContents->layout()->removeWidget(btn18);
                 btn18->deleteLater();
             }
-            if(auto *btn19 = ui->serviceContents->findChild<QPushButton *>("button_RemoveADSMalware_19"))
+            if (auto *btn19 = ui->serviceContents->findChild<QPushButton *>("button_RemoveADSMalware_19"))
             {
                 ui->serviceContents->layout()->removeWidget(btn19);
                 btn19->deleteLater();
             }
         }
 
-        while(ui->sss->count() > 0)
+        while (ui->sss->count() > 0)
         {
             QLayoutItem *item = ui->sss->takeAt(0);
-            if(item->widget() && item->widget() != ui->serviceContents)
+            if (item->widget() && item->widget() != ui->serviceContents)
             {
                 item->widget()->deleteLater();
             }
@@ -1361,24 +1381,24 @@ void MainWindow::setupPagesDesign()
         ui->scrollArea_3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         ui->scrollAreaWidgetContents_3->setMinimumWidth(0);
         ui->serviceContents->setMinimumWidth(0);
-        if(ui->verticalLayout)
+        if (ui->verticalLayout)
         {
             ui->verticalLayout->setAlignment(Qt::AlignTop);
         }
 
         // Clean up any old vertical/horizontal filter panels if they exist in scroll area
-        if(auto *oldPanel = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterPanel"))
+        if (auto *oldPanel = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterPanel"))
         {
             oldPanel->deleteLater();
         }
-        if(auto *oldFilterBar = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterBar"))
+        if (auto *oldFilterBar = ui->scrollAreaWidgetContents_3->findChild<QFrame *>("cabinetFilterBar"))
         {
             oldFilterBar->deleteLater();
         }
 
         // Horizontal Quick Filters Bar (attached directly to page_cabinet between toplevel_up_2 and scrollArea_3)
         QFrame *filterBar = ui->page_cabinet->findChild<QFrame *>("cabinetFilterBar");
-        if(!filterBar)
+        if (!filterBar)
         {
             filterBar = new QFrame(ui->page_cabinet);
             filterBar->setObjectName("cabinetFilterBar");
@@ -1393,33 +1413,29 @@ void MainWindow::setupPagesDesign()
             filterGroup->setObjectName("serviceFilterGroup");
             filterGroup->setExclusive(true);
 
-            auto addFilterBtn = [this, filterBar, fLayout, filterGroup](const QString &mode, const QString &text, const QString &iconPath, bool checked = false)
-            {
-                QPushButton *btn = new QPushButton(text, filterBar);
-                btn->setObjectName("cabinetFilterBtn");
-                btn->setAccessibleName(QString("filterBtn_%1").arg(mode));
-                btn->setProperty("filterMode", mode);
-                btn->setCheckable(true);
-                btn->setChecked(checked);
-                btn->setCursor(Qt::PointingHandCursor);
-                btn->setFixedHeight(28);
-                btn->setIcon(QIcon(iconPath));
-                btn->setIconSize(QSize(14, 14));
+            auto addFilterBtn
+                = [this, filterBar, fLayout, filterGroup](
+                      const QString &mode, const QString &text, const QString &iconPath, bool checked = false) {
+                      QPushButton *btn = new QPushButton(text, filterBar);
+                      btn->setObjectName("cabinetFilterBtn");
+                      btn->setAccessibleName(QString("filterBtn_%1").arg(mode));
+                      btn->setProperty("filterMode", mode);
+                      btn->setCheckable(true);
+                      btn->setChecked(checked);
+                      btn->setCursor(Qt::PointingHandCursor);
+                      btn->setFixedHeight(28);
+                      btn->setIcon(QIcon(iconPath));
+                      btn->setIconSize(QSize(14, 14));
 
-                filterGroup->addButton(btn);
-                fLayout->addWidget(btn);
+                      filterGroup->addButton(btn);
+                      fLayout->addWidget(btn);
 
-                QObject::connect(
-                    btn,
-                    &QPushButton::toggled,
-                    this,
-                    [this](bool c)
-                    {
-                        if(c)
-                            this->applyServiceFilters();
-                    });
-                return btn;
-            };
+                      QObject::connect(btn, &QPushButton::toggled, this, [this](bool c) {
+                          if (c)
+                              this->applyServiceFilters();
+                      });
+                      return btn;
+                  };
 
             addFilterBtn("all", QString::fromUtf8("Все сервисы"), ":/svg/shuffle", true);
             addFilterBtn("available", QString::fromUtf8("Доступные"), ":/svg/check-circle");
@@ -1430,7 +1446,7 @@ void MainWindow::setupPagesDesign()
             fLayout->addStretch(1);
 
             // Insert directly between toplevel_up_2 (index 2) and scrollArea_3 (index 3)
-            if(auto *cabLayout = qobject_cast<QVBoxLayout *>(ui->page_cabinet->layout()))
+            if (auto *cabLayout = qobject_cast<QVBoxLayout *>(ui->page_cabinet->layout()))
             {
                 cabLayout->insertWidget(3, filterBar);
                 cabLayout->setStretch(0, 0); // toplevel_up
@@ -1454,7 +1470,7 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 3. Devices Connection Page (page_devices)
     // ==========================================
-    if(auto *hLayout = qobject_cast<QHBoxLayout *>(ui->page_devices->layout()))
+    if (auto *hLayout = qobject_cast<QHBoxLayout *>(ui->page_devices->layout()))
     {
         hLayout->setContentsMargins(18, 14, 18, 14);
         hLayout->setSpacing(20);
@@ -1464,7 +1480,7 @@ void MainWindow::setupPagesDesign()
         hLayout->setStretch(3, 0); // horizontalSpacer
     }
 
-    if(ui->scrollArea_2)
+    if (ui->scrollArea_2)
     {
         ui->scrollArea_2->setFrameShape(QFrame::NoFrame);
         ui->scrollArea_2->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -1472,11 +1488,11 @@ void MainWindow::setupPagesDesign()
 
     updateDevicePageInstructions(DeviceConnectType::ADB);
 
-    if(ui->device_right_group && !adbVisualizer)
+    if (ui->device_right_group && !adbVisualizer)
     {
-        while(auto item = ui->device_right_group->takeAt(0))
+        while (auto item = ui->device_right_group->takeAt(0))
         {
-            if(item->widget())
+            if (item->widget())
             {
                 item->widget()->hide();
                 item->widget()->deleteLater();
@@ -1493,7 +1509,7 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 4. Procedures & Scan Execution Page (page_adsmalware)
     // ==========================================
-    if(ui->malwareReRun)
+    if (ui->malwareReRun)
     {
         ui->malwareReRun->setCursor(Qt::PointingHandCursor);
     }
@@ -1505,15 +1521,15 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 6. My Devices & Warranty Page (page_mydevices)
     // ==========================================
-    if(ui->myDeviceQuaranteeFilter)
+    if (ui->myDeviceQuaranteeFilter)
     {
         ui->myDeviceQuaranteeFilter->setCursor(Qt::PointingHandCursor);
     }
-    if(ui->myDeviceSend)
+    if (ui->myDeviceSend)
     {
         ui->myDeviceSend->setCursor(Qt::PointingHandCursor);
     }
-    if(ui->myDeviceActual)
+    if (ui->myDeviceActual)
     {
         ui->myDeviceActual->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui->myDeviceActual->horizontalHeader()->setStretchLastSection(true);
@@ -1522,7 +1538,7 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 7. VIP Subscription Page (page_buyvip)
     // ==========================================
-    if(ui->buttonBuyVip)
+    if (ui->buttonBuyVip)
     {
         ui->buttonBuyVip->setCursor(Qt::PointingHandCursor);
     }
@@ -1530,7 +1546,7 @@ void MainWindow::setupPagesDesign()
     // ==========================================
     // 8. Top Back Bar (toplevel_backpage)
     // ==========================================
-    if(ui->buttonBackTo)
+    if (ui->buttonBackTo)
     {
         ui->buttonBackTo->setText("Назад");
         ui->buttonBackTo->setCursor(Qt::PointingHandCursor);

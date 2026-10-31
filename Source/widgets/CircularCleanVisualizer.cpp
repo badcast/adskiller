@@ -3,7 +3,9 @@
 
 #include "CircularCleanVisualizer.h"
 
-CircularCleanVisualizer::CircularCleanVisualizer(QWidget *parent) : QWidget(parent), m_tickerText("* ОЧИСТКА МУСОРА * КЭШ ПРИЛОЖЕНИЙ * THUMBNAILS * ФОНОВЫЕ ПРОЦЕССЫ * ADB CLEANER ")
+CircularCleanVisualizer::CircularCleanVisualizer(QWidget *parent)
+    : QWidget(parent)
+    , m_tickerText("* ОЧИСТКА МУСОРА * КЭШ ПРИЛОЖЕНИЙ * THUMBNAILS * ФОНОВЫЕ ПРОЦЕССЫ * ADB CLEANER ")
 {
     setFixedSize(270, 270);
     setAttribute(Qt::WA_OpaquePaintEvent, false);
@@ -35,7 +37,7 @@ void CircularCleanVisualizer::reset()
 
     // Default icon: storage clean icon from resources
     QPixmap icon(":/svg/services/storage-clean");
-    if(icon.isNull())
+    if (icon.isNull())
         icon = QPixmap(":/svg/trash");
     m_appIcon = icon.scaled(56, 56, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
@@ -48,13 +50,14 @@ void CircularCleanVisualizer::setProgress(int percent)
     update();
 }
 
-void CircularCleanVisualizer::setCurrentApp(const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusText)
+void CircularCleanVisualizer::setCurrentApp(
+    const QString &appName, const QString &pkgName, const QPixmap &icon, const QString &statusText)
 {
     m_appName = appName;
     m_pkgName = pkgName;
     m_statusText = statusText;
 
-    if(!icon.isNull())
+    if (!icon.isNull())
     {
         // Round corners for the app icon
         QPixmap rounded(56, 56);
@@ -77,9 +80,9 @@ void CircularCleanVisualizer::setRunning(bool running)
 {
     m_isRunning = running;
     m_isCompleted = false;
-    if(running)
+    if (running)
     {
-        if(!m_animTimer->isActive())
+        if (!m_animTimer->isActive())
             m_animTimer->start();
     }
     else
@@ -98,9 +101,9 @@ void CircularCleanVisualizer::setCompleted(bool completed, const QString &summar
     m_statusText = summaryText.isEmpty() ? "Все выбранные элементы очищены" : summaryText;
 
     QPixmap checkPix(":/svg/check-circle");
-    if(checkPix.isNull())
+    if (checkPix.isNull())
         checkPix = QPixmap(":/svg/check");
-    if(!checkPix.isNull())
+    if (!checkPix.isNull())
     {
         m_appIcon = checkPix.scaled(56, 56, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }
@@ -111,21 +114,21 @@ void CircularCleanVisualizer::setCompleted(bool completed, const QString &summar
 
 void CircularCleanVisualizer::onAnimationTick()
 {
-    if(m_isRunning)
+    if (m_isRunning)
     {
         // Advance circular ticker angle
         m_tickerAngle += 0.75;
-        if(m_tickerAngle >= 360.0)
+        if (m_tickerAngle >= 360.0)
             m_tickerAngle -= 360.0;
 
         // Counter-rotating particle/accent ring
         m_particleAngle -= 1.4;
-        if(m_particleAngle <= -360.0)
+        if (m_particleAngle <= -360.0)
             m_particleAngle += 360.0;
 
         // Icon pulse animation
         m_pulsePhase += 0.08;
-        if(m_iconScale < 1.0)
+        if (m_iconScale < 1.0)
         {
             m_iconScale = qMin<qreal>(1.0, m_iconScale + 0.03);
         }
@@ -152,13 +155,13 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
 
     // 1. Background radial glow
     QRadialGradient bgGlow(QPointF(cx, cy), outerR);
-    if(m_isCompleted)
+    if (m_isCompleted)
     {
         bgGlow.setColorAt(0.0, QColor(6, 78, 59, 120));
         bgGlow.setColorAt(0.7, QColor(10, 14, 26, 80));
         bgGlow.setColorAt(1.0, QColor(10, 14, 26, 0));
     }
-    else if(m_isRunning)
+    else if (m_isRunning)
     {
         bgGlow.setColorAt(0.0, QColor(2, 132, 199, 130));
         bgGlow.setColorAt(0.65, QColor(10, 14, 26, 90));
@@ -185,10 +188,10 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     p.setFont(tickerFont);
 
     int totalChars = m_tickerText.length();
-    if(totalChars > 0)
+    if (totalChars > 0)
     {
         const qreal stepDeg = 360.0 / totalChars;
-        for(int i = 0; i < totalChars; ++i)
+        for (int i = 0; i < totalChars; ++i)
         {
             qreal charAngle = m_tickerAngle + (i * stepDeg);
             qreal rad = qDegreesToRadians(charAngle);
@@ -198,13 +201,15 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
             p.rotate(charAngle + 90.0);
 
             QChar ch = m_tickerText.at(i);
-            if(ch == QChar(0x2726) || ch == QChar('*')) // symbol *
+            if (ch == QChar(0x2726) || ch == QChar('*')) // symbol *
             {
                 p.setPen(m_isCompleted ? QColor(52, 211, 153) : QColor(56, 189, 248));
             }
             else
             {
-                p.setPen(m_isCompleted ? QColor(167, 243, 208, 200) : (m_isRunning ? QColor(224, 242, 254, 220) : QColor(148, 163, 184, 150)));
+                p.setPen(
+                    m_isCompleted ? QColor(167, 243, 208, 200)
+                                  : (m_isRunning ? QColor(224, 242, 254, 220) : QColor(148, 163, 184, 150)));
             }
 
             p.drawText(QRectF(-8, -8, 16, 16), Qt::AlignCenter, QString(ch));
@@ -220,10 +225,10 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     p.setPen(QPen(QColor(15, 23, 42, 180), 5.0, Qt::SolidLine, Qt::RoundCap));
     p.drawEllipse(arcRect);
 
-    if(m_progress > 0)
+    if (m_progress > 0)
     {
         QConicalGradient arcGrad(QPointF(cx, cy), -90);
-        if(m_isCompleted)
+        if (m_isCompleted)
         {
             arcGrad.setColorAt(0.0, QColor(52, 211, 153));
             arcGrad.setColorAt(1.0, QColor(16, 185, 129));
@@ -242,7 +247,7 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     }
 
     // 5. Rotating accent dashed orbit (counter-direction)
-    if(m_isRunning)
+    if (m_isRunning)
     {
         const qreal dashR = outerR - 33.0;
         p.save();
@@ -264,17 +269,19 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     centerGrad.setColorAt(1.0, QColor(3, 7, 18, 255));
 
     p.setBrush(centerGrad);
-    QPen centerBorder(m_isCompleted ? QColor(52, 211, 153, 180) : (m_isRunning ? QColor(56, 189, 248, 160) : QColor(30, 41, 59, 200)), 2.0);
+    QPen centerBorder(
+        m_isCompleted ? QColor(52, 211, 153, 180) : (m_isRunning ? QColor(56, 189, 248, 160) : QColor(30, 41, 59, 200)),
+        2.0);
     p.setPen(centerBorder);
     p.drawEllipse(centerRect);
 
     // 7. Center App Icon with scale / pulse
-    if(!m_appIcon.isNull())
+    if (!m_appIcon.isNull())
     {
         p.save();
         p.translate(cx, cy - 8.0);
         qreal s = m_iconScale;
-        if(m_isRunning)
+        if (m_isRunning)
         {
             s *= (1.0 + 0.03 * std::sin(m_pulsePhase));
         }

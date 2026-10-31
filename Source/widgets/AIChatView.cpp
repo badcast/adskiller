@@ -9,11 +9,17 @@ static QString formatMarkdown(const QString &raw)
 
     // Code blocks ```...```
     static QRegularExpression blockCodeRe(R"(```(?:\w+)?\n?([\s\S]*?)```)");
-    s.replace(blockCodeRe, "<pre style='background:#14161A; color:#4CC2FF; padding:6px 8px; border-radius: 0px; border:1px solid #282B32; font-family:Consolas, monospace; font-size:10.5px; margin:4px 0;'>\\1</pre>");
+    s.replace(
+        blockCodeRe,
+        "<pre style='background:#14161A; color:#4CC2FF; padding:6px 8px; border-radius: 0px; border:1px solid #282B32; "
+        "font-family:Consolas, monospace; font-size:10.5px; margin:4px 0;'>\\1</pre>");
 
     // Inline code `...`
     static QRegularExpression codeRe(R"(`([^`]+)`)");
-    s.replace(codeRe, "<code style='background:rgba(0,0,0,0.35); color:#4CC2FF; padding:1px 5px; border-radius: 0px; font-family:Consolas, monospace; font-size:11px;'>\\1</code>");
+    s.replace(
+        codeRe,
+        "<code style='background:rgba(0,0,0,0.35); color:#4CC2FF; padding:1px 5px; border-radius: 0px; "
+        "font-family:Consolas, monospace; font-size:11px;'>\\1</code>");
 
     // Bold **...**
     static QRegularExpression boldRe(R"(\*\*(.+?)\*\*)");
@@ -38,7 +44,9 @@ static QString formatMarkdown(const QString &raw)
 // -------------------------------------------------------------------
 // AIChatBubble Implementation
 // -------------------------------------------------------------------
-AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeStr, QWidget *parent) : QWidget(parent), m_type(type)
+AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeStr, QWidget *parent)
+    : QWidget(parent)
+    , m_type(type)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
@@ -48,7 +56,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
     m_cardFrame = new QFrame(this);
 
-    if(type == User)
+    if (type == User)
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
@@ -70,7 +78,8 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         QString esc = text.toHtmlEscaped();
         esc.replace("\r\n", "<br/>");
         esc.replace("\n", "<br/>");
-        m_textLabel->setText(QString("<span style='color:#FFFFFF; font-size:11.5px; line-height:1.4;'>%1</span>").arg(esc));
+        m_textLabel->setText(
+            QString("<span style='color:#FFFFFF; font-size:11.5px; line-height:1.4;'>%1</span>").arg(esc));
         m_textLabel->setWordWrap(true);
         m_textLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
         m_textLabel->setStyleSheet("background: transparent; border: none;");
@@ -78,14 +87,15 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         QString time = timeStr.isEmpty() ? QDateTime::currentDateTime().toString("HH:mm") : timeStr;
         m_timeLabel = new QLabel(time, this);
-        m_timeLabel->setStyleSheet("color: rgba(255,255,255,0.7); font-size: 8.5px; font-weight: 500; background: transparent; border: none;");
+        m_timeLabel->setStyleSheet(
+            "color: rgba(255,255,255,0.7); font-size: 8.5px; font-weight: 500; background: transparent; border: none;");
         m_timeLabel->setAlignment(Qt::AlignRight);
         cardLayout->addWidget(m_timeLabel);
 
         rootLayout->addStretch(1);
         rootLayout->addWidget(m_cardFrame, 0);
     }
-    else if(type == AI)
+    else if (type == AI)
     {
         m_cardFrame->setStyleSheet(
             "QFrame {"
@@ -106,7 +116,9 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         headerLayout->setSpacing(4);
 
         QLabel *badge = new QLabel(this);
-        badge->setText("<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 0px; font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>AdsKiller AI</span>");
+        badge->setText(
+            "<span style='background: rgba(76,194,255,0.12); color: #4CC2FF; padding: 2px 7px; border-radius: 0px; "
+            "font-weight: bold; font-size: 10px; border: 1px solid rgba(76,194,255,0.22);'>AdsKiller AI</span>");
         badge->setTextFormat(Qt::RichText);
         badge->setStyleSheet("background: transparent; border: none;");
         headerLayout->addWidget(badge);
@@ -134,25 +146,16 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             "   border-color: #4CC2FF;"
             "}");
 
-        connect(
-            m_copyButton,
-            &QPushButton::clicked,
-            this,
-            [this, text]()
-            {
-                QClipboard *clipboard = QApplication::clipboard();
-                if(clipboard)
-                    clipboard->setText(text);
-                m_copyButton->setIcon(QIcon(":/svg/check"));
-                QTimer::singleShot(
-                    1500,
-                    this,
-                    [this]()
-                    {
-                        if(m_copyButton)
-                            m_copyButton->setIcon(QIcon(":/svg/copy"));
-                    });
+        connect(m_copyButton, &QPushButton::clicked, this, [this, text]() {
+            QClipboard *clipboard = QApplication::clipboard();
+            if (clipboard)
+                clipboard->setText(text);
+            m_copyButton->setIcon(QIcon(":/svg/check"));
+            QTimer::singleShot(1500, this, [this]() {
+                if (m_copyButton)
+                    m_copyButton->setIcon(QIcon(":/svg/copy"));
             });
+        });
         headerLayout->addWidget(m_copyButton);
 
         cardLayout->addLayout(headerLayout);
@@ -160,7 +163,8 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         m_textLabel = new QLabel(this);
         m_textLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         m_textLabel->setTextFormat(Qt::RichText);
-        m_textLabel->setText(QString("<div style='color:#E5E7EB; font-size:11.5px; line-height:1.45;'>%1</div>").arg(formatMarkdown(text)));
+        m_textLabel->setText(QString("<div style='color:#E5E7EB; font-size:11.5px; line-height:1.45;'>%1</div>")
+                                 .arg(formatMarkdown(text)));
         m_textLabel->setWordWrap(true);
         m_textLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
         m_textLabel->setStyleSheet("background: transparent; border: none;");
@@ -174,7 +178,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         rootLayout->addWidget(m_cardFrame, 1);
     }
-    else if(type == Welcome)
+    else if (type == Welcome)
     {
         m_cardFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         m_cardFrame->setStyleSheet(
@@ -196,12 +200,14 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         QLabel *titleLabel = new QLabel("AdsKiller AI Assistant", this);
         titleLabel->setAlignment(Qt::AlignCenter);
-        titleLabel->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 13.5px; background: transparent; border: none;");
+        titleLabel->setStyleSheet(
+            "color: #4CC2FF; font-weight: bold; font-size: 13.5px; background: transparent; border: none;");
         cardLayout->addWidget(titleLabel);
 
         QLabel *descLabel = new QLabel(
             "Интеллектуальный помощник по Android-устройствам, удалению рекламы и ускорению системы.<br><br>"
-            "<span style='color:#7E8590; font-size:10.5px;'>Нажмите любую кнопку-подсказку ниже или введите свой вопрос.</span>",
+            "<span style='color:#7E8590; font-size:10.5px;'>Нажмите любую кнопку-подсказку ниже или введите свой "
+            "вопрос.</span>",
             this);
         descLabel->setTextFormat(Qt::RichText);
         descLabel->setAlignment(Qt::AlignCenter);
@@ -211,7 +217,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         rootLayout->addWidget(m_cardFrame, 1);
     }
-    else if(type == Locked)
+    else if (type == Locked)
     {
         m_cardFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         m_cardFrame->setStyleSheet(
@@ -233,7 +239,8 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         QLabel *titleLabel = new QLabel("ИИ в режиме ожидания", this);
         titleLabel->setAlignment(Qt::AlignCenter);
-        titleLabel->setStyleSheet("color: #D1D5DB; font-weight: bold; font-size: 12px; background: transparent; border: none;");
+        titleLabel->setStyleSheet(
+            "color: #D1D5DB; font-weight: bold; font-size: 12px; background: transparent; border: none;");
         cardLayout->addWidget(titleLabel);
 
         QLabel *descLabel = new QLabel("Авторизуйтесь в личном кабинете для доступа к диалогу с ИИ.", this);
@@ -249,7 +256,8 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 // -------------------------------------------------------------------
 // AITypingIndicator Implementation
 // -------------------------------------------------------------------
-AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
+AITypingIndicator::AITypingIndicator(QWidget *parent)
+    : QWidget(parent)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     QHBoxLayout *rootLayout = new QHBoxLayout(this);
@@ -270,12 +278,14 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
     cardLayout->setSpacing(6);
 
     QLabel *badge = new QLabel("AI", this);
-    badge->setStyleSheet("color: #4CC2FF; font-weight: bold; font-size: 10.5px; background: transparent; border: none;");
+    badge->setStyleSheet(
+        "color: #4CC2FF; font-weight: bold; font-size: 10.5px; background: transparent; border: none;");
     cardLayout->addWidget(badge);
 
     m_dotsLabel = new QLabel(this);
     m_dotsLabel->setTextFormat(Qt::RichText);
-    m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> * *</span>");
+    m_dotsLabel->setText(
+        "<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> * *</span>");
     m_dotsLabel->setStyleSheet("background: transparent; border: none;");
     cardLayout->addWidget(m_dotsLabel);
 
@@ -291,7 +301,7 @@ AITypingIndicator::AITypingIndicator(QWidget *parent) : QWidget(parent)
 
 AITypingIndicator::~AITypingIndicator()
 {
-    if(m_timer)
+    if (m_timer)
         m_timer->stop();
 }
 
@@ -299,13 +309,13 @@ void AITypingIndicator::start()
 {
     m_step = 0;
     show();
-    if(m_timer && !m_timer->isActive())
+    if (m_timer && !m_timer->isActive())
         m_timer->start();
 }
 
 void AITypingIndicator::stop()
 {
-    if(m_timer && m_timer->isActive())
+    if (m_timer && m_timer->isActive())
         m_timer->stop();
     hide();
 }
@@ -313,18 +323,22 @@ void AITypingIndicator::stop()
 void AITypingIndicator::onTick()
 {
     m_step = (m_step + 1) % 3;
-    if(m_step == 0)
-        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> * *</span>");
-    else if(m_step == 1)
-        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает * <b style='color:#4CC2FF;'>●</b> *</span>");
+    if (m_step == 0)
+        m_dotsLabel->setText(
+            "<span style='color:#9CA3AF; font-size:10.5px;'>печатает <b style='color:#4CC2FF;'>●</b> * *</span>");
+    else if (m_step == 1)
+        m_dotsLabel->setText(
+            "<span style='color:#9CA3AF; font-size:10.5px;'>печатает * <b style='color:#4CC2FF;'>●</b> *</span>");
     else
-        m_dotsLabel->setText("<span style='color:#9CA3AF; font-size:10.5px;'>печатает * * <b style='color:#4CC2FF;'>●</b></span>");
+        m_dotsLabel->setText(
+            "<span style='color:#9CA3AF; font-size:10.5px;'>печатает * * <b style='color:#4CC2FF;'>●</b></span>");
 }
 
 // -------------------------------------------------------------------
 // AIChatView Implementation
 // -------------------------------------------------------------------
-AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
+AIChatView::AIChatView(QWidget *parent)
+    : QScrollArea(parent)
 {
     setObjectName("aiChatView");
     setWidgetResizable(true);
@@ -344,16 +358,19 @@ AIChatView::AIChatView(QWidget *parent) : QScrollArea(parent)
         "   background: transparent;"
         "   margin: 0px;"
         "}"
-        "QScrollArea#aiChatView QScrollBar::handle:vertical, QScrollArea#aiChatMessagesArea QScrollBar::handle:vertical {"
+        "QScrollArea#aiChatView QScrollBar::handle:vertical, QScrollArea#aiChatMessagesArea "
+        "QScrollBar::handle:vertical {"
         "   background: #363940;"
         "   border-radius: 0px;"
         "   min-height: 18px;"
         "}"
-        "QScrollArea#aiChatView QScrollBar::handle:vertical:hover, QScrollArea#aiChatMessagesArea QScrollBar::handle:vertical:hover {"
+        "QScrollArea#aiChatView QScrollBar::handle:vertical:hover, QScrollArea#aiChatMessagesArea "
+        "QScrollBar::handle:vertical:hover {"
         "   background: #38BDF8;"
         "}"
         "QScrollArea#aiChatView QScrollBar::add-line:vertical, QScrollArea#aiChatView QScrollBar::sub-line:vertical, "
-        "QScrollArea#aiChatMessagesArea QScrollBar::add-line:vertical, QScrollArea#aiChatMessagesArea QScrollBar::sub-line:vertical {"
+        "QScrollArea#aiChatMessagesArea QScrollBar::add-line:vertical, QScrollArea#aiChatMessagesArea "
+        "QScrollBar::sub-line:vertical {"
         "   height: 0px;"
         "}");
 
@@ -390,16 +407,16 @@ void AIChatView::addAIMessage(const QString &text, const QString &time)
 
 int AIChatView::messageCount()
 {
-    if(m_layout)
+    if (m_layout)
         return m_layout->count();
     return -1;
 }
 
 void AIChatView::showTyping(bool show)
 {
-    if(m_typingIndicator)
+    if (m_typingIndicator)
     {
-        if(show)
+        if (show)
             m_typingIndicator->start();
         else
             m_typingIndicator->stop();
@@ -415,7 +432,7 @@ void AIChatView::showWelcome()
     m_layout->insertWidget(insertIndex, welcome);
     scrollToBottom();
 
-    if(messageCount() == 3)
+    if (messageCount() == 3)
         addAIMessage("Салам алейкум 👋!");
 }
 
@@ -430,14 +447,14 @@ void AIChatView::showLocked()
 
 void AIChatView::clearAll()
 {
-    if(m_typingIndicator)
+    if (m_typingIndicator)
         m_typingIndicator->stop();
 
     // Remove all widgets except typing indicator and spacer stretch
-    for(int i = m_layout->count() - 1; i >= 0; --i)
+    for (int i = m_layout->count() - 1; i >= 0; --i)
     {
         QLayoutItem *item = m_layout->itemAt(i);
-        if(item && item->widget() && item->widget() != m_typingIndicator)
+        if (item && item->widget() && item->widget() != m_typingIndicator)
         {
             QWidget *w = item->widget();
             m_layout->removeWidget(w);
@@ -448,12 +465,8 @@ void AIChatView::clearAll()
 
 void AIChatView::scrollToBottom()
 {
-    QTimer::singleShot(
-        50,
-        this,
-        [this]()
-        {
-            if(verticalScrollBar())
-                verticalScrollBar()->setValue(verticalScrollBar()->maximum());
-        });
+    QTimer::singleShot(50, this, [this]() {
+        if (verticalScrollBar())
+            verticalScrollBar()->setValue(verticalScrollBar()->maximum());
+    });
 }

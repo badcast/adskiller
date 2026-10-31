@@ -32,12 +32,10 @@ enum vCardEncoding
 class TextReader
 {
 public:
-    TextReader(std::istream &is, vCardEncoding code = UTF_8) : m_is(&is)
-    {
-    }
-    ~TextReader()
-    {
-    }
+    TextReader(std::istream &is, vCardEncoding code = UTF_8)
+        : m_is(&is)
+    {}
+    ~TextReader() {}
 
     static vCardParamMap parseParams(std::string line);
     static vCardProperty parseProperty(std::string line);
@@ -55,12 +53,10 @@ protected:
 class TextWriter
 {
 public:
-    TextWriter(std::ostream &os, vCardEncoding code = UTF_8) : m_os(&os)
-    {
-    }
-    ~TextWriter()
-    {
-    }
+    TextWriter(std::ostream &os, vCardEncoding code = UTF_8)
+        : m_os(&os)
+    {}
+    ~TextWriter() {}
 
     TextWriter &operator<<(vCard &vCard);
     TextWriter &operator<<(std::vector<vCard> &cards);

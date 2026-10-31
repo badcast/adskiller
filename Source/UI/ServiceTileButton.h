@@ -49,9 +49,23 @@ public:
         ServiceFlag flag = ServiceFlag::None;
     };
 
-    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, QWidget *parent = nullptr);
-    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, ServiceFlag flag, QWidget *parent = nullptr);
-    explicit ServiceTileButton(const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, bool showRibbon, const QString &ribbonText = QString::fromUtf8("NEW"), QWidget *parent = nullptr);
+    explicit ServiceTileButton(
+        const QIcon &icon, const QString &title, const QString &badgeText, Tier tier, QWidget *parent = nullptr);
+    explicit ServiceTileButton(
+        const QIcon &icon,
+        const QString &title,
+        const QString &badgeText,
+        Tier tier,
+        ServiceFlag flag,
+        QWidget *parent = nullptr);
+    explicit ServiceTileButton(
+        const QIcon &icon,
+        const QString &title,
+        const QString &badgeText,
+        Tier tier,
+        bool showRibbon,
+        const QString &ribbonText = QString::fromUtf8("NEW"),
+        QWidget *parent = nullptr);
 
     int sort_score() const
     {

@@ -36,82 +36,93 @@
 namespace
 {
 
-    class HeroBannerView : public QWidget
+class HeroBannerView : public QWidget
+{
+public:
+    explicit HeroBannerView(const QPixmap &pix, QWidget *parent = nullptr)
+        : QWidget(parent)
+        , m_pixmap(pix)
     {
-    public:
-        explicit HeroBannerView(const QPixmap &pix, QWidget *parent = nullptr) : QWidget(parent), m_pixmap(pix)
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        setMinimumHeight(440);
+    }
+
+    void setPixmap(const QPixmap &pix)
+    {
+        m_pixmap = pix;
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *event) override
+    {
+        Q_UNUSED(event);
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+        QRect r = rect();
+        p.fillRect(r, QColor(7, 10, 18));
+
+        if (!m_pixmap.isNull())
         {
-            setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            setMinimumHeight(440);
-        }
+            QPixmap scaled = m_pixmap.scaled(r.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            int x = (r.width() - scaled.width()) / 2;
+            int y = (r.height() - scaled.height()) / 2;
+            p.drawPixmap(x, y, scaled);
 
-        void setPixmap(const QPixmap &pix)
+            // Subtle cyber neon border around the banner image
+            p.setPen(QPen(QColor(56, 189, 248, 50), 1));
+            p.drawRect(x, y, scaled.width() - 1, scaled.height() - 1);
+
+            // High-tech sci-fi corner bracket accents
+            p.setPen(QPen(QColor(56, 189, 248, 190), 1.5));
+            const int bracketLen = 10;
+            // Top-left
+            p.drawLine(x, y, x + bracketLen, y);
+            p.drawLine(x, y, x, y + bracketLen);
+            // Top-right
+            p.drawLine(x + scaled.width() - bracketLen, y, x + scaled.width() - 1, y);
+            p.drawLine(x + scaled.width() - 1, y, x + scaled.width() - 1, y + bracketLen);
+            // Bottom-left
+            p.drawLine(x, y + scaled.height() - 1, x + bracketLen, y + scaled.height() - 1);
+            p.drawLine(x, y + scaled.height() - bracketLen, x, y + scaled.height() - 1);
+            // Bottom-right
+            p.drawLine(
+                x + scaled.width() - bracketLen,
+                y + scaled.height() - 1,
+                x + scaled.width() - 1,
+                y + scaled.height() - 1);
+            p.drawLine(
+                x + scaled.width() - 1,
+                y + scaled.height() - bracketLen,
+                x + scaled.width() - 1,
+                y + scaled.height() - 1);
+        }
+        else
         {
-            m_pixmap = pix;
-            update();
+            p.setPen(QColor(148, 163, 184));
+            p.drawText(r, Qt::AlignCenter, QStringLiteral("AdsKiller Banner"));
         }
+    }
 
-    protected:
-        void paintEvent(QPaintEvent *event) override
-        {
-            Q_UNUSED(event);
-            QPainter p(this);
-            p.setRenderHint(QPainter::Antialiasing);
-            p.setRenderHint(QPainter::SmoothPixmapTransform);
-
-            QRect r = rect();
-            p.fillRect(r, QColor(7, 10, 18));
-
-            if(!m_pixmap.isNull())
-            {
-                QPixmap scaled = m_pixmap.scaled(r.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                int x = (r.width() - scaled.width()) / 2;
-                int y = (r.height() - scaled.height()) / 2;
-                p.drawPixmap(x, y, scaled);
-
-                // Subtle cyber neon border around the banner image
-                p.setPen(QPen(QColor(56, 189, 248, 50), 1));
-                p.drawRect(x, y, scaled.width() - 1, scaled.height() - 1);
-
-                // High-tech sci-fi corner bracket accents
-                p.setPen(QPen(QColor(56, 189, 248, 190), 1.5));
-                const int bracketLen = 10;
-                // Top-left
-                p.drawLine(x, y, x + bracketLen, y);
-                p.drawLine(x, y, x, y + bracketLen);
-                // Top-right
-                p.drawLine(x + scaled.width() - bracketLen, y, x + scaled.width() - 1, y);
-                p.drawLine(x + scaled.width() - 1, y, x + scaled.width() - 1, y + bracketLen);
-                // Bottom-left
-                p.drawLine(x, y + scaled.height() - 1, x + bracketLen, y + scaled.height() - 1);
-                p.drawLine(x, y + scaled.height() - bracketLen, x, y + scaled.height() - 1);
-                // Bottom-right
-                p.drawLine(x + scaled.width() - bracketLen, y + scaled.height() - 1, x + scaled.width() - 1, y + scaled.height() - 1);
-                p.drawLine(x + scaled.width() - 1, y + scaled.height() - bracketLen, x + scaled.width() - 1, y + scaled.height() - 1);
-            }
-            else
-            {
-                p.setPen(QColor(148, 163, 184));
-                p.drawText(r, Qt::AlignCenter, QStringLiteral("AdsKiller Banner"));
-            }
-        }
-
-    private:
-        QPixmap m_pixmap;
-    };
+private:
+    QPixmap m_pixmap;
+};
 
 } // namespace
 
-AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
+AboutDialog::AboutDialog(QWidget *parent)
+    : QDialog(parent)
 {
     setWindowTitle(QStringLiteral("О программе AdsKiller"));
 
     QPixmap iconPix(QStringLiteral(":/resources/app-logo"));
-    if(iconPix.isNull())
+    if (iconPix.isNull())
         iconPix = QPixmap(QStringLiteral("Resources/res/icon.png"));
-    if(iconPix.isNull())
+    if (iconPix.isNull())
         iconPix = QPixmap(QStringLiteral("Resources/res/icon_std.png"));
-    if(iconPix.isNull())
+    if (iconPix.isNull())
         iconPix = QPixmap(QStringLiteral(":/resources/banner-low"));
     setWindowIcon(QIcon(iconPix));
     setModal(true);
@@ -124,7 +135,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 
 void AboutDialog::setCurrentTab(TabIndex tab)
 {
-    if(m_tabWidget)
+    if (m_tabWidget)
     {
         m_tabWidget->setCurrentIndex(static_cast<int>(tab));
     }
@@ -283,9 +294,11 @@ QWidget *AboutDialog::createHeroBannerWidget()
     topStripLayout->setSpacing(2);
 
     auto *badgeTitle = new QLabel(QStringLiteral("ADS MOBILE KILLER"), topStrip);
-    badgeTitle->setStyleSheet(QStringLiteral("font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #38BDF8;"));
+    badgeTitle->setStyleSheet(
+        QStringLiteral("font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #38BDF8;"));
     auto *badgeSub = new QLabel(QStringLiteral("ADVANCED ANDROID MANAGEMENT SUITE"), topStrip);
-    badgeSub->setStyleSheet(QStringLiteral("font-size: 8.5px; font-weight: 600; letter-spacing: 0.5px; color: #94A3B8;"));
+    badgeSub->setStyleSheet(
+        QStringLiteral("font-size: 8.5px; font-weight: 600; letter-spacing: 0.5px; color: #94A3B8;"));
 
     topStripLayout->addWidget(badgeTitle);
     topStripLayout->addWidget(badgeSub);
@@ -293,15 +306,15 @@ QWidget *AboutDialog::createHeroBannerWidget()
 
     // Tall Hero Banner Display
     QPixmap bannerPix;
-    if(QFile::exists(QStringLiteral("Resources/res/banner-max.png")))
+    if (QFile::exists(QStringLiteral("Resources/res/banner-max.png")))
         bannerPix.load(QStringLiteral("Resources/res/banner-max.png"));
-    if(bannerPix.isNull())
+    if (bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral(":/resources/banner-max"));
-    if(bannerPix.isNull())
+    if (bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral(":/resources/banner-low"));
-    if(bannerPix.isNull())
+    if (bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral("Resources/res/banner-low.png"));
-    if(bannerPix.isNull())
+    if (bannerPix.isNull())
         bannerPix = QPixmap(QStringLiteral(":/resources/banner"));
 
     auto *heroBanner = new HeroBannerView(bannerPix, bannerFrame);
@@ -326,14 +339,14 @@ QWidget *AboutDialog::createHeaderWidget()
     logoLabel->setAlignment(Qt::AlignCenter);
 
     QPixmap appIconPix(QStringLiteral(":/resources/app-logo"));
-    if(appIconPix.isNull())
+    if (appIconPix.isNull())
         appIconPix = QPixmap(QStringLiteral("Resources/res/icon.png"));
-    if(appIconPix.isNull())
+    if (appIconPix.isNull())
         appIconPix = QPixmap(QStringLiteral("Resources/res/icon_std.png"));
-    if(appIconPix.isNull())
+    if (appIconPix.isNull())
         appIconPix = QPixmap(QStringLiteral(":/resources/icon-hello"));
 
-    if(!appIconPix.isNull())
+    if (!appIconPix.isNull())
     {
         logoLabel->setPixmap(appIconPix.scaled(68, 68, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
@@ -348,7 +361,8 @@ QWidget *AboutDialog::createHeaderWidget()
     titleRow->setSpacing(8);
 
     auto *titleLabel = new QLabel(QStringLiteral("AdsKiller"), headerFrame);
-    titleLabel->setStyleSheet(QStringLiteral("font-size: 20px; font-weight: 800; letter-spacing: 0.5px; color: #F8FAFC;"));
+    titleLabel->setStyleSheet(
+        QStringLiteral("font-size: 20px; font-weight: 800; letter-spacing: 0.5px; color: #F8FAFC;"));
     titleRow->addWidget(titleLabel);
 
     const QString verStr = QStringLiteral("v%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
@@ -371,7 +385,8 @@ QWidget *AboutDialog::createHeaderWidget()
     infoLayout->addWidget(subLabel);
 
     // Row 3: Meta info
-    auto *metaLabel = new QLabel(QStringLiteral("GNU GPL v3 * Авторские права © 2026 imister.tech * C++17 / Qt 6 Native"), headerFrame);
+    auto *metaLabel = new QLabel(
+        QStringLiteral("GNU GPL v3 * Авторские права © 2026 imister.tech * C++17 / Qt 6 Native"), headerFrame);
     metaLabel->setStyleSheet(QStringLiteral("font-size: 10.5px; color: #64748B;"));
     infoLayout->addWidget(metaLabel);
 
@@ -398,14 +413,17 @@ QWidget *AboutDialog::createAboutTab()
     overviewLayout->setContentsMargins(14, 12, 14, 12);
     overviewLayout->setSpacing(6);
 
-    auto *overviewTitle = new QLabel(QStringLiteral("Комплексная экосистема оптимизации и защиты Android"), overviewCard);
+    auto *overviewTitle
+        = new QLabel(QStringLiteral("Комплексная экосистема оптимизации и защиты Android"), overviewCard);
     overviewTitle->setStyleSheet(QStringLiteral("font-size: 13px; font-weight: bold; color: #38BDF8;"));
     overviewLayout->addWidget(overviewTitle);
 
     auto *overviewDesc = new QLabel(
         QStringLiteral(
-            "AdsKiller - специализированный настольный программный комплекс для глубокого деблоатинга, удаления нежелательного ПО, "
-            "тонкой системной оптимизации и ускорения Android-устройств. Взаимодействие осуществляется через защищенный ADB-слой "
+            "AdsKiller - специализированный настольный программный комплекс для глубокого деблоатинга, удаления "
+            "нежелательного ПО, "
+            "тонкой системной оптимизации и ускорения Android-устройств. Взаимодействие осуществляется через "
+            "защищенный ADB-слой "
             "в пользовательском пространстве, без вмешательства в целостность системных разделов и без Root-прав."),
         overviewCard);
     overviewDesc->setWordWrap(true);
@@ -501,7 +519,8 @@ QWidget *AboutDialog::createAuthorsTab()
 
     auto *thanksText = new QLabel(
         QStringLiteral(
-            "* <b>Free Software Foundation (FSF)</b> - за принципы свободного программного обеспечения и лицензию GNU GPL v3.<br>"
+            "* <b>Free Software Foundation (FSF)</b> - за принципы свободного программного обеспечения и лицензию GNU "
+            "GPL v3.<br>"
             "* <b>Проекту Qt Project</b> - за великолепный кроссплатформенный графический инструментарий.<br>"
             "* <b>Android Open Source Project (AOSP)</b> - за инструменты платформы Android и протокол ADB.<br>"
             "* <b>Всем пользователям и сообществу</b> - за полезные отзывы, тестирование и поддержку проекта!"),
@@ -516,7 +535,15 @@ QWidget *AboutDialog::createAuthorsTab()
     return scrollArea;
 }
 
-QWidget *AboutDialog::createAuthorCard(const QString &initials, const QColor &gradStart, const QColor &gradEnd, const QString &name, const QString &role, const QString &roleColor, const QString &description, const QString &contact)
+QWidget *AboutDialog::createAuthorCard(
+    const QString &initials,
+    const QColor &gradStart,
+    const QColor &gradEnd,
+    const QString &name,
+    const QString &role,
+    const QString &roleColor,
+    const QString &description,
+    const QString &contact)
 {
     auto *cardFrame = new QFrame(this);
     cardFrame->setProperty("card", true);
@@ -566,7 +593,7 @@ QWidget *AboutDialog::createAuthorCard(const QString &initials, const QColor &gr
     infoLayout->addWidget(descLabel);
 
     // Contact info
-    if(!contact.isEmpty())
+    if (!contact.isEmpty())
     {
         auto *contactLabel = new QLabel(contact, cardFrame);
         contactLabel->setTextFormat(Qt::RichText);
@@ -616,15 +643,15 @@ QWidget *AboutDialog::createGplTab()
     {
         QString text;
         QString color;
-    } chips[] = {
-        {QStringLiteral("Свободное использование"), QStringLiteral("#10B981")},
-        {QStringLiteral("Доступ к исходному коду"), QStringLiteral("#10B981")},
-        {QStringLiteral("Модификация"), QStringLiteral("#10B981")},
-        {QStringLiteral("Распространение"), QStringLiteral("#10B981")},
-        {QStringLiteral("Copyleft (GPL v3)"), QStringLiteral("#0078D4")},
-        {QStringLiteral("Без гарантий (AS IS)"), QStringLiteral("#F59E0B")}};
+    } chips[]
+        = {{QStringLiteral("Свободное использование"), QStringLiteral("#10B981")},
+           {QStringLiteral("Доступ к исходному коду"), QStringLiteral("#10B981")},
+           {QStringLiteral("Модификация"), QStringLiteral("#10B981")},
+           {QStringLiteral("Распространение"), QStringLiteral("#10B981")},
+           {QStringLiteral("Copyleft (GPL v3)"), QStringLiteral("#0078D4")},
+           {QStringLiteral("Без гарантий (AS IS)"), QStringLiteral("#F59E0B")}};
 
-    for(const auto &chip : chips)
+    for (const auto &chip : chips)
     {
         auto *chipLabel = new QLabel(chip.text, summaryCard);
         chipLabel->setStyleSheet(QStringLiteral(
@@ -699,7 +726,11 @@ QWidget *AboutDialog::createChangelogTab()
     topTitle->setObjectName(QStringLiteral("cardTitle"));
     topInfoLayout->addWidget(topTitle);
 
-    auto *topSub = new QLabel(QStringLiteral("История выпусков * Сервер: <a href=\"https://adskiller.imister.tech/changelog\" style=\"color:#0078D4; text-decoration:none;\">adskiller.imister.tech/changelog</a>"), topCard);
+    auto *topSub = new QLabel(
+        QStringLiteral(
+            "История выпусков * Сервер: <a href=\"https://adskiller.imister.tech/changelog\" style=\"color:#0078D4; "
+            "text-decoration:none;\">adskiller.imister.tech/changelog</a>"),
+        topCard);
     topSub->setTextFormat(Qt::RichText);
     topSub->setOpenExternalLinks(true);
     topSub->setStyleSheet(QStringLiteral("color: rgba(127,127,127,0.9); font-size: 11px;"));
@@ -813,7 +844,7 @@ void AboutDialog::openChangelogWebsite()
 
 void AboutDialog::fetchChangelog()
 {
-    if(!m_netManager)
+    if (!m_netManager)
     {
         m_netManager = new QNetworkAccessManager(this);
     }
@@ -821,105 +852,110 @@ void AboutDialog::fetchChangelog()
     showChangelogLoading();
 
     QNetworkRequest request(QUrl(QStringLiteral("https://adskiller.imister.tech/changelog")));
-    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("AdsKiller-Desktop/%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch));
+    request.setHeader(
+        QNetworkRequest::UserAgentHeader,
+        QStringLiteral("AdsKiller-Desktop/%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(6000);
 
     QNetworkReply *reply = m_netManager->get(request);
-    connect(
-        reply,
-        &QNetworkReply::finished,
-        this,
-        [this, reply]()
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (m_changelogRefreshBtn)
+            m_changelogRefreshBtn->setEnabled(true);
+
+        if (reply->error() == QNetworkReply::NoError)
         {
-            reply->deleteLater();
-            if(m_changelogRefreshBtn)
-                m_changelogRefreshBtn->setEnabled(true);
-
-            if(reply->error() == QNetworkReply::NoError)
+            QByteArray data = reply->readAll();
+            QJsonParseError parseErr;
+            QJsonDocument doc = QJsonDocument::fromJson(data, &parseErr);
+            if (parseErr.error == QJsonParseError::NoError)
             {
-                QByteArray data = reply->readAll();
-                QJsonParseError parseErr;
-                QJsonDocument doc = QJsonDocument::fromJson(data, &parseErr);
-                if(parseErr.error == QJsonParseError::NoError)
+                QJsonArray arr;
+                if (doc.isArray())
                 {
-                    QJsonArray arr;
-                    if(doc.isArray())
-                    {
-                        arr = doc.array();
-                    }
-                    else if(doc.isObject())
-                    {
-                        QJsonObject root = doc.object();
-                        if(root.contains(QStringLiteral("changelog")) && root[QStringLiteral("changelog")].isArray())
-                            arr = root[QStringLiteral("changelog")].toArray();
-                        else if(root.contains(QStringLiteral("data")) && root[QStringLiteral("data")].isArray())
-                            arr = root[QStringLiteral("data")].toArray();
-                        else if(root.contains(QStringLiteral("releases")) && root[QStringLiteral("releases")].isArray())
-                            arr = root[QStringLiteral("releases")].toArray();
-                    }
-
-                    if(!arr.isEmpty())
-                    {
-                        if(m_changelogStatusWidget)
-                            m_changelogStatusWidget->hide();
-                        renderChangelog(arr);
-                        return;
-                    }
+                    arr = doc.array();
                 }
-                showChangelogError(QStringLiteral("Сервер вернул пустой или некорректный формат списка изменений."));
-            }
-            else
-            {
-                showChangelogError(QStringLiteral("Не удалось связаться с сервером обновлений (%1).").arg(reply->errorString()));
-            }
+                else if (doc.isObject())
+                {
+                    QJsonObject root = doc.object();
+                    if (root.contains(QStringLiteral("changelog")) && root[QStringLiteral("changelog")].isArray())
+                        arr = root[QStringLiteral("changelog")].toArray();
+                    else if (root.contains(QStringLiteral("data")) && root[QStringLiteral("data")].isArray())
+                        arr = root[QStringLiteral("data")].toArray();
+                    else if (root.contains(QStringLiteral("releases")) && root[QStringLiteral("releases")].isArray())
+                        arr = root[QStringLiteral("releases")].toArray();
+                }
 
-            // Render offline fallback releases so tab is never empty
-            renderChangelog(getFallbackChangelog());
-        });
+                if (!arr.isEmpty())
+                {
+                    if (m_changelogStatusWidget)
+                        m_changelogStatusWidget->hide();
+                    renderChangelog(arr);
+                    return;
+                }
+            }
+            showChangelogError(QStringLiteral("Сервер вернул пустой или некорректный формат списка изменений."));
+        }
+        else
+        {
+            showChangelogError(
+                QStringLiteral("Не удалось связаться с сервером обновлений (%1).").arg(reply->errorString()));
+        }
+
+        // Render offline fallback releases so tab is never empty
+        renderChangelog(getFallbackChangelog());
+    });
 }
 
 void AboutDialog::showChangelogLoading()
 {
-    if(m_changelogRefreshBtn)
+    if (m_changelogRefreshBtn)
         m_changelogRefreshBtn->setEnabled(false);
 
-    if(m_changelogStatusWidget && m_changelogStatusLabel)
+    if (m_changelogStatusWidget && m_changelogStatusLabel)
     {
         m_changelogStatusLabel->setText(QStringLiteral(
             "<img src=\":/svg/clock\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> "
             "<span style=\"color:#0078D4; font-weight:600;\">Загрузка...</span> "
             "Получение актуального списка изменений с adskiller.imister.tech/changelog"));
-        if(m_changelogRetryBtn)
+        if (m_changelogRetryBtn)
             m_changelogRetryBtn->hide();
-        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); border-radius: 0px; }"));
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral(
+            "QFrame { background-color: rgba(0, 120, 212, 0.08); border: 1px solid rgba(0, 120, 212, 0.25); "
+            "border-radius: 0px; }"));
         m_changelogStatusWidget->show();
     }
 }
 
 void AboutDialog::showChangelogError(const QString &errorMsg)
 {
-    if(m_changelogStatusWidget && m_changelogStatusLabel)
+    if (m_changelogStatusWidget && m_changelogStatusLabel)
     {
-        m_changelogStatusLabel->setText(QStringLiteral(
-                                            "<img src=\":/svg/alert-triangle\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> "
-                                            "<span style=\"color:#EF4444; font-weight:bold;\">Ошибка соединения:</span> %1<br>"
-                                            "<span style=\"color:rgba(127,127,127,0.9); font-size:11px;\">Ниже показаны встроенные сведения о релизе (автономный режим).</span>")
-                                            .arg(errorMsg));
-        if(m_changelogRetryBtn)
+        m_changelogStatusLabel->setText(
+            QStringLiteral(
+                "<img src=\":/svg/alert-triangle\" width=\"13\" height=\"13\" style=\"vertical-align: middle;\"/> "
+                "<span style=\"color:#EF4444; font-weight:bold;\">Ошибка соединения:</span> %1<br>"
+                "<span style=\"color:rgba(127,127,127,0.9); font-size:11px;\">Ниже показаны встроенные сведения о "
+                "релизе (автономный режим).</span>")
+                .arg(errorMsg));
+        if (m_changelogRetryBtn)
             m_changelogRetryBtn->show();
-        m_changelogStatusWidget->setStyleSheet(QStringLiteral("QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 0px; }"));
+        m_changelogStatusWidget->setStyleSheet(QStringLiteral(
+            "QFrame { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); "
+            "border-radius: 0px; }"));
         m_changelogStatusWidget->show();
     }
 }
 
 QString AboutDialog::formatChangelogText(const QString &raw)
 {
-    if(raw.isEmpty())
+    if (raw.isEmpty())
         return QStringLiteral("<i>Нет описания изменений.</i>");
 
-    if(raw.contains(QStringLiteral("<p>")) || raw.contains(QStringLiteral("<br>")) || raw.contains(QStringLiteral("<div>")))
+    if (raw.contains(QStringLiteral("<p>")) || raw.contains(QStringLiteral("<br>"))
+        || raw.contains(QStringLiteral("<div>")))
         return raw;
 
     QString s = raw.toHtmlEscaped();
@@ -931,27 +967,60 @@ QString AboutDialog::formatChangelogText(const QString &raw)
 
     // Code `code`
     static QRegularExpression codeRe(QStringLiteral(R"(`([^`]+)`)"));
-    s.replace(codeRe, QStringLiteral("<code style=\"background:rgba(127,127,127,0.15); padding:1px 5px; border-radius: 0px; font-family:monospace;\">\\1</code>"));
+    s.replace(
+        codeRe,
+        QStringLiteral(
+            "<code style=\"background:rgba(127,127,127,0.15); padding:1px 5px; border-radius: 0px; "
+            "font-family:monospace;\">\\1</code>"));
 
     // Tag pills
-    static QRegularExpression tagNew(QStringLiteral(R"(\[(New|Новое|Добавлено)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagNew, QStringLiteral("<span style=\"background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">НОВОЕ</span>"));
+    static QRegularExpression tagNew(
+        QStringLiteral(R"(\[(New|Новое|Добавлено)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(
+        tagNew,
+        QStringLiteral(
+            "<span style=\"background:rgba(16,185,129,0.2); color:#10B981; border:1px solid rgba(16,185,129,0.4); "
+            "border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">НОВОЕ</span>"));
 
-    static QRegularExpression tagFix(QStringLiteral(R"(\[(Fix|Исправлено|Исправление)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagFix, QStringLiteral("<span style=\"background:rgba(59,130,246,0.2); color:#3B82F6; border:1px solid rgba(59,130,246,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">ИСПРАВЛЕНО</span>"));
+    static QRegularExpression tagFix(
+        QStringLiteral(R"(\[(Fix|Исправлено|Исправление)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(
+        tagFix,
+        QStringLiteral(
+            "<span style=\"background:rgba(59,130,246,0.2); color:#3B82F6; border:1px solid rgba(59,130,246,0.4); "
+            "border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">ИСПРАВЛЕНО</span>"));
 
-    static QRegularExpression tagOpt(QStringLiteral(R"(\[(Opt|Optimized|Improvement|Улучшено|Улучшение)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagOpt, QStringLiteral("<span style=\"background:rgba(245,158,11,0.2); color:#F59E0B; border:1px solid rgba(245,158,11,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">УЛУЧШЕНИЕ</span>"));
+    static QRegularExpression tagOpt(
+        QStringLiteral(R"(\[(Opt|Optimized|Improvement|Улучшено|Улучшение)\])"),
+        QRegularExpression::CaseInsensitiveOption);
+    s.replace(
+        tagOpt,
+        QStringLiteral(
+            "<span style=\"background:rgba(245,158,11,0.2); color:#F59E0B; border:1px solid rgba(245,158,11,0.4); "
+            "border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">УЛУЧШЕНИЕ</span>"));
 
-    static QRegularExpression tagUi(QStringLiteral(R"(\[(UI|Дизайн|Интерфейс)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagUi, QStringLiteral("<span style=\"background:rgba(168,85,247,0.2); color:#A855F7; border:1px solid rgba(168,85,247,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">ДИЗАЙН</span>"));
+    static QRegularExpression tagUi(
+        QStringLiteral(R"(\[(UI|Дизайн|Интерфейс)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(
+        tagUi,
+        QStringLiteral(
+            "<span style=\"background:rgba(168,85,247,0.2); color:#A855F7; border:1px solid rgba(168,85,247,0.4); "
+            "border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">ДИЗАЙН</span>"));
 
-    static QRegularExpression tagSec(QStringLiteral(R"(\[(Sec|Security|Безопасность)\])"), QRegularExpression::CaseInsensitiveOption);
-    s.replace(tagSec, QStringLiteral("<span style=\"background:rgba(239,68,68,0.2); color:#EF4444; border:1px solid rgba(239,68,68,0.4); border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">БЕЗОПАСНОСТЬ</span>"));
+    static QRegularExpression tagSec(
+        QStringLiteral(R"(\[(Sec|Security|Безопасность)\])"), QRegularExpression::CaseInsensitiveOption);
+    s.replace(
+        tagSec,
+        QStringLiteral(
+            "<span style=\"background:rgba(239,68,68,0.2); color:#EF4444; border:1px solid rgba(239,68,68,0.4); "
+            "border-radius: 0px; padding:1px 6px; font-size:10px; font-weight:bold;\">БЕЗОПАСНОСТЬ</span>"));
 
     // Bullets (- or * at start of line)
     static QRegularExpression bulletRe(QStringLiteral(R"((?:^|\n)[-**]\s+(.+))"));
-    s.replace(bulletRe, QStringLiteral("<div style=\"margin: 2px 0 2px 10px;\"><span style=\"color:#0078D4;\">*</span> &nbsp;\\1</div>"));
+    s.replace(
+        bulletRe,
+        QStringLiteral(
+            "<div style=\"margin: 2px 0 2px 10px;\"><span style=\"color:#0078D4;\">*</span> &nbsp;\\1</div>"));
 
     s.replace(QStringLiteral("\n\n"), QStringLiteral("<div style=\"height:6px;\"></div>"));
     s.replace(QStringLiteral("\n"), QStringLiteral("<br/>"));
@@ -961,50 +1030,50 @@ QString AboutDialog::formatChangelogText(const QString &raw)
 
 void AboutDialog::renderChangelog(const QJsonArray &entries)
 {
-    if(!m_changelogListLayout)
+    if (!m_changelogListLayout)
         return;
 
     // Clear old items
     QLayoutItem *item;
-    while((item = m_changelogListLayout->takeAt(0)) != nullptr)
+    while ((item = m_changelogListLayout->takeAt(0)) != nullptr)
     {
-        if(item->widget())
+        if (item->widget())
             delete item->widget();
         delete item;
     }
 
     const QString currentVerStr = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
 
-    for(int i = 0; i < entries.size(); ++i)
+    for (int i = 0; i < entries.size(); ++i)
     {
         QJsonValue val = entries[i];
-        if(!val.isObject())
+        if (!val.isObject())
             continue;
 
         QJsonObject obj = val.toObject();
 
         QString version = obj.value(QStringLiteral("version")).toString();
-        if(version.isEmpty())
+        if (version.isEmpty())
             version = obj.value(QStringLiteral("ver")).toString();
-        if(version.isEmpty())
+        if (version.isEmpty())
             version = obj.value(QStringLiteral("tag")).toString();
-        if(version.isEmpty())
+        if (version.isEmpty())
             version = QStringLiteral("1.0.0");
 
         QString changelog = obj.value(QStringLiteral("changelog")).toString();
-        if(changelog.isEmpty())
+        if (changelog.isEmpty())
             changelog = obj.value(QStringLiteral("changes")).toString();
-        if(changelog.isEmpty())
+        if (changelog.isEmpty())
             changelog = obj.value(QStringLiteral("notes")).toString();
-        if(changelog.isEmpty())
+        if (changelog.isEmpty())
             changelog = obj.value(QStringLiteral("description")).toString();
-        if(changelog.isEmpty())
+        if (changelog.isEmpty())
             changelog = obj.value(QStringLiteral("body")).toString();
 
         QString date = obj.value(QStringLiteral("date")).toString();
-        if(date.isEmpty())
+        if (date.isEmpty())
             date = obj.value(QStringLiteral("released_at")).toString();
-        if(date.isEmpty())
+        if (date.isEmpty())
             date = obj.value(QStringLiteral("created_at")).toString();
 
         auto *card = new QFrame();
@@ -1029,10 +1098,10 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
         headerLayout->addWidget(verBadge);
 
         QString cleanVer = version;
-        if(cleanVer.startsWith(QLatin1Char('v')))
+        if (cleanVer.startsWith(QLatin1Char('v')))
             cleanVer = cleanVer.mid(1);
 
-        if(cleanVer == currentVerStr)
+        if (cleanVer == currentVerStr)
         {
             auto *curBadge = new QLabel(QStringLiteral("ТЕКУЩАЯ ВЕРСИЯ"), card);
             curBadge->setStyleSheet(QStringLiteral(
@@ -1046,11 +1115,14 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
             headerLayout->addWidget(curBadge);
         }
 
-        if(!date.isEmpty())
+        if (!date.isEmpty())
         {
             auto *dateLabel = new QLabel(card);
             dateLabel->setTextFormat(Qt::RichText);
-            dateLabel->setText(QStringLiteral("<img src=\":/svg/calendar\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/> %1").arg(date));
+            dateLabel->setText(
+                QStringLiteral(
+                    "<img src=\":/svg/calendar\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/> %1")
+                    .arg(date));
             dateLabel->setStyleSheet(QStringLiteral("color: rgba(127, 127, 127, 0.85); font-size: 11px;"));
             headerLayout->addWidget(dateLabel);
         }
@@ -1061,7 +1133,8 @@ void AboutDialog::renderChangelog(const QJsonArray &entries)
         // Subtle separator
         auto *sep = new QFrame(card);
         sep->setFrameShape(QFrame::HLine);
-        sep->setStyleSheet(QStringLiteral("border: none; border-top: 1px solid rgba(127, 127, 127, 0.15); margin: 2px 0;"));
+        sep->setStyleSheet(
+            QStringLiteral("border: none; border-top: 1px solid rgba(127, 127, 127, 0.15); margin: 2px 0;"));
         cardLayout->addWidget(sep);
 
         // Body content
@@ -1083,7 +1156,8 @@ QJsonArray AboutDialog::getFallbackChangelog()
     QJsonObject v1;
     v1[QStringLiteral("version")] = QStringLiteral("%1.%2.%3").arg(AppVerMajor).arg(AppVerMinor).arg(AppVerPatch);
     v1[QStringLiteral("date")] = QStringLiteral("2026-09-01");
-    v1[QStringLiteral("changelog")] = QStringLiteral("[New] Официальный стабильный релиз утилиты AdsKiller для десктопа.");
+    v1[QStringLiteral("changelog")]
+        = QStringLiteral("[New] Официальный стабильный релиз утилиты AdsKiller для десктопа.");
     arr.append(v1);
     return arr;
 }
@@ -1096,8 +1170,10 @@ QWidget *AboutDialog::createFooterWidget()
 
     auto *siteLabel = new QLabel(
         QStringLiteral(
-            "<a href=\"https://adskiller.imister.tech\" style=\"text-decoration: none; color: #38BDF8; font-weight: 600;\">"
-            "<img src=\":/svg/globe\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/> adskiller.imister.tech</a>"),
+            "<a href=\"https://adskiller.imister.tech\" style=\"text-decoration: none; color: #38BDF8; font-weight: "
+            "600;\">"
+            "<img src=\":/svg/globe\" width=\"12\" height=\"12\" style=\"vertical-align: middle;\"/> "
+            "adskiller.imister.tech</a>"),
         footerWidget);
     siteLabel->setOpenExternalLinks(true);
     footerLayout->addWidget(siteLabel);
@@ -1122,7 +1198,8 @@ QWidget *AboutDialog::createFooterWidget()
     return footerWidget;
 }
 
-QPixmap AboutDialog::createAvatarPixmap(const QString &initials, const QColor &startColor, const QColor &endColor, int size)
+QPixmap AboutDialog::createAvatarPixmap(
+    const QString &initials, const QColor &startColor, const QColor &endColor, int size)
 {
     QPixmap pix(size, size);
     pix.fill(Qt::transparent);
@@ -1153,11 +1230,11 @@ QPixmap AboutDialog::createAvatarPixmap(const QString &initials, const QColor &s
 QString AboutDialog::loadLicenseText()
 {
     QFile resFile(QStringLiteral(":/resources/license-gplv3"));
-    if(resFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (resFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QString content = QString::fromUtf8(resFile.readAll());
         resFile.close();
-        if(!content.trimmed().isEmpty())
+        if (!content.trimmed().isEmpty())
         {
             return content;
         }
@@ -1165,14 +1242,14 @@ QString AboutDialog::loadLicenseText()
 
     const QStringList candidatePaths = {QCoreApplication::applicationDirPath() + QStringLiteral("/LICENSE")};
 
-    for(const QString &path : candidatePaths)
+    for (const QString &path : candidatePaths)
     {
         QFile file(path);
-        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
             QString content = QString::fromUtf8(file.readAll());
             file.close();
-            if(!content.trimmed().isEmpty())
+            if (!content.trimmed().isEmpty())
             {
                 return content;
             }
@@ -1183,34 +1260,30 @@ QString AboutDialog::loadLicenseText()
 
 void AboutDialog::copyLicenseToClipboard()
 {
-    if(!m_licenseEdit)
+    if (!m_licenseEdit)
         return;
 
     QClipboard *clipboard = QGuiApplication::clipboard();
-    if(clipboard)
+    if (clipboard)
     {
         clipboard->setText(m_licenseEdit->toPlainText());
     }
 
-    if(m_copyLicenseBtn)
+    if (m_copyLicenseBtn)
     {
         const QString origText = m_copyLicenseBtn->text();
         m_copyLicenseBtn->setIcon(QIcon(":/svg/check"));
         m_copyLicenseBtn->setText(QStringLiteral(" Скопировано в буфер обмена!"));
         m_copyLicenseBtn->setEnabled(false);
 
-        QTimer::singleShot(
-            2500,
-            this,
-            [this, origText]()
+        QTimer::singleShot(2500, this, [this, origText]() {
+            if (m_copyLicenseBtn)
             {
-                if(m_copyLicenseBtn)
-                {
-                    m_copyLicenseBtn->setIcon(QIcon(":/svg/copy"));
-                    m_copyLicenseBtn->setText(origText);
-                    m_copyLicenseBtn->setEnabled(true);
-                }
-            });
+                m_copyLicenseBtn->setIcon(QIcon(":/svg/copy"));
+                m_copyLicenseBtn->setText(origText);
+                m_copyLicenseBtn->setEnabled(true);
+            }
+        });
     }
 }
 

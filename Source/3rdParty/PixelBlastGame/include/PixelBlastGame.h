@@ -17,9 +17,11 @@ struct PB_EXPORT BlockObject
     int y;
     int idx;
 
-    BlockObject(int x, int y, int idx = -1) : x(x), y(y), idx(idx)
-    {
-    }
+    BlockObject(int x, int y, int idx = -1)
+        : x(x)
+        , y(y)
+        , idx(idx)
+    {}
 
     QPointF adjustPoint(const QPointF &adjust, const QSizeF &scale) const;
 };
