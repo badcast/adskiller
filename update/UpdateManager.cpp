@@ -137,10 +137,7 @@ std::pair<QList<FetchResult>, int> UpdateManager::fetch()
                         const QString defaultHashType = rootObj["hashType"].toString();
 
                         const QUrl parsedRoot(m_rootUrl);
-                        const bool schemeAllowed = (parsedRoot.scheme() == QLatin1String("https")) ||
-                                                   (parsedRoot.scheme() == QLatin1String("http") &&
-                                                    fetchEndpoint.scheme() == QLatin1String("http") &&
-                                                    parsedRoot.host().compare(fetchEndpoint.host(), Qt::CaseInsensitive) == 0);
+                        const bool schemeAllowed = (parsedRoot.scheme() == QLatin1String("https")) || (parsedRoot.scheme() == QLatin1String("http") && fetchEndpoint.scheme() == QLatin1String("http") && parsedRoot.host().compare(fetchEndpoint.host(), Qt::CaseInsensitive) == 0);
 
                         if(!parsedRoot.isValid() || parsedRoot.host().isEmpty() || !schemeAllowed)
                         {
@@ -253,11 +250,7 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
     {
         QMutexLocker locker(&mutex);
         m_statusDownload.maxDownloads = contents.size();
-        m_statusDownload.totalDownloadBytes = std::accumulate(
-            std::begin(contents),
-            std::end(contents),
-            quint64(0),
-            [](quint64 val, const FetchResult &t) { return val + t.bytes; });
+        m_statusDownload.totalDownloadBytes = std::accumulate(std::begin(contents), std::end(contents), quint64(0), [](quint64 val, const FetchResult &t) { return val + t.bytes; });
     }
 
     if(m_simulate)
@@ -464,8 +457,7 @@ int UpdateManager::downloadAll(const QString &existsDir, const QList<FetchResult
                         {
                             const quint64 actualSize = static_cast<quint64>(QFileInfo(targetFilePath).size());
                             const bool sizeOk = (fetch->bytes == 0 || actualSize == fetch->bytes);
-                            const bool hashOk = fetch->md5hash.isEmpty() ||
-                                                (getFileHash(targetFilePath, fetch->hashAlgo).compare(fetch->md5hash, Qt::CaseInsensitive) == 0);
+                            const bool hashOk = fetch->md5hash.isEmpty() || (getFileHash(targetFilePath, fetch->hashAlgo).compare(fetch->md5hash, Qt::CaseInsensitive) == 0);
 
                             if(sizeOk && hashOk)
                             {
@@ -652,8 +644,7 @@ bool UpdateManager::moveFilesTo(const QString &sourcePath, const QString &destin
     {
         QString sourceFilePath;
         QString destinationFilePath;
-        if(!isSafeRelativePath(sourcePath, entry, &sourceFilePath) ||
-           !isSafeRelativePath(destinationPath, entry, &destinationFilePath))
+        if(!isSafeRelativePath(sourcePath, entry, &sourceFilePath) || !isSafeRelativePath(destinationPath, entry, &destinationFilePath))
         {
             allSuccess = false;
             continue;

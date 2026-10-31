@@ -75,8 +75,7 @@ int main(int argc, char **argv)
         const QString execDir = QDir::cleanPath(execInfo.absolutePath());
         const QString targetDir = QDir::cleanPath(QDir(workDir).absolutePath());
         const QString exeName = execInfo.fileName();
-        const bool allowedName = (exeName.compare(QLatin1String("adskiller.exe"), Qt::CaseInsensitive) == 0) ||
-                                 (exeName == QLatin1String("adskiller"));
+        const bool allowedName = (exeName.compare(QLatin1String("adskiller.exe"), Qt::CaseInsensitive) == 0) || (exeName == QLatin1String("adskiller"));
 
         if(!execInfo.exists() || !execInfo.isFile() || execDir != targetDir || !allowedName)
         {

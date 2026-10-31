@@ -36,7 +36,7 @@ RadioPlayerWidget::~RadioPlayerWidget()
 void RadioPlayerWidget::populateDefaultStations()
 {
     m_stations.clear();
-    
+
     // Россия и мир
     m_stations.append({QString::fromUtf8("Русское Радио"), QStringLiteral("https://rusradio.hostingradio.ru/rusradio128.mp3"), QString::fromUtf8("Pop Hits")});
     m_stations.append({QString::fromUtf8("Монте-Карло"), QStringLiteral("https://montecarlo.hostingradio.ru/montecarlo128.mp3"), QString::fromUtf8("Lounge Pop")});

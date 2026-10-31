@@ -19,11 +19,15 @@ PixelBlastSideButton::PixelBlastSideButton(QWidget *parent) : QWidget(parent)
     setupUi();
 
     m_borderTimer = new QTimer(this);
-    connect(m_borderTimer, &QTimer::timeout, this, [this]()
-            {
-                m_borderAngle = (m_borderAngle + 1) % 360;
-                update();
-            });
+    connect(
+        m_borderTimer,
+        &QTimer::timeout,
+        this,
+        [this]()
+        {
+            m_borderAngle = (m_borderAngle + 1) % 360;
+            update();
+        });
     m_borderTimer->start(25);
 }
 
