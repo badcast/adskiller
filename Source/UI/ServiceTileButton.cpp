@@ -1,5 +1,6 @@
 #include "ServiceTileButton.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 #include <QCursor>
 #include <QEasingCurve>
@@ -10,6 +11,7 @@
 #include <QPainterPath>
 #include <QPen>
 #include <QPolygon>
+#include <QPainterPath>
 #include <QResizeEvent>
 #include <QShowEvent>
 
@@ -86,22 +88,21 @@ ServiceTileButton::ServiceTileButton(
     m_btnHelp->setStyleSheet(QStringLiteral(
         "QPushButton#serviceHelpBtn {"
         "    background-color: transparent;"
-        "    color: #38BDF8;"
-        "    font-family: 'Segoe UI', -apple-system, sans-serif;"
+        "    color: #4DA3FF;"
+        "    border: none;"
+        "    border-radius: 8px;"
         "    font-size: 11px;"
-        "    font-weight: bold;"
+        "    font-weight: 600;"
         "    padding: 1px 6px;"
         "    min-width: 76px;"
         "    min-height: 20px;"
         "    max-height: 22px;"
         "}"
         "QPushButton#serviceHelpBtn:hover {"
-        "    color: #FFFFFF;"
-        "    border: 1px solid #38BDF8;"
+        "    background-color: rgba(0, 113, 227, 0.12);"
         "}"
         "QPushButton#serviceHelpBtn:pressed {"
-        "    color: #E0F2FE;"
-        "    border: 1px solid #0284C7;"
+        "    background-color: rgba(0, 113, 227, 0.2);"
         "}"));
     m_btnHelp->setToolTip(QString::fromUtf8("Подробная информация о сервисе и условиях"));
     connect(m_btnHelp, &QPushButton::clicked, this, &ServiceTileButton::showInfoDialog);
@@ -375,392 +376,182 @@ void ServiceTileButton::keyReleaseEvent(QKeyEvent *event)
     QPushButton::keyReleaseEvent(event);
 }
 
+namespace
+{
+struct TierStyle
+{
+    QColor text;
+    QColor tint;
+};
+
+// Apple system colors, tuned per theme for contrast.
+TierStyle tierStyle(ServiceTileButton::Tier tier, bool enabled, bool dark)
+{
+    auto make = [](const QColor &text, qreal tintAlpha) {
+        QColor tint = text;
+        tint.setAlphaF(tintAlpha);
+        return TierStyle {text, tint};
+    };
+    if (!enabled || tier == ServiceTileButton::Tier::Disabled)
+        return make(dark ? QColor(0x98, 0x98, 0x9d) : QColor(0x6e, 0x6e, 0x73), 0.16);
+    switch (tier)
+    {
+        case ServiceTileButton::Tier::Vip:
+            return make(dark ? QColor(0xff, 0xb3, 0x40) : QColor(0xb2, 0x50, 0x00), 0.16);
+        case ServiceTileButton::Tier::Free:
+            return make(dark ? QColor(0x30, 0xd1, 0x58) : QColor(0x24, 0x8a, 0x3d), 0.16);
+        case ServiceTileButton::Tier::Dynamic:
+            return make(dark ? QColor(0xbf, 0x5a, 0xf2) : QColor(0x89, 0x44, 0xab), 0.16);
+        case ServiceTileButton::Tier::Credit:
+        default:
+            return make(dark ? QColor(0x3d, 0x9b, 0xff) : QColor(0x00, 0x71, 0xe3), 0.16);
+    }
+}
+} // namespace
+
 void ServiceTileButton::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
 
+    const bool dark = ThemeManager::instance()->isDark();
+    const QColor accent(0x00, 0x71, 0xe3);
     const int w = width();
     const int h = height();
     const bool enabled = isEnabled() && m_serviceActive && (m_tier != Tier::Disabled);
     const bool hovered = enabled && (underMouse() || m_isHovered);
     const bool pressed = enabled && isDown();
 
-    // 1. Metro Card Shell: Base Dark Obsidian Background
-    QColor bgColor;
-    QColor borderColor;
-    if (!enabled)
-    {
-        bgColor = QColor(11, 15, 25);     // #0B0F19
-        borderColor = QColor(30, 41, 59); // #1E293B
-    }
-    else if (pressed)
-    {
-        bgColor = QColor(8, 14, 26);       // #080E1A
-        borderColor = QColor(2, 132, 199); // #0284C7
-    }
+    QPainterPath cardPath;
+    cardPath.addRoundedRect(QRectF(0.5, 0.5, w - 1, h - 1), 16, 16);
+
+    // 1. Card: flat surface with a hairline border
+    QColor fill = dark ? QColor(0x2c, 0x2c, 0x2e) : QColor(0xff, 0xff, 0xff);
+    QColor border = dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 20);
+    if (pressed)
+        fill = dark ? QColor(0x26, 0x26, 0x28) : QColor(0xf2, 0xf2, 0xf5);
     else if (hovered)
     {
-        bgColor = QColor(19, 31, 55);       // #131F37
-        borderColor = QColor(56, 189, 248); // #38BDF8
+        fill = dark ? QColor(0x34, 0x34, 0x36) : QColor(0xfc, 0xfc, 0xfd);
+        border = QColor(accent.red(), accent.green(), accent.blue(), 110);
     }
-    else
-    {
-        bgColor = QColor(15, 23, 42);     // #0F172A
-        borderColor = QColor(30, 41, 59); // #1E293B
-    }
+    painter.fillPath(cardPath, fill);
 
-    painter.fillRect(QRect(0, 0, w, h), bgColor);
-
-    // 1b. Windows 10 Reveal Highlight: cursor flashlight gradient
-    if (enabled && hovered)
-    {
-        QRadialGradient revealLight(m_mousePos, 160);
-        revealLight.setColorAt(0.0, QColor(0, 229, 255, 38)); // Electric cyan soft spotlight
-        revealLight.setColorAt(0.4, QColor(2, 132, 199, 18)); // Deep azure falloff
-        revealLight.setColorAt(1.0, QColor(2, 132, 199, 0));  // Transparent
-        painter.fillRect(QRect(0, 0, w, h), revealLight);
-    }
-
-    // 1c. Windows 10 Bubble Press Ripple Effect
+    // Soft press feedback, clipped to the card
+    painter.save();
+    painter.setClipPath(cardPath);
     if (m_rippleOpacity > 0.01)
     {
-        painter.save();
-        painter.setClipRect(QRect(0, 0, w, h));
-        QRadialGradient bubble(m_pressPos, qMax<qreal>(10.0, m_rippleRadius));
-        int alpha = qBound(0, static_cast<int>(m_rippleOpacity * 255), 255);
-        bubble.setColorAt(0.0, QColor(0, 229, 255, alpha));
-        bubble.setColorAt(0.5, QColor(2, 132, 199, alpha * 2 / 3));
-        bubble.setColorAt(0.85, QColor(14, 165, 233, alpha / 3));
-        bubble.setColorAt(1.0, QColor(2, 132, 199, 0));
-        painter.setBrush(bubble);
+        QColor c = accent;
+        c.setAlphaF(qBound<qreal>(0.0, m_rippleOpacity * 0.28, 0.2));
         painter.setPen(Qt::NoPen);
-        painter.drawEllipse(m_pressPos, static_cast<int>(m_rippleRadius), static_cast<int>(m_rippleRadius));
-        painter.restore();
+        painter.setBrush(c);
+        painter.drawEllipse(m_pressPos, int(m_rippleRadius), int(m_rippleRadius));
     }
-
-    // 1d. Border: Reveal Border glow near mouse cursor
-    if (enabled && hovered)
-    {
-        QRadialGradient borderGlow(m_mousePos, 140);
-        borderGlow.setColorAt(0.0, QColor(0, 229, 255, 230));  // Hot glowing edge near mouse
-        borderGlow.setColorAt(0.5, QColor(56, 189, 248, 120)); // Soft cyan
-        borderGlow.setColorAt(1.0, borderColor);               // Base border color
-        painter.setPen(QPen(QBrush(borderGlow), 1));
-        painter.drawRect(QRect(0, 0, w - 1, h - 1));
-    }
-    else
-    {
-        painter.setPen(QPen(borderColor, 1));
-        painter.drawRect(QRect(0, 0, w - 1, h - 1));
-    }
-
-    // 2. Left Status Accent Stripe (4px width)
-    QColor accentColor;
-    if (!enabled || m_tier == Tier::Disabled)
-    {
-        accentColor = QColor(71, 85, 105); // #475569 Slate
-    }
-    else
-    {
-        switch (m_tier)
-        {
-            case Tier::Vip:
-                accentColor = hovered ? QColor(251, 191, 36) : QColor(245, 158, 11); // Gold #F59E0B / #FBBF24
-                break;
-            case Tier::Free:
-                accentColor = hovered ? QColor(52, 211, 153) : QColor(16, 185, 129); // Emerald #10B981 / #34D399
-                break;
-            case Tier::Dynamic:
-                accentColor = hovered ? QColor(129, 140, 248) : QColor(99, 102, 241); // Indigo #818CF8
-                break;
-            case Tier::Credit:
-            default:
-                accentColor = hovered ? QColor(56, 189, 248) : QColor(14, 165, 233); // Sky Cyan #38BDF8
-                break;
-        }
-    }
-    painter.fillRect(QRect(0, 0, 4, h), accentColor);
-
-    // 3. Recessed Icon Plate Sub-Panel
-    const int plateX = 12;
-    const int plateY = (h - 54) / 2;
-    const int plateSize = 54;
-    const QRect plateRect(plateX, plateY, plateSize, plateSize);
-
-    const QColor plateBg = hovered ? QColor(11, 17, 30) : QColor(7, 10, 18);
-    const QColor plateBorder = hovered ? QColor(51, 65, 85) : QColor(26, 36, 54);
-    painter.fillRect(plateRect, plateBg);
-    painter.setPen(QPen(plateBorder, 1));
-    painter.drawRect(plateRect);
-
-    // Center icon inside plate (42x42)
-    const QRect iconRect(plateX + 6, plateY + 6, plateSize - 12, plateSize - 12);
-    if (!enabled)
-    {
-        painter.setOpacity(0.35);
-        icon().paint(&painter, iconRect);
-        painter.setOpacity(1.0);
-    }
-    else
-    {
-        icon().paint(&painter, iconRect);
-    }
-
-    // 4. Service Title Typography
-    const int textX = plateRect.right() + 12;
-    const int textTop = plateY + 1;
-    // Reserved width for top-right ribbon
-    const int ribbonReservation = (m_showRibbon && enabled) ? 68 : 12;
-    const int maxTitleW = qMax(40, w - textX - ribbonReservation);
-
-    QFont titleFont("Segoe UI", 10, QFont::Bold);
-    painter.setFont(titleFont);
-    QFontMetrics tfm(titleFont);
-    const QString elidedTitle = tfm.elidedText(m_title, Qt::ElideRight, maxTitleW);
-
-    QColor titleColor;
-    if (!enabled)
-        titleColor = QColor(100, 116, 139); // #64748B
-    else if (hovered)
-        titleColor = QColor(56, 189, 248); // #38BDF8
-    else
-        titleColor = QColor(248, 250, 252); // #F8FAFC
-
-    painter.setPen(titleColor);
-    painter.drawText(QRect(textX, textTop, maxTitleW, 22), Qt::AlignLeft | Qt::AlignVCenter, elidedTitle);
-
-    // 5. Pricing / Status Badge Pill
-    if (!m_badgeText.isEmpty())
-    {
-        QFont badgeFont("Segoe UI", 8, QFont::Bold);
-        painter.setFont(badgeFont);
-        QFontMetrics bfm(badgeFont);
-
-        QColor pillBg;
-        QColor pillBorder;
-        QColor pillText;
-
-        if (!enabled || m_tier == Tier::Disabled)
-        {
-            pillBg = QColor(24, 30, 41);
-            pillBorder = QColor(51, 65, 85);
-            pillText = QColor(148, 163, 184);
-        }
-        else
-        {
-            switch (m_tier)
-            {
-                case Tier::Vip:
-                    pillBg = QColor(36, 24, 6);
-                    pillBorder = QColor(146, 64, 14);
-                    pillText = QColor(251, 191, 36);
-                    break;
-                case Tier::Free:
-                    pillBg = QColor(6, 37, 22);
-                    pillBorder = QColor(5, 150, 105);
-                    pillText = QColor(52, 211, 153);
-                    break;
-                case Tier::Dynamic:
-                    pillBg = QColor(14, 27, 56);
-                    pillBorder = QColor(37, 99, 235);
-                    pillText = QColor(96, 165, 250);
-                    break;
-                case Tier::Credit:
-                default:
-                    pillBg = QColor(12, 32, 56);
-                    pillBorder = QColor(2, 132, 199);
-                    pillText = QColor(56, 189, 248);
-                    break;
-            }
-        }
-
-        const int badgeH = 22;
-        const int badgeY = plateRect.bottom() - badgeH;
-        const int maxPillW = qMax(40, w - textX - 98);
-        const int textW = bfm.horizontalAdvance(m_badgeText);
-        const int pillW = qBound(50, textW + 16, maxPillW);
-        const QRect pillRect(textX, badgeY, pillW, badgeH);
-
-        painter.fillRect(pillRect, pillBg);
-        painter.setPen(QPen(pillBorder, 1));
-        painter.drawRect(pillRect);
-
-        painter.setPen(pillText);
-        const QString elidedBadge = bfm.elidedText(m_badgeText, Qt::ElideRight, pillRect.width() - 8);
-        painter.drawText(pillRect, Qt::AlignCenter, elidedBadge);
-    }
-
-    // 6. Top-Right Ribbons (Vertical list if multiple flags are present)
-    if (m_showRibbon)
-    {
-        struct RibbonEntry
-        {
-            QString text;
-            bool isBeta;
-        };
-        QVector<RibbonEntry> ribbons;
-
-        const bool hasNew = (static_cast<int>(m_flag) & static_cast<int>(ServiceFlag::New)) != 0;
-        const bool hasBeta = (static_cast<int>(m_flag) & static_cast<int>(ServiceFlag::Beta)) != 0;
-
-        if (hasNew && hasBeta)
-        {
-            ribbons.append({QString::fromUtf8("NEW"), false});
-            ribbons.append({QString::fromUtf8("BETA"), true});
-        }
-        else if (hasBeta)
-        {
-            ribbons.append({QString::fromUtf8("BETA"), true});
-        }
-        else if (hasNew)
-        {
-            ribbons.append({QString::fromUtf8("NEW"), false});
-        }
-        else if (!m_ribbonText.isEmpty())
-        {
-            if (m_ribbonText.contains("BETA", Qt::CaseInsensitive) && m_ribbonText.contains("NEW", Qt::CaseInsensitive))
-            {
-                ribbons.append({QString::fromUtf8("NEW"), false});
-                ribbons.append({QString::fromUtf8("BETA"), true});
-            }
-            else if (m_ribbonText.compare("BETA", Qt::CaseInsensitive) == 0)
-            {
-                ribbons.append({QString::fromUtf8("BETA"), true});
-            }
-            else
-            {
-                ribbons.append({m_ribbonText, false});
-            }
-        }
-
-        const bool isMulti = ribbons.size() > 1;
-        const int ribbonW = isMulti ? 52 : 56;
-        const int ribbonH = isMulti ? 18 : 20;
-        const int notch = isMulti ? 6 : 7;
-        const int gap = 3;
-        const int rx = w - ribbonW;
-
-        QFont ribbonFont("Segoe UI", isMulti ? 7 : 8, QFont::Black);
-        ribbonFont.setBold(true);
-        ribbonFont.setLetterSpacing(QFont::AbsoluteSpacing, isMulti ? 1.0 : 1.2);
-
-        for (int i = 0; i < ribbons.size(); ++i)
-        {
-            const auto &entry = ribbons.at(i);
-            const int ry = i * (ribbonH + gap);
-
-            // Physical drop shadow behind ribbon
-            QPolygon shadowPoly;
-            shadowPoly << QPoint(w, ry + 2) << QPoint(rx + 1, ry + 2) << QPoint(rx + notch + 1, ry + ribbonH / 2 + 1)
-                       << QPoint(rx + 1, ry + ribbonH + 2) << QPoint(w, ry + ribbonH + 2);
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(0, 0, 0, 110));
-            painter.drawPolygon(shadowPoly);
-
-            // Ribbon polygon with decorative swallowtail notch cut on the left
-            QPolygon ribbonPoly;
-            ribbonPoly << QPoint(w, ry) << QPoint(rx, ry) << QPoint(rx + notch, ry + ribbonH / 2)
-                       << QPoint(rx, ry + ribbonH) << QPoint(w, ry + ribbonH);
-
-            QLinearGradient ribbonGrad(rx, ry, w, ry + ribbonH);
-            QColor strokeColor;
-            QColor shadowTextColor;
-
-            if (entry.isBeta)
-            {
-                if (hovered)
-                {
-                    ribbonGrad.setColorAt(0.0, QColor(253, 224, 71)); // #FDE047 Amber highlight
-                    ribbonGrad.setColorAt(0.3, QColor(251, 191, 36)); // #FBBF24 Amber
-                    ribbonGrad.setColorAt(0.8, QColor(217, 119, 6));  // #D97706 Deep amber
-                    ribbonGrad.setColorAt(1.0, QColor(180, 83, 9));   // #B45309 Amber shadow
-                }
-                else
-                {
-                    ribbonGrad.setColorAt(0.0, QColor(251, 191, 36));  // #FBBF24 Amber
-                    ribbonGrad.setColorAt(0.35, QColor(245, 158, 11)); // #F59E0B Gold
-                    ribbonGrad.setColorAt(0.8, QColor(217, 119, 6));   // #D97706
-                    ribbonGrad.setColorAt(1.0, QColor(146, 64, 14));   // #92400E
-                }
-                strokeColor = QColor(180, 83, 9);
-                shadowTextColor = QColor(120, 53, 15);
-            }
-            else
-            {
-                if (hovered)
-                {
-                    ribbonGrad.setColorAt(0.0, QColor(254, 120, 120));
-                    ribbonGrad.setColorAt(0.3, QColor(248, 113, 113));
-                    ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));
-                    ribbonGrad.setColorAt(1.0, QColor(185, 28, 28));
-                }
-                else
-                {
-                    ribbonGrad.setColorAt(0.0, QColor(248, 113, 113)); // #F87171 Ruby highlight
-                    ribbonGrad.setColorAt(0.35, QColor(239, 68, 68));  // #EF4444 Vivid red
-                    ribbonGrad.setColorAt(0.8, QColor(220, 38, 38));   // #DC2626 Deep red
-                    ribbonGrad.setColorAt(1.0, QColor(153, 27, 27));   // #991B1B Crimson shadow
-                }
-                strokeColor = QColor(185, 28, 28);
-                shadowTextColor = QColor(127, 29, 29);
-            }
-
-            painter.setPen(QPen(strokeColor, 1));
-            painter.setBrush(ribbonGrad);
-            painter.drawPolygon(ribbonPoly);
-
-            // Fine glossy highlight line along top edge
-            painter.setPen(QPen(QColor(255, 255, 255, 90), 1));
-            painter.drawLine(rx + 1, ry + 1, w - 1, ry + 1);
-
-            // Ribbon Inscription
-            painter.setFont(ribbonFont);
-            const QRect textRect(rx + notch / 2, ry, ribbonW - notch / 2, ribbonH);
-
-            // Embossed 3D shadow for text
-            painter.setPen(shadowTextColor);
-            painter.drawText(textRect.translated(0, 1), Qt::AlignCenter, entry.text);
-
-            // Pure white foreground
-            painter.setPen(Qt::white);
-            painter.drawText(textRect, Qt::AlignCenter, entry.text);
-        }
-    }
-
-    // 7. Click / Activation Pulse Animation
     if (m_clickProgress > 0.0)
     {
-        painter.save();
-        painter.setClipRect(QRect(0, 0, w, h));
+        QColor c = accent;
+        c.setAlphaF((1.0 - m_clickProgress) * 0.12);
+        painter.fillPath(cardPath, c);
+    }
+    painter.restore();
 
-        const QColor accent = accentColor;
+    painter.setPen(QPen(border, 1));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawPath(cardPath);
 
-        // Luminous light sweep beam across the card
-        const int beamW = 100;
-        const int sweepX = -beamW + static_cast<int>(m_clickProgress * (w + beamW * 2));
-        QLinearGradient sweepGrad(sweepX, 0, sweepX + beamW, 0);
-        const int sweepAlpha = static_cast<int>((1.0 - m_clickProgress) * 110);
-        sweepGrad.setColorAt(0.0, QColor(accent.red(), accent.green(), accent.blue(), 0));
-        sweepGrad.setColorAt(0.5, QColor(accent.red(), accent.green(), accent.blue(), sweepAlpha));
-        sweepGrad.setColorAt(1.0, QColor(accent.red(), accent.green(), accent.blue(), 0));
-        painter.fillRect(QRect(0, 0, w, h), sweepGrad);
+    // 2. Icon on a rounded plate
+    const int plateSize = 48;
+    const QRect plateRect(14, (h - plateSize) / 2, plateSize, plateSize);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(dark ? QColor(0x1c, 0x1c, 0x1e) : QColor(0xf5, 0xf5, 0xf7));
+    painter.drawRoundedRect(plateRect, 12, 12);
+    painter.setBrush(Qt::NoBrush);
 
-        // Expanding energy shockwave ring from the icon plate center
-        const QPoint pCenter = plateRect.center();
-        const qreal ringR = 26.0 + m_clickProgress * 55.0;
-        const int ringAlpha = static_cast<int>((1.0 - m_clickProgress) * 220);
-        painter.setPen(QPen(QColor(accent.red(), accent.green(), accent.blue(), ringAlpha), 2.5));
+    const QRect iconRect = plateRect.adjusted(8, 8, -8, -8);
+    painter.setOpacity(enabled ? 1.0 : 0.4);
+    icon().paint(&painter, iconRect);
+    painter.setOpacity(1.0);
+
+    // 3. Flags (NEW / BETA) as small flat capsules in the top-right corner
+    struct Flag
+    {
+        QString text;
+        QColor color;
+    };
+    QVector<Flag> flags;
+    if (m_showRibbon && enabled)
+    {
+        const bool hasNew = (static_cast<int>(m_flag) & static_cast<int>(ServiceFlag::New)) != 0;
+        const bool hasBeta = (static_cast<int>(m_flag) & static_cast<int>(ServiceFlag::Beta)) != 0;
+        const QColor red(0xff, 0x3b, 0x30);
+        const QColor orange(0xff, 0x95, 0x00);
+        if (hasNew)
+            flags.append({QStringLiteral("NEW"), red});
+        if (hasBeta)
+            flags.append({QStringLiteral("BETA"), orange});
+        if (flags.isEmpty() && !m_ribbonText.isEmpty())
+        {
+            const bool beta = m_ribbonText.contains(QLatin1String("BETA"), Qt::CaseInsensitive);
+            flags.append({m_ribbonText, beta ? orange : red});
+        }
+    }
+    QFont flagFont = font();
+    flagFont.setPixelSize(9);
+    flagFont.setWeight(QFont::Bold);
+    flagFont.setLetterSpacing(QFont::AbsoluteSpacing, 0.5);
+    const QFontMetrics ffm(flagFont);
+    int flagsRight = w - 12;
+    int flagsWidth = 0;
+    for (int i = flags.size() - 1; i >= 0; --i)
+    {
+        const int fw = ffm.horizontalAdvance(flags[i].text) + 14;
+        const QRect r(flagsRight - fw, 10, fw, 16);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(flags[i].color);
+        painter.drawRoundedRect(r, 8, 8);
+        painter.setFont(flagFont);
+        painter.setPen(Qt::white);
+        painter.drawText(r, Qt::AlignCenter, flags[i].text);
+        flagsRight -= fw + 4;
+        flagsWidth += fw + 4;
+    }
+
+    // 4. Title
+    const int textX = plateRect.right() + 14;
+    const int maxTitleW = qMax(40, w - textX - 12 - (flagsWidth ? flagsWidth + 4 : 0));
+    QFont titleFont = font();
+    titleFont.setPixelSize(14);
+    titleFont.setWeight(QFont::DemiBold);
+    painter.setFont(titleFont);
+    painter.setPen(
+        enabled ? (dark ? QColor(0xf5, 0xf5, 0xf7) : QColor(0x1d, 0x1d, 0x1f))
+                : (dark ? QColor(0x63, 0x63, 0x66) : QColor(0xae, 0xae, 0xb2)));
+    painter.drawText(
+        QRect(textX, 11, maxTitleW, 22),
+        Qt::AlignLeft | Qt::AlignVCenter,
+        QFontMetrics(titleFont).elidedText(m_title, Qt::ElideRight, maxTitleW));
+
+    // 5. Tier badge: tinted capsule, no border
+    if (!m_badgeText.isEmpty())
+    {
+        const TierStyle ts = tierStyle(m_tier, enabled, dark);
+        QFont badgeFont = font();
+        badgeFont.setPixelSize(11);
+        badgeFont.setWeight(QFont::DemiBold);
+        const QFontMetrics bfm(badgeFont);
+        const int badgeH = 20;
+        const int maxPillW = qMax(40, w - textX - 104);
+        const int pillW = qBound(44, bfm.horizontalAdvance(m_badgeText) + 18, maxPillW);
+        const QRect pillRect(textX, h - badgeH - 12, pillW, badgeH);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(ts.tint);
+        painter.drawRoundedRect(pillRect, 10, 10);
         painter.setBrush(Qt::NoBrush);
-        painter.drawEllipse(pCenter, static_cast<int>(ringR), static_cast<int>(ringR));
-
-        // Neon border flash
-        const int borderPulseAlpha = static_cast<int>((1.0 - m_clickProgress) * 240);
-        painter.setPen(QPen(QColor(accent.red(), accent.green(), accent.blue(), borderPulseAlpha), 1.5));
-        painter.drawRect(QRect(0, 0, w - 1, h - 1));
-
-        painter.restore();
+        painter.setFont(badgeFont);
+        painter.setPen(ts.text);
+        painter.drawText(pillRect, Qt::AlignCenter, bfm.elidedText(m_badgeText, Qt::ElideRight, pillRect.width() - 10));
     }
 }
 

@@ -1,8 +1,13 @@
 <RCC>
     <qresource prefix="/resources">
         <file alias="app-logo-merry">res/icon.png</file>
-        <file alias="ApplicationStyle.qss">res/style/ApplicationStyle.qss</file>
         <file alias="icon-hello">res/icon-hello.png</file>
+        <file alias="font-Inter-Regular">res/fonts/font-Inter/Inter-Regular.ttf</file>
+        <file alias="font-Inter-Medium">res/fonts/font-Inter/Inter-Medium.ttf</file>
+        <file alias="font-Inter-SemiBold">res/fonts/font-Inter/Inter-SemiBold.ttf</file>
+        <file alias="font-Inter-Bold">res/fonts/font-Inter/Inter-Bold.ttf</file>
+        <file alias="lucide-license">res/svg/LICENSE-lucide.txt</file>
+        <file alias="font-Inter-license">res/fonts/font-Inter/OFL.txt</file>
         <file alias="font-DigitalNumbers">res/fonts/font-DigitalNumbers/DigitalNumbers-Regular.ttf</file>
         <file alias="no-avatar">res/no-avatar.png</file>
         <file alias="snowflake-image">res/snowflake-image.png</file>
@@ -12,6 +17,10 @@
         <file alias="app-logo">res/icon_std.png</file>
         <file alias="checkbox-checked">res/svg/checkbox-checked.svg</file>
         <file alias="license-gplv3">../LICENSE</file>
+    </qresource>
+    <qresource prefix="/themes">
+        <file alias="light.qss">res/style/light.qss</file>
+        <file alias="dark.qss">res/style/dark.qss</file>
     </qresource>
     <qresource prefix="/service-icons">
         <file alias="ads-killer">res/svg/services/ads-killer.svg</file>

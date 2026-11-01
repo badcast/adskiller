@@ -25,6 +25,7 @@
 #include "StorageCacheCleanWidget.h"
 #include "Services.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 RunningAppIconsStrip::RunningAppIconsStrip(QWidget *parent)
     : QWidget(parent)
@@ -119,12 +120,15 @@ void RunningAppIconsStrip::paintEvent(QPaintEvent *)
     p.setRenderHint(QPainter::SmoothPixmapTransform);
 
     // Subtle dark container background
-    p.fillRect(rect(), QColor(7, 10, 18, 160));
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setPen(Qt::NoPen);
+    p.setBrush(ThemeManager::autoColor(QColor(7, 10, 18, 160)));
+    p.drawRoundedRect(rect(), 12, 12);
 
     if (m_items.isEmpty())
     {
-        p.setPen(QColor(100, 116, 139));
-        p.setFont(QFont("Segoe UI", 10));
+        p.setPen(ThemeManager::autoColor(QColor(100, 116, 139)));
+        p.setFont(ThemeManager::uiFont(10));
         p.drawText(rect(), Qt::AlignCenter, "Иконки сканируемых приложений появятся здесь при очистке");
         return;
     }
@@ -646,7 +650,7 @@ void StorageCacheCleanWidget::setupUi()
     btnLayout->setSpacing(10);
 
     m_btnStart = new QPushButton("Запустить", leftFrame);
-    m_btnStart->setIcon(QIcon(":/svg/play"));
+    m_btnStart->setIcon(ThemeManager::icon(":/svg/play"));
     m_btnStart->setIconSize(QSize(16, 16));
     m_btnStart->setFixedHeight(40);
     m_btnStart->setCursor(Qt::PointingHandCursor);
@@ -660,7 +664,7 @@ void StorageCacheCleanWidget::setupUi()
     btnLayout->addWidget(m_btnStart, 1);
 
     m_btnStop = new QPushButton("Остановить", leftFrame);
-    m_btnStop->setIcon(QIcon(":/svg/pause"));
+    m_btnStop->setIcon(ThemeManager::icon(":/svg/pause"));
     m_btnStop->setIconSize(QSize(16, 16));
     m_btnStop->setFixedHeight(40);
     m_btnStop->setEnabled(false);
@@ -695,7 +699,7 @@ void StorageCacheCleanWidget::setupUi()
         QLabel *iconLbl = new QLabel(card);
         iconLbl->setFixedSize(36, 36);
         iconLbl->setAlignment(Qt::AlignCenter);
-        iconLbl->setPixmap(QPixmap(iconPath).scaled(22, 22, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLbl->setPixmap(ThemeManager::icon(iconPath).pixmap(22, 22));
         iconLbl->setStyleSheet("background-color: #070A12; border: 1px solid #1E293B; border-radius: 0px;");
         lay->addWidget(iconLbl);
 
@@ -1005,7 +1009,7 @@ public:
                                 const QString &val,
                                 const QString &color = "#FFFFFF") {
             QLabel *iLbl = new QLabel(detailsFrame);
-            iLbl->setPixmap(QPixmap(iconPath).scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            iLbl->setPixmap(ThemeManager::icon(iconPath).pixmap(16, 16));
             grid->addWidget(iLbl, row, 0);
 
             QLabel *tLbl = new QLabel(label, detailsFrame);

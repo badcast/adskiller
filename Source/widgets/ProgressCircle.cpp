@@ -1,4 +1,5 @@
 #include "ProgressCircle.h"
+#include "ThemeManager.h"
 #include <QPainter>
 #include <QPixmapCache>
 #include <QtMath>
@@ -287,7 +288,7 @@ QPixmap ProgressCircle::generatePixmap() const
         }
         else
         {
-            painter.setPen(QPen(QColor(255, 255, 255, 25), 1.5, Qt::SolidLine, Qt::FlatCap));
+            painter.setPen(QPen(ThemeManager::autoColor(QColor(255, 255, 255, 25)), 1.5, Qt::SolidLine, Qt::FlatCap));
         }
 
         painter.drawLine(pInner, pOuter);
@@ -297,7 +298,7 @@ QPixmap ProgressCircle::generatePixmap() const
     if (coreR > 10.0)
     {
         painter.setPen(QPen(QColor(mColor.red(), mColor.green(), mColor.blue(), 70), 1.0, Qt::DashLine));
-        painter.setBrush(QColor(10, 14, 20, 180));
+        painter.setBrush(ThemeManager::autoColor(QColor(10, 14, 20, 180)));
         painter.drawEllipse(center, coreR, coreR);
 
         painter.setPen(QPen(mColor, 1.5));
@@ -353,11 +354,11 @@ QPixmap ProgressCircle::generatePixmap() const
 
                 QColor charColor;
                 if ((col + charIndex) % 11 == 0)
-                    charColor = QColor(255, 60, 70);
+                    charColor = ThemeManager::autoColor(QColor(255, 60, 70));
                 else if ((col + charIndex) % 5 == 0)
-                    charColor = QColor(50, 230, 130);
+                    charColor = ThemeManager::autoColor(QColor(50, 230, 130));
                 else
-                    charColor = QColor(0, 220, 255);
+                    charColor = ThemeManager::autoColor(QColor(0, 220, 255));
 
                 int alpha = qBound(0, static_cast<int>(edgeFade * colAlphaScale * 140), 255);
                 charColor.setAlpha(alpha);
@@ -380,7 +381,7 @@ QPixmap ProgressCircle::generatePixmap() const
         QFontMetrics fm(numFont);
         QRectF textRect(center.x() - coreR, center.y() - (fm.height() / 2.0), coreR * 2.0, fm.height());
 
-        painter.setPen(QColor(240, 248, 255));
+        painter.setPen(ThemeManager::autoColor(QColor(240, 248, 255)));
         painter.drawText(textRect, Qt::AlignCenter, numStr);
     }
 

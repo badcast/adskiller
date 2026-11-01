@@ -1,4 +1,5 @@
 #include "PixelBlastSideButton.h"
+#include "ThemeManager.h"
 
 #include <QIcon>
 #include <QConicalGradient>
@@ -78,19 +79,19 @@ void PixelBlastSideButton::paintEvent(QPaintEvent *event)
     panelPath.addRoundedRect(panelRect, 8, 8);
 
     QLinearGradient background(panelRect.topLeft(), panelRect.bottomRight());
-    background.setColorAt(0.0, QColor("#211B0D"));
-    background.setColorAt(0.55, QColor("#17150F"));
-    background.setColorAt(1.0, QColor("#30230A"));
+    background.setColorAt(0.0, ThemeManager::autoColor(QColor("#211B0D")));
+    background.setColorAt(0.55, ThemeManager::autoColor(QColor("#17150F")));
+    background.setColorAt(1.0, ThemeManager::autoColor(QColor("#30230A")));
     painter.fillPath(panelPath, background);
 
     QConicalGradient border(panelRect.center(), m_borderAngle);
-    border.setColorAt(0.0, QColor("#FFF1A8"));
-    border.setColorAt(0.12, QColor("#A16207"));
-    border.setColorAt(0.28, QColor("#FDE68A"));
-    border.setColorAt(0.48, QColor("#713F12"));
-    border.setColorAt(0.68, QColor("#FACC15"));
-    border.setColorAt(0.86, QColor("#A16207"));
-    border.setColorAt(1.0, QColor("#FFF1A8"));
+    border.setColorAt(0.0, ThemeManager::autoColor(QColor("#FFF1A8")));
+    border.setColorAt(0.12, ThemeManager::autoColor(QColor("#A16207")));
+    border.setColorAt(0.28, ThemeManager::autoColor(QColor("#FDE68A")));
+    border.setColorAt(0.48, ThemeManager::autoColor(QColor("#713F12")));
+    border.setColorAt(0.68, ThemeManager::autoColor(QColor("#FACC15")));
+    border.setColorAt(0.86, ThemeManager::autoColor(QColor("#A16207")));
+    border.setColorAt(1.0, ThemeManager::autoColor(QColor("#FFF1A8")));
 
     QPen borderPen(border, m_isPressed ? 4 : 3);
     painter.setPen(borderPen);

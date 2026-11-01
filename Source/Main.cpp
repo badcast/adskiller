@@ -27,6 +27,7 @@
 #include "Begin.h"
 #include "MainWindow.h"
 #include "Network.h"
+#include "ThemeManager.h"
 
 constexpr auto ShowCommandPipe = "adskiller_window_show";
 constexpr auto HideCommandPipe = "adskiller_window_hide";
@@ -179,31 +180,8 @@ int main(int argc, char **argv)
 
     QWidget *banner = createBanner();
 
-    app.setStyle(QStyleFactory::create("Fusion"));
-
-    QPalette darkPalette;
-    darkPalette.setColor(QPalette::Window, QColor(10, 14, 26));
-    darkPalette.setColor(QPalette::WindowText, QColor(248, 250, 252));
-    darkPalette.setColor(QPalette::Base, QColor(7, 10, 18));
-    darkPalette.setColor(QPalette::AlternateBase, QColor(15, 23, 42));
-    darkPalette.setColor(QPalette::ToolTipBase, QColor(15, 23, 42));
-    darkPalette.setColor(QPalette::ToolTipText, QColor(248, 250, 252));
-    darkPalette.setColor(QPalette::Text, QColor(248, 250, 252));
-    darkPalette.setColor(QPalette::Button, QColor(15, 23, 42));
-    darkPalette.setColor(QPalette::ButtonText, QColor(248, 250, 252));
-    darkPalette.setColor(QPalette::BrightText, QColor(56, 189, 248));
-    darkPalette.setColor(QPalette::Link, QColor(56, 189, 248));
-    darkPalette.setColor(QPalette::Highlight, QColor(2, 132, 199));
-    darkPalette.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
-    darkPalette.setColor(QPalette::PlaceholderText, QColor(100, 116, 139));
-
-    darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(71, 85, 105));
-    darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(71, 85, 105));
-    darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(71, 85, 105));
-    darkPalette.setColor(QPalette::Disabled, QPalette::Highlight, QColor(30, 41, 59));
-    darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, QColor(71, 85, 105));
-
-    app.setPalette(darkPalette);
+    ThemeManager::instance()->apply(
+        AppSetting::themeIndex() == ThemeScheme::Light ? ThemeManager::Theme::Light : ThemeManager::Theme::Dark);
 
     MainWindow *w = new MainWindow;
     MainWindow::current = w;

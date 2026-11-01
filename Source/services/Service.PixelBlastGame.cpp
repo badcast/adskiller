@@ -20,6 +20,7 @@
 #include <QScrollBar>
 
 #include "Extension.h"
+#include "ThemeManager.h"
 
 // ============================================================================
 // PBGInternal (In-Window Embedded Overlay for Pixel Blast Game)
@@ -265,7 +266,7 @@ void PBGInternal::setupUi()
 
     // Restart Button
     mRestartBtn = new QPushButton(QString::fromUtf8("Заново"), topCard);
-    mRestartBtn->setIcon(QIcon(":/svg/refresh-cw"));
+    mRestartBtn->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     mRestartBtn->setCursor(Qt::PointingHandCursor);
     mRestartBtn->setStyleSheet(
         "QPushButton {"

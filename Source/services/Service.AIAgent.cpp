@@ -61,6 +61,7 @@ bool AIAgentService::eventFilter(QObject *obj, QEvent *ev)
 }
 
 #include "AIChatView.h"
+#include "ThemeManager.h"
 
 static QStringList s_persistedAiMessages;
 static int s_persistedAiSessionId = -1;
@@ -204,7 +205,7 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
         if (btn)
         {
             btn->setText(QString());
-            btn->setIcon(QIcon(":/svg/send"));
+            btn->setIcon(ThemeManager::icon(":/svg/send"));
             btn->setIconSize(QSize(16, 16));
             btn->setEnabled(true);
         }
@@ -247,7 +248,7 @@ void AIAgentService::slotPullMessage(const QJsonObject responce, const QString g
     if (btn)
     {
         btn->setText(QString());
-        btn->setIcon(QIcon(":/svg/send"));
+        btn->setIcon(ThemeManager::icon(":/svg/send"));
         btn->setIconSize(QSize(16, 16));
         btn->setEnabled(true);
     }

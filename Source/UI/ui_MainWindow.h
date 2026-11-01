@@ -420,7 +420,7 @@ public:
         QFont font1;
         font1.setPointSize(14);
         font1.setBold(false);
-        font1.setItalic(true);
+        font1.setItalic(false);
         label_6->setFont(font1);
         label_6->setStyleSheet(
             QString::fromUtf8(

@@ -56,6 +56,7 @@
 #include "SamsungFrpWidget.h"
 #include <QToolBar>
 #include "RadioPlayerWidget.h"
+#include "ThemeManager.h"
 
 constexpr struct
 {
@@ -362,12 +363,12 @@ void MainWindow::setupAiPanel()
 
         QPushButton *tabChatBtn = new QPushButton("Чат", segmentedBar);
         tabChatBtn->setObjectName("tabChatBtn");
-        tabChatBtn->setIcon(QIcon(":/svg/message-circle"));
+        tabChatBtn->setIcon(ThemeManager::icon(":/svg/message-circle"));
         tabChatBtn->setIconSize(QSize(14, 14));
 
         QPushButton *tabInfoBtn = new QPushButton("Инфо", segmentedBar);
         tabInfoBtn->setObjectName("tabInfoBtn");
-        tabInfoBtn->setIcon(QIcon(":/svg/clipboard"));
+        tabInfoBtn->setIcon(ThemeManager::icon(":/svg/clipboard"));
         tabInfoBtn->setIconSize(QSize(14, 14));
 
         tabChatBtn->setCheckable(true);
@@ -422,7 +423,7 @@ void MainWindow::setupAiPanel()
                 aiPanel->setVisible(false);
                 ui->aiToolBoxToggle->setVisible(true);
                 ui->aiToolBoxToggle->setFixedSize(36, 100);
-                ui->aiToolBoxToggle->setIcon(QIcon(":/svg/bot"));
+                ui->aiToolBoxToggle->setIcon(ThemeManager::icon(":/svg/bot"));
                 ui->aiToolBoxToggle->setIconSize(QSize(18, 18));
                 ui->aiToolBoxToggle->setText(QString::fromUtf8("AI\n‹"));
                 ui->aiToolBoxToggle->setToolTip(QString::fromUtf8("Развернуть панель AdsKiller AI"));
@@ -531,7 +532,7 @@ void MainWindow::setupAiPanel()
 
         QPushButton *shuffleBtn = new QPushButton(quickBarWidget);
         shuffleBtn->setObjectName("aiShuffleBtn");
-        shuffleBtn->setIcon(QIcon(":/svg/shuffle"));
+        shuffleBtn->setIcon(ThemeManager::icon(":/svg/shuffle"));
         shuffleBtn->setIconSize(QSize(14, 14));
         shuffleBtn->setToolTip("Перемешать подсказки");
         shuffleBtn->setFixedSize(26, 26);
@@ -665,7 +666,7 @@ void MainWindow::setupAiPanel()
         ui->aiChatSend->setFixedSize(30, 30);
         ui->aiChatSend->setCursor(Qt::PointingHandCursor);
         ui->aiChatSend->setText(QString());
-        ui->aiChatSend->setIcon(QIcon(":/svg/send"));
+        ui->aiChatSend->setIcon(ThemeManager::icon(":/svg/send"));
         ui->aiChatSend->setIconSize(QSize(15, 15));
         ui->aiChatSend->setToolTip("Отправить сообщение (Enter)");
         ui->aiChatSend->setToolTip("Отправить сообщение (Enter)");
@@ -722,7 +723,7 @@ void MainWindow::setupRadioPlayer()
     if (ui->menubar)
     {
         QMenu *radioMenu = ui->menubar->addMenu(QString::fromUtf8("Радио"));
-        radioMenu->setIcon(QIcon(":/svg/radio"));
+        radioMenu->setIcon(ThemeManager::icon(":/svg/radio"));
 
         QAction *toggleViewAct = radioToolBar->toggleViewAction();
         toggleViewAct->setText(QString::fromUtf8("Показать/скрыть панель радио"));
@@ -732,21 +733,21 @@ void MainWindow::setupRadioPlayer()
         radioMenu->addSeparator();
 
         QAction *playPauseAct = radioMenu->addAction(
-            QIcon(":/svg/play"),
+            ThemeManager::icon(":/svg/play"),
             QString::fromUtf8("Воспроизведение / Пауза"),
             radioPlayer,
             &RadioPlayerWidget::togglePlay);
         playPauseAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Space));
 
         QAction *nextStationAct = radioMenu->addAction(
-            QIcon(":/svg/skip-forward"),
+            ThemeManager::icon(":/svg/skip-forward"),
             QString::fromUtf8("Следующая станция"),
             radioPlayer,
             &RadioPlayerWidget::nextStation);
         nextStationAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Right));
 
         QAction *prevStationAct = radioMenu->addAction(
-            QIcon(":/svg/skip-back"),
+            ThemeManager::icon(":/svg/skip-back"),
             QString::fromUtf8("Предыдущая станция"),
             radioPlayer,
             &RadioPlayerWidget::previousStation);
@@ -771,7 +772,7 @@ void MainWindow::setupRadioPlayer()
 
         radioMenu->addSeparator();
         radioMenu->addAction(
-            QIcon(":/svg/plus"),
+            ThemeManager::icon(":/svg/plus"),
             QString::fromUtf8("Добавить свою радиостанцию..."),
             radioPlayer,
             &RadioPlayerWidget::showAddStationDialog);
@@ -856,7 +857,7 @@ void MainWindow::setupPagesDesign()
     if (ui->butShowPass)
     {
         ui->butShowPass->setText(QString());
-        ui->butShowPass->setIcon(QIcon(":/svg/eye"));
+        ui->butShowPass->setIcon(ThemeManager::icon(":/svg/eye"));
         ui->butShowPass->setIconSize(QSize(18, 18));
         ui->butShowPass->setToolTip("Показать / скрыть пароль");
         ui->butShowPass->setCursor(Qt::PointingHandCursor);
@@ -1158,7 +1159,7 @@ void MainWindow::setupPagesDesign()
 
                 QPushButton *btnWa
                     = msgBox.addButton(QString::fromUtf8("Написать в WhatsApp"), QMessageBox::ActionRole);
-                btnWa->setIcon(QIcon(":/svg/message-circle"));
+                btnWa->setIcon(ThemeManager::icon(":/svg/message-circle"));
                 btnWa->setIconSize(QSize(16, 16));
                 btnWa->setCursor(Qt::PointingHandCursor);
                 btnWa->setStyleSheet(
@@ -1326,7 +1327,7 @@ void MainWindow::setupPagesDesign()
         searchEdit->setFixedWidth(240);
         searchEdit->setFixedHeight(26);
         searchEdit->setCursor(Qt::IBeamCursor);
-        searchEdit->addAction(QIcon(":/svg/search"), QLineEdit::LeadingPosition);
+        searchEdit->addAction(ThemeManager::icon(":/svg/search"), QLineEdit::LeadingPosition);
         searchEdit->setStyleSheet(
             "QLineEdit#serviceSearchEdit {"
             "   background-color: #070B14;"

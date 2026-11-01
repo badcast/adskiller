@@ -46,6 +46,7 @@
 #include <QRandomGenerator>
 
 #include "AppSystemTray.h"
+#include "ThemeManager.h"
 #include "Services.h"
 #include "Strings.h"
 #include "Extension.h"
@@ -169,10 +170,15 @@ MainWindow::MainWindow(QWidget *parent)
     });
     QObject::connect(versionChecker, &QTimer::timeout, this, [this]() { checkVersion(false); });
 
-    // Set Default Theme DARK ONLY
+    // Theme is switched from the tray menu; the legacy menu bar entry is not used.
     ui->menu_4->deleteLater();
 
-    setTheme(ThemeScheme::Dark);
+    setTheme(getTheme());
+
+    // Soft shadows only on a few static cards
+    for (QWidget *card :
+         {static_cast<QWidget *>(ui->frame_4), static_cast<QWidget *>(ui->groupBox), static_cast<QWidget *>(ui->frame)})
+        ThemeManager::instance()->addCardShadow(card);
 
     QString _version;
     _version += QString::number(AppVerMajor);
@@ -203,13 +209,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Setup SVG icons on action buttons
     ui->butShowPass->setText(QString());
-    ui->butShowPass->setIcon(QIcon(":/svg/eye"));
+    ui->butShowPass->setIcon(ThemeManager::icon(":/svg/eye"));
     ui->butShowPass->setIconSize(QSize(16, 16));
     ui->butShowPass->setToolTip(tr("Показать пароль"));
     ui->butShowPass->setCursor(Qt::PointingHandCursor);
 
     ui->aiChatSend->setText(QString());
-    ui->aiChatSend->setIcon(QIcon(":/svg/send"));
+    ui->aiChatSend->setIcon(ThemeManager::icon(":/svg/send"));
     ui->aiChatSend->setIconSize(QSize(15, 15));
     ui->aiChatSend->setCursor(Qt::PointingHandCursor);
 }
@@ -240,7 +246,6 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     setStyleSheet(QStringLiteral(
         "QDialog {"
         "    background-color: #0B1120;"
-        "    border: 1.5px solid #1E293B;"
         "    color: #F8FAFC;"
         "    font-family: 'Segoe UI', -apple-system, sans-serif;"
         "}"
@@ -280,11 +285,12 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
     QFrame *iconFrame = new QFrame(this);
     iconFrame->setFixedSize(54, 54);
+    iconFrame->setObjectName(QStringLiteral("svcIconFrame"));
     iconFrame->setStyleSheet(QStringLiteral(
-        "QFrame {"
+        "QFrame#svcIconFrame {"
         "    background-color: #070A12;"
-        "    border: 1.5px solid #1E293B;"
-        "    border-radius: 6px;"
+        "    border: none;"
+        "    border-radius: 14px;"
         "}"));
     QVBoxLayout *iconLayout = new QVBoxLayout(iconFrame);
     iconLayout->setContentsMargins(0, 0, 0, 0);
@@ -295,7 +301,7 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     iconLbl->setAlignment(Qt::AlignCenter);
     QIcon icon = m_details.icon;
     if (icon.isNull())
-        icon = QIcon(":/svg/bot");
+        icon = ThemeManager::icon(":/svg/bot");
     iconLbl->setPixmap(icon.pixmap(38, 38));
     iconLayout->addWidget(iconLbl);
     headerLayout->addWidget(iconFrame);
@@ -318,44 +324,44 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     {
         tierBadge->setText(QString::fromUtf8("  В РАЗРАБОТКЕ / ОГРАНИЧЕН  "));
         tierBadge->setStyleSheet(QStringLiteral(
-            "background: #181E29; border: 1px solid #334155; color: #94A3B8; font-size: 10px; font-weight: bold; "
-            "border-radius: 2px;"));
+            "background: #181E29; color: #94A3B8; font-size: 11px; font-weight: 600; "
+            "border-radius: 11px;"));
     }
     else if (m_details.tier == ServiceTileButton::Tier::Vip)
     {
         tierBadge->setText(QString::fromUtf8("  VIP СЕРВИС  "));
         tierBadge->setStyleSheet(QStringLiteral(
-            "background: #241806; border: 1px solid #92400E; color: #FBBF24; font-size: 10px; font-weight: bold; "
-            "border-radius: 2px;"));
+            "background: #241806; color: #FBBF24; font-size: 11px; font-weight: 600; "
+            "border-radius: 11px;"));
     }
     else if (m_details.tier == ServiceTileButton::Tier::Free)
     {
         tierBadge->setText(QString::fromUtf8("  БЕСПЛАТНЫЙ СЕРВИС  "));
         tierBadge->setStyleSheet(QStringLiteral(
-            "background: #062516; border: 1px solid #059669; color: #34D399; font-size: 10px; font-weight: bold; "
-            "border-radius: 2px;"));
+            "background: #062516; color: #34D399; font-size: 11px; font-weight: 600; "
+            "border-radius: 11px;"));
     }
     else if (m_details.tier == ServiceTileButton::Tier::Dynamic)
     {
         tierBadge->setText(QString::fromUtf8("  ТАРИФ НА ВЫБОР  "));
         tierBadge->setStyleSheet(QStringLiteral(
-            "background: #0E1B38; border: 1px solid #2563EB; color: #60A5FA; font-size: 10px; font-weight: bold; "
-            "border-radius: 2px;"));
+            "background: #0E1B38; color: #60A5FA; font-size: 11px; font-weight: 600; "
+            "border-radius: 11px;"));
     }
     else
     {
         tierBadge->setText(QString::fromUtf8("  ПЛАТНЫЙ СЕРВИС  "));
         tierBadge->setStyleSheet(QStringLiteral(
-            "background: #0C2038; border: 1px solid #0284C7; color: #38BDF8; font-size: 10px; font-weight: bold; "
-            "border-radius: 2px;"));
+            "background: #0C2038; color: #38BDF8; font-size: 11px; font-weight: 600; "
+            "border-radius: 11px;"));
     }
     badgesLayout->addWidget(tierBadge);
 
     QLabel *connBadge = new QLabel(QString("  %1  ").arg(m_details.connectTypeName), this);
     connBadge->setFixedHeight(22);
     connBadge->setStyleSheet(QStringLiteral(
-        "background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-size: 10px; font-weight: bold; "
-        "border-radius: 2px;"));
+        "background: #1E293B; color: #CBD5E1; font-size: 11px; font-weight: 600; "
+        "border-radius: 11px;"));
     badgesLayout->addWidget(connBadge);
 
     if (m_details.flag != ServiceFlag::None)
@@ -366,8 +372,8 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
             flagBadgeNew->setFixedHeight(22);
             flagBadgeNew->setText(QString::fromUtf8("  NEW  "));
             flagBadgeNew->setStyleSheet(QStringLiteral(
-                "background: #2D0B0B; border: 1px solid #DC2626; color: #F87171; font-size: 10px; font-weight: bold; "
-                "border-radius: 2px;"));
+                "background: #2D0B0B; color: #F87171; font-size: 11px; font-weight: 600; "
+                "border-radius: 11px;"));
             badgesLayout->addWidget(flagBadgeNew);
         }
         if ((static_cast<int>(m_details.flag) & static_cast<int>(ServiceFlag::Beta)) != 0)
@@ -376,8 +382,8 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
             flagBadgeBeta->setFixedHeight(22);
             flagBadgeBeta->setText(QString::fromUtf8("  BETA  "));
             flagBadgeBeta->setStyleSheet(QStringLiteral(
-                "background: #2D1A04; border: 1px solid #D97706; color: #FBBF24; font-size: 10px; font-weight: bold; "
-                "border-radius: 2px;"));
+                "background: #2D1A04; color: #FBBF24; font-size: 11px; font-weight: 600; "
+                "border-radius: 11px;"));
             badgesLayout->addWidget(flagBadgeBeta);
         }
     }
@@ -396,11 +402,12 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
     // 2. Conditions of Use & Pricing Panel
     QFrame *condCard = new QFrame(this);
+    condCard->setObjectName(QStringLiteral("svcCondCard"));
     condCard->setStyleSheet(QStringLiteral(
-        "QFrame {"
+        "QFrame#svcCondCard {"
         "    background-color: #0F172A;"
-        "    border: 1px solid #1E293B;"
-        "    border-radius: 4px;"
+        "    border: none;"
+        "    border-radius: 14px;"
         "    padding: 12px;"
         "}"));
     QVBoxLayout *condLayout = new QVBoxLayout(condCard);
@@ -409,7 +416,7 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
 
     QLabel *condHeader = new QLabel(QString::fromUtf8("УСЛОВИЯ И СТОИМОСТЬ"), condCard);
     condHeader->setStyleSheet(
-        QStringLiteral("color: #38BDF8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;"));
+        QStringLiteral("color: #94A3B8; font-size: 11px; font-weight: 600; letter-spacing: 0.6px;"));
     condLayout->addWidget(condHeader);
 
     QString priceTextHtml;
@@ -477,11 +484,12 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     mainLayout->addWidget(descHeader);
 
     QFrame *descFrame = new QFrame(this);
+    descFrame->setObjectName(QStringLiteral("svcDescFrame"));
     descFrame->setStyleSheet(QStringLiteral(
-        "QFrame {"
-        "    background-color: #070A12;"
-        "    border: 1px solid #1E293B;"
-        "    border-radius: 4px;"
+        "QFrame#svcDescFrame {"
+        "    background-color: #0F172A;"
+        "    border: none;"
+        "    border-radius: 14px;"
         "}"));
     QVBoxLayout *descFrameLayout = new QVBoxLayout(descFrame);
     descFrameLayout->setContentsMargins(12, 10, 12, 10);
@@ -489,6 +497,8 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     QScrollArea *scrollDesc = new QScrollArea(descFrame);
     scrollDesc->setWidgetResizable(true);
     scrollDesc->setMaximumHeight(130);
+    scrollDesc->setFrameShape(QFrame::NoFrame);
+    scrollDesc->setStyleSheet(QStringLiteral("QScrollArea { background: transparent; border: none; }"));
 
     QString descContent = m_details.description.trimmed();
     if (descContent.isEmpty())
@@ -501,35 +511,35 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
     QLabel *descTextLbl = new QLabel(descContent, scrollDesc);
     descTextLbl->setWordWrap(true);
     descTextLbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    descTextLbl->setStyleSheet(QStringLiteral("color: #E2E8F0; font-size: 12px; line-height: 1.45;"));
+    descTextLbl->setStyleSheet(
+        QStringLiteral("color: #E2E8F0; font-size: 12px; line-height: 1.45; background: transparent;"));
     scrollDesc->setWidget(descTextLbl);
     descFrameLayout->addWidget(scrollDesc);
 
     mainLayout->addWidget(descFrame);
 
-    // 4. Action Buttons Footer: [ 🤖 Спросить ИИ ] on left, [ Закрыть ] on right
+    // 4. Action Buttons Footer: [  Спросить ИИ ] on left, [ Закрыть ] on right
     QHBoxLayout *footerLayout = new QHBoxLayout();
     footerLayout->setContentsMargins(0, 6, 0, 0);
     footerLayout->setSpacing(12);
 
-    QPushButton *btnAskAi = new QPushButton(QString::fromUtf8("🤖 Спросить ИИ"), this);
+    QPushButton *btnAskAi = new QPushButton(QString::fromUtf8("Спросить ИИ"), this);
     btnAskAi->setCursor(Qt::PointingHandCursor);
     btnAskAi->setToolTip(
         QString::fromUtf8("Задать вопрос ИИ-ассистенту о возможностях и порядке работы данного сервиса"));
     btnAskAi->setStyleSheet(QStringLiteral(
         "QPushButton {"
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:1 #0369A1);"
+        "    background-color: #0284C7;"
         "    color: #FFFFFF;"
-        "    border: 1px solid #38BDF8;"
-        "    border-radius: 4px;"
+        "    border: none;"
+        "    border-radius: 10px;"
         "    font-size: 12px;"
-        "    font-weight: bold;"
+        "    font-weight: 600;"
         "    padding: 7px 18px;"
         "    min-height: 28px;"
         "}"
         "QPushButton:hover {"
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0EA5E9, stop:1 #0284C7);"
-        "    border-color: #7DD3FC;"
+        "    background-color: #0369A1;"
         "}"
         "QPushButton:pressed {"
         "    background-color: #0369A1;"
@@ -545,17 +555,15 @@ ServiceInfoDialog::ServiceInfoDialog(const ServiceTileButton::Details &details, 
         "QPushButton {"
         "    background-color: #1E293B;"
         "    color: #CBD5E1;"
-        "    border: 1px solid #334155;"
-        "    border-radius: 4px;"
+        "    border: none;"
+        "    border-radius: 10px;"
         "    font-size: 12px;"
-        "    font-weight: bold;"
+        "    font-weight: 600;"
         "    padding: 7px 20px;"
         "    min-height: 28px;"
         "}"
         "QPushButton:hover {"
         "    background-color: #334155;"
-        "    color: #FFFFFF;"
-        "    border-color: #64748B;"
         "}"
         "QPushButton:pressed {"
         "    background-color: #0F172A;"
@@ -676,133 +684,25 @@ void ServiceShockwaveOverlay::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
-    const int w = width();
-    const int h = height();
+    // A single, quiet ripple: soft accent disc that expands and fades out.
     const qreal maxRadius
-        = std::hypot(qMax(m_center.x(), w - m_center.x()), qMax(m_center.y(), h - m_center.y())) * 1.08;
-    const qreal currentRadius = m_progress * maxRadius;
-    const qreal fade = qMax<qreal>(0.0, 1.0 - m_progress);
-    const qreal easedFade = std::pow(fade, 0.65);
+        = std::hypot(qMax(m_center.x(), width() - m_center.x()), qMax(m_center.y(), height() - m_center.y()));
+    const qreal radius = 24.0 + (1.0 - std::pow(1.0 - m_progress, 3.0)) * maxRadius * 0.55;
+    const qreal fade = std::pow(1.0 - m_progress, 1.5);
 
-    // 1. Initial Epic Energy Core Blast (0.0 to 0.4 progress)
-    if (m_progress < 0.4)
-    {
-        const qreal burstProgress = m_progress / 0.4;
-        const qreal burstFade = 1.0 - burstProgress;
-        const qreal burstRadius = 30.0 + burstProgress * 160.0;
-
-        QRadialGradient burstGrad(m_center, burstRadius);
-        QColor coreWhite = Qt::white;
-        coreWhite.setAlphaF(burstFade * 0.85);
-
-        QColor coreGlow = m_accentColor.lighter(140);
-        coreGlow.setAlphaF(burstFade * 0.60);
-
-        QColor outerGlow = m_accentColor;
-        outerGlow.setAlphaF(0.0);
-
-        burstGrad.setColorAt(0.0, coreWhite);
-        burstGrad.setColorAt(0.35, coreGlow);
-        burstGrad.setColorAt(1.0, outerGlow);
-
-        painter.setBrush(burstGrad);
-        painter.setPen(Qt::NoPen);
-        painter.drawEllipse(m_center, static_cast<int>(burstRadius), static_cast<int>(burstRadius));
-    }
-
-    // 2. Window-Wide Expanding Radial Energy Distortion / Field ("Круг изменения по всему окну")
-    if (currentRadius > 8.0)
-    {
-        const qreal ringBandWidth = qMin<qreal>(currentRadius * 0.45, 220.0);
-        const qreal innerRadius = qMax<qreal>(0.0, currentRadius - ringBandWidth);
-
-        QRadialGradient waveField(m_center, currentRadius);
-        QColor fieldEdge = m_accentColor;
-        fieldEdge.setAlphaF(easedFade * 0.24);
-
-        QColor fieldPeak = m_accentColor.lighter(130);
-        fieldPeak.setAlphaF(easedFade * 0.16);
-
-        QColor fieldInner = m_accentColor;
-        fieldInner.setAlphaF(0.0);
-
-        waveField.setColorAt(0.0, fieldInner);
-        if (currentRadius > 0.0)
-        {
-            qreal midStop = qBound<qreal>(0.0, innerRadius / currentRadius, 0.95);
-            waveField.setColorAt(midStop, fieldInner);
-            waveField.setColorAt((midStop + 1.0) * 0.5, fieldPeak);
-        }
-        waveField.setColorAt(1.0, fieldEdge);
-
-        painter.setBrush(waveField);
-        painter.setPen(Qt::NoPen);
-        painter.drawEllipse(m_center, static_cast<int>(currentRadius), static_cast<int>(currentRadius));
-    }
-
-    // 3. Shockwave Front: High-Energy Outer Neon Rings
-    // Ring A: Primary Leading Shockwave (sharp, bright beam)
-    {
-        const int shockAlpha = qBound(0, static_cast<int>(easedFade * 255), 255);
-        QPen shockPen(QColor(m_accentColor.red(), m_accentColor.green(), m_accentColor.blue(), shockAlpha), 4.0);
-        shockPen.setCapStyle(Qt::RoundCap);
-        painter.setPen(shockPen);
-        painter.setBrush(Qt::NoBrush);
-        painter.drawEllipse(m_center, static_cast<int>(currentRadius), static_cast<int>(currentRadius));
-    }
-
-    // Ring B: Neon Corona Glow around Primary Ring (thick, soft halo)
-    {
-        const int haloAlpha = qBound(0, static_cast<int>(easedFade * 110), 255);
-        QPen haloPen(
-            QColor(
-                m_accentColor.lighter(130).red(),
-                m_accentColor.lighter(130).green(),
-                m_accentColor.lighter(130).blue(),
-                haloAlpha),
-            9.0);
-        painter.setPen(haloPen);
-        painter.drawEllipse(m_center, static_cast<int>(currentRadius), static_cast<int>(currentRadius));
-    }
-
-    // Ring C: Secondary Trailing Wavefront (at 82% radius)
-    const qreal secondaryRadius = currentRadius * 0.82;
-    if (secondaryRadius > 10.0)
-    {
-        const int secAlpha = qBound(0, static_cast<int>(easedFade * 150), 255);
-        QPen secPen(
-            QColor(
-                m_accentColor.lighter(150).red(),
-                m_accentColor.lighter(150).green(),
-                m_accentColor.lighter(150).blue(),
-                secAlpha),
-            2.2);
-        painter.setPen(secPen);
-        painter.drawEllipse(m_center, static_cast<int>(secondaryRadius), static_cast<int>(secondaryRadius));
-    }
-
-    // Ring D: Tertiary Harmonic Wavefront (at 64% radius)
-    const qreal tertiaryRadius = currentRadius * 0.64;
-    if (tertiaryRadius > 15.0)
-    {
-        const int terAlpha = qBound(0, static_cast<int>(easedFade * 90), 255);
-        QPen terPen(QColor(m_accentColor.red(), m_accentColor.green(), m_accentColor.blue(), terAlpha), 1.4);
-        painter.setPen(terPen);
-        painter.drawEllipse(m_center, static_cast<int>(tertiaryRadius), static_cast<int>(tertiaryRadius));
-    }
-
-    // 4. Window Border Energy Impact Flash (progress 0.15 to 0.85)
-    if (m_progress > 0.15 && m_progress < 0.85)
-    {
-        const qreal borderProgress = (m_progress - 0.15) / 0.70;
-        const qreal borderIntensity = std::sin(borderProgress * 3.14159265);
-        const int borderAlpha = qBound(0, static_cast<int>(borderIntensity * 140), 255);
-
-        QPen borderPen(QColor(m_accentColor.red(), m_accentColor.green(), m_accentColor.blue(), borderAlpha), 2);
-        painter.setPen(borderPen);
-        painter.setBrush(Qt::NoBrush);
-        painter.drawRect(rect().adjusted(1, 1, -1, -1));
-    }
+    QRadialGradient grad(m_center, radius);
+    QColor inner(0, 113, 227);
+    inner.setAlphaF(0.0);
+    QColor mid(0, 113, 227);
+    mid.setAlphaF(0.10 * fade);
+    QColor edge(0, 113, 227);
+    edge.setAlphaF(0.18 * fade);
+    grad.setColorAt(0.0, inner);
+    grad.setColorAt(0.75, mid);
+    grad.setColorAt(1.0, edge);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(grad);
+    painter.drawEllipse(m_center, static_cast<int>(radius), static_cast<int>(radius));
 }
 
 void MainWindow::showWindowShockwave(const QPoint &globalPos, const QColor &color)
@@ -1076,7 +976,7 @@ void MainWindow::initServiceModules()
                         if (needVIP)
                         {
                             btnVip = msgBox.addButton(QString::fromUtf8("Оформить VIP"), QMessageBox::ActionRole);
-                            btnVip->setIcon(QIcon(":/svg/crown"));
+                            btnVip->setIcon(ThemeManager::icon(":/svg/crown"));
                             btnVip->setIconSize(QSize(16, 16));
                             btnVip->setCursor(Qt::PointingHandCursor);
                             btnVip->setStyleSheet(
@@ -1101,7 +1001,7 @@ void MainWindow::initServiceModules()
                         else
                         {
                             btnSupport = msgBox.addButton(QString::fromUtf8("Поддержка"), QMessageBox::ActionRole);
-                            btnSupport->setIcon(QIcon(":/svg/message-circle"));
+                            btnSupport->setIcon(ThemeManager::icon(":/svg/message-circle"));
                             btnSupport->setIconSize(QSize(16, 16));
                             btnSupport->setCursor(Qt::PointingHandCursor);
                             btnSupport->setStyleSheet(
@@ -1274,7 +1174,7 @@ void MainWindow::initServiceModules()
             if (svcIcon.isNull())
                 svcIcon = QIcon("svg/services/" + remaining->widgetIconName() + ".svg");
             if (svcIcon.isNull())
-                svcIcon = QIcon(":/svg/apple");
+                svcIcon = ThemeManager::icon(":/svg/apple");
 
             ServiceFlag flag = remaining->flag();
             ServiceTileButton *button = new ServiceTileButton(
@@ -1370,8 +1270,8 @@ void MainWindow::initServiceModules()
     QGridLayout *layoutSpace = qobject_cast<QGridLayout *>(ui->serviceContents->layout());
     if (layoutSpace)
     {
-        layoutSpace->setSpacing(14);
-        layoutSpace->setContentsMargins(10, 10, 10, 10);
+        layoutSpace->setSpacing(16);
+        layoutSpace->setContentsMargins(16, 16, 16, 16);
         while (layoutSpace->count() > 0)
         {
             QLayoutItem *child = layoutSpace->takeAt(0);
@@ -1419,26 +1319,23 @@ static QWidget *createServiceGroupDivider(
         layout->addWidget(iconLbl);
     }
 
+    // Quiet section header: primary text, small tinted counter and a hairline separator.
+    Q_UNUSED(accentHex);
     QLabel *titleLbl = new QLabel(title, divider);
-    titleLbl->setStyleSheet(QString(
-                                "color: %1; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: "
-                                "uppercase; background: transparent;")
-                                .arg(accentHex));
+    titleLbl->setStyleSheet(
+        QStringLiteral("color: #F8FAFC; font-size: 13px; font-weight: 600; background: transparent;"));
     layout->addWidget(titleLbl);
 
-    QLabel *countBadge = new QLabel(QString("(%1)").arg(count), divider);
-    countBadge->setStyleSheet(
-        "color: #94A3B8; font-size: 10.5px; font-weight: bold; background: #1E293B; "
-        "border: 1px solid #334155; padding: 1px 7px; border-radius: 2px;");
+    QLabel *countBadge = new QLabel(QString::number(count), divider);
+    countBadge->setStyleSheet(QStringLiteral(
+        "color: #94A3B8; font-size: 11px; font-weight: 600; background: #1E293B; "
+        "padding: 1px 8px; border-radius: 9px;"));
     layout->addWidget(countBadge);
 
     QFrame *line = new QFrame(divider);
     line->setFixedHeight(1);
     line->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    line->setStyleSheet(QString(
-                            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 %1, stop:0.35 #334155, stop:1 "
-                            "transparent); border: none;")
-                            .arg(accentHex));
+    line->setStyleSheet(QStringLiteral("background: #1E293B; border: none;"));
     layout->addWidget(line, 1);
 
     return divider;
@@ -1856,7 +1753,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "подключать напрямую в разъём системного блока без переходников и хабов."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; \">"
+            "  <div >"
             "    <span style=\"color: #FFFFFF; \">2</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Доверие этому "
             "компьютеру</strong>"
@@ -1865,7 +1762,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "код-пароль разблокировки на экране iPhone/iPad."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; \">"
+            "  <div >"
             "    <span style=\"color: #FFFFFF; \">3</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режимы Recovery и DFU (при "
             "необходимости)</strong>"
@@ -1874,7 +1771,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "или <b>DFU</b>. Приложение автоматически определит его и откроет прошивку."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px "
+            "  <div style=\" border: 1px dashed #0284C7; border-radius: 0px; padding: 9px "
             "12px; margin-top: 6px;\">"
             "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" "
             "width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Устройство не определяется?</span>"
@@ -1897,7 +1794,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
         if (ui->label_5)
         {
             ui->label_5->setStyleSheet(
-                "background-color: #18181B;"
+                ""
                 "border: 1px solid #0284C7;"
                 "border-radius: 0px;"
                 "color: #00E5FF;"
@@ -1925,7 +1822,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "  <p style=\"color: #A1A1AA; font-size: 11.5px; margin: 0 0 12px 0; line-height: 1.45;\">"
             "    Для выполнения процедур активируйте <b>Отладку по USB</b> на вашем Android-смартфоне:"
             "  </p>"
-            "  <div style=\"background-color: #18181B; \">"
+            "  <div >"
             "    <span style=\"color: #FFFFFF; \">1</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Режим разработчика</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
@@ -1933,7 +1830,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "MIUI/HyperOS) и нажмите на него <b>7 раз</b> подряд."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; \">"
+            "  <div >"
             "    <span style=\"color: #FFFFFF; \">2</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Включите отладку по "
             "USB</strong>"
@@ -1942,7 +1839,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "USB</b> (для Xiaomi также «Установка через USB»)."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; \">"
+            "  <div >"
             "    <span style=\"color: #FFFFFF; \">3</span>"
             "    <strong style=\"color: #FFFFFF; font-size: 12.5px; margin-left: 6px;\">Подключите кабель к ПК</strong>"
             "    <p style=\"margin: 5px 0 0 24px; color: #A1A1AA; font-size: 11.5px; line-height: 1.45;\">"
@@ -1950,7 +1847,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
             "разрешать с этого компьютера»</b> и нажмите <b>ОК</b>."
             "    </p>"
             "  </div>"
-            "  <div style=\"background-color: #18181B; border: 1px dashed #0284C7; border-radius: 0px; padding: 9px "
+            "  <div style=\" border: 1px dashed #0284C7; border-radius: 0px; padding: 9px "
             "12px; margin-top: 6px;\">"
             "    <span style=\"color: #00E5FF; font-size: 11.5px; font-weight: 600;\"><img src=\":/svg/lightbulb\" "
             "width=\"13\" height=\"13\" style=\"vertical-align:middle;\"/> Телефон не определяется?</span>"
@@ -1974,7 +1871,7 @@ void MainWindow::updateDevicePageInstructions(DeviceConnectType type)
         if (ui->label_5)
         {
             ui->label_5->setStyleSheet(
-                "background-color: #18181B;"
+                ""
                 "border: 1px solid #0284C7;"
                 "border-radius: 0px;"
                 "color: #00E5FF;"
@@ -2113,7 +2010,7 @@ void MainWindow::pageShownPreStart(int page)
                             {
                                 vis->setStatus(UNKNOWN);
                                 ui->label_5->setStyleSheet(
-                                    "background-color: #18181B;"
+                                    ""
                                     "border: 1px solid #0284C7;"
                                     "border-radius: 0px;"
                                     "color: #00E5FF;"
@@ -2214,7 +2111,7 @@ void MainWindow::pageShownPreStart(int page)
                             {
                                 vis->setStatus(UNKNOWN);
                                 ui->label_5->setStyleSheet(
-                                    "background-color: #18181B;"
+                                    ""
                                     "border: 1px solid #0284C7;"
                                     "border-radius: 0px;"
                                     "color: #00E5FF;"
@@ -2744,9 +2641,9 @@ void MainWindow::updateCabinetUserCard()
         // Reset to default Obsidian dark state
         ui->frame_7->setStyleSheet(QStringLiteral(
             "QFrame#frame_7 {"
-            "    background-color: #0B0F19;"
-            "    border: 1px solid #1E293B;"
-            "    border-radius: 0px;"
+            "    background-color: #0F172A;"
+            "    border: none;"
+            "    border-radius: 16px;"
             "    padding: 6px 12px;"
             "}"
             "QFrame#cabinetSideRow {"
@@ -2924,9 +2821,9 @@ void MainWindow::updateCabinetUserCard()
         // 3. > 0 Credits, No VIP -> Default state as it is
         ui->frame_7->setStyleSheet(QStringLiteral(
             "QFrame#frame_7 {"
-            "    background-color: #0B0F19;"
-            "    border: 1px solid #1E293B;"
-            "    border-radius: 0px;"
+            "    background-color: #0F172A;"
+            "    border: none;"
+            "    border-radius: 16px;"
             "    padding: 6px 12px;"
             "}"
             "QFrame#cabinetSideRow {"
@@ -3148,12 +3045,11 @@ void MainWindow::on_authButton_clicked()
 
 void MainWindow::setThemeAction()
 {
-    // QList<QAction *> virtualSelectItems {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
-    // QAction *selfSender = qobject_cast<QAction *>(sender());
-    // int scheme;
-    // for(scheme = (0); scheme < virtualSelectItems.size() && selfSender != virtualSelectItems[scheme]; ++scheme)
-    //     ;
-    // setTheme(static_cast<ThemeScheme>(scheme));
+    QList<QAction *> virtualSelectItems {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
+    QAction *selfSender = qobject_cast<QAction *>(sender());
+    int scheme = virtualSelectItems.indexOf(selfSender);
+    if (scheme >= 0)
+        setTheme(static_cast<ThemeScheme>(scheme));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -3342,97 +3238,24 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::setTheme(ThemeScheme theme)
 {
-    int scheme;
-    const char *resourceName;
+    // Only Light and Dark are supported; anything else (e.g. legacy "System") means Dark.
+    if (theme != ThemeScheme::Light)
+        theme = ThemeScheme::Dark;
+
     QList<QAction *> menus {ui->mThemeSystem, ui->mThemeLight, ui->mThemeDark};
-    for (scheme = (0); scheme < menus.size(); ++scheme)
+    for (int scheme = 0; scheme < menus.size(); ++scheme)
     {
         menus[scheme]->setChecked(theme == scheme);
     }
 
-    switch (theme)
-    {
-        case System:
-            resourceName = nullptr;
-            break;
-        case Dark:
-            resourceName = ":/resources/ApplicationStyle.qss";
-            break;
-        case Light:
-        default:
-            resourceName = ":/resources/app-style-light";
-            break;
-    }
-
-    QFile styleRes {};
-    QString styleSheet {};
-    if (resourceName)
-    {
-        styleRes.setFileName(resourceName);
-        if (!styleRes.open(QFile::ReadOnly | QFile::Text))
-        {
-            if (theme == Dark)
-            {
-                styleRes.setFileName(QCoreApplication::applicationDirPath() + "/ApplicationStyle.qss");
-                if (!styleRes.open(QFile::ReadOnly | QFile::Text))
-                {
-                    styleRes.setFileName("Resources/res/style/ApplicationStyle.qss");
-                    if (!styleRes.open(QFile::ReadOnly | QFile::Text))
-                        styleRes.setFileName("ApplicationStyle.qss");
-                }
-            }
-        }
-        if (styleRes.isOpen() || styleRes.open(QFile::ReadOnly | QFile::Text))
-        {
-            styleSheet = styleRes.readAll();
-            styleRes.close();
-        }
-    }
-
-    // Set application Design
-    if (!app)
-        app = qApp;
-    if (app)
-        app->setStyleSheet(styleSheet);
-    if (qApp)
-    {
-        qApp->setStyleSheet(styleSheet);
-        if (theme == Dark)
-        {
-            qApp->setStyle(QStyleFactory::create("Fusion"));
-            QPalette darkPalette;
-            darkPalette.setColor(QPalette::Window, QColor(10, 14, 26));             // #0A0E1A
-            darkPalette.setColor(QPalette::WindowText, QColor(248, 250, 252));      // #F8FAFC
-            darkPalette.setColor(QPalette::Base, QColor(7, 10, 18));                // #070A12
-            darkPalette.setColor(QPalette::AlternateBase, QColor(15, 23, 42));      // #0F172A
-            darkPalette.setColor(QPalette::ToolTipBase, QColor(15, 23, 42));        // #0F172A
-            darkPalette.setColor(QPalette::ToolTipText, QColor(248, 250, 252));     // #F8FAFC
-            darkPalette.setColor(QPalette::Text, QColor(248, 250, 252));            // #F8FAFC
-            darkPalette.setColor(QPalette::Button, QColor(15, 23, 42));             // #0F172A
-            darkPalette.setColor(QPalette::ButtonText, QColor(248, 250, 252));      // #F8FAFC
-            darkPalette.setColor(QPalette::BrightText, QColor(56, 189, 248));       // #38BDF8
-            darkPalette.setColor(QPalette::Link, QColor(56, 189, 248));             // #38BDF8
-            darkPalette.setColor(QPalette::Highlight, QColor(2, 132, 199));         // #0284C7
-            darkPalette.setColor(QPalette::HighlightedText, QColor(255, 255, 255)); // #FFFFFF
-            darkPalette.setColor(QPalette::PlaceholderText, QColor(100, 116, 139)); // #64748B
-
-            darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(71, 85, 105)); // #475569
-            darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(71, 85, 105));
-            darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(71, 85, 105));
-            darkPalette.setColor(QPalette::Disabled, QPalette::Highlight, QColor(30, 41, 59)); // #1E293B
-            darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, QColor(71, 85, 105));
-            qApp->setPalette(darkPalette);
-        }
-    }
-    this->setStyleSheet(styleSheet);
+    ThemeManager::instance()->apply(
+        theme == ThemeScheme::Light ? ThemeManager::Theme::Light : ThemeManager::Theme::Dark);
     AppSetting::themeIndex(nullptr, static_cast<int>(theme));
 }
 
 ThemeScheme MainWindow::getTheme()
 {
-    ThemeScheme scheme;
-    scheme = static_cast<ThemeScheme>(AppSetting::themeIndex());
-    return scheme;
+    return AppSetting::themeIndex() == ThemeScheme::Light ? ThemeScheme::Light : ThemeScheme::Dark;
 }
 
 void MainWindow::showMessageFromStatus(int statusCode)
@@ -3584,7 +3407,7 @@ void MainWindow::on_butShowPass_clicked()
     {
         ui->linePassEdit->setEchoMode(QLineEdit::EchoMode::Normal);
         ui->butShowPass->setText(QString());
-        ui->butShowPass->setIcon(QIcon(":/svg/eye-off"));
+        ui->butShowPass->setIcon(ThemeManager::icon(":/svg/eye-off"));
         ui->butShowPass->setIconSize(QSize(16, 16));
         ui->butShowPass->setToolTip(tr("Скрыть пароль"));
     }
@@ -3592,7 +3415,7 @@ void MainWindow::on_butShowPass_clicked()
     {
         ui->linePassEdit->setEchoMode(QLineEdit::EchoMode::Password);
         ui->butShowPass->setText(QString());
-        ui->butShowPass->setIcon(QIcon(":/svg/eye"));
+        ui->butShowPass->setIcon(ThemeManager::icon(":/svg/eye"));
         ui->butShowPass->setIconSize(QSize(16, 16));
         ui->butShowPass->setToolTip(tr("Показать пароль"));
     }

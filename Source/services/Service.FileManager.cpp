@@ -1,6 +1,7 @@
 #include "FileManagerWidget.h"
 #include "Services.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -149,7 +150,7 @@ void FileManagerWidget::setupUi()
     navLayout->setSpacing(6);
 
     m_btnBack = new QPushButton(this);
-    m_btnBack->setIcon(QIcon(":/svg/arrow-left"));
+    m_btnBack->setIcon(ThemeManager::icon(":/svg/arrow-left"));
     m_btnBack->setIconSize(QSize(14, 14));
     m_btnBack->setToolTip("Назад");
     m_btnBack->setFixedWidth(34);
@@ -157,7 +158,7 @@ void FileManagerWidget::setupUi()
     connect(m_btnBack, &QPushButton::clicked, this, &FileManagerWidget::navigateBack);
 
     m_btnForward = new QPushButton(this);
-    m_btnForward->setIcon(QIcon(":/svg/arrow-right"));
+    m_btnForward->setIcon(ThemeManager::icon(":/svg/arrow-right"));
     m_btnForward->setIconSize(QSize(14, 14));
     m_btnForward->setToolTip("Вперёд");
     m_btnForward->setFixedWidth(34);
@@ -165,7 +166,7 @@ void FileManagerWidget::setupUi()
     connect(m_btnForward, &QPushButton::clicked, this, &FileManagerWidget::navigateForward);
 
     m_btnUp = new QPushButton("Наверх", this);
-    m_btnUp->setIcon(QIcon(":/svg/arrow-up"));
+    m_btnUp->setIcon(ThemeManager::icon(":/svg/arrow-up"));
     m_btnUp->setIconSize(QSize(14, 14));
     m_btnUp->setToolTip("Перейти на уровень выше");
     connect(m_btnUp, &QPushButton::clicked, this, &FileManagerWidget::navigateUp);
@@ -180,7 +181,7 @@ void FileManagerWidget::setupUi()
     });
 
     m_btnCopyPath = new QPushButton(this);
-    m_btnCopyPath->setIcon(QIcon(":/svg/copy"));
+    m_btnCopyPath->setIcon(ThemeManager::icon(":/svg/copy"));
     m_btnCopyPath->setIconSize(QSize(13, 13));
     m_btnCopyPath->setToolTip("Скопировать путь");
     m_btnCopyPath->setFixedWidth(32);
@@ -196,13 +197,13 @@ void FileManagerWidget::setupUi()
     connect(m_searchEdit, &QLineEdit::textChanged, this, &FileManagerWidget::onSearchFilterChanged);
 
     m_btnNewDir = new QPushButton("Папка", this);
-    m_btnNewDir->setIcon(QIcon(":/svg/plus"));
+    m_btnNewDir->setIcon(ThemeManager::icon(":/svg/plus"));
     m_btnNewDir->setIconSize(QSize(13, 13));
     m_btnNewDir->setToolTip("Создать новую папку");
     connect(m_btnNewDir, &QPushButton::clicked, this, &FileManagerWidget::createDirectory);
 
     m_btnUpload = new QPushButton("Загрузить", this);
-    m_btnUpload->setIcon(QIcon(":/svg/upload"));
+    m_btnUpload->setIcon(ThemeManager::icon(":/svg/upload"));
     m_btnUpload->setIconSize(QSize(13, 13));
     m_btnUpload->setToolTip("Загрузить файл с компьютера");
     m_btnUpload->setStyleSheet(
@@ -211,7 +212,7 @@ void FileManagerWidget::setupUi()
     connect(m_btnUpload, &QPushButton::clicked, this, &FileManagerWidget::uploadFile);
 
     m_btnRefresh = new QPushButton(this);
-    m_btnRefresh->setIcon(QIcon(":/svg/refresh-cw"));
+    m_btnRefresh->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     m_btnRefresh->setIconSize(QSize(13, 13));
     m_btnRefresh->setToolTip("Обновить список");
     m_btnRefresh->setFixedWidth(34);
@@ -246,7 +247,7 @@ void FileManagerWidget::setupUi()
 
     m_quickAccessList = new QListWidget(sidebarWidget);
     auto addShortcut = [this](const QString &label, const QString &path, const QString &iconPath) {
-        QListWidgetItem *it = new QListWidgetItem(QIcon(iconPath), label, m_quickAccessList);
+        QListWidgetItem *it = new QListWidgetItem(ThemeManager::icon(iconPath), label, m_quickAccessList);
         it->setData(Qt::UserRole, path);
     };
     addShortcut("Внутренняя память", "/sdcard", ":/svg/smartphone");
@@ -370,7 +371,7 @@ void FileManagerWidget::setupUi()
     cardLayout->addSpacing(8);
 
     m_btnDownload = new QPushButton("Скачать на ПК", card);
-    m_btnDownload->setIcon(QIcon(":/svg/download"));
+    m_btnDownload->setIcon(ThemeManager::icon(":/svg/download"));
     m_btnDownload->setIconSize(QSize(14, 14));
     m_btnDownload->setStyleSheet(
         "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 7px; border: none; "
@@ -381,19 +382,19 @@ void FileManagerWidget::setupUi()
     cardLayout->addWidget(m_btnDownload);
 
     m_btnPreview = new QPushButton("Быстрый просмотр", card);
-    m_btnPreview->setIcon(QIcon(":/svg/eye"));
+    m_btnPreview->setIcon(ThemeManager::icon(":/svg/eye"));
     m_btnPreview->setIconSize(QSize(13, 13));
     connect(m_btnPreview, &QPushButton::clicked, this, &FileManagerWidget::previewSelected);
     cardLayout->addWidget(m_btnPreview);
 
     m_btnRename = new QPushButton("Переименовать", card);
-    m_btnRename->setIcon(QIcon(":/svg/edit"));
+    m_btnRename->setIcon(ThemeManager::icon(":/svg/edit"));
     m_btnRename->setIconSize(QSize(13, 13));
     connect(m_btnRename, &QPushButton::clicked, this, &FileManagerWidget::renameSelected);
     cardLayout->addWidget(m_btnRename);
 
     m_btnDelete = new QPushButton("Удалить объект", card);
-    m_btnDelete->setIcon(QIcon(":/svg/trash"));
+    m_btnDelete->setIcon(ThemeManager::icon(":/svg/trash"));
     m_btnDelete->setIconSize(QSize(13, 13));
     m_btnDelete->setStyleSheet(
         "QPushButton { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); "
@@ -890,21 +891,25 @@ void FileManagerWidget::showContextMenu(const QPoint &pos)
         {
             if (!isDir)
             {
-                menu.addAction(QIcon(":/svg/download"), "Скачать на ПК", this, &FileManagerWidget::downloadSelected);
-                menu.addAction(QIcon(":/svg/eye"), "Быстрый просмотр", this, &FileManagerWidget::previewSelected);
+                menu.addAction(
+                    ThemeManager::icon(":/svg/download"), "Скачать на ПК", this, &FileManagerWidget::downloadSelected);
+                menu.addAction(
+                    ThemeManager::icon(":/svg/eye"), "Быстрый просмотр", this, &FileManagerWidget::previewSelected);
             }
-            menu.addAction(QIcon(":/svg/edit"), "Переименовать", this, &FileManagerWidget::renameSelected);
-            menu.addAction(
-                QIcon(":/svg/copy"), "Копировать путь", [fullPath]() { QApplication::clipboard()->setText(fullPath); });
+            menu.addAction(ThemeManager::icon(":/svg/edit"), "Переименовать", this, &FileManagerWidget::renameSelected);
+            menu.addAction(ThemeManager::icon(":/svg/copy"), "Копировать путь", [fullPath]() {
+                QApplication::clipboard()->setText(fullPath);
+            });
             menu.addSeparator();
-            menu.addAction(QIcon(":/svg/trash"), "Удалить", this, &FileManagerWidget::deleteSelected);
+            menu.addAction(ThemeManager::icon(":/svg/trash"), "Удалить", this, &FileManagerWidget::deleteSelected);
             menu.addSeparator();
         }
     }
 
-    menu.addAction(QIcon(":/svg/plus"), "Создать папку", this, &FileManagerWidget::createDirectory);
-    menu.addAction(QIcon(":/svg/upload"), "Загрузить файл на телефон", this, &FileManagerWidget::uploadFile);
-    menu.addAction(QIcon(":/svg/refresh-cw"), "Обновить", this, &FileManagerWidget::refreshList);
+    menu.addAction(ThemeManager::icon(":/svg/plus"), "Создать папку", this, &FileManagerWidget::createDirectory);
+    menu.addAction(
+        ThemeManager::icon(":/svg/upload"), "Загрузить файл на телефон", this, &FileManagerWidget::uploadFile);
+    menu.addAction(ThemeManager::icon(":/svg/refresh-cw"), "Обновить", this, &FileManagerWidget::refreshList);
 
     menu.exec(m_table->viewport()->mapToGlobal(pos));
 }

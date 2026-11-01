@@ -1,6 +1,7 @@
 #include "AboutDialog.h"
 #include "Begin.h"
 #include "Strings.h"
+#include "ThemeManager.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -683,13 +684,13 @@ QWidget *AboutDialog::createGplTab()
     btnRow->setSpacing(10);
 
     m_copyLicenseBtn = new QPushButton(QStringLiteral("Копировать текст лицензии"), widget);
-    m_copyLicenseBtn->setIcon(QIcon(":/svg/copy"));
+    m_copyLicenseBtn->setIcon(ThemeManager::icon(":/svg/copy"));
     m_copyLicenseBtn->setIconSize(QSize(15, 15));
     connect(m_copyLicenseBtn, &QPushButton::clicked, this, &AboutDialog::copyLicenseToClipboard);
     btnRow->addWidget(m_copyLicenseBtn);
 
     auto *fsfBtn = new QPushButton(QStringLiteral("Официальная страница gnu.org/licenses"), widget);
-    fsfBtn->setIcon(QIcon(":/svg/globe"));
+    fsfBtn->setIcon(ThemeManager::icon(":/svg/globe"));
     fsfBtn->setIconSize(QSize(15, 15));
     connect(fsfBtn, &QPushButton::clicked, this, &AboutDialog::openGplWebsite);
     btnRow->addWidget(fsfBtn);
@@ -739,7 +740,7 @@ QWidget *AboutDialog::createChangelogTab()
     topLayout->addLayout(topInfoLayout, 1);
 
     m_changelogRefreshBtn = new QPushButton(QStringLiteral("Обновить"), topCard);
-    m_changelogRefreshBtn->setIcon(QIcon(":/svg/refresh-cw"));
+    m_changelogRefreshBtn->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     m_changelogRefreshBtn->setIconSize(QSize(14, 14));
     m_changelogRefreshBtn->setCursor(Qt::PointingHandCursor);
     m_changelogRefreshBtn->setStyleSheet(QStringLiteral(
@@ -763,7 +764,7 @@ QWidget *AboutDialog::createChangelogTab()
     topLayout->addWidget(m_changelogRefreshBtn);
 
     auto *webBtn = new QPushButton(QStringLiteral("В браузере"), topCard);
-    webBtn->setIcon(QIcon(":/svg/globe"));
+    webBtn->setIcon(ThemeManager::icon(":/svg/globe"));
     webBtn->setIconSize(QSize(14, 14));
     webBtn->setCursor(Qt::PointingHandCursor);
     webBtn->setStyleSheet(QStringLiteral(
@@ -1181,7 +1182,7 @@ QWidget *AboutDialog::createFooterWidget()
     footerLayout->addStretch();
 
     auto *supportBtn = new QPushButton(QStringLiteral("WhatsApp Поддержка"), footerWidget);
-    supportBtn->setIcon(QIcon(":/svg/message-circle"));
+    supportBtn->setIcon(ThemeManager::icon(":/svg/message-circle"));
     supportBtn->setIconSize(QSize(15, 15));
     connect(supportBtn, &QPushButton::clicked, this, &AboutDialog::openSupportWhatsApp);
     footerLayout->addWidget(supportBtn);
@@ -1272,14 +1273,14 @@ void AboutDialog::copyLicenseToClipboard()
     if (m_copyLicenseBtn)
     {
         const QString origText = m_copyLicenseBtn->text();
-        m_copyLicenseBtn->setIcon(QIcon(":/svg/check"));
+        m_copyLicenseBtn->setIcon(ThemeManager::icon(":/svg/check"));
         m_copyLicenseBtn->setText(QStringLiteral(" Скопировано в буфер обмена!"));
         m_copyLicenseBtn->setEnabled(false);
 
         QTimer::singleShot(2500, this, [this, origText]() {
             if (m_copyLicenseBtn)
             {
-                m_copyLicenseBtn->setIcon(QIcon(":/svg/copy"));
+                m_copyLicenseBtn->setIcon(ThemeManager::icon(":/svg/copy"));
                 m_copyLicenseBtn->setText(origText);
                 m_copyLicenseBtn->setEnabled(true);
             }

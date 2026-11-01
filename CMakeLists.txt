@@ -13,8 +13,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia Svg)
 
 set(PROJECT_SOURCES
         Source/UI/MainWindow.h
@@ -25,6 +25,8 @@ set(PROJECT_SOURCES
         Source/UI/ServiceTileButton.h
         Source/UI/ServiceTileButton.cpp
         Source/UI/MainPages.cpp
+        Source/UI/ThemeManager.h
+        Source/UI/ThemeManager.cpp
         Source/UI/RadioPlayerWidget.h
         Source/UI/RadioPlayerWidget.cpp
         Source/UI/DeviceVisualizer.h
@@ -146,7 +148,7 @@ target_compile_definitions(adskiller_build_config INTERFACE ${APP_COMPILE_DEFINI
 target_link_libraries(widgets PRIVATE adskiller_build_config)
 target_link_libraries(adbfront PUBLIC adskiller_build_config)
 target_link_libraries(services PRIVATE adskiller_build_config adbfront applefront widgets)
-target_link_libraries(application PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Multimedia adbfront applefront services widgets)
+target_link_libraries(application PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Svg adbfront applefront services widgets)
 target_link_libraries(update PRIVATE adskiller_build_config Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network)
 
 set(NREMOTEADDR_VALUE "")

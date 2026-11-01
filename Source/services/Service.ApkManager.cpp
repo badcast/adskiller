@@ -39,6 +39,7 @@
 #include "ApkManagerWidget.h"
 #include "Services.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 QIcon extractAppIcon(
     AdbShell &shell,
@@ -155,12 +156,12 @@ void ApkManagerWidget::setupUi()
         &ApkManagerWidget::onSearchOrFilterChanged);
 
     QPushButton *btnRefresh = new QPushButton("Обновить", this);
-    btnRefresh->setIcon(QIcon(":/svg/refresh-cw"));
+    btnRefresh->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     btnRefresh->setIconSize(QSize(13, 13));
     connect(btnRefresh, &QPushButton::clicked, this, &ApkManagerWidget::loadPackages);
 
     QPushButton *btnInstall = new QPushButton("Установить APK", this);
-    btnInstall->setIcon(QIcon(":/svg/plus"));
+    btnInstall->setIcon(ThemeManager::icon(":/svg/plus"));
     btnInstall->setIconSize(QSize(13, 13));
     btnInstall->setStyleSheet(
         "QPushButton { background-color: #0284C7; color: white; font-weight: bold; padding: 6px 14px; border: none; "
@@ -237,7 +238,7 @@ void ApkManagerWidget::setupUi()
     m_packageIdLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
     QPushButton *btnCopyPkg = new QPushButton(appCard);
-    btnCopyPkg->setIcon(QIcon(":/svg/copy"));
+    btnCopyPkg->setIcon(ThemeManager::icon(":/svg/copy"));
     btnCopyPkg->setIconSize(QSize(12, 12));
     btnCopyPkg->setToolTip("Скопировать packageId");
     btnCopyPkg->setFixedSize(22, 22);
@@ -283,7 +284,7 @@ void ApkManagerWidget::setupUi()
     actionsLayout->setSpacing(6);
 
     m_btnLaunch = new QPushButton("Запустить", rightContainer);
-    m_btnLaunch->setIcon(QIcon(":/svg/play"));
+    m_btnLaunch->setIcon(ThemeManager::icon(":/svg/play"));
     m_btnLaunch->setIconSize(QSize(13, 13));
     m_btnLaunch->setStyleSheet(
         "QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { "
@@ -291,7 +292,7 @@ void ApkManagerWidget::setupUi()
     connect(m_btnLaunch, &QPushButton::clicked, this, &ApkManagerWidget::launchApp);
 
     m_btnStop = new QPushButton("Остановить", rightContainer);
-    m_btnStop->setIcon(QIcon(":/svg/close"));
+    m_btnStop->setIcon(ThemeManager::icon(":/svg/close"));
     m_btnStop->setIconSize(QSize(13, 13));
     m_btnStop->setStyleSheet(
         "QPushButton { background-color: #78350F; color: #FBBF24; border: 1px solid #D97706; } QPushButton:hover { "
@@ -299,22 +300,22 @@ void ApkManagerWidget::setupUi()
     connect(m_btnStop, &QPushButton::clicked, this, &ApkManagerWidget::forceStopApp);
 
     m_btnToggleFreeze = new QPushButton("Отключить", rightContainer);
-    m_btnToggleFreeze->setIcon(QIcon(":/svg/close"));
+    m_btnToggleFreeze->setIcon(ThemeManager::icon(":/svg/close"));
     m_btnToggleFreeze->setIconSize(QSize(13, 13));
     connect(m_btnToggleFreeze, &QPushButton::clicked, this, &ApkManagerWidget::toggleFreezeApp);
 
     m_btnClearData = new QPushButton("Сброс данных", rightContainer);
-    m_btnClearData->setIcon(QIcon(":/svg/trash"));
+    m_btnClearData->setIcon(ThemeManager::icon(":/svg/trash"));
     m_btnClearData->setIconSize(QSize(13, 13));
     connect(m_btnClearData, &QPushButton::clicked, this, &ApkManagerWidget::clearAppData);
 
     m_btnExportApk = new QPushButton("Скачать APK", rightContainer);
-    m_btnExportApk->setIcon(QIcon(":/svg/download"));
+    m_btnExportApk->setIcon(ThemeManager::icon(":/svg/download"));
     m_btnExportApk->setIconSize(QSize(13, 13));
     connect(m_btnExportApk, &QPushButton::clicked, this, &ApkManagerWidget::exportSelectedApk);
 
     m_btnUninstall = new QPushButton("Удалить", rightContainer);
-    m_btnUninstall->setIcon(QIcon(":/svg/trash"));
+    m_btnUninstall->setIcon(ThemeManager::icon(":/svg/trash"));
     m_btnUninstall->setIconSize(QSize(13, 13));
     m_btnUninstall->setStyleSheet(
         "QPushButton { background-color: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, "
@@ -346,7 +347,7 @@ void ApkManagerWidget::setupUi()
     m_overviewTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_overviewTable->setShowGrid(true);
     overLayout->addWidget(m_overviewTable);
-    m_tabs->addTab(tabOverview, QIcon(":/svg/bar-chart"), "Обзор");
+    m_tabs->addTab(tabOverview, ThemeManager::icon(":/svg/bar-chart"), "Обзор");
 
     // Tab 2: Permissions
     QWidget *tabPerms = new QWidget();
@@ -374,7 +375,7 @@ void ApkManagerWidget::setupUi()
     m_permTable->setShowGrid(false);
     m_permTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     permLayout->addWidget(m_permTable);
-    m_tabs->addTab(tabPerms, QIcon(":/svg/shield"), "Разрешения");
+    m_tabs->addTab(tabPerms, ThemeManager::icon(":/svg/shield"), "Разрешения");
 
     // Tab 3: Components
     QWidget *tabComps = new QWidget();
@@ -388,7 +389,7 @@ void ApkManagerWidget::setupUi()
     m_compTable->verticalHeader()->setVisible(false);
     m_compTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     compLayout->addWidget(m_compTable);
-    m_tabs->addTab(tabComps, QIcon(":/svg/settings"), "Компоненты");
+    m_tabs->addTab(tabComps, ThemeManager::icon(":/svg/settings"), "Компоненты");
 
     // Tab 4: Raw Dumpsys
     QWidget *tabDump = new QWidget();
@@ -399,7 +400,7 @@ void ApkManagerWidget::setupUi()
     QHBoxLayout *dumpTop = new QHBoxLayout();
     QLabel *dumpTitle = new QLabel("Сырые данные команды dumpsys package:", tabDump);
     QPushButton *btnCopyDump = new QPushButton("Копировать весь дамп", tabDump);
-    btnCopyDump->setIcon(QIcon(":/svg/copy"));
+    btnCopyDump->setIcon(ThemeManager::icon(":/svg/copy"));
     btnCopyDump->setIconSize(QSize(13, 13));
     connect(btnCopyDump, &QPushButton::clicked, this, &ApkManagerWidget::copyRawDumpsys);
     dumpTop->addWidget(dumpTitle);
@@ -410,7 +411,7 @@ void ApkManagerWidget::setupUi()
     m_dumpsysEdit = new QTextEdit(tabDump);
     m_dumpsysEdit->setReadOnly(true);
     dumpLayout->addWidget(m_dumpsysEdit);
-    m_tabs->addTab(tabDump, QIcon(":/svg/clipboard"), "Dumpsys");
+    m_tabs->addTab(tabDump, ThemeManager::icon(":/svg/clipboard"), "Dumpsys");
 
     rightLayout->addWidget(m_tabs, 1);
     splitter->addWidget(rightContainer);
@@ -645,7 +646,7 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
             "background-color: #450A0A; color: #F87171; border: 1px solid #DC2626; border-radius: 0px; padding: 2px "
             "8px; font-size: 10.5px; font-weight: 600;");
         m_btnToggleFreeze->setText("Включить");
-        m_btnToggleFreeze->setIcon(QIcon(":/svg/play"));
+        m_btnToggleFreeze->setIcon(ThemeManager::icon(":/svg/play"));
         m_btnToggleFreeze->setStyleSheet(
             "QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } QPushButton:hover { "
             "background-color: #059669; color: #FFFFFF; }");
@@ -657,7 +658,7 @@ void ApkManagerWidget::inspectPackage(AppPackageInfo &pkgInfo, int tableRow)
             "background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: 2px "
             "8px; font-size: 10.5px; font-weight: 600;");
         m_btnToggleFreeze->setText("Отключить");
-        m_btnToggleFreeze->setIcon(QIcon(":/svg/close"));
+        m_btnToggleFreeze->setIcon(ThemeManager::icon(":/svg/close"));
         m_btnToggleFreeze->setStyleSheet(
             "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: 0px; "
             "} QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");
@@ -703,7 +704,7 @@ void ApkManagerWidget::fillOverviewTab(const AppDetails &d)
 
         QTableWidgetItem *pItem = new QTableWidgetItem(param);
         pItem->setForeground(QColor("#94A3B8"));
-        pItem->setFont(QFont("Segoe UI", 9, QFont::Bold));
+        pItem->setFont(ThemeManager::uiFont(9, QFont::Bold));
 
         QTableWidgetItem *vItem = new QTableWidgetItem(val);
         vItem->setForeground(QColor("#FFFFFF"));
@@ -842,7 +843,7 @@ void ApkManagerWidget::fillComponentsTab(const AppDetails &d)
     auto addComp = [this](const QString &type, const QString &name, const QString &iconPath) {
         int r = m_compTable->rowCount();
         m_compTable->insertRow(r);
-        QTableWidgetItem *tItem = new QTableWidgetItem(QIcon(iconPath), type);
+        QTableWidgetItem *tItem = new QTableWidgetItem(ThemeManager::icon(iconPath), type);
         tItem->setForeground(QColor("#38BDF8"));
         QTableWidgetItem *nItem = new QTableWidgetItem(name);
         nItem->setForeground(QColor("#FFFFFF"));
@@ -929,7 +930,7 @@ void ApkManagerWidget::toggleFreezeApp()
                 "background-color: #450A0A; color: #F87171; border: 1px solid #DC2626; border-radius: 0px; padding: "
                 "2px 8px; font-size: 10.5px; font-weight: 600;");
             m_btnToggleFreeze->setText("Включить");
-            m_btnToggleFreeze->setIcon(QIcon(":/svg/play"));
+            m_btnToggleFreeze->setIcon(ThemeManager::icon(":/svg/play"));
             m_btnToggleFreeze->setStyleSheet(
                 "QPushButton { background-color: #065F46; color: #34D399; border: 1px solid #059669; } "
                 "QPushButton:hover { background-color: #059669; color: #FFFFFF; }");
@@ -941,7 +942,7 @@ void ApkManagerWidget::toggleFreezeApp()
                 "background-color: #064E3B; color: #34D399; border: 1px solid #059669; border-radius: 0px; padding: "
                 "2px 8px; font-size: 10.5px; font-weight: 600;");
             m_btnToggleFreeze->setText("Отключить");
-            m_btnToggleFreeze->setIcon(QIcon(":/svg/close"));
+            m_btnToggleFreeze->setIcon(ThemeManager::icon(":/svg/close"));
             m_btnToggleFreeze->setStyleSheet(
                 "QPushButton { background-color: #0F172A; color: #E2E8F0; border: 1.5px solid #1E293B; border-radius: "
                 "0px; } QPushButton:hover { background-color: #131E35; border-color: #38BDF8; color: #38BDF8; }");

@@ -12,6 +12,7 @@
 
 #include "Services.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 static QIcon createBrandBadgeIcon(const QString &vendorRaw)
 {
@@ -23,56 +24,56 @@ static QIcon createBrandBadgeIcon(const QString &vendorRaw)
     if (vendor.contains("xiaomi") || vendor.contains("redmi") || vendor.contains("poco") || vendor.contains("mi"))
     {
         letter = "X";
-        bgTop = QColor("#FF4D4D");
-        bgBot = QColor("#D32F2F"); // Red background for Xiaomi as requested
+        bgTop = ThemeManager::autoColor(QColor("#FF4D4D"));
+        bgBot = ThemeManager::autoColor(QColor("#D32F2F")); // Red background for Xiaomi as requested
     }
     else if (vendor.contains("samsung"))
     {
         letter = "S";
-        bgTop = QColor("#1E88E5");
-        bgBot = QColor("#0D47A1");
+        bgTop = ThemeManager::autoColor(QColor("#1E88E5"));
+        bgBot = ThemeManager::autoColor(QColor("#0D47A1"));
     }
     else if (vendor.contains("huawei") || vendor.contains("honor"))
     {
         letter = "H";
-        bgTop = QColor("#EF5350");
-        bgBot = QColor("#B71C1C");
+        bgTop = ThemeManager::autoColor(QColor("#EF5350"));
+        bgBot = ThemeManager::autoColor(QColor("#B71C1C"));
     }
     else if (vendor.contains("oneplus"))
     {
         letter = "1+";
-        bgTop = QColor("#E53935");
-        bgBot = QColor("#B71C1C");
+        bgTop = ThemeManager::autoColor(QColor("#E53935"));
+        bgBot = ThemeManager::autoColor(QColor("#B71C1C"));
     }
     else if (vendor.contains("oppo") || vendor.contains("realme"))
     {
         letter = vendor.contains("realme") ? "R" : "O";
-        bgTop = QColor("#43A047");
-        bgBot = QColor("#1B5E20");
+        bgTop = ThemeManager::autoColor(QColor("#43A047"));
+        bgBot = ThemeManager::autoColor(QColor("#1B5E20"));
     }
     else if (vendor.contains("vivo") || vendor.contains("iqoo"))
     {
         letter = "V";
-        bgTop = QColor("#00ACC1");
-        bgBot = QColor("#006064");
+        bgTop = ThemeManager::autoColor(QColor("#00ACC1"));
+        bgBot = ThemeManager::autoColor(QColor("#006064"));
     }
     else if (vendor.contains("google") || vendor.contains("pixel"))
     {
         letter = "G";
-        bgTop = QColor("#4285F4");
-        bgBot = QColor("#1A73E8");
+        bgTop = ThemeManager::autoColor(QColor("#4285F4"));
+        bgBot = ThemeManager::autoColor(QColor("#1A73E8"));
     }
     else if (vendor.contains("apple"))
     {
         letter = "A";
-        bgTop = QColor("#757575");
-        bgBot = QColor("#303030");
+        bgTop = ThemeManager::autoColor(QColor("#757575"));
+        bgBot = ThemeManager::autoColor(QColor("#303030"));
     }
     else
     {
         letter = vendorRaw.isEmpty() ? "D" : vendorRaw.left(1).toUpper();
-        bgTop = QColor("#0078D4");
-        bgBot = QColor("#004E8C");
+        bgTop = ThemeManager::autoColor(QColor("#0078D4"));
+        bgBot = ThemeManager::autoColor(QColor("#004E8C"));
     }
 
     constexpr int size = 26;
@@ -94,7 +95,7 @@ static QIcon createBrandBadgeIcon(const QString &vendorRaw)
         grad.setColorAt(1.0, bgBot);
         p.fillPath(path, grad);
 
-        p.setPen(QPen(QColor(255, 255, 255, 70), 1));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(255, 255, 255, 70)), 1));
         p.drawPath(path);
 
         // Draw text letter
@@ -237,7 +238,7 @@ void MyDeviceService::clearMyDevicesPage(QString text)
     {
         QStandardItem *it = new QStandardItem(col == 1 ? text : "");
         it->setTextAlignment(Qt::AlignCenter);
-        it->setForeground(QBrush(QColor("#8E9297")));
+        it->setForeground(QBrush(ThemeManager::autoColor(QColor("#8E9297"))));
         model->setItem(0, col, it);
     }
 }
@@ -267,68 +268,68 @@ void MyDeviceService::fillMyDevicesPage()
         DeviceSortItem *idItem = new DeviceSortItem(QString::number(item.deviceId));
         idItem->setData(item.deviceId, Qt::UserRole);
         idItem->setTextAlignment(Qt::AlignCenter);
-        idItem->setForeground(QBrush(QColor("#8E9297")));
+        idItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#8E9297"))));
 
         DeviceSortItem *vendorItem = new DeviceSortItem(createBrandBadgeIcon(item.vendor), item.vendor);
         vendorItem->setData(item.vendor.trimmed().toLower(), Qt::UserRole);
         vendorItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        vendorItem->setForeground(QBrush(QColor("#FFFFFF")));
+        vendorItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#FFFFFF"))));
 
         DeviceSortItem *modelItem = new DeviceSortItem(item.model);
         modelItem->setData(item.model.trimmed().toLower(), Qt::UserRole);
         modelItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        modelItem->setForeground(QBrush(QColor("#E3E5E8")));
+        modelItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#E3E5E8"))));
 
         DeviceSortItem *logTimeItem
             = new DeviceSortItem(item.logTime.isValid() ? item.logTime.toString("yyyy-MM-dd HH:mm") : "-");
         logTimeItem->setData(item.logTime, Qt::UserRole);
         logTimeItem->setTextAlignment(Qt::AlignCenter);
-        logTimeItem->setForeground(QBrush(QColor("#BAC0CB")));
+        logTimeItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#BAC0CB"))));
 
         DeviceSortItem *lastConnItem = new DeviceSortItem(
             item.lastConnectTime.isValid() ? item.lastConnectTime.toString("yyyy-MM-dd HH:mm") : "-");
         lastConnItem->setData(item.lastConnectTime, Qt::UserRole);
         lastConnItem->setTextAlignment(Qt::AlignCenter);
-        lastConnItem->setForeground(QBrush(QColor("#BAC0CB")));
+        lastConnItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#BAC0CB"))));
 
         DeviceSortItem *expireItem
             = new DeviceSortItem(item.expire.isValid() ? item.expire.toString("yyyy-MM-dd HH:mm") : "-");
         expireItem->setData(item.expire, Qt::UserRole);
         expireItem->setTextAlignment(Qt::AlignCenter);
-        expireItem->setForeground(QBrush(QColor("#BAC0CB")));
+        expireItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#BAC0CB"))));
 
         DeviceSortItem *pkgItem = new DeviceSortItem(QString::number(item.packages));
         pkgItem->setData(item.packages, Qt::UserRole);
         pkgItem->setTextAlignment(Qt::AlignCenter);
-        pkgItem->setForeground(QBrush(QColor("#4CC2FF")));
+        pkgItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#4CC2FF"))));
 
         DeviceSortItem *connCountItem = new DeviceSortItem(QString::number(item.connectionCount));
         connCountItem->setData(item.connectionCount, Qt::UserRole);
         connCountItem->setTextAlignment(Qt::AlignCenter);
-        connCountItem->setForeground(QBrush(QColor("#E3E5E8")));
+        connCountItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#E3E5E8"))));
 
         QString payStr = (item.purchasedType == 1)
                              ? "VIP"
                              : ((item.purchasedType == 2) ? QString::number(item.purchasedValue) : "-");
         DeviceSortItem *payItem = new DeviceSortItem(payStr);
         if (item.purchasedType == 1)
-            payItem->setIcon(QIcon(":/svg/crown"));
+            payItem->setIcon(ThemeManager::icon(":/svg/crown"));
         int payRank = (item.purchasedType == 1) ? 999999 : ((item.purchasedType == 2) ? item.purchasedValue : 0);
         payItem->setData(payRank, Qt::UserRole);
         payItem->setTextAlignment(Qt::AlignCenter);
         if (item.purchasedType == 1)
-            payItem->setForeground(QBrush(QColor("#FFD700")));
+            payItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#FFD700"))));
         else
-            payItem->setForeground(QBrush(QColor("#8E9297")));
+            payItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#8E9297"))));
 
         DeviceSortItem *guarItem = new DeviceSortItem(item.serverQuarantee == 1 ? "Активна" : "Истекла");
-        guarItem->setIcon(QIcon(item.serverQuarantee == 1 ? ":/svg/check" : ":/svg/close"));
+        guarItem->setIcon(ThemeManager::icon(item.serverQuarantee == 1 ? ":/svg/check" : ":/svg/close"));
         guarItem->setData(item.serverQuarantee == 1 ? 1 : 0, Qt::UserRole);
         guarItem->setTextAlignment(Qt::AlignCenter);
         if (item.serverQuarantee == 1)
-            guarItem->setForeground(QBrush(QColor("#00E676")));
+            guarItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#00E676"))));
         else
-            guarItem->setForeground(QBrush(QColor("#8E9297")));
+            guarItem->setForeground(QBrush(ThemeManager::autoColor(QColor("#8E9297"))));
 
         model->setItem(idx, 0, idItem);
         model->setItem(idx, 1, vendorItem);

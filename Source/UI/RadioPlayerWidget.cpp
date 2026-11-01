@@ -1,4 +1,5 @@
 #include "RadioPlayerWidget.h"
+#include "ThemeManager.h"
 
 #include <QInputDialog>
 #include <QMessageBox>
@@ -375,7 +376,7 @@ void RadioPlayerWidget::initUi()
     // 3. Add Custom Station Button
     m_btnAddStation = new QPushButton(this);
     m_btnAddStation->setObjectName("btnAddStation");
-    m_btnAddStation->setIcon(QIcon(":/svg/plus"));
+    m_btnAddStation->setIcon(ThemeManager::icon(":/svg/plus"));
     m_btnAddStation->setIconSize(QSize(13, 13));
     m_btnAddStation->setToolTip(QString::fromUtf8("Добавить свой поток радио"));
     m_btnAddStation->setFixedSize(26, 24);
@@ -386,7 +387,7 @@ void RadioPlayerWidget::initUi()
     // 4. Playback Controls (Prev, Play/Pause, Next)
     m_btnPrev = new QPushButton(this);
     m_btnPrev->setObjectName("btnPrev");
-    m_btnPrev->setIcon(QIcon(":/svg/skip-back"));
+    m_btnPrev->setIcon(ThemeManager::icon(":/svg/skip-back"));
     m_btnPrev->setIconSize(QSize(13, 13));
     m_btnPrev->setToolTip(QString::fromUtf8("Предыдущая станция"));
     m_btnPrev->setFixedSize(26, 24);
@@ -396,7 +397,7 @@ void RadioPlayerWidget::initUi()
 
     m_btnPlay = new QPushButton(this);
     m_btnPlay->setObjectName("btnPlay");
-    m_btnPlay->setIcon(QIcon(":/svg/play"));
+    m_btnPlay->setIcon(ThemeManager::icon(":/svg/play"));
     m_btnPlay->setIconSize(QSize(13, 13));
     m_btnPlay->setToolTip(QString::fromUtf8("Включить радио (Пробел)"));
     m_btnPlay->setFixedSize(36, 24);
@@ -406,7 +407,7 @@ void RadioPlayerWidget::initUi()
 
     m_btnNext = new QPushButton(this);
     m_btnNext->setObjectName("btnNext");
-    m_btnNext->setIcon(QIcon(":/svg/skip-forward"));
+    m_btnNext->setIcon(ThemeManager::icon(":/svg/skip-forward"));
     m_btnNext->setIconSize(QSize(13, 13));
     m_btnNext->setToolTip(QString::fromUtf8("Следующая станция"));
     m_btnNext->setFixedSize(26, 24);
@@ -437,7 +438,7 @@ void RadioPlayerWidget::initUi()
     // 7. Volume controls
     m_btnMute = new QPushButton(this);
     m_btnMute->setObjectName("btnMute");
-    m_btnMute->setIcon(QIcon(":/svg/volume"));
+    m_btnMute->setIcon(ThemeManager::icon(":/svg/volume"));
     m_btnMute->setIconSize(QSize(14, 14));
     m_btnMute->setToolTip(QString::fromUtf8("Выключить звук"));
     m_btnMute->setFixedSize(26, 24);
@@ -463,7 +464,7 @@ void RadioPlayerWidget::initUi()
     // 8. Close / Hide button
     m_btnClose = new QPushButton(this);
     m_btnClose->setObjectName("btnClose");
-    m_btnClose->setIcon(QIcon(":/svg/close"));
+    m_btnClose->setIcon(ThemeManager::icon(":/svg/close"));
     m_btnClose->setIconSize(QSize(11, 11));
     m_btnClose->setToolTip(QString::fromUtf8("Скрыть панель радио"));
     m_btnClose->setFixedSize(24, 24);
@@ -794,7 +795,7 @@ void RadioPlayerWidget::updatePlayButtonState(bool isPlaying)
     if (isPlaying)
     {
         m_btnPlay->setText(QString());
-        m_btnPlay->setIcon(QIcon(":/svg/pause"));
+        m_btnPlay->setIcon(ThemeManager::icon(":/svg/pause"));
         m_btnPlay->setIconSize(QSize(13, 13));
         m_btnPlay->setToolTip(QString::fromUtf8("Пауза (Пробел)"));
         m_btnPlay->setStyleSheet(
@@ -821,7 +822,7 @@ void RadioPlayerWidget::updatePlayButtonState(bool isPlaying)
     else
     {
         m_btnPlay->setText(QString());
-        m_btnPlay->setIcon(QIcon(":/svg/play"));
+        m_btnPlay->setIcon(ThemeManager::icon(":/svg/play"));
         m_btnPlay->setIconSize(QSize(13, 13));
         m_btnPlay->setToolTip(QString::fromUtf8("Слушать (Пробел)"));
         m_btnPlay->setStyleSheet(
@@ -861,7 +862,7 @@ void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
         if (muted || value == 0)
         {
             m_btnMute->setText(QString());
-            m_btnMute->setIcon(QIcon(":/svg/volume-x"));
+            m_btnMute->setIcon(ThemeManager::icon(":/svg/volume-x"));
             m_btnMute->setIconSize(QSize(14, 14));
             m_btnMute->setToolTip(QString::fromUtf8("Включить звук"));
             m_btnMute->setStyleSheet(
@@ -888,7 +889,7 @@ void RadioPlayerWidget::updateVolumeUi(int value, bool muted)
         else
         {
             m_btnMute->setText(QString());
-            m_btnMute->setIcon(QIcon(":/svg/volume"));
+            m_btnMute->setIcon(ThemeManager::icon(":/svg/volume"));
             m_btnMute->setIconSize(QSize(14, 14));
             m_btnMute->setToolTip(QString::fromUtf8("Отключить звук"));
             m_btnMute->setStyleSheet(

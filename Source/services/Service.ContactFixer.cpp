@@ -5,6 +5,7 @@
 #include "NumberPreview.h"
 #include "Vcard.h"
 #include "TextIo.h"
+#include "ThemeManager.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -83,7 +84,7 @@ void ContactFixerWidget::updateDeviceUi()
         if (m_btnConnectDevice)
         {
             m_btnConnectDevice->setText("Сменить устройство");
-            m_btnConnectDevice->setIcon(QIcon(":/svg/refresh-cw"));
+            m_btnConnectDevice->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
             m_btnConnectDevice->setIconSize(QSize(13, 13));
         }
     }
@@ -96,7 +97,7 @@ void ContactFixerWidget::updateDeviceUi()
         if (m_btnConnectDevice)
         {
             m_btnConnectDevice->setText("Подключить ADB");
-            m_btnConnectDevice->setIcon(QIcon(":/svg/wifi"));
+            m_btnConnectDevice->setIcon(ThemeManager::icon(":/svg/wifi"));
             m_btnConnectDevice->setIconSize(QSize(13, 13));
         }
     }
@@ -198,7 +199,7 @@ void ContactFixerWidget::setupUi()
     headerRowA->addWidget(m_lblDeviceStatus);
 
     m_btnConnectDevice = new QPushButton("Подключить ADB", headerFrame);
-    m_btnConnectDevice->setIcon(QIcon(":/svg/wifi"));
+    m_btnConnectDevice->setIcon(ThemeManager::icon(":/svg/wifi"));
     m_btnConnectDevice->setIconSize(QSize(13, 13));
     m_btnConnectDevice->setStyleSheet(
         "QPushButton { background-color: #1E293B; color: #38BDF8; font-weight: 600; border-radius: 0px; padding: 4px "
@@ -242,7 +243,7 @@ void ContactFixerWidget::setupUi()
     actRow1->setSpacing(8);
 
     m_btnOpenVcf = new QPushButton("Открыть .vcf с ПК", actionFrame);
-    m_btnOpenVcf->setIcon(QIcon(":/svg/folder"));
+    m_btnOpenVcf->setIcon(ThemeManager::icon(":/svg/folder"));
     m_btnOpenVcf->setIconSize(QSize(13, 13));
     m_btnOpenVcf->setStyleSheet(
         "QPushButton { background-color: #0284C7; color: #FFFFFF; font-weight: 600; font-size: 11.5px; border-radius: "
@@ -252,7 +253,7 @@ void ContactFixerWidget::setupUi()
     actRow1->addWidget(m_btnOpenVcf);
 
     m_btnLoadDevice = new QPushButton("Считать с телефона", actionFrame);
-    m_btnLoadDevice->setIcon(QIcon(":/svg/smartphone"));
+    m_btnLoadDevice->setIcon(ThemeManager::icon(":/svg/smartphone"));
     m_btnLoadDevice->setIconSize(QSize(13, 13));
     m_btnLoadDevice->setStyleSheet(
         "QPushButton { background-color: #1E293B; color: #38BDF8; font-weight: 600; font-size: 11.5px; border-radius: "
@@ -277,7 +278,7 @@ void ContactFixerWidget::setupUi()
     actRow1->addStretch(1);
 
     m_btnSaveVcf = new QPushButton("Сохранить .vcf", actionFrame);
-    m_btnSaveVcf->setIcon(QIcon(":/svg/download"));
+    m_btnSaveVcf->setIcon(ThemeManager::icon(":/svg/download"));
     m_btnSaveVcf->setIconSize(QSize(13, 13));
     m_btnSaveVcf->setStyleSheet(
         "QPushButton { background-color: #1E293B; color: #E2E8F0; font-weight: 600; font-size: 11.5px; border-radius: "
@@ -287,7 +288,7 @@ void ContactFixerWidget::setupUi()
     actRow1->addWidget(m_btnSaveVcf);
 
     m_btnPushDevice = new QPushButton("Отправить на телефон", actionFrame);
-    m_btnPushDevice->setIcon(QIcon(":/svg/send"));
+    m_btnPushDevice->setIcon(ThemeManager::icon(":/svg/send"));
     m_btnPushDevice->setIconSize(QSize(13, 13));
     m_btnPushDevice->setStyleSheet(
         "QPushButton { background-color: #1E293B; color: #E2E8F0; font-weight: 600; font-size: 11.5px; border-radius: "
@@ -297,7 +298,7 @@ void ContactFixerWidget::setupUi()
     actRow1->addWidget(m_btnPushDevice);
 
     m_btnExportCsv = new QPushButton("Экспорт в CSV", actionFrame);
-    m_btnExportCsv->setIcon(QIcon(":/svg/clipboard"));
+    m_btnExportCsv->setIcon(ThemeManager::icon(":/svg/clipboard"));
     m_btnExportCsv->setIconSize(QSize(13, 13));
     m_btnExportCsv->setStyleSheet(
         "QPushButton { background-color: #1E293B; color: #94A3B8; font-weight: 500; font-size: 11.5px; border-radius: "
@@ -348,7 +349,7 @@ void ContactFixerWidget::setupUi()
     actRow2->addWidget(m_chkFixLeading8);
 
     m_btnApplyFix = new QPushButton("Применить формат", actionFrame);
-    m_btnApplyFix->setIcon(QIcon(":/svg/zap"));
+    m_btnApplyFix->setIcon(ThemeManager::icon(":/svg/zap"));
     m_btnApplyFix->setIconSize(QSize(13, 13));
     m_btnApplyFix->setStyleSheet(
         "QPushButton { background-color: #059669; color: #FFFFFF; font-weight: bold; font-size: 11.5px; border-radius: "
@@ -535,7 +536,7 @@ void ContactFixerWidget::setupUi()
         h->addWidget(labelPtr, 1);
 
         QPushButton *btnCopy = new QPushButton(w);
-        btnCopy->setIcon(QIcon(":/svg/copy"));
+        btnCopy->setIcon(ThemeManager::icon(":/svg/copy"));
         btnCopy->setIconSize(QSize(12, 12));
         btnCopy->setFixedSize(24, 24);
         btnCopy->setToolTip("Копировать в буфер");
@@ -589,7 +590,7 @@ void ContactFixerWidget::setupUi()
     addLayout->addWidget(m_quickNumberEdit);
 
     m_btnQuickAdd = new QPushButton("Добавить в список", addFrame);
-    m_btnQuickAdd->setIcon(QIcon(":/svg/plus"));
+    m_btnQuickAdd->setIcon(ThemeManager::icon(":/svg/plus"));
     m_btnQuickAdd->setIconSize(QSize(13, 13));
     m_btnQuickAdd->setStyleSheet(
         "QPushButton { background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155; border-radius: 0px; "
@@ -1040,7 +1041,7 @@ void ContactFixerWidget::populateTable()
         // Name
         QTableWidgetItem *nameItem = new QTableWidgetItem(item.name);
         nameItem->setForeground(QColor("#F8FAFC"));
-        nameItem->setFont(QFont("Segoe UI", 9, QFont::DemiBold));
+        nameItem->setFont(ThemeManager::uiFont(9, QFont::DemiBold));
         m_table->setItem(row, 1, nameItem);
 
         // Original Number

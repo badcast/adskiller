@@ -1,6 +1,7 @@
 #include "AITranslaterWidget.h"
 #include "Services.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -242,7 +243,7 @@ void AITranslaterWidget::setupUi()
         textTabLayout->addWidget(ch);
         break;
     }
-    tabs->addTab(textTab, QIcon(":/svg/message-circle"), QString::fromUtf8("Текст"));
+    tabs->addTab(textTab, ThemeManager::icon(":/svg/message-circle"), QString::fromUtf8("Текст"));
 
     // ── Tab 2: Document translation ──
     QWidget *docTab = new QWidget(this);
@@ -255,7 +256,7 @@ void AITranslaterWidget::setupUi()
         docTabLayout->addWidget(ch);
         break;
     }
-    tabs->addTab(docTab, QIcon(":/svg/clipboard"), QString::fromUtf8("Документ"));
+    tabs->addTab(docTab, ThemeManager::icon(":/svg/clipboard"), QString::fromUtf8("Документ"));
 
     // ── Tab 3: Async queue ──
     QWidget *queueTab = new QWidget(this);
@@ -268,7 +269,7 @@ void AITranslaterWidget::setupUi()
         queueTabLayout->addWidget(ch);
         break;
     }
-    tabs->addTab(queueTab, QIcon(":/svg/clock"), QString::fromUtf8("Очередь"));
+    tabs->addTab(queueTab, ThemeManager::icon(":/svg/clock"), QString::fromUtf8("Очередь"));
 
     root->addWidget(tabs, 1);
 
@@ -314,7 +315,7 @@ void AITranslaterWidget::setupHeaderFrame()
 
     // Right: refresh languages button
     QPushButton *btnLangs = new QPushButton(QString::fromUtf8("Обновить языки"), hdr);
-    btnLangs->setIcon(QIcon(":/svg/refresh-cw"));
+    btnLangs->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     btnLangs->setIconSize(QSize(13, 13));
     btnLangs->setStyleSheet(AITT_STYLE_BTN_SEC);
     btnLangs->setCursor(Qt::PointingHandCursor);
@@ -370,7 +371,7 @@ void AITranslaterWidget::setupTextTranslatePanel()
     langRow->addStretch(1);
 
     m_btnTranslateText = new QPushButton(QString::fromUtf8("Перевести"), inner);
-    m_btnTranslateText->setIcon(QIcon(":/svg/play"));
+    m_btnTranslateText->setIcon(ThemeManager::icon(":/svg/play"));
     m_btnTranslateText->setIconSize(QSize(14, 14));
     m_btnTranslateText->setStyleSheet(AITT_STYLE_BTN_PRIMARY);
     m_btnTranslateText->setMinimumWidth(130);
@@ -423,7 +424,7 @@ void AITranslaterWidget::setupTextTranslatePanel()
     outputHeader->addWidget(outputTitle);
     outputHeader->addStretch(1);
     QPushButton *btnCopyOut = new QPushButton(QString::fromUtf8("Копировать"), outputCard);
-    btnCopyOut->setIcon(QIcon(":/svg/copy"));
+    btnCopyOut->setIcon(ThemeManager::icon(":/svg/copy"));
     btnCopyOut->setIconSize(QSize(12, 12));
     btnCopyOut->setStyleSheet(AITT_STYLE_BTN_SEC);
     btnCopyOut->setFixedHeight(24);
@@ -480,7 +481,7 @@ void AITranslaterWidget::setupDocumentPanel()
     m_editDocPath->setReadOnly(true);
     fileRow->addWidget(m_editDocPath, 1);
     m_btnChooseDoc = new QPushButton(QString::fromUtf8("Обзор..."), fileCard);
-    m_btnChooseDoc->setIcon(QIcon(":/svg/folder"));
+    m_btnChooseDoc->setIcon(ThemeManager::icon(":/svg/folder"));
     m_btnChooseDoc->setIconSize(QSize(14, 14));
     m_btnChooseDoc->setStyleSheet(AITT_STYLE_BTN_SEC);
     m_btnChooseDoc->setCursor(Qt::PointingHandCursor);
@@ -551,7 +552,7 @@ void AITranslaterWidget::setupDocumentPanel()
     QHBoxLayout *actRow = new QHBoxLayout();
     actRow->setSpacing(8);
     m_btnTranslateDoc = new QPushButton(QString::fromUtf8("Перевести сейчас"), fileCard);
-    m_btnTranslateDoc->setIcon(QIcon(":/svg/play"));
+    m_btnTranslateDoc->setIcon(ThemeManager::icon(":/svg/play"));
     m_btnTranslateDoc->setIconSize(QSize(14, 14));
     m_btnTranslateDoc->setStyleSheet(AITT_STYLE_BTN_PRIMARY);
     m_btnTranslateDoc->setMinimumWidth(160);
@@ -560,7 +561,7 @@ void AITranslaterWidget::setupDocumentPanel()
     actRow->addWidget(m_btnTranslateDoc);
 
     m_btnTranslateDocAsync = new QPushButton(QString::fromUtf8("В очередь (async)"), fileCard);
-    m_btnTranslateDocAsync->setIcon(QIcon(":/svg/clock"));
+    m_btnTranslateDocAsync->setIcon(ThemeManager::icon(":/svg/clock"));
     m_btnTranslateDocAsync->setIconSize(QSize(14, 14));
     m_btnTranslateDocAsync->setStyleSheet(AITT_STYLE_BTN_GREEN);
     m_btnTranslateDocAsync->setMinimumWidth(160);
@@ -634,7 +635,7 @@ void AITranslaterWidget::setupQueuePanel()
     ctrlRow->addWidget(queueTitle);
     ctrlRow->addStretch(1);
     m_btnRefreshQueue = new QPushButton(QString::fromUtf8("Обновить"), inner);
-    m_btnRefreshQueue->setIcon(QIcon(":/svg/refresh-cw"));
+    m_btnRefreshQueue->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     m_btnRefreshQueue->setIconSize(QSize(13, 13));
     m_btnRefreshQueue->setStyleSheet(AITT_STYLE_BTN_SEC);
     m_btnRefreshQueue->setCursor(Qt::PointingHandCursor);
@@ -980,7 +981,7 @@ void AITranslaterWidget::sendDocumentTranslate(bool async)
                     m_queueTable->setItem(row, 4, new QTableWidgetItem("-"));
 
                     QPushButton *dlBtn = new QPushButton(QString::fromUtf8("Скачать"), m_queueTable);
-                    dlBtn->setIcon(QIcon(":/svg/download"));
+                    dlBtn->setIcon(ThemeManager::icon(":/svg/download"));
                     dlBtn->setIconSize(QSize(13, 13));
                     dlBtn->setEnabled(false);
                     dlBtn->setStyleSheet(AITT_STYLE_BTN_PRIMARY);

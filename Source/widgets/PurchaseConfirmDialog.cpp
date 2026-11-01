@@ -6,6 +6,7 @@
 #include "Extension.h"
 
 #include "PurchaseConfirmDialog.h"
+#include "ThemeManager.h"
 
 PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &deviceName, const UserDataInfo &data)
     : QDialog(parent)
@@ -201,7 +202,7 @@ PurchaseConfirmDialog::PurchaseConfirmDialog(QWidget *parent, const QString &dev
     confirmBtn->setMinimumHeight(38);
     if (hasEnough)
     {
-        confirmBtn->setIcon(QIcon(":/svg/credit-card"));
+        confirmBtn->setIcon(ThemeManager::icon(":/svg/credit-card"));
         confirmBtn->setIconSize(QSize(16, 16));
         confirmBtn->setText(QString(" Оплатить %1 %2").arg(data.basePrice).arg(data.currencyType));
         confirmBtn->setEnabled(true);

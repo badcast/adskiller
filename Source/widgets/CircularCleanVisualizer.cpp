@@ -2,6 +2,7 @@
 #include <QPainterPath>
 
 #include "CircularCleanVisualizer.h"
+#include "ThemeManager.h"
 
 CircularCleanVisualizer::CircularCleanVisualizer(QWidget *parent)
     : QWidget(parent)
@@ -157,33 +158,33 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     QRadialGradient bgGlow(QPointF(cx, cy), outerR);
     if (m_isCompleted)
     {
-        bgGlow.setColorAt(0.0, QColor(6, 78, 59, 120));
-        bgGlow.setColorAt(0.7, QColor(10, 14, 26, 80));
-        bgGlow.setColorAt(1.0, QColor(10, 14, 26, 0));
+        bgGlow.setColorAt(0.0, ThemeManager::autoColor(QColor(6, 78, 59, 120)));
+        bgGlow.setColorAt(0.7, ThemeManager::autoColor(QColor(10, 14, 26, 80)));
+        bgGlow.setColorAt(1.0, ThemeManager::autoColor(QColor(10, 14, 26, 0)));
     }
     else if (m_isRunning)
     {
-        bgGlow.setColorAt(0.0, QColor(2, 132, 199, 130));
-        bgGlow.setColorAt(0.65, QColor(10, 14, 26, 90));
-        bgGlow.setColorAt(1.0, QColor(10, 14, 26, 0));
+        bgGlow.setColorAt(0.0, ThemeManager::autoColor(QColor(2, 132, 199, 130)));
+        bgGlow.setColorAt(0.65, ThemeManager::autoColor(QColor(10, 14, 26, 90)));
+        bgGlow.setColorAt(1.0, ThemeManager::autoColor(QColor(10, 14, 26, 0)));
     }
     else
     {
-        bgGlow.setColorAt(0.0, QColor(30, 41, 59, 80));
-        bgGlow.setColorAt(0.7, QColor(10, 14, 26, 50));
-        bgGlow.setColorAt(1.0, QColor(10, 14, 26, 0));
+        bgGlow.setColorAt(0.0, ThemeManager::autoColor(QColor(30, 41, 59, 80)));
+        bgGlow.setColorAt(0.7, ThemeManager::autoColor(QColor(10, 14, 26, 50)));
+        bgGlow.setColorAt(1.0, ThemeManager::autoColor(QColor(10, 14, 26, 0)));
     }
     p.fillRect(rect(), bgGlow);
 
     // 2. Circular Outer Track Line
-    QPen trackPen(QColor(30, 41, 59, 140), 2.0);
+    QPen trackPen(ThemeManager::autoColor(QColor(30, 41, 59, 140)), 2.0);
     p.setPen(trackPen);
     p.setBrush(Qt::NoBrush);
     p.drawEllipse(QPointF(cx, cy), outerR, outerR);
 
     // 3. Circular Running Ticker Text (Бегущая строка по кругу)
     const qreal textR = outerR - 10.0;
-    QFont tickerFont("Segoe UI", 8, QFont::Bold);
+    QFont tickerFont = ThemeManager::uiFont(8, QFont::Bold);
     tickerFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.2);
     p.setFont(tickerFont);
 
@@ -203,13 +204,16 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
             QChar ch = m_tickerText.at(i);
             if (ch == QChar(0x2726) || ch == QChar('*')) // symbol *
             {
-                p.setPen(m_isCompleted ? QColor(52, 211, 153) : QColor(56, 189, 248));
+                p.setPen(
+                    m_isCompleted ? ThemeManager::autoColor(QColor(52, 211, 153))
+                                  : ThemeManager::autoColor(QColor(56, 189, 248)));
             }
             else
             {
                 p.setPen(
-                    m_isCompleted ? QColor(167, 243, 208, 200)
-                                  : (m_isRunning ? QColor(224, 242, 254, 220) : QColor(148, 163, 184, 150)));
+                    m_isCompleted ? ThemeManager::autoColor(QColor(167, 243, 208, 200))
+                                  : (m_isRunning ? ThemeManager::autoColor(QColor(224, 242, 254, 220))
+                                                 : ThemeManager::autoColor(QColor(148, 163, 184, 150))));
             }
 
             p.drawText(QRectF(-8, -8, 16, 16), Qt::AlignCenter, QString(ch));
@@ -222,7 +226,7 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     QRectF arcRect(cx - arcR, cy - arcR, arcR * 2.0, arcR * 2.0);
 
     // Subtle track background for arc
-    p.setPen(QPen(QColor(15, 23, 42, 180), 5.0, Qt::SolidLine, Qt::RoundCap));
+    p.setPen(QPen(ThemeManager::autoColor(QColor(15, 23, 42, 180)), 5.0, Qt::SolidLine, Qt::RoundCap));
     p.drawEllipse(arcRect);
 
     if (m_progress > 0)
@@ -230,14 +234,14 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
         QConicalGradient arcGrad(QPointF(cx, cy), -90);
         if (m_isCompleted)
         {
-            arcGrad.setColorAt(0.0, QColor(52, 211, 153));
-            arcGrad.setColorAt(1.0, QColor(16, 185, 129));
+            arcGrad.setColorAt(0.0, ThemeManager::autoColor(QColor(52, 211, 153)));
+            arcGrad.setColorAt(1.0, ThemeManager::autoColor(QColor(16, 185, 129)));
         }
         else
         {
-            arcGrad.setColorAt(0.0, QColor(56, 189, 248));
-            arcGrad.setColorAt(0.5, QColor(0, 229, 255));
-            arcGrad.setColorAt(1.0, QColor(52, 211, 153));
+            arcGrad.setColorAt(0.0, ThemeManager::autoColor(QColor(56, 189, 248)));
+            arcGrad.setColorAt(0.5, ThemeManager::autoColor(QColor(0, 229, 255)));
+            arcGrad.setColorAt(1.0, ThemeManager::autoColor(QColor(52, 211, 153)));
         }
 
         QPen progPen(QBrush(arcGrad), 5.5, Qt::SolidLine, Qt::RoundCap);
@@ -253,7 +257,7 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
         p.save();
         p.translate(cx, cy);
         p.rotate(m_particleAngle);
-        QPen dashPen(QColor(56, 189, 248, 80), 1.5, Qt::DashLine);
+        QPen dashPen(ThemeManager::autoColor(QColor(56, 189, 248, 80)), 1.5, Qt::DashLine);
         p.setPen(dashPen);
         p.drawEllipse(QPointF(0, 0), dashR, dashR);
         p.restore();
@@ -264,13 +268,15 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
     QRectF centerRect(cx - centerR, cy - centerR, centerR * 2.0, centerR * 2.0);
 
     QRadialGradient centerGrad(QPointF(cx, cy), centerR);
-    centerGrad.setColorAt(0.0, QColor(15, 23, 42, 240));
-    centerGrad.setColorAt(0.85, QColor(7, 10, 18, 250));
-    centerGrad.setColorAt(1.0, QColor(3, 7, 18, 255));
+    centerGrad.setColorAt(0.0, ThemeManager::autoColor(QColor(15, 23, 42, 240)));
+    centerGrad.setColorAt(0.85, ThemeManager::autoColor(QColor(7, 10, 18, 250)));
+    centerGrad.setColorAt(1.0, ThemeManager::autoColor(QColor(3, 7, 18, 255)));
 
     p.setBrush(centerGrad);
     QPen centerBorder(
-        m_isCompleted ? QColor(52, 211, 153, 180) : (m_isRunning ? QColor(56, 189, 248, 160) : QColor(30, 41, 59, 200)),
+        m_isCompleted ? ThemeManager::autoColor(QColor(52, 211, 153, 180))
+                      : (m_isRunning ? ThemeManager::autoColor(QColor(56, 189, 248, 160))
+                                     : ThemeManager::autoColor(QColor(30, 41, 59, 200))),
         2.0);
     p.setPen(centerBorder);
     p.drawEllipse(centerRect);
@@ -295,8 +301,11 @@ void CircularCleanVisualizer::paintEvent(QPaintEvent *)
 
     // 8. Progress % badge inside center circle at bottom
     QRectF percentRect(cx - 40, cy + 26, 80, 20);
-    QFont pctFont("Segoe UI", 11, QFont::Bold);
+    QFont pctFont = ThemeManager::uiFont(11, QFont::Bold);
     p.setFont(pctFont);
-    p.setPen(m_isCompleted ? QColor(52, 211, 153) : (m_isRunning ? QColor(56, 189, 248) : QColor(148, 163, 184)));
+    p.setPen(
+        m_isCompleted ? ThemeManager::autoColor(QColor(52, 211, 153))
+                      : (m_isRunning ? ThemeManager::autoColor(QColor(56, 189, 248))
+                                     : ThemeManager::autoColor(QColor(148, 163, 184))));
     p.drawText(percentRect, Qt::AlignCenter, QString::number(m_progress) + "%");
 }

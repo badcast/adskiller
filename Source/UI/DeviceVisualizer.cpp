@@ -15,6 +15,7 @@
 
 #include "AdbFront.h"
 #include "AppleFront.h"
+#include "ThemeManager.h"
 
 DeviceVisualizer::DeviceVisualizer(QWidget *parent)
     : QWidget(parent)
@@ -117,28 +118,28 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
 
     if (m_status == DEVICE)
     {
-        primaryColor = QColor(16, 185, 129); // Emerald #10B981
-        glowColor = QColor(52, 211, 153, 90);
-        accentColor = QColor(110, 231, 183);
+        primaryColor = ThemeManager::autoColor(QColor(16, 185, 129)); // Emerald #10B981
+        glowColor = ThemeManager::autoColor(QColor(52, 211, 153, 90));
+        accentColor = ThemeManager::autoColor(QColor(110, 231, 183));
     }
     else if (m_status == UNAUTH)
     {
-        primaryColor = QColor(245, 158, 11); // Amber #F59E0B
-        glowColor = QColor(251, 191, 36, 100);
-        accentColor = QColor(253, 230, 138);
+        primaryColor = ThemeManager::autoColor(QColor(245, 158, 11)); // Amber #F59E0B
+        glowColor = ThemeManager::autoColor(QColor(251, 191, 36, 100));
+        accentColor = ThemeManager::autoColor(QColor(253, 230, 138));
     }
     else
     {
-        primaryColor = QColor(56, 189, 248); // Sky Cyan #38BDF8
-        glowColor = QColor(14, 165, 233, 70);
-        accentColor = QColor(186, 230, 253);
+        primaryColor = ThemeManager::autoColor(QColor(56, 189, 248)); // Sky Cyan #38BDF8
+        glowColor = ThemeManager::autoColor(QColor(14, 165, 233, 70));
+        accentColor = ThemeManager::autoColor(QColor(186, 230, 253));
     }
 
     // 1. Ambient Background Glow
     QRadialGradient ambientGlow(cx, cy, qMax(w, h) * 0.55);
     ambientGlow.setColorAt(0.0, QColor(glowColor.red(), glowColor.green(), glowColor.blue(), 30));
     ambientGlow.setColorAt(0.65, QColor(glowColor.red(), glowColor.green(), glowColor.blue(), 5));
-    ambientGlow.setColorAt(1.0, QColor(11, 15, 25, 0));
+    ambientGlow.setColorAt(1.0, ThemeManager::autoColor(QColor(11, 15, 25, 0)));
     p.fillRect(rect(), ambientGlow);
 
     // 2. Tech Orbit Ring & Crosshairs
@@ -186,10 +187,10 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         p.translate(cx, cy);
         p.rotate(std::fmod(m_time * 100.0f, 360.0f));
         QConicalGradient sweep(0, 0, 0);
-        sweep.setColorAt(0.0, QColor(56, 189, 248, 50));
-        sweep.setColorAt(0.15, QColor(56, 189, 248, 10));
-        sweep.setColorAt(0.3, QColor(56, 189, 248, 0));
-        sweep.setColorAt(1.0, QColor(56, 189, 248, 0));
+        sweep.setColorAt(0.0, ThemeManager::autoColor(QColor(56, 189, 248, 50)));
+        sweep.setColorAt(0.15, ThemeManager::autoColor(QColor(56, 189, 248, 10)));
+        sweep.setColorAt(0.3, ThemeManager::autoColor(QColor(56, 189, 248, 0)));
+        sweep.setColorAt(1.0, ThemeManager::autoColor(QColor(56, 189, 248, 0)));
         p.setBrush(sweep);
         p.setPen(Qt::NoPen);
         p.drawEllipse(QPointF(0, 0), maxRadarR * 0.9f, maxRadarR * 0.9f);
@@ -209,7 +210,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
     const float cableEndY = py + phoneH;
 
     // Cable Base line
-    p.setPen(QPen(QColor(30, 41, 59, 220), 6.0f, Qt::SolidLine, Qt::RoundCap));
+    p.setPen(QPen(ThemeManager::autoColor(QColor(30, 41, 59, 220)), 6.0f, Qt::SolidLine, Qt::RoundCap));
     p.drawLine(QPointF(cableStartX, cableStartY), QPointF(cableStartX, cableEndY));
 
     // Cable Core Glow line
@@ -234,8 +235,8 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
     // USB-C Plug Head
     QRectF usbPlugRect(cx - 11.0f, cableEndY - 1.0f, 22.0f, 15.0f);
     QLinearGradient plugGrad(usbPlugRect.topLeft(), usbPlugRect.bottomRight());
-    plugGrad.setColorAt(0.0, QColor(71, 85, 105));
-    plugGrad.setColorAt(1.0, QColor(30, 41, 59));
+    plugGrad.setColorAt(0.0, ThemeManager::autoColor(QColor(71, 85, 105)));
+    plugGrad.setColorAt(1.0, ThemeManager::autoColor(QColor(30, 41, 59)));
     p.setPen(QPen(primaryColor, 1.2f));
     p.setBrush(plugGrad);
     p.drawRoundedRect(usbPlugRect, 3.0f, 3.0f);
@@ -248,9 +249,9 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
     neonPen.setWidthF(2.5f);
 
     QLinearGradient chassisGrad(phoneRect.topLeft(), phoneRect.bottomRight());
-    chassisGrad.setColorAt(0.0, QColor(30, 41, 59));
-    chassisGrad.setColorAt(0.5, QColor(15, 23, 42));
-    chassisGrad.setColorAt(1.0, QColor(2, 6, 23));
+    chassisGrad.setColorAt(0.0, ThemeManager::autoColor(QColor(30, 41, 59)));
+    chassisGrad.setColorAt(0.5, ThemeManager::autoColor(QColor(15, 23, 42)));
+    chassisGrad.setColorAt(1.0, ThemeManager::autoColor(QColor(2, 6, 23)));
 
     p.setPen(neonPen);
     p.setBrush(chassisGrad);
@@ -259,28 +260,28 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
     // 8. Phone Screen (AMOLED Glass)
     const float screenMargin = 7.0f;
     QRectF screenRect(px + screenMargin, py + screenMargin, phoneW - screenMargin * 2.0f, phoneH - screenMargin * 2.0f);
-    p.setPen(QPen(QColor(51, 65, 85, 160), 1.0f));
-    p.setBrush(QColor(8, 12, 20));
+    p.setPen(QPen(ThemeManager::autoColor(QColor(51, 65, 85, 160)), 1.0f));
+    p.setBrush(ThemeManager::autoColor(QColor(8, 12, 20)));
     p.drawRoundedRect(screenRect, 20.0f, 20.0f);
 
     // Speaker slit & front camera punch-hole / Dynamic Island
     if (m_isApple)
     {
         p.setPen(Qt::NoPen);
-        p.setBrush(QColor(10, 10, 14));
+        p.setBrush(ThemeManager::autoColor(QColor(10, 10, 14)));
         p.drawRoundedRect(QRectF(cx - 20.0f, py + 10.5f, 40.0f, 9.0f), 4.5f, 4.5f);
     }
     else
     {
         p.setPen(Qt::NoPen);
-        p.setBrush(QColor(51, 65, 85));
+        p.setBrush(ThemeManager::autoColor(QColor(51, 65, 85)));
         p.drawRoundedRect(QRectF(cx - 16.0f, py + 12.0f, 32.0f, 3.5f), 1.5f, 1.5f);
-        p.setBrush(QColor(30, 41, 59));
+        p.setBrush(ThemeManager::autoColor(QColor(30, 41, 59)));
         p.drawEllipse(QPointF(cx + 25.0f, py + 13.5f), 3.0f, 3.0f);
     }
 
     // Mini Status Bar inside Phone
-    p.setPen(QColor(148, 163, 184));
+    p.setPen(ThemeManager::autoColor(QColor(148, 163, 184)));
     QFont statusFont = p.font();
     statusFont.setPointSize(8);
     statusFont.setBold(true);
@@ -292,7 +293,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
 
     // Battery icon
     QRectF battRect(screenRect.right() - 24.0f, screenRect.top() + 10.0f, 14.0f, 8.0f);
-    p.setPen(QPen(QColor(148, 163, 184), 1.0f));
+    p.setPen(QPen(ThemeManager::autoColor(QColor(148, 163, 184)), 1.0f));
     p.setBrush(Qt::NoBrush);
     p.drawRoundedRect(battRect, 1.5f, 1.5f);
     p.fillRect(QRectF(battRect.left() + 2.0f, battRect.top() + 2.0f, 7.0f, 4.0f), primaryColor);
@@ -309,14 +310,14 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         float checkR = 34.0f * successPulse;
 
         QRadialGradient succGrad(cx, checkCenterY, checkR * 1.5f);
-        succGrad.setColorAt(0.0, QColor(16, 185, 129, 70));
-        succGrad.setColorAt(1.0, QColor(16, 185, 129, 0));
+        succGrad.setColorAt(0.0, ThemeManager::autoColor(QColor(16, 185, 129, 70)));
+        succGrad.setColorAt(1.0, ThemeManager::autoColor(QColor(16, 185, 129, 0)));
         p.setBrush(succGrad);
         p.setPen(Qt::NoPen);
         p.drawEllipse(QPointF(cx, checkCenterY), checkR * 1.5f, checkR * 1.5f);
 
-        p.setPen(QPen(QColor(16, 185, 129), 2.5f));
-        p.setBrush(QColor(6, 78, 59, 180));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(16, 185, 129)), 2.5f));
+        p.setBrush(ThemeManager::autoColor(QColor(6, 78, 59, 180)));
         p.drawEllipse(QPointF(cx, checkCenterY), checkR, checkR);
 
         // Checkmark path
@@ -324,7 +325,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         checkPath.moveTo(cx - 12.0f, checkCenterY);
         checkPath.lineTo(cx - 3.0f, checkCenterY + 9.0f);
         checkPath.lineTo(cx + 14.0f, checkCenterY - 8.0f);
-        QPen checkPen(QColor(240, 253, 244), 3.0f, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+        QPen checkPen(ThemeManager::autoColor(QColor(240, 253, 244)), 3.0f, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
         p.strokePath(checkPath, checkPen);
 
         // Device Title
@@ -332,7 +333,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         titleFont.setPointSize(11);
         titleFont.setBold(true);
         p.setFont(titleFont);
-        p.setPen(QColor(240, 253, 244));
+        p.setPen(ThemeManager::autoColor(QColor(240, 253, 244)));
         QString displayName = m_devName.isEmpty() ? (m_isApple ? QString::fromUtf8("Apple Устройство")
                                                                : QString::fromUtf8("Android Устройство"))
                                                   : m_devName;
@@ -346,7 +347,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         subFont.setPointSize(8);
         subFont.setBold(false);
         p.setFont(subFont);
-        p.setPen(QColor(110, 231, 183));
+        p.setPen(ThemeManager::autoColor(QColor(110, 231, 183)));
         QString subText = m_devSub.isEmpty() ? QString::fromUtf8("USB Подключен") : m_devSub;
         p.drawText(
             QRectF(screenRect.left() + 6.0f, checkCenterY + 66.0f, screenRect.width() - 12.0f, 18.0f),
@@ -355,15 +356,15 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
 
         // Ready Badge
         QRectF badgeRect(cx - 58.0f, checkCenterY + 92.0f, 116.0f, 22.0f);
-        p.setPen(QPen(QColor(16, 185, 129), 1.0f));
-        p.setBrush(QColor(16, 185, 129, 45));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(16, 185, 129)), 1.0f));
+        p.setBrush(ThemeManager::autoColor(QColor(16, 185, 129, 45)));
         p.drawRoundedRect(badgeRect, 11.0f, 11.0f);
 
         QFont badgeFont = p.font();
         badgeFont.setPointSize(8);
         badgeFont.setBold(true);
         p.setFont(badgeFont);
-        p.setPen(QColor(52, 211, 153));
+        p.setPen(ThemeManager::autoColor(QColor(52, 211, 153)));
         QString badgeText = QString::fromUtf8("АВТОРИЗОВАНО");
         if (m_isApple
             && (m_devSub.contains("Recovery", Qt::CaseInsensitive) || m_devSub.contains("DFU", Qt::CaseInsensitive)))
@@ -378,28 +379,28 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         float alertY = py + phoneH * 0.32f;
 
         // Warning Icon
-        p.setPen(QPen(QColor(245, 158, 11), 2.2f));
-        p.setBrush(QColor(120, 53, 15, 160));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(245, 158, 11)), 2.2f));
+        p.setBrush(ThemeManager::autoColor(QColor(120, 53, 15, 160)));
         p.drawEllipse(QPointF(cx, alertY), 22.0f, 22.0f);
 
         QFont warnIconFont = p.font();
         warnIconFont.setPointSize(13);
         warnIconFont.setBold(true);
         p.setFont(warnIconFont);
-        p.setPen(QColor(253, 230, 138));
+        p.setPen(ThemeManager::autoColor(QColor(253, 230, 138)));
         p.drawText(QRectF(cx - 15.0f, alertY - 15.0f, 30.0f, 30.0f), Qt::AlignCenter, "!");
 
         // Simulated Prompt Dialog
         QRectF promptCard(screenRect.left() + 8.0f, alertY + 30.0f, screenRect.width() - 16.0f, 116.0f);
-        p.setPen(QPen(QColor(245, 158, 11, 160), 1.0f));
-        p.setBrush(QColor(30, 25, 18, 230));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(245, 158, 11, 160)), 1.0f));
+        p.setBrush(ThemeManager::autoColor(QColor(30, 25, 18, 230)));
         p.drawRoundedRect(promptCard, 8.0f, 8.0f);
 
         QFont pTitle = p.font();
         pTitle.setPointSize(8);
         pTitle.setBold(true);
         p.setFont(pTitle);
-        p.setPen(QColor(251, 191, 36));
+        p.setPen(ThemeManager::autoColor(QColor(251, 191, 36)));
         if (m_isApple)
         {
             p.drawText(
@@ -419,7 +420,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         pDesc.setPointSize(7);
         pDesc.setBold(false);
         p.setFont(pDesc);
-        p.setPen(QColor(209, 213, 219));
+        p.setPen(ThemeManager::autoColor(QColor(209, 213, 219)));
         if (m_isApple)
         {
             p.drawText(
@@ -445,7 +446,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(okBtnRect.adjusted(-ripT * 8.0f, -ripT * 5.0f, ripT * 8.0f, ripT * 5.0f), 6.0f, 6.0f);
 
-        p.setPen(QPen(QColor(245, 158, 11), 1.2f));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(245, 158, 11)), 1.2f));
         p.setBrush(QColor(217, 119, 6, static_cast<int>(200 * btnPulse)));
         p.drawRoundedRect(okBtnRect, 5.0f, 5.0f);
 
@@ -453,7 +454,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         btnFont.setPointSize(8);
         btnFont.setBold(true);
         p.setFont(btnFont);
-        p.setPen(QColor(255, 255, 255));
+        p.setPen(ThemeManager::autoColor(QColor(255, 255, 255)));
         p.drawText(
             okBtnRect, Qt::AlignCenter, m_isApple ? QString::fromUtf8("ДОВЕРЯТЬ") : QString::fromUtf8("РАЗРЕШИТЬ"));
     }
@@ -464,17 +465,17 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
 
         // Radar scan circles inside screen
         float inRadius = 45.0f;
-        p.setPen(QPen(QColor(56, 189, 248, 60), 1.0f, Qt::DashLine));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(56, 189, 248, 60)), 1.0f, Qt::DashLine));
         p.setBrush(Qt::NoBrush);
         p.drawEllipse(QPointF(cx, iconCenterY), inRadius, inRadius);
 
         float innerPulseR = 24.0f + 12.0f * std::sin(m_time * 2.5f);
-        p.setPen(QPen(QColor(56, 189, 248, 90), 1.2f));
+        p.setPen(QPen(ThemeManager::autoColor(QColor(56, 189, 248, 90)), 1.2f));
         p.drawEllipse(QPointF(cx, iconCenterY), innerPulseR, innerPulseR);
 
         // Center Icon Glyph
         p.setPen(Qt::NoPen);
-        p.setBrush(QColor(14, 165, 233, 50));
+        p.setBrush(ThemeManager::autoColor(QColor(14, 165, 233, 50)));
         p.drawEllipse(QPointF(cx, iconCenterY), 20.0f, 20.0f);
 
         QPixmap zapPix(":/svg/zap");
@@ -490,7 +491,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         sTitle.setPointSize(9);
         sTitle.setBold(true);
         p.setFont(sTitle);
-        p.setPen(QColor(240, 249, 255));
+        p.setPen(ThemeManager::autoColor(QColor(240, 249, 255)));
         p.drawText(
             QRectF(screenRect.left() + 6.0f, iconCenterY + 42.0f, screenRect.width() - 12.0f, 20.0f),
             Qt::AlignCenter,
@@ -501,7 +502,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         sDesc.setPointSize(8);
         sDesc.setBold(false);
         p.setFont(sDesc);
-        p.setPen(QColor(148, 163, 184));
+        p.setPen(ThemeManager::autoColor(QColor(148, 163, 184)));
         p.drawText(
             QRectF(screenRect.left() + 6.0f, iconCenterY + 62.0f, screenRect.width() - 12.0f, 18.0f),
             Qt::AlignCenter,
@@ -520,7 +521,7 @@ void DeviceVisualizer::paintEvent(QPaintEvent *event)
         QFont dotsFont = p.font();
         dotsFont.setPointSize(9);
         p.setFont(dotsFont);
-        p.setPen(QColor(56, 189, 248));
+        p.setPen(ThemeManager::autoColor(QColor(56, 189, 248)));
         p.drawText(
             QRectF(screenRect.left() + 6.0f, iconCenterY + 84.0f, screenRect.width() - 12.0f, 18.0f),
             Qt::AlignCenter,

@@ -1,4 +1,5 @@
 #include "AIChatView.h"
+#include "ThemeManager.h"
 #include <QRegularExpression>
 #include <QScrollBar>
 
@@ -126,7 +127,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
         headerLayout->addStretch();
 
         m_copyButton = new QPushButton(this);
-        m_copyButton->setIcon(QIcon(":/svg/copy"));
+        m_copyButton->setIcon(ThemeManager::icon(":/svg/copy"));
         m_copyButton->setIconSize(QSize(12, 12));
         m_copyButton->setToolTip("Скопировать ответ");
         m_copyButton->setFixedSize(24, 20);
@@ -150,10 +151,10 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
             QClipboard *clipboard = QApplication::clipboard();
             if (clipboard)
                 clipboard->setText(text);
-            m_copyButton->setIcon(QIcon(":/svg/check"));
+            m_copyButton->setIcon(ThemeManager::icon(":/svg/check"));
             QTimer::singleShot(1500, this, [this]() {
                 if (m_copyButton)
-                    m_copyButton->setIcon(QIcon(":/svg/copy"));
+                    m_copyButton->setIcon(ThemeManager::icon(":/svg/copy"));
             });
         });
         headerLayout->addWidget(m_copyButton);
@@ -194,7 +195,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         QLabel *iconLabel = new QLabel(this);
         iconLabel->setAlignment(Qt::AlignCenter);
-        iconLabel->setPixmap(QPixmap(":/svg/bot").scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLabel->setPixmap(ThemeManager::icon(":/svg/bot").pixmap(32, 32));
         iconLabel->setStyleSheet("background: transparent; border: none;");
         cardLayout->addWidget(iconLabel);
 
@@ -233,7 +234,7 @@ AIChatBubble::AIChatBubble(Type type, const QString &text, const QString &timeSt
 
         QLabel *iconLabel = new QLabel(this);
         iconLabel->setAlignment(Qt::AlignCenter);
-        iconLabel->setPixmap(QPixmap(":/svg/lock").scaled(28, 28, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLabel->setPixmap(ThemeManager::icon(":/svg/lock").pixmap(28, 28));
         iconLabel->setStyleSheet("background: transparent; border: none;");
         cardLayout->addWidget(iconLabel);
 

@@ -1,6 +1,7 @@
 #include "MiAccountWidget.h"
 #include "MainWindow.h"
 #include "Services.h"
+#include "ThemeManager.h"
 
 #include <QFrame>
 #include <QIcon>
@@ -44,7 +45,7 @@ void MiAccountWidget::setupUi()
 
     // Warning icon from SVG
     m_iconLabel = new QLabel(centerCard);
-    m_iconLabel->setPixmap(QIcon(":/svg/alert-triangle").pixmap(64, 64));
+    m_iconLabel->setPixmap(ThemeManager::icon(":/svg/alert-triangle").pixmap(64, 64));
     m_iconLabel->setAlignment(Qt::AlignCenter);
     cardLayout->addWidget(m_iconLabel);
 
@@ -60,7 +61,7 @@ void MiAccountWidget::setupUi()
     cardLayout->addWidget(m_subLabel);
 
     m_btnBack = new QPushButton(QString::fromUtf8("Назад в личный кабинет"), centerCard);
-    m_btnBack->setIcon(QIcon(":/svg/arrow-left"));
+    m_btnBack->setIcon(ThemeManager::icon(":/svg/arrow-left"));
     m_btnBack->setMinimumHeight(36);
     m_btnBack->setStyleSheet(
         "QPushButton {"

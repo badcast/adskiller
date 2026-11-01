@@ -3,6 +3,7 @@
 #include <QPainterPath>
 
 #include "Services.h"
+#include "ThemeManager.h"
 
 const std::array<const char *, 5> ConstDataSizes = {"байт(ов)", "КБ", "МБ", "ГБ", "ТБ"};
 
@@ -67,8 +68,8 @@ QPixmap generateFallbackIcon(const QString &appName, const QString &pkgName, boo
     QLinearGradient grad(0, 0, 0, size);
     if (isSystem)
     {
-        grad.setColorAt(0.0, QColor(51, 65, 85));
-        grad.setColorAt(1.0, QColor(30, 41, 59));
+        grad.setColorAt(0.0, ThemeManager::autoColor(QColor(51, 65, 85)));
+        grad.setColorAt(1.0, ThemeManager::autoColor(QColor(30, 41, 59)));
     }
     else
     {
@@ -80,7 +81,7 @@ QPixmap generateFallbackIcon(const QString &appName, const QString &pkgName, boo
 
     p.fillPath(path, grad);
 
-    QPen borderPen(QColor(255, 255, 255, 45), 1.5);
+    QPen borderPen(ThemeManager::autoColor(QColor(255, 255, 255, 45)), 1.5);
     p.setPen(borderPen);
     p.drawPath(path);
 
@@ -94,7 +95,7 @@ QPixmap generateFallbackIcon(const QString &appName, const QString &pkgName, boo
             monogram = clean.left(1).toUpper();
     }
 
-    QFont font("Segoe UI", 16, QFont::Bold);
+    QFont font = ThemeManager::uiFont(16, QFont::Bold);
     p.setFont(font);
     p.setPen(Qt::white);
     p.drawText(rect, Qt::AlignCenter, monogram);

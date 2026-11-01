@@ -1,6 +1,7 @@
 #include "AppleIpswWidget.h"
 #include "Services.h"
 #include "MainWindow.h"
+#include "ThemeManager.h"
 
 #include <QApplication>
 #include <QDialog>
@@ -661,7 +662,7 @@ void AppleIpswWidget::setupUi()
     m_btnRefreshDevice = new QPushButton(QString::fromUtf8("🔄 Опросить USB"), headerWidget);
     m_btnRefreshDevice->setObjectName(QStringLiteral("ipswBtnRefreshDevice"));
     m_btnRefreshDevice->setCursor(Qt::PointingHandCursor);
-    m_btnRefreshDevice->setIcon(QIcon(":/svg/refresh-cw"));
+    m_btnRefreshDevice->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     m_btnRefreshDevice->setIconSize(QSize(13, 13));
     m_btnRefreshDevice->setStyleSheet(
         "background-color: #141C2E; border: 1px solid #1E293B; color: #F8FAFC; padding: 6px 12px; font-weight: 600; "
@@ -902,7 +903,7 @@ void AppleIpswWidget::setupSimpleWizardPage()
     QPushButton *btnManualRefresh = new QPushButton(QString::fromUtf8("🔄 Проверить подключение USB"), step1);
     btnManualRefresh->setObjectName(QStringLiteral("ipswBtnManualRefreshUSB"));
     btnManualRefresh->setCursor(Qt::PointingHandCursor);
-    btnManualRefresh->setIcon(QIcon(":/svg/refresh-cw"));
+    btnManualRefresh->setIcon(ThemeManager::icon(":/svg/refresh-cw"));
     btnManualRefresh->setStyleSheet(
         "background-color: #141C2E; border: 1px solid #1E293B; color: #FFFFFF; padding: 8px 16px; font-weight: 600; "
         "font-size: 12px;");
@@ -1342,7 +1343,7 @@ void AppleIpswWidget::setupAdvancedWizardPage()
     m_btnSelectLocal = new QPushButton(QString::fromUtf8("📂 Импорт .ipsw..."), tabCatalog);
     m_btnSelectLocal->setObjectName(QStringLiteral("ipswBtnSelectLocal"));
     m_btnSelectLocal->setCursor(Qt::PointingHandCursor);
-    m_btnSelectLocal->setIcon(QIcon(":/svg/folder"));
+    m_btnSelectLocal->setIcon(ThemeManager::icon(":/svg/folder"));
     m_btnSelectLocal->setStyleSheet(
         "QPushButton { background-color: #141C2E; border: 1px solid #38BDF8; color: #38BDF8; padding: 6px 14px; "
         "font-weight: 600; } QPushButton:hover { background-color: #38BDF8; color: #000000; }");
@@ -2742,7 +2743,7 @@ void AppleIpswWidget::populateLocalFirmwareTable()
 
         // 0: File name
         QTableWidgetItem *nameItem = new QTableWidgetItem(fi.fileName());
-        nameItem->setFont(QFont("Segoe UI", 9, QFont::Bold));
+        nameItem->setFont(ThemeManager::uiFont(9, QFont::Bold));
         nameItem->setToolTip(fi.absoluteFilePath());
         m_localFirmwareTable->setItem(row, 0, nameItem);
 
@@ -3061,7 +3062,7 @@ void AppleIpswWidget::populateFirmwareTable()
 
         // 0: Version
         QTableWidgetItem *verItem = new QTableWidgetItem(QString("iOS %1").arg(fw.version));
-        verItem->setFont(QFont("Segoe UI", 9, QFont::Bold));
+        verItem->setFont(ThemeManager::uiFont(9, QFont::Bold));
         m_firmwareTable->setItem(row, 0, verItem);
 
         // 1: Build
@@ -3079,7 +3080,7 @@ void AppleIpswWidget::populateFirmwareTable()
         QTableWidgetItem *signItem = new QTableWidgetItem(
             fw.isSigned ? QString::fromUtf8("🟢 Подписывается Apple (Готова к установке)")
                         : QString::fromUtf8("🔴 Не подписывается (Отказ TSS)"));
-        signItem->setFont(QFont("Segoe UI", 9, QFont::Bold));
+        signItem->setFont(ThemeManager::uiFont(9, QFont::Bold));
         signItem->setForeground(fw.isSigned ? QColor("#34D399") : QColor("#F87171"));
         m_firmwareTable->setItem(row, 3, signItem);
 
@@ -3628,7 +3629,7 @@ void AppleIpswWidget::showBetaDisclaimer()
     headerLayout->setSpacing(12);
 
     QLabel *iconLbl = new QLabel(&dlg);
-    iconLbl->setPixmap(QIcon(":/svg/alert-triangle").pixmap(36, 36));
+    iconLbl->setPixmap(ThemeManager::icon(":/svg/alert-triangle").pixmap(36, 36));
     iconLbl->setFixedSize(36, 36);
     headerLayout->addWidget(iconLbl);
 
